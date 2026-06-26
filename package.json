@@ -11,7 +11,7 @@
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^7.0.0",
     "@sveltejs/kit": "^2.20.0",
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@tailwindcss/vite": "^4.1.0",
     "svelte": "^5.25.0",
     "tailwindcss": "^4.1.0",
