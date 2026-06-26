@@ -3,6 +3,7 @@
 	import { navItems, socialLinks } from '$lib/nav';
 	import { page } from '$app/stores';
 
+	let { children } = $props();
 	const currentYear = new Date().getFullYear();
 </script>
 
