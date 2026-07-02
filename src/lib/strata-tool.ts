@@ -16,6 +16,7 @@ export interface StrataToolModule {
 	status: ToolStatus;
 	features: string[];
 	savings?: string;
+	href?: string;
 }
 
 export const toolDomains = [
@@ -63,7 +64,7 @@ export const strataToolModules: StrataToolModule[] = [
 	// People
 	{ id: 'unit-matrix', domain: 'people', icon: '🏠', title: 'Unit & Occupancy Matrix', desc: 'All suites with status, rent, EHT/SVT, Form K, EV charger', bcfsaRelevant: false, status: 'live', features: ['Add/remove units', 'Tenant link', 'Alert states'], savings: '—' },
 	{ id: 'nostr-identity', domain: 'people', icon: '🔗', title: 'Nostr Unit Identity', desc: 'Attach npub to suite for payments, votes, Satohash proofs', bcfsaRelevant: false, status: 'planned', features: ['NIP-05', 'Lightning Address', 'Agent pay'], savings: '—' },
-	{ id: 'building-template', domain: 'people', icon: '🏗️', title: 'Building Template Wizard', desc: 'Onboard new strata in 30 min — units, funds, bylaws, rails', bcfsaRelevant: true, status: 'planned', features: ['BC template', 'Custom sub-accounts', 'Service toggles'], savings: '30 days → 30 min' },
+	{ id: 'building-template', domain: 'people', icon: '🏗️', title: 'Building Template Wizard', desc: 'Onboard new strata in 30 min — units, funds, services, rails, bylaws', bcfsaRelevant: true, status: 'live', features: ['BC template', '8-step wizard', 'JSON export', 'Custom sub-accounts', 'Service toggles'], savings: '30 days → 30 min', href: '/tools/wizard' },
 
 	// Sovereign
 	{ id: 'satohash-stamp', domain: 'sovereign', icon: '⏱️', title: 'Satohash Proof Layer', desc: 'OTS-stamp payments, votes, rules, leases to Bitcoin', bcfsaRelevant: false, status: 'planned', features: ['60-sec stamp', 'Zero custody', 'CRT-ready', 'API hook'], savings: 'Court-grade proof' },

@@ -3,6 +3,7 @@
 	import { units } from '$lib/data';
 	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';
 	import Icon from '$lib/components/Icon.svelte';
+	import { goto } from '$app/navigation';
 
 	let activeDomain = $state('all');
 	let sovereignMode = $state(false);
@@ -102,7 +103,7 @@
 	<!-- Module grid -->
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
 		{#each filteredModules as mod}
-			<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group">
+			<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} onclick={() => { if (mod.href) goto(mod.href); }}>
 				<div class="flex items-start justify-between gap-2 mb-3">
 					<span class="text-2xl">{mod.icon}</span>
 					<div class="flex gap-1.5">

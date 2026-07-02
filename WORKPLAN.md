@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
 **Last updated:** July 2026 (Hermes Desktop update — wizard live)  
-**Status:** Phase 1 complete (marketing site). Phase 2 starting.
+**Status:** Phase 1 complete (marketing site). Phase 2 in progress.
 
 ---
 
@@ -9,9 +9,9 @@
 
 - [x] Light-themed Hermes Strata marketing site (SvelteKit + Tailwind)
 - [x] Live dashboard with treasury, occupancy, EPR, unit matrix, charts
-- [x] BC Compliance knowledge base (`/compliance`, `compliance.ts`, `BC-STRATA-COMPLIANCE.md`)
-- [x] RSS & API hub (`/rss`)
-- [x] Strata Tools interactive modules (`/tools`)
+- [x] BC Compliance knowledge base (/compliance, compliance.ts, BC-STRATA-COMPLIANCE.md)
+- [x] RSS & API hub (/rss)
+- [x] Strata Tools interactive modules (/tools)
 - [x] Docs, Spec, Blog pages
 - [x] Footer: careers dropdown, BTC/LN donate modal, social icons
 - [x] Brand logo, jurisdiction selector
@@ -25,7 +25,7 @@
 - [x] About page with cost savings, product stack, BCFSA paths
 - [x] Roadmap/paths page
 - [x] Supercharged homepage with graphs and competitive facts
-- [x] Building Template Wizard (onboarding flow) — live at 
+- [x] Building Template Wizard (onboarding flow) — live at /tools/wizard
 - [ ] E-transfer auto-reconciliation prototype
 
 ## Phase 3 — Core Product (Q3 2026)
@@ -34,7 +34,7 @@
 - [ ] Multi-account trust ledger (Operating, CRF, Special Levy)
 - [ ] Automated fee billing + late notices
 - [ ] Form B/F generator with deadline tracking
-- [ ] Bylaw enforcement state machine API (`BLOCK_FINE_ACTIONS`)
+- [ ] Bylaw enforcement state machine API (BLOCK_FINE_ACTIONS)
 - [ ] Meeting quorum calculator + voting engine
 - [ ] PWA manifest + service worker
 
@@ -65,12 +65,13 @@
 openstrata/
 ├── docs/
 │   ├── BC-STRATA-COMPLIANCE.md    # SPA/BCFSA compliance KB
-│   ├── EXECUTIVE-SUMMARY.md       # This executive doc
+│   ├── EXECUTIVE-SUMMARY.md       # Executive doc
 │   ├── WORKPLAN.md                # This workplan
 │   ├── BCFSA-STRATEGY.md          # Competitive/regulatory strategy
 │   ├── PRODUCT-PLAN.md            # Full product vision
 │   ├── ROADMAP.md                 # Timeline and paths
 │   └── KIMI-HANDOFF.md            # Handoff prompt for M4 Kimi
+├── DIRECTORY-MAP.md               # Multi-LLM handoff index
 ├── SOURCE-OF-TRUTH.md             # Project source of truth
 ├── hermes-strata-app-framework-v2.md
 ├── public/logo.png

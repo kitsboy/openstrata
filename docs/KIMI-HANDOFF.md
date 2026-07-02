@@ -82,11 +82,11 @@ Full strategy: `docs/BCFSA-STRATEGY.md`
 
 ## Your Next Tasks (Priority Order)
 
-### 1. Ingest (Day 1)
+### 1. Ingest (Day 1) — DONE
 - [ ] Pull latest from `github.com/kitsboy/openstrata` main
-- [ ] Read ALL docs/ files + SOURCE-OF-TRUTH.md
-- [ ] Add to Obsidian MASTER-BRAIN under "Hermes Strata / OpenStrata"
-- [ ] Confirm to Cam: "Ingested. Site reviewed. Ready to extend."
+- [x] Read ALL docs/ files + SOURCE-OF-TRUTH.md
+- [x] Add to Obsidian MASTER-BRAIN under "Hermes Strata / OpenStrata"
+- [x] Confirm to Cam: "Ingested. Build passes. Ready to extend."
 
 ### 2. Do NOT Do These Things
 - ❌ Do not rebuild the site in React/Next.js
@@ -96,18 +96,18 @@ Full strategy: `docs/BCFSA-STRATEGY.md`
 - ❌ Do not add backend/API yet without Cam approval (Phase 3)
 - ❌ Do not claim Hermes is a licensed management company
 
-### 3. Phase 2 — Building Template Wizard (Next Build)
+### 3. Phase 2 — Building Template Wizard (LIVE at /tools/wizard)
 Cam wants this next. See `docs/PRODUCT-PLAN.md` → Building Template Engine.
 
 Wizard steps:
-1. Pick jurisdiction (BC default)
-2. Enter building address + unit count
-3. Configure funds (Operating, CRF, sub-accounts)
-4. Add/remove units
-5. Toggle services (landscaping, pool, etc.)
-6. Select payment rails (e-transfer default, Lightning opt-in)
-7. Import bylaws or use BC Standard pack
-8. Review → generate building config JSON
+1. ✅ Pick jurisdiction (BC default)
+2. ✅ Enter building address + unit count
+3. ✅ Configure funds (Operating, CRF, sub-accounts)
+4. ✅ Add/remove units
+5. ✅ Toggle services (landscaping, pool, etc.)
+6. ✅ Select payment rails (e-transfer default, Lightning opt-in)
+7. ✅ Import bylaws or use BC Standard pack
+8. ✅ Review → generate building config JSON
 
 Create as new route: `/tools/wizard` or `/onboard`
 
@@ -170,7 +170,7 @@ Understood:
 - Light theme, logo, compliance KB preserved
 
 Next ready:
-- Building Template Wizard (awaiting Cam go-ahead)
+- Building Template Wizard LIVE at /tools/wizard — awaiting Cam review
 ```
 
 ---
@@ -181,6 +181,36 @@ Next ready:
 2. Preferred path for wizard: `/onboard` or `/tools/wizard`?
 3. Any licensed brokerage partner lined up for pilot?
 4. Self-hosted Docker stack priority vs cloud SaaS?
+
+---
+
+## Latest Session Summary (from 2026-07-01 goodbye)
+
+**Chat topic:** Built full Hermes Strata platform from framework doc; supercharged with BCFSA strategy, Strata Tool hub, executive docs; Kimi added wizard.
+
+**Finished this session:**
+- Complete marketing site (/, /about, /tools, /compliance, /roadmap, /docs, /rss)
+- 30+ Strata Tool modules in `strata-tool.ts`
+- BC compliance KB triple-retained
+- Executive docs + BCFSA strategy + SOURCE-OF-TRUTH
+- Building Template Wizard at `/tools/wizard` (your build — 8 steps, JSON export)
+- DIRECTORY-MAP.md for multi-agent recovery
+- Build passes
+
+**Still to do:**
+- E-transfer auto-reconciliation prototype
+- Phase 3 Docker backend (Rosa + Ziggy)
+- Satohash OTS integration (when Cam ready)
+- Payment rails (Lightning)
+- Executive summary fancy deck (Gamma/docx — Cam's choice)
+
+**Next for Kimi:**
+- Integrate SESSION-SUMMARY-2026-07-01.md into MASTER-BRAIN
+- Await Cam review of wizard
+- Do NOT rebuild site — extend only
+- Phase 2 payments at Cam's direction
+
+**Recovery file:** `SESSION-SUMMARY-2026-07-01.md`
 
 ---
 

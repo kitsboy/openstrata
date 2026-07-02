@@ -1,40 +1,39 @@
 ---
 title: Mission
-project: [Project Name]
-version: 0.1.0
+project: Hermes Strata / OpenStrata
+version: 0.2.0
 audience: internal
-tags: [project, mission, purpose, values]
-last_updated: YYYY-MM-DD
-owner: Nova (Product Management & Documentation)
+tags: [hermes-strata, openstrata, mission, bc-strata, bitcoin]
+last_updated: 2026-07-01
+owner: Cam (Give A Bit)
 ---
 
-# [Project Name] — Mission
+# Hermes Strata — Mission
 
 ## Our Purpose
-[One paragraph — why this project exists. What gap does it fill in the world?]
+
+Make BC strata corporation management dramatically cheaper, faster, and more transparent — while preserving the option of Bitcoin sovereignty for every owner. Hermes Strata is software infrastructure for licensed brokerages, self-managed councils, and hybrid models.
 
 ## Core Values
-1. **Bitcoin Sovereignty First** — [How this project puts Bitcoin self-custody and permissionless access first]
-2. **Privacy by Design** — [Zero-knowledge, client-side, no tracking]
-3. **Open Source** — [License, community model]
-4. **Safe Harbour** — [How it protects users legally and ethically]
+
+1. **Regulatory Compliance First** — BCFSA-aware by design. Trust isolation, SPA workflows, CRT-proof documentation built into every module.
+2. **Bitcoin Sovereignty Optional** — Fiat rails for everyone. Lightning and multisig for those who want provable, self-custodial treasury management.
+3. **Portability, Not Lock-In** — OpenStrata protocol means strata data belongs to the corporation, not the software vendor. Take your history with you.
+4. **Progressive Disclosure** — Three taps max to any task. Self-managed councils get everything they need. Licensed brokerages get white-label depth.
+5. **Local-First, Global-Ready** — BC MVP today. Config-driven expansion to ON, AB, US states, and EU markets via law packs.
 
 ## The Problem We Solve
-[What broken system or unmet need does this address?]
+
+BC strata management is expensive, labour-intensive, and dominated by legacy software with no sovereignty path. Credit cards cost $9K+/year per 50-unit building. Manual reconciliation eats 4 hours per month. CRT evidence packages take 8 hours to compile. Bitcoin adoption is blocked by custody fear and regulatory uncertainty.
 
 ## Our Solution
-[How Bitcoin + the specific project architecture solves it]
+
+A jurisdiction-aware software platform that automates full management company operations — trust accounting, compliance, payments, governance, and conveyancing — with BCFSA rules built into every workflow. Fiat primary. Bitcoin additive. Hermes runs your strata. Satohash proves it happened. OpenStrata lets you take your history.
 
 ## Who It Serves
-[Target users, communities, or use cases]
 
----
-
-**Part of the [Give A Bit](https://giveabit.io) family — Bitcoin education, services, and hope.**
-
-```
-Safe Harbour Statement: This project is provided for educational and informational purposes only.
-Nothing herein constitutes legal, financial, or investment advice. Use at your own risk.
-Always consult qualified professionals for legal and financial decisions.
-© Give A Bit — Bitcoin sovereignty first.
-```
+- **Licensed BC brokerages** — white-label ops platform replacing legacy software
+- **Self-managed strata councils** — full tooling without needing a brokerage license
+- **Hybrid councils** — day-to-day in Hermes, licensed oversight for trust/compliance
+- **Bitcoin-native property owners** — multisig war chest, Lightning fee payments, Satohash proofs
+- **Give A Bit community** — proving sovereign finance works in the most regulated industries
