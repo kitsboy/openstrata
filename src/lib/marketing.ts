@@ -1,5 +1,39 @@
 /** Facts, savings math, and competitive positioning for presentations */
 
+export const pitchMeta = {
+	version: '0.2.0',
+	contact: 'hello@giveabit.io',
+	github: 'https://github.com/kitsboy/openstrata',
+	parent: 'https://giveabit.io',
+	oneLiner:
+		'BCFSA-aware strata operations software — cheaper, faster, and fewer errors than legacy management. Fiat rails today. Bitcoin sovereignty optional.'
+} as const;
+
+export const problemPoints = [
+	'BCFSA requires licensed brokerages, Managing Brokers, and UBC Sauder certification',
+	'Separate trust funds per corporation — co-mingling is illegal',
+	'SPA mandates strict workflows: 14-day bylaw windows, 7-day Form B, quorum rules',
+	'CRT resolves most disputes — evidence quality wins cases',
+	'Credit cards cost strata 3%+ on fee collection ($9K+/year per 50-unit building)',
+	'Managers spend hours on reconciliation, forms, and complaint tracking',
+	'Legacy software is expensive, US-centric, and has zero Bitcoin/sovereignty path'
+] as const;
+
+export const revenueTiers = [
+	{ tier: 'Self-hosted', price: 'Free', priceNote: 'open source', target: 'Developers, self-managed councils' },
+	{ tier: 'Hermes Standard', price: '$4/unit/mo', priceNote: 'per unit', target: 'Licensed brokerages' },
+	{ tier: 'Hermes Sovereign', price: '$6/unit + $49/bldg', priceNote: 'per month', target: '+ Lightning, Satohash proofs' },
+	{ tier: 'Hermes Advanced', price: '+$99/bldg/mo', priceNote: 'add-on', target: 'Multisig, war chest, agent pay' }
+] as const;
+
+export const roadmapSnapshot = [
+	{ phase: 1, timeline: 'Now', deliverable: 'Marketing site, compliance KB, Strata Tool hub', status: 'complete' as const },
+	{ phase: 2, timeline: 'Q3 2026', deliverable: 'Building wizard, e-transfer auto-match', status: 'active' as const },
+	{ phase: 3, timeline: 'Q4 2026', deliverable: 'Lightning Dual Pay, Satohash API', status: 'planned' as const },
+	{ phase: 4, timeline: '2027', deliverable: 'War chest DCA, multisig PSBT, agent payments', status: 'planned' as const },
+	{ phase: 5, timeline: '2028', deliverable: 'ON/AB/US expansion via config.yaml', status: 'planned' as const }
+] as const;
+
 export const bcfsaFacts = {
 	regulator: 'BC Financial Services Authority (BCFSA)',
 	act: 'Real Estate Services Act (RESA)',
@@ -54,11 +88,11 @@ export const costSavings = {
 		{ method: 'Hermes + Lightning', rate: 0.005, fixed: 0, annualCost: 1500, label: 'Blended 0.5%' }
 	],
 	managerSavings: [
-		{ task: 'Monthly fee reconciliation', traditional: '4 hrs', hermes: '15 min', saving: '94%' },
-		{ task: 'Form B generation', traditional: '2 hrs', hermes: '5 min', saving: '96%' },
-		{ task: 'Bylaw complaint tracking', traditional: '3 hrs', hermes: 'Auto workflow', saving: '100%' },
-		{ task: 'AGM quorum calculation', traditional: '1 hr', hermes: 'Real-time', saving: '100%' },
-		{ task: 'CRT evidence package', traditional: '8 hrs', hermes: '1-click export', saving: '88%' }
+		{ task: 'Monthly fee reconciliation', traditional: '4 hrs', hermes: '15 min', saving: '94%', traditionalHrs: 4, hermesHrs: 0.25 },
+		{ task: 'Form B generation', traditional: '2 hrs', hermes: '5 min', saving: '96%', traditionalHrs: 2, hermesHrs: 0.08 },
+		{ task: 'Bylaw complaint tracking', traditional: '3 hrs', hermes: 'Auto workflow', saving: '100%', traditionalHrs: 3, hermesHrs: 0.05 },
+		{ task: 'AGM quorum calculation', traditional: '1 hr', hermes: 'Real-time', saving: '100%', traditionalHrs: 1, hermesHrs: 0.02 },
+		{ task: 'CRT evidence package', traditional: '8 hrs', hermes: '1-click export', saving: '88%', traditionalHrs: 8, hermesHrs: 1 }
 	],
 	annualFeeFlow: 300000 // 50 units × $500 × 12
 } as const;

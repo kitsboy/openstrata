@@ -1,6 +1,7 @@
 export const navItems = [
 	{ href: '/', label: 'Dashboard' },
 	{ href: '/about', label: 'About' },
+	{ href: '/pitch', label: 'Pitch' },
 	{ href: '/tools', label: 'Strata Tool' },
 	{ href: '/compliance', label: 'Compliance' },
 	{ href: '/roadmap', label: 'Roadmap' },
