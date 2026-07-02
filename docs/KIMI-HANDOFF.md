@@ -214,4 +214,33 @@ Next ready:
 
 ---
 
+## Latest Session Summary (from 2026-07-01 goodbye — session 2)
+
+**Chat topic:** Recovered via whatsup; built live `/pitch` investor deck; rebranded logo to Opens Strata / Always Open · Give A Bit; cleaned About and Docs pages.
+
+**Finished in this session:**
+- `/pitch` — 7-slide investor deck, charts from `marketing.ts`, nav link added
+- Logo rebrand: Opens Strata / Always Open · Give A Bit (header + footer)
+- `/about` — all Hermes mentions removed; Auto E-Transfer + E-Transfer + Lightning labels
+- `/docs` — removed Kimi Handoff and Hermes Framework v2 cards from public index
+- Pushed to main: `ea682df`, `6ab5fec`
+
+**Still to do:**
+- Confirm Opens Strata vs OpenStrata spelling with Cam
+- Update SOURCE-OF-TRUTH routes (+ `/pitch`) and branding notes
+- E-transfer auto-reconciliation prototype (Phase 2)
+- Phase 3 Docker backend (Rosa + Ziggy)
+- Satohash integration when Cam ready
+- Executive deck (Gamma/docx — Cam's choice)
+
+**Next for Kimi:**
+- Integrate this summary into MASTER-BRAIN / Kanban
+- Note public rebrand — do NOT revert logo text without Cam
+- Extend site only — do NOT rebuild
+- Phase 2 payments at Cam's direction
+
+**Recovery file:** `SESSION-SUMMARY-2026-07-01.md` (session 2 section)
+
+---
+
 *Built with love by Grok on M3. Handed to Kimi on M4. Cam orchestrates both. Give A Bit forever.*

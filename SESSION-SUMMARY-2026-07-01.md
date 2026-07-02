@@ -1,50 +1,49 @@
-# Session Summary — 2026-07-01
+# Session Summary — 2026-07-01 (Session 2)
 
-**Project:** OpenStrata / Hermes Strata  
+**Project:** OpenStrata / Opens Strata  
 **Machine:** M3 (Grok/Cursor)  
-**GitHub:** https://github.com/kitsboy/openstrata (main)
+**Live:** https://openstrata.giveabit.io  
+**GitHub:** https://github.com/kitsboy/openstrata (main @ `6ab5fec`)
 
 ---
 
 ## Chat Topic
 
-Built Hermes Strata from framework doc into a full BCFSA-aware marketing platform with compliance knowledge, Strata Tool hub, executive docs, and Kimi handoff — then closed cleanly for M4 recovery.
+Recovered prior context via `/whatsup`, shipped a live `/pitch` investor deck, then rebranded the site header and cleaned up the About and Docs pages — all committed and pushed to main.
 
 ---
 
 ## Key Things We Did
 
-- Transformed OpenStrata repo into light-themed **Hermes Strata** site (SvelteKit 5 + Tailwind 4)
-- Integrated BC SPA/BCFSA compliance KB (triple retention: UI + `compliance.ts` + markdown)
-- Added 30+ **Strata Tool** modules covering full management company scope
-- Created executive docs: EXECUTIVE-SUMMARY, PRODUCT-PLAN, BCFSA-STRATEGY, WORKPLAN, ROADMAP
-- Supercharged homepage with savings charts, competitive metrics, BCFSA GTM paths
-- New pages: `/about`, `/roadmap`, `/compliance`, `/tools`, `/docs` hub, `/rss`
-- Brand logo in header/footer (`static/logo.png`)
-- **Kimi handoff:** `docs/KIMI-HANDOFF.md` + `SOURCE-OF-TRUTH.md`
-- Kimi (M4) later added **Building Template Wizard** at `/tools/wizard` (8-step onboarding + JSON export)
-- Kimi added `DIRECTORY-MAP.md` and root `WORKPLAN.md` for multi-agent recovery
+- Loaded continuity from `SESSION-SUMMARY-2026-07-01.md` and `SOURCE-OF-TRUTH.md` via whatsup skill
+- Built **`/pitch`** — 7-slide investor deck with live charts (BTC ticker, payment costs, manager hours, treasury, roadmap, revenue tiers)
+- Single source of truth: all pitch numbers pull from `src/lib/marketing.ts` (update once, deck stays current)
+- Committed + pushed pitch: `ea682df`
+- Rebranded **logo area** (header + footer): **Opens Strata** / **Always Open · Give A Bit**
+- **`/about`**: removed all Hermes mentions; payment methods renamed to **Auto E-Transfer** and **E-Transfer + Lightning**
+- **`/docs`**: removed Kimi Handoff and Hermes Framework v2 cards from document index
+- Committed + pushed rebrand: `6ab5fec`
 
 ---
 
 ## What We Finished
 
-- [x] Phase 1 marketing site — complete
-- [x] BC compliance knowledge base — complete
-- [x] Strata Tool hub (30+ modules) — complete
-- [x] BCFSA competitive strategy (3 legal GTM paths) — documented
-- [x] Executive summary + product plan + roadmap — documented
-- [x] Kimi super-prompt handoff — written
-- [x] Building Template Wizard — live at `/tools/wizard` (Kimi)
+- [x] `/pitch` investor deck live with nav link
+- [x] `marketing.ts` pitch exports (`pitchMeta`, `revenueTiers`, `roadmapSnapshot`, `recommended` payment flags)
+- [x] Logo rebrand in header and footer
+- [x] About page Hermes-free
+- [x] Docs index trimmed (2 internal cards removed)
 - [x] `npm run build` passes
+- [x] All changes pushed to `main`
 
 ---
 
 ## What We Are Still Aiming to Finish
 
-- [ ] Commit + push Kimi's wizard and DIRECTORY-MAP (pending this goodbye commit)
+- [ ] Confirm branding: **Opens Strata** vs **OpenStrata** (Cam may want spelling fix)
+- [ ] Update `SOURCE-OF-TRUTH.md` routes table to include `/pitch` and new branding
 - [ ] E-transfer auto-reconciliation prototype (Phase 2)
-- [ ] Fancy executive summary deck (Gamma.app or docx/pptx — user choice)
+- [ ] Fancy executive summary deck (Gamma.app, docx, or pptx — Cam's choice)
 - [ ] Phase 3: Docker stack, Rosa RAG, Ziggy treasury, trust ledger API
 - [ ] Satohash OTS integration (when satohash.io API ready)
 - [ ] Payment integration (Lightning, backend)
@@ -54,26 +53,27 @@ Built Hermes Strata from framework doc into a full BCFSA-aware marketing platfor
 
 ## Update / Status
 
-As of 2026-07-01: Hermes Strata marketing platform is live in repo. Two commits pushed by Grok (`48eb1f8`, `7da7bbc`). Kimi built wizard locally — uncommitted until goodbye commit. Build verified. Kimi confirmed handoff read; ready for wizard review and Phase 2 at Cam's direction.
+As of 2026-07-01 (session 2): Site at openstrata.giveabit.io has new branding in the logo area, a shareable `/pitch` page for investors, and cleaner public-facing About/Docs pages. Three commits on main this session (`ea682df`, `6ab5fec`). Working tree clean. Cloudflare deploy should follow from `main`.
 
-**"Try again" / "Error?" note:** No project error. Likely a chat response delivery timeout — all work is in git/files.
+Prior session (same day) delivered the full marketing platform, wizard, and Kimi handoff — see git history `23584c9` and earlier.
 
 ---
 
 ## Key Decisions / Notes
 
-- **Hermes = software, NOT unlicensed brokerage.** Three paths: Licensed Brokerage Partner | Self-Managed Council | Hybrid
-- **Light theme intentional** — do not dark-theme
-- **Satohash integration deferred** until Cam confirms API ready
-- **Imagine NOT for exec summary** — use Gamma.app, docx, or pptx for charts/numbers
-- **Never custody Bitcoin** — external wallets, watch-only, PSBT multisig
-- **Wizard path:** `/tools/wizard` (Kimi chose this)
+- **Logo text:** Opens Strata / Always Open · Give A Bit (Cam-directed rebrand)
+- **About page:** No Hermes on public About; use OpenStrata in copy
+- **Payment labels:** Auto E-Transfer, E-Transfer + Lightning (with `recommended` flag in marketing.ts)
+- **Docs:** Kimi Handoff + Framework v2 cards hidden from public docs index (files still in repo)
+- **Pitch:** Data-driven from `marketing.ts` — best long-term approach for always-current deck
+- **Hermes** still appears on other pages (dashboard, compliance, tools) — intentional scope; only About/Docs/logo changed this session
+- **Satohash integration** still deferred until Cam confirms API ready
 
 ---
 
 ## Mission Tie-in
 
-Give A Bit sovereignty stack: Hermes (ops) + Satohash (proof) + OpenStrata (portability). BC strata gets cheaper, faster, CRT-proof operations with optional Bitcoin rails. Knowledge preserved for Kimi on M4 without raw chat dumps.
+Give A Bit sovereignty stack: OpenStrata (ops) + Satohash (proof) + portable protocol. BC strata gets cheaper, faster, CRT-proof operations with optional Bitcoin rails. Clean summaries preserve context for Kimi on M4 without raw chat dumps.
 
 ---
 
@@ -83,5 +83,5 @@ Give A Bit sovereignty stack: Hermes (ops) + Satohash (proof) + OpenStrata (port
 Use the whatsup skill for openstrata
 Load /Users/cam/projects/openstrata
 Read SESSION-SUMMARY-2026-07-01.md and SOURCE-OF-TRUTH.md
-Continue: review wizard at /tools/wizard, then Phase 2 payments
+Continue: confirm Opens Strata branding, then Phase 2 e-transfer prototype
 ```
