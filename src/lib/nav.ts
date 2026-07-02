@@ -1,11 +1,11 @@
 export const navItems = [
 	{ href: '/', label: 'Dashboard' },
-	{ href: '/compliance', label: 'BC Compliance' },
+	{ href: '/about', label: 'About' },
+	{ href: '/tools', label: 'Strata Tool' },
+	{ href: '/compliance', label: 'Compliance' },
+	{ href: '/roadmap', label: 'Roadmap' },
 	{ href: '/docs', label: 'Docs' },
-	{ href: '/rss', label: 'RSS & API' },
-	{ href: '/tools', label: 'Strata Tools' },
-	{ href: '/spec', label: 'OpenStrata Spec' },
-	{ href: '/blog', label: 'Blog' }
+	{ href: '/rss', label: 'RSS & API' }
 ] as const;
 
 export const socialLinks = [

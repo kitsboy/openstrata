@@ -6,9 +6,18 @@
 		faqItems,
 		rssItems
 	} from '$lib/data';
+	import { competitiveAdvantages, costSavings, hermesPositioning } from '$lib/marketing';
+	import { getToolStats } from '$lib/strata-tool';
 	import Icon from '$lib/components/Icon.svelte';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import LineChart from '$lib/components/LineChart.svelte';
+
+	const toolStats = getToolStats();
+	const savingsChart = costSavings.paymentMethods.map((p) => ({
+		label: p.method.split(' ')[0],
+		value: p.annualCost,
+		color: p.method.includes('Hermes') ? '#14b8a6' : p.method.includes('Credit') ? '#ef4444' : '#94a3b8'
+	}));
 
 	let btcCad = $state(135820);
 	let occupancyRate = $state(83.3);
@@ -42,7 +51,7 @@
 		return () => clearInterval(interval);
 	});
 
-	const modules = [
+	const modules = $derived([
 		{
 			id: 'form-k',
 			icon: '📋',
@@ -115,7 +124,7 @@
 			status: 'Due 2027',
 			statusColor: 'brand'
 		}
-	];
+	]);
 
 	const agents = [
 		{ name: 'Rosa', role: 'Compliance RAG', desc: 'BC SPA/RTA/CRT/bylaws strict RAG. Source citations only. Auto-remind loops.', color: 'brand' },
@@ -133,29 +142,32 @@
 	<div class="mx-auto max-w-7xl px-6 py-16 sm:py-24 relative">
 		<div class="grid lg:grid-cols-2 gap-12 items-center">
 			<div>
-				<div class="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-700">
-					<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
-					BC-First MVP · Metro Vancouver · Live Dashboard
+				<div class="mb-5 flex flex-wrap gap-2">
+					<span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-700">
+						<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
+						BC-First · BCFSA-Aware Software
+					</span>
+					<span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 text-xs font-semibold text-slate-600">
+						{toolStats.total} Strata Tool modules · {toolStats.live} live
+					</span>
 				</div>
 				<h1 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] leading-[1.1]">
-					Run Your Strata Corp.<br />
-					<span class="bg-gradient-to-r from-brand-600 to-bc-blue bg-clip-text text-transparent">Sovereign. Compliant. Sexy.</span>
+					Everything a Management<br />
+					<span class="bg-gradient-to-r from-brand-600 to-bc-blue bg-clip-text text-transparent">Company Does — Better.</span>
 				</h1>
 				<p class="mt-6 text-lg leading-relaxed text-slate-600 max-w-xl">
-					Institutional backend power with a mobile-first PWA frontend. Fiat CAD ledger with mandatory 10% CRF,
-					plus Bitcoin 3-of-5 multisig and Lightning instant pay — data never leaves your stack.
+					Cheaper, faster, fewer errors. Trust accounting, compliance, payments, governance —
+					for licensed brokerages, self-managed councils, or hybrid. Fiat today. Bitcoin sovereignty optional.
 				</p>
 				<div class="mt-8 flex flex-wrap gap-3">
 					<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3.5 text-sm font-semibold text-white no-underline shadow-lg shadow-brand-500/25 hover:bg-brand-500 hover:shadow-xl transition-all">
-						Open Strata Tools
-						<span>→</span>
+						Strata Tool →
 					</a>
-					<a href="/compliance" class="inline-flex items-center gap-2 rounded-xl border border-bc-blue/20 bg-bc-blue/5 px-6 py-3.5 text-sm font-semibold text-bc-blue no-underline hover:border-bc-blue/40 transition-all">
-						BC Compliance Knowledge
+					<a href="/about" class="inline-flex items-center gap-2 rounded-xl border border-bitcoin/30 bg-amber-50 px-6 py-3.5 text-sm font-semibold text-bitcoin no-underline hover:border-bitcoin/50 transition-all">
+						Why Trusted Money
 					</a>
-					<a href="/rss" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 hover:text-brand-700 transition-all">
-						<Icon name="rss" class="h-4 w-4" />
-						RSS & API
+					<a href="/roadmap" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all">
+						Roadmap
 					</a>
 				</div>
 			</div>
@@ -215,8 +227,37 @@
 	</div>
 </section>
 
-<!-- Architecture strip -->
+<!-- Competitive advantages + savings -->
 <section class="border-b border-border bg-white">
+	<div class="mx-auto max-w-7xl px-6 py-14">
+		<div class="grid lg:grid-cols-2 gap-10 items-center">
+			<div>
+				<h2 class="text-2xl font-bold text-slate-900">Save $9,000+/Year Per Building</h2>
+				<p class="mt-2 text-slate-500">50 units × $500/mo — credit cards vs Hermes e-transfer/Lightning</p>
+				<BarChart data={savingsChart} height={180} barColor="#14b8a6" />
+			</div>
+			<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+				{#each competitiveAdvantages as adv}
+					<div class="rounded-xl border border-border bg-slate-50 p-4 text-center hover:border-brand-200 transition-colors">
+						<div class="text-xl font-bold text-brand-600">{adv.metric}</div>
+						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+		<div class="mt-10 grid md:grid-cols-3 gap-4">
+			{#each hermesPositioning.paths as path}
+				<div class="rounded-xl border border-border p-4 text-center">
+					<span class="text-sm font-bold text-slate-800">{path.title}</span>
+					<p class="text-xs text-slate-500 mt-1">{path.legal}</p>
+				</div>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<!-- Architecture strip -->
+<section class="border-b border-border bg-slate-50">
 	<div class="mx-auto max-w-7xl px-6 py-8">
 		<div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm">
 			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-border">
