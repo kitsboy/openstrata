@@ -25,7 +25,7 @@
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
 		value: p.annualCost,
-		color: p.method.includes('Hermes')
+		color: 'recommended' in p && p.recommended
 			? '#14b8a6'
 			: p.method.includes('Credit')
 				? '#ef4444'
@@ -48,7 +48,7 @@
 	const rentalChart = rentalTrend.map((m) => m.avg);
 
 	const hermesAnnualCost = costSavings.paymentMethods.find((p) =>
-		p.method.includes('Hermes Auto')
+		p.method === 'Auto E-Transfer'
 	)?.annualCost ?? 600;
 	const creditAnnualCost = costSavings.paymentMethods.find((p) =>
 		p.method.includes('Credit')
@@ -198,7 +198,7 @@
 					<p class="text-xs text-slate-400 mb-4">Source: marketing.ts · {costSavings.scenario.units}-unit building</p>
 					<BarChart data={paymentChart} height={200} barColor="#14b8a6" />
 					<p class="mt-4 rounded-xl bg-success/10 px-4 py-3 text-sm text-success font-semibold">
-						Hermes saves ${annualSavings.toLocaleString()}/yr vs credit cards alone
+						OpenStrata saves ${annualSavings.toLocaleString()}/yr vs credit cards alone
 					</p>
 				</div>
 				<div class="glass-card rounded-2xl p-6">

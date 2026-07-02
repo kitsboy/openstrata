@@ -16,7 +16,7 @@
 	const savingsChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
 		value: p.annualCost,
-		color: p.method.includes('Hermes') ? '#14b8a6' : p.method.includes('Credit') ? '#ef4444' : '#94a3b8'
+		color: 'recommended' in p && p.recommended ? '#14b8a6' : p.method.includes('Credit') ? '#ef4444' : '#94a3b8'
 	}));
 
 	let btcCad = $state(135820);

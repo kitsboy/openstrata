@@ -13,12 +13,16 @@
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
 		value: p.annualCost,
-		color: p.method.includes('Hermes') ? '#14b8a6' : p.method.includes('Credit') ? '#ef4444' : '#94a3b8'
+		color: 'recommended' in p && p.recommended
+			? '#14b8a6'
+			: p.method.includes('Credit')
+				? '#ef4444'
+				: '#94a3b8'
 	}));
 </script>
 
 <svelte:head>
-	<title>About — Hermes Strata | Trusted Money for BC Strata</title>
+	<title>About — Opens Strata | Trusted Money for BC Strata</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-br from-brand-50 via-white to-amber-50/30">
@@ -28,7 +32,7 @@
 			<span class="bg-gradient-to-r from-brand-600 to-bitcoin bg-clip-text text-transparent">Proven Operations.</span>
 		</h1>
 		<p class="mt-6 text-xl text-slate-600 max-w-3xl leading-relaxed">
-			Hermes Strata is BCFSA-aware software that does everything a management company does —
+			Opens Strata is BCFSA-aware software that does everything a management company does —
 			cheaper, faster, with fewer errors. Fiat rails today. Bitcoin sovereignty when you're ready.
 			Every payment provable on Bitcoin via Satohash.
 		</p>
@@ -54,7 +58,7 @@
 		</div>
 		<div class="space-y-4">
 			{#each costSavings.paymentMethods as pm}
-				<div class="flex items-center justify-between rounded-xl border border-border p-4 {pm.method.includes('Hermes') ? 'bg-brand-50 border-brand-200' : ''}">
+				<div class="flex items-center justify-between rounded-xl border border-border p-4 {'recommended' in pm && pm.recommended ? 'bg-brand-50 border-brand-200' : ''}">
 					<div>
 						<span class="font-semibold text-slate-800">{pm.method}</span>
 						<p class="text-xs text-slate-400">{pm.label}</p>
@@ -78,7 +82,7 @@
 					<tr class="text-left">
 						<th class="p-4 font-bold text-slate-600">Task</th>
 						<th class="p-4 font-bold text-slate-600">Traditional</th>
-						<th class="p-4 font-bold text-slate-600">Hermes</th>
+						<th class="p-4 font-bold text-slate-600">OpenStrata</th>
 						<th class="p-4 font-bold text-slate-600">Saving</th>
 					</tr>
 				</thead>
@@ -102,14 +106,14 @@
 	<h2 class="text-2xl font-bold text-slate-900 mb-2">Smart Within the Law</h2>
 	<p class="text-slate-500 mb-8 max-w-3xl">
 		{bcfsaFacts.regulator} requires licensed brokerages for management services.
-		<strong class="text-slate-700">Hermes is software — not an unlicensed management company.</strong>
+		<strong class="text-slate-700">OpenStrata is software — not an unlicensed management company.</strong>
 		Three compliant paths:
 	</p>
 	<div class="grid md:grid-cols-3 gap-6">
 		{#each hermesPositioning.paths as path}
 			<div class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all">
 				<h3 class="font-bold text-slate-800 text-lg">{path.title}</h3>
-				<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc}</p>
+				<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc.replace(/\bHermes\b/g, 'OpenStrata')}</p>
 				<span class="mt-4 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{path.legal}</span>
 			</div>
 		{/each}
@@ -127,14 +131,14 @@
 						{i === 0 ? 'bg-brand-600' : i === 1 ? 'bg-bitcoin' : 'bg-bc-blue'}">
 						{i + 1}
 					</div>
-					<h3 class="font-bold text-slate-800 text-lg">{product.name}</h3>
+					<h3 class="font-bold text-slate-800 text-lg">{product.name === 'Hermes Strata' ? 'OpenStrata' : product.name}</h3>
 					<p class="text-sm font-semibold text-brand-600 mt-1">{product.role}</p>
 					<p class="mt-3 text-sm text-slate-500">{product.desc}</p>
 				</div>
 			{/each}
 		</div>
 		<p class="mt-8 text-center text-slate-600 max-w-2xl mx-auto">
-			<strong>Hermes runs your strata. Satohash proves it happened. OpenStrata lets you take your history with you.</strong>
+			<strong>OpenStrata runs your building. Satohash proves it happened. The protocol lets you take your history with you.</strong>
 		</p>
 	</div>
 </section>
@@ -146,7 +150,7 @@
 			<h3 class="text-xl font-bold text-slate-800">BTC War Chest</h3>
 			<p class="mt-3 text-slate-600 leading-relaxed">
 				Council votes to allocate <strong>{warChest.allocPct}</strong> of annual budget into a multisig treasury hedge.
-				Keys stay on council hardware wallets. Hermes watches — never custodies.
+				Keys stay on council hardware wallets. OpenStrata watches — never custodies.
 				Disclosed on Form B. Purpose: {warChest.purpose}.
 			</p>
 		</div>

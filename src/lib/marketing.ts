@@ -83,9 +83,9 @@ export const costSavings = {
 	paymentMethods: [
 		{ method: 'Credit Card', rate: 0.03, fixed: 0.30, annualCost: 9000, label: '3% + $0.30/txn' },
 		{ method: 'Manual E-Transfer', rate: 0, fixed: 0, annualCost: 2400, label: '~$200/mo manager labour' },
-		{ method: 'Hermes Auto E-Transfer', rate: 0, fixed: 0, annualCost: 600, label: '~$50/mo reconciliation' },
+		{ method: 'Auto E-Transfer', rate: 0, fixed: 0, annualCost: 600, label: '~$50/mo reconciliation', recommended: true },
 		{ method: 'Lightning (1%)', rate: 0.01, fixed: 0, annualCost: 3000, label: '~1% routing fee' },
-		{ method: 'Hermes + Lightning', rate: 0.005, fixed: 0, annualCost: 1500, label: 'Blended 0.5%' }
+		{ method: 'E-Transfer + Lightning', rate: 0.005, fixed: 0, annualCost: 1500, label: 'Blended 0.5%', recommended: true }
 	],
 	managerSavings: [
 		{ task: 'Monthly fee reconciliation', traditional: '4 hrs', hermes: '15 min', saving: '94%', traditionalHrs: 4, hermesHrs: 0.25 },

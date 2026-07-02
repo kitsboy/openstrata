@@ -10,9 +10,7 @@
 		{ file: 'WORKPLAN.md', title: 'Workplan', desc: 'Phase tracker, file map, build commands', href: '/roadmap' },
 		{ file: 'BCFSA-STRATEGY.md', title: 'BCFSA Strategy', desc: 'Competitive positioning within licensing law — three GTM paths', href: '/about' },
 		{ file: 'BC-STRATA-COMPLIANCE.md', title: 'BC Compliance KB', desc: 'SPA workflows, quorum, voting, retention, localization', href: '/compliance' },
-		{ file: 'ROADMAP.md', title: 'Roadmap', desc: 'Timeline, jurisdictions, integrations', href: '/roadmap' },
-		{ file: 'KIMI-HANDOFF.md', title: 'Kimi Handoff', desc: 'M4 agent instructions — read before touching codebase', href: null },
-		{ file: 'hermes-strata-app-framework-v2.md', title: 'Hermes Framework v2', desc: 'Architecture, Rosa/Ziggy agents, install SOP, modules', href: null }
+		{ file: 'ROADMAP.md', title: 'Roadmap', desc: 'Timeline, jurisdictions, integrations', href: '/roadmap' }
 	];
 
 	const installSteps = [

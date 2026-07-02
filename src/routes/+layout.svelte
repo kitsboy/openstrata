@@ -20,15 +20,15 @@
 			<a href="/" class="flex items-center gap-3 no-underline group">
 				<img
 					src="/logo.png"
-					alt="Hermes Strata"
+					alt="Opens Strata"
 					class="h-10 w-10 rounded-lg object-cover shadow-md shadow-black/10 group-hover:shadow-lg transition-shadow"
 				/>
 				<div>
 					<span class="block text-lg font-bold tracking-tight text-slate-800 group-hover:text-brand-700 transition-colors">
-						Hermes Strata
+						Opens Strata
 					</span>
 					<span class="block text-[10px] font-medium uppercase tracking-widest text-slate-400">
-						OpenStrata · Give A Bit
+						Always Open · Give A Bit
 					</span>
 				</div>
 			</a>
@@ -118,10 +118,10 @@
 					<div class="flex items-center gap-3 mb-4">
 						<img
 							src="/logo.png"
-							alt="Hermes Strata"
+							alt="Opens Strata"
 							class="h-10 w-10 rounded-lg object-cover shadow-sm"
 						/>
-						<span class="font-bold text-slate-800">Hermes Strata</span>
+						<span class="font-bold text-slate-800">Opens Strata</span>
 					</div>
 					<p class="text-sm text-slate-500 leading-relaxed">
 						Sovereign strata corporation management for BC, Canada, and beyond.
