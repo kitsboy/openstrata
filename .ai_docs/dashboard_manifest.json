@@ -1,0 +1,49 @@
+{
+  "project": "openstrata",
+  "displayName": "Hermes Strata (OpenStrata)",
+  "domain": "openstrata.giveabit.io",
+  "framework": "SvelteKit",
+  "frameworkVersion": "2",
+  "language": "TypeScript",
+  "css": "Tailwind CSS 4",
+  "type": "SPA/app",
+  "subtype": "static-spa",
+  "buildTool": "Vite",
+  "buildToolVersion": "6",
+  "adapter": "@sveltejs/adapter-static",
+  "adapterVersion": "3.0.10",
+  "adapterConfig": {
+    "fallback": "404.html"
+  },
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "buildOutputDir": "build",
+  "devPort": 5173,
+  "previewPort": 4173,
+  "hosting": "Cloudflare Pages",
+  "repository": "https://github.com/kitsboy/openstrata",
+  "branch": "main",
+  "hasRuntimeDependencies": false,
+  "routeCount": 11,
+  "routes": [
+    "/",
+    "/about",
+    "/blog",
+    "/compliance",
+    "/docs",
+    "/pitch",
+    "/roadmap",
+    "/rss",
+    "/spec",
+    "/tools",
+    "/tools/wizard"
+  ],
+  "spaFallback": "404.html",
+  "isSvelteKit": true,
+  "isReact": false,
+  "isNextjs": false,
+  "agentDocsVersion": "1.0.0"
+}
