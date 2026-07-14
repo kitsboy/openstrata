@@ -91,3 +91,6 @@ Legacy software (Yardi, AppFolio equivalents for strata) is expensive, US-centri
 ---
 
 *Safe Harbour: Educational purposes only. Consult qualified professionals for legal and financial decisions.*
+
+---
+**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)

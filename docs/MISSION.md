@@ -37,3 +37,6 @@ A jurisdiction-aware software platform that automates full management company op
 - **Hybrid councils** — day-to-day in Hermes, licensed oversight for trust/compliance
 - **Bitcoin-native property owners** — multisig war chest, Lightning fee payments, Satohash proofs
 - **Give A Bit community** — proving sovereign finance works in the most regulated industries
+
+---
+**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)

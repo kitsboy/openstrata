@@ -68,3 +68,6 @@ Config-driven via `config.yaml` — one codebase, swap law packs.
 | Umbrel/Tailscale | Ready | Local-first hosting |
 | Unchained/Casa | Future | Multisig provider option |
 | BCFSA | N/A (regulator) | Audit-ready exports |
+
+---
+**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)

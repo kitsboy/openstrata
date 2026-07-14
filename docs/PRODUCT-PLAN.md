@@ -132,3 +132,6 @@ Financial, Assets, Governance, Meetings, Conveyancing, People, Sovereign.
 | Sovereign | $6/unit + $49/bldg | + Lightning, Satohash proofs |
 | Advanced | +$99/bldg/mo | + Multisig, war chest, agent pay |
 | Brokerage Pro | Custom | Multi-building, white-label, API |
+
+---
+**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)
