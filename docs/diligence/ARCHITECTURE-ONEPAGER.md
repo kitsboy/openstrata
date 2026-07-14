@@ -14,63 +14,63 @@ tags: [diligence, pitch, mvp, giveabit]
 ---
 # OpenStrata — Technical Architecture One-Pager
 
-            **Live:** https://openstrata.giveabit.io · **Repo:** https://github.com/kitsboy/openstrata · **Version:** `0.1.0`
+**Live:** https://openstrata.giveabit.io · **Repo:** https://github.com/kitsboy/openstrata · **Version:** `0.1.0`
 
-            ## Stack
-            SvelteKit 5 · Tailwind 4 · TypeScript · static CF Pages
+## Stack
+SvelteKit 5 · Tailwind 4 · TypeScript · static CF Pages
 
-            ## System map (boxes)
-            ```
-            [User browser]
-                 |
-                 v
-            [SPA / static app on Cloudflare Pages]
-                 |
+## System map (boxes)
+```
+[User browser]
+     |
+     v
+[SPA / static app on Cloudflare Pages]
+     |
         +--------+--------+
-        |                 |
+|                 |
         v                 v
-            [Public APIs / LN / Nostr / OTS]   [Optional M3/M4 services]
-            ```
+[Public APIs / LN / Nostr / OTS]   [Optional M3/M4 services]
+```
 
-            ## Architecture notes
-            - Static/SvelteKit site for standard + product narrative
+## Architecture notes
+- Static/SvelteKit site for standard + product narrative
 - Spec/docs-first development (PRODUCT-PLAN, ROADMAP)
 - Interop targets: Bitcoin · Lightning · Nostr
 - No heavy proprietary backend in MVP
 - Open implementation path for third parties
 
-            ## Deploy path
-            git push main → Cloudflare Pages auto
+## Deploy path
+git push main → Cloudflare Pages auto
 
-            ## Data & privacy posture
-            Prefer client-side and user-held keys. Minimize PII. Bitcoin rails where payments exist. See project privacy/security docs if present.
+## Data & privacy posture
+Prefer client-side and user-held keys. Minimize PII. Bitcoin rails where payments exist. See project privacy/security docs if present.
 
-            ## MVP boundary
-            - **In MVP now:** Live site + mission + roadmap scaffolding.
-            - **Explicitly later:** v0.1 schema, reference libs, interop demos with suite apps.
+## MVP boundary
+- **In MVP now:** Live site + mission + roadmap scaffolding.
+- **Explicitly later:** v0.1 schema, reference libs, interop demos with suite apps.
 
-            ## Dependencies
-            Nostr/LN/Bitcoin app partners
+## Dependencies
+Nostr/LN/Bitcoin app partners
 
-            ## How a technical helper starts (15 min)
-            ```bash
-            git clone https://github.com/kitsboy/openstrata.git
-            cd openstrata
-            # typically:
-            npm install
-            npm run dev
-            ```
-            Read `README.md`, `docs/DEPLOYMENT.md` (or `DEPLOY.md`), and this file.
+## How a technical helper starts (15 min)
+```bash
+git clone https://github.com/kitsboy/openstrata.git
+cd openstrata
+# typically:
+npm install
+npm run dev
+```
+Read `README.md`, `docs/DEPLOYMENT.md` (or `DEPLOY.md`), and this file.
 
-            ## Known gaps (full disclosure)
-            See Investor one-pager risks + project `LATEST-UPDATE.md` / handoffs. Do not claim production hardness without tests/deploy verification.
+## Known gaps (full disclosure)
+See Investor one-pager risks + project `LATEST-UPDATE.md` / handoffs. Do not claim production hardness without tests/deploy verification.
 
-            ## Related
-            - [Investor one-pager](./INVESTOR-ONEPAGER.md)
-            - [Ask sheet](./ASK-SHEET.md)
-            - Deeper docs: `docs/ARCHITECTURE.md` (if present), `SOURCE-OF-TRUTH.md`, `docs/.ai_docs/`
+## Related
+- [Investor one-pager](./INVESTOR-ONEPAGER.md)
+- [Ask sheet](./ASK-SHEET.md)
+- Deeper docs: `docs/ARCHITECTURE.md` (if present), `SOURCE-OF-TRUTH.md`, `docs/.ai_docs/`
 
-            ---
+---
 **Safe Harbour:** Educational / informational only. Not financial, legal, or investment advice.
 Bitcoin involves risk. DYOR. Not your keys, not your cheese.
 Part of the [Give A Bit](https://giveabit.io) family.
