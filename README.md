@@ -1,57 +1,35 @@
----
-title: README
-project: openstrata
-version: 0.1.0
-audience: devs
-last_updated: 2026-06-22
-owner: Nova (Product Management & Documentation)
----
+# OpenStrata — Sovereign Data Portability
 
-# openstrata
+**Open data marketplace built on Bitcoin, Lightning, and Nostr.**  
+Sovereign data portability — own your data, control who accesses it, get paid when it's used.
 
-> Your sovereign identity, portable across every Bitcoin layer.
+## What is OpenStrata?
 
-Open standard for sovereign data portability and decentralized identity bridging across Bitcoin, Lightning, and Nostr protocols.
+A SvelteKit 5 + Tailwind 4 + TypeScript landing page and platform for sovereign data portability. Users control their data via Bitcoin, Lightning, and Nostr identities. No central authority, no data silos.
 
-## 🚀 Quick Start
+## Live
+
+- **Production:** https://openstrata.giveabit.io ✅
+- **Repository:** https://github.com/kitsboy/openstrata
+- **Auto-deploy:** Main branch → Cloudflare Pages
+
+## Tech Stack
+
+- SvelteKit 5 + TypeScript
+- Tailwind CSS v4
+- Cloudflare Pages (auto-deploy)
+
+## Development
 
 ```bash
-# Clone the repo
-git clone https://github.com/kitsboy/openstrata.git
-cd openstrata
-
-# Install dependencies
-npm install  # or equivalent
-
-# Run locally
-npm run dev  # or equivalent
+cd ~/projects/openstrata
+npm run dev
 ```
 
-## 📖 Documentation
+## Docs
 
-- [SOURCE-OF-TRUTH.md](./SOURCE-OF-TRUTH.md) — Canonical project doc
-- [CHANGELOG.md](./CHANGELOG.md) — Release notes
+- `SOURCE-OF-TRUTH.md` — Canonical project document
+- `docs/KIMI-HANDOFF.md` — Session handoff log
+- `docs/diligence/` — Investor and partner packs
 
-## 🔧 Tech Stack
-
-- [Primary language]
-- [Framework]
-- [Infrastructure]
-
-## 🌐 Live
-
-Not yet deployed.
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-## 📄 License
-
-MIT — see [LICENSE](./LICENSE).
-
-## ⚖️ Legal
-
-**Safe Harbour:** This project is provided for informational and educational purposes only. It does not constitute financial, legal, or investment advice. Bitcoin and cryptocurrency investments carry risk. Always do your own research. Not your keys, not your cheese.
-
-Part of the [Give A Bit](https://giveabit.io) family — Bitcoin suite of services, education, and hope.
+*Safe Harbour · Part of the [Give A Bit](https://giveabit.io) family.*
