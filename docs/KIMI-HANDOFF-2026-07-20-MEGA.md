@@ -84,19 +84,3 @@ Root: `AGENTS.md`, `GROK-SESSION-PROTOCOL.md`, `README.md`, `SOURCE-OF-TRUTH.md`
 All public outputs stay Bitcoin-sovereign + Safe Harbour.
 
 — Kimi · THOR · 2026-07-20
-
----
-
-# KIMI-HANDOFF — OpenStrata
-
-## Initial Setup — 2026-07-19
-
-**Done:**
-- Created AGENTS.md
-- Created GROK-SESSION-PROTOCOL.md
-- Created DILIGENCE.md
-- Created docs/ directory with KIMI-HANDOFF.md
-- Set up full documentation suite matching Give A Bit standards
-
-**Next:**
-- Feature development as prioritized on Kanban
