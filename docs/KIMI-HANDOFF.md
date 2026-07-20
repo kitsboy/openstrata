@@ -1,3 +1,22 @@
+## Session — 2026-07-19
+
+**Done:**
+- Added thin Satohash API client `src/lib/satohash.ts` (sha256Hex, stampHash, getApiHealth, getStamp, verifyUrl, stampGuideUrl)
+- Client id `openstrata`; env `VITE_SATOHASH_API_URL` / `VITE_SATOHASH_URL` / optional `VITE_SATOHASH_KEY`
+- Graceful offline (ok:false, no throw); API live at https://api.satohash.io
+- No UI wiring (no integrations barrel); no secrets committed
+- `npm run build` OK
+
+**Decisions:**
+- Same family client pattern as motopass/tadbuy
+- No unit test runner in package.json — skipped tests
+
+**Git State:**
+- SHA: `180ccfa46a243c61a2c19bcfc58ecdc760588696`
+- Unpushed: this commit
+
+---
+
 # KIMI HANDOFF — Hermes Strata / OpenStrata
 
 **Date:** July 2026  
