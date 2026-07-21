@@ -4,3 +4,10 @@
 
 /assets/*.js
   Content-Type: application/javascript
+
+# HQ product metrics envelope — short cache, CORS for hq.giveabit.io poll
+/metrics.json
+  Content-Type: application/json
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, HEAD, OPTIONS
