@@ -160,10 +160,10 @@
 					for licensed brokerages, self-managed councils, or hybrid. Fiat today. Bitcoin sovereignty optional.
 				</p>
 				<div class="mt-8 flex flex-wrap gap-3">
-					<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3.5 text-sm font-semibold text-white no-underline shadow-lg shadow-brand-500/25 hover:bg-brand-500 hover:shadow-xl transition-all">
+					<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-6 py-3.5 text-sm font-semibold text-white no-underline shadow-lg shadow-brand-500/25 hover:bg-brand-500 hover:shadow-xl transition-all">
 						Strata Tool →
 					</a>
-					<a href="/about" class="inline-flex items-center gap-2 rounded-xl border border-bitcoin/30 bg-amber-50 px-6 py-3.5 text-sm font-semibold text-bitcoin no-underline hover:border-bitcoin/50 transition-all">
+					<a href="/about" class="inline-flex items-center gap-2 rounded-xl border border-amber-700/30 bg-amber-50 px-6 py-3.5 text-sm font-semibold text-amber-700 no-underline hover:border-bitcoin/50 transition-all">
 						Why Trusted Money
 					</a>
 					<a href="/roadmap" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all">
@@ -214,7 +214,7 @@
 					<div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
 						<div class="h-full rounded-full bg-brand-500 transition-all" style="width: {eprProgress}%"></div>
 					</div>
-					<p class="mt-1.5 text-[10px] text-slate-400">Deadline: Dec 31, 2026</p>
+					<p class="mt-1.5 text-[10px] text-slate-600">Deadline: Dec 31, 2026</p>
 				</div>
 
 				<div class="glass-card rounded-2xl p-5">

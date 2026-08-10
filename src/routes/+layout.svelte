@@ -144,7 +144,7 @@
 				</div>
 
 				<div>
-					<h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Platform</h4>
+					<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Platform</h3>
 					<ul class="space-y-2.5">
 						{#each navItems as item}
 							<li>
@@ -157,7 +157,7 @@
 				</div>
 
 				<div>
-					<h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Jurisdictions</h4>
+					<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Jurisdictions</h3>
 					<ul class="space-y-2.5">
 						{#each jurisdictions as j}
 							<li class="flex items-center gap-2 text-sm {j.active ? 'text-slate-600' : 'text-slate-400'}">
@@ -174,7 +174,7 @@
 				</div>
 
 				<div>
-					<h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Get Involved</h4>
+					<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Get Involved</h3>
 					<div class="space-y-4">
 						<JobsDropdown />
 						<button

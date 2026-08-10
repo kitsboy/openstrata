@@ -1,0 +1,8 @@
+# Hermes Strata
+
+Sovereign Strata Corporation dashboard — strata governance, treasury, and property-management tools on Bitcoin rails.
+
+- [Hermes Strata](https://openstrata.giveabit.io/)
+- [Tools](https://openstrata.giveabit.io/tools)
+- [About](https://openstrata.giveabit.io/about)
+- [Roadmap](https://openstrata.giveabit.io/roadmap)
