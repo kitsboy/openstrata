@@ -1,0 +1,12 @@
+# openstrata.giveabit.io — Cloudflare Pages _headers (added 2026-08-20 security sweep)
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.satohash.io https://mempool.space
+
+# HTML — no cache (always fresh)
+/*
+  Cache-Control: public, max-age=0, must-revalidate
