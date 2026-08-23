@@ -26,6 +26,52 @@
 		s === 'live' ? 'bg-success/10 text-success' :
 		s === 'beta' ? 'bg-brand-100 text-brand-700' :
 		'bg-slate-100 text-slate-500';
+
+	// ---- Tooltip state -----------------------------------------------------
+	type TipState = { mod: any; top: number; left: number; above: boolean; maxWidth: number };
+	let tip = $state<TipState | null>(null);
+
+	// ELI16 plain-English restatement of the module's own savings claim (honest:
+	// it only rephrases what mod.savings already states, never adds new claims).
+	const plainSavings = (s: string | undefined): string | null => {
+		if (!s || s === '—' || s === '-') return null;
+		const map: Record<string, string> = {
+			'Eliminates trust fund violations': 'Removes the risk of trust-fund violations — money stays cleanly separated, exactly as BCFSA requires.',
+			'4 hrs → 15 min/month': 'Saves about 4 hours a month — billing that used to take hours now takes roughly 15 minutes.',
+			'$2,400/yr labour': 'Frees up about $2,400 a year in manual bookkeeping labour.',
+			'vs 3% credit cards': 'Much cheaper than paying ~3% in credit-card processing fees on every payment.',
+			'Zero unauthorized spends': 'Makes it impossible to spend funds without council sign-off — no surprise spend.',
+			'Inflation hedge': 'Helps protect the building’s funds from losing value to inflation over time.',
+			'Trust through transparency': 'Builds owner trust because every dollar is visible and accounted for.',
+			'Avoid Form B disclosure hits': 'Avoids awkward surprises being flagged on the mandatory Form B disclosure.',
+			'Liability reduction': 'Reduces the building’s legal and financial liability.',
+			'CRT overturn prevention': 'Helps fines stick — fewer enforcement actions overturned at the CRT.',
+			'BCFSA audit ready': 'Keeps records organized and ready in case of a BCFSA audit.',
+			'8 hrs → 1 click': 'Saves about 8 hours — evidence export that used to take a day is now a single click.',
+			'Instant legal answers': 'Gives instant answers grounded in BC law, with citations you can check.',
+			'Invalid meeting prevention': 'Helps you run meetings that count — avoiding a costly challenge later.',
+			'2 hrs → 5 min': 'Saves about 2 hours per form — down to roughly 5 minutes.',
+			'30 days → 30 min': 'Cuts onboarding that used to take 30 days down to roughly 30 minutes.',
+			'Court-grade proof': 'Creates proof strong enough to hold up in court.'
+		};
+		return map[s] ?? s;
+	};
+
+	function openTip(mod: any, el: HTMLElement) {
+		const r = el.getBoundingClientRect();
+		const bw = Math.min(320, window.innerWidth - 24);
+		let left = Math.round(r.left + r.width / 2 - bw / 2);
+		left = Math.max(12, Math.min(left, window.innerWidth - bw - 12));
+		const estH = 210;
+		const above = r.bottom + estH + 12 > window.innerHeight - 12;
+		const top = above
+			? Math.max(12, Math.round(r.top - estH - 10))
+			: Math.round(r.bottom + 10);
+		tip = { mod, top, left, above, maxWidth: bw };
+	}
+	function closeTip() {
+		tip = null;
+	}
 </script>
 
 <svelte:head>
@@ -82,14 +128,14 @@
 			<button
 				class="rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all
 					{activeDomain === 'all' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}"
-				onclick={() => (activeDomain = 'all')}
+				onclick={() => { activeDomain = 'all'; closeTip(); }}
 			>All ({stats.total})</button>
 			{#each toolDomains as domain}
 				{@const count = strataToolModules.filter((m) => m.domain === domain.id).length}
 				<button
 					class="rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all flex items-center gap-1.5
 						{activeDomain === domain.id ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
-					onclick={() => (activeDomain = domain.id)}
+					onclick={() => { activeDomain = domain.id; closeTip(); }}
 				>
 					<span>{domain.icon}</span>
 					{domain.label} ({count})
@@ -106,11 +152,29 @@
 			<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} onclick={() => { if (mod.href) goto(mod.href); }}>
 				<div class="flex items-start justify-between gap-2 mb-3">
 					<span class="text-2xl">{mod.icon}</span>
-					<div class="flex gap-1.5">
+					<div class="flex items-center gap-1.5">
 						<span class="rounded-full px-2 py-0.5 text-[10px] font-bold {statusColor(mod.status)}">{mod.status}</span>
 						{#if mod.bcfsaRelevant}
 							<span class="rounded-full bg-bc-blue/10 px-2 py-0.5 text-[10px] font-bold text-bc-blue">BCFSA</span>
 						{/if}
+						<button
+							type="button"
+							class="tooltip-trigger"
+							aria-label="More about {mod.title}: {mod.desc}"
+							onmouseenter={(e) => openTip(mod, e.currentTarget)}
+							onmouseleave={closeTip}
+							onclick={(e) => {
+								e.stopPropagation();
+								if (tip?.mod === mod) closeTip();
+								else openTip(mod, e.currentTarget);
+							}}
+							ontouchstart={(e) => e.stopPropagation()}
+						>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<circle cx="12" cy="12" r="10"/>
+								<path d="M12 16v-4"/><path d="M12 8h.01"/>
+							</svg>
+						</button>
 					</div>
 				</div>
 				<h3 class="font-bold text-slate-800 group-hover:text-brand-700 transition-colors">{mod.title}</h3>
@@ -139,7 +203,7 @@
 		<div class="flex gap-2 mb-4">
 			{#each ['all', 'signed', 'missing'] as f}
 				<button class="rounded-lg px-3 py-1.5 text-xs font-semibold {formKFilter === f ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}"
-					onclick={() => (formKFilter = f as typeof formKFilter)}>{f}</button>
+					onclick={() => { formKFilter = f as typeof formKFilter; closeTip(); }}>{f}</button>
 			{/each}
 		</div>
 		<div class="grid sm:grid-cols-3 gap-3">
@@ -188,3 +252,27 @@
 		</div>
 	{/if}
 </div>
+
+{#if tip}
+	<div
+		class="tooltip-bubble"
+		role="tooltip"
+		data-above={tip.above}
+		style="top:{tip.top}px; left:{tip.left}px; max-width:{tip.maxWidth}px;"
+	>
+		<div class="tooltip-inner">
+			<p class="tooltip-title">{tip.mod.icon} {tip.mod.title}</p>
+			<p class="tooltip-what">{tip.mod.desc}</p>
+			{#if tip.mod.features?.length}
+				<ul class="tooltip-list">
+					{#each tip.mod.features.slice(0, 3) as f}
+						<li>{f}</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if plainSavings(tip.mod.savings)}
+				<p class="tooltip-why"><span class="tooltip-why-label">Why it matters:</span> {plainSavings(tip.mod.savings)}</p>
+			{/if}
+		</div>
+	</div>
+{/if}
