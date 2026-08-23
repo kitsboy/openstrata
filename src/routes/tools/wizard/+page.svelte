@@ -216,16 +216,16 @@
 					<div class="space-y-5">
 						<div>
 							<label class="block text-sm font-semibold text-slate-700 mb-1.5">Strata Corporation Name</label>
-							<input type="text" bind:value={corpName} placeholder="e.g. The Towers Strata Corporation" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white" />
+							<input type="text" bind:value={corpName} placeholder="e.g. The Towers Strata Corporation" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 						</div>
 						<div>
 							<label class="block text-sm font-semibold text-slate-700 mb-1.5">Building Address</label>
-							<input type="text" bind:value={address} placeholder="e.g. 1234 Maple Street, Vancouver BC" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white" />
+							<input type="text" bind:value={address} placeholder="e.g. 1234 Maple Street, Vancouver BC" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 						</div>
 						<div class="grid sm:grid-cols-2 gap-4">
 							<div>
 								<label class="block text-sm font-semibold text-slate-700 mb-1.5">Fiscal Year Start</label>
-								<select bind:value={fiscalYearStart} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white">
+								<select bind:value={fiscalYearStart} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2">
 									{#each ['January','February','March','April','May','June','July','August','September','October','November','December'] as m}
 										<option value={m}>{m}</option>
 									{/each}
@@ -236,7 +236,7 @@
 									<div class="relative">
 										<input type="checkbox" bind:checked={isSelfManaged} class="sr-only peer" />
 										<div class="h-7 w-14 rounded-full bg-slate-200 peer-checked:bg-success transition-colors"></div>
-										<div class="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow peer-checked:translate-x-7 transition-transform"></div>
+										<div class="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-surface-2 shadow peer-checked:translate-x-7 transition-transform"></div>
 									</div>
 									<div class="text-sm"><span class="font-semibold text-slate-700">Self-Managed</span><br /><span class="text-slate-400 text-xs">SPA-permitted self-management</span></div>
 								</label>
@@ -245,7 +245,7 @@
 						{#if !isSelfManaged}
 							<div>
 								<label class="block text-sm font-semibold text-slate-700 mb-1.5">BCFSA License #</label>
-								<input type="text" bind:value={bcfsaLicense} placeholder="e.g. BCFSA-STR-2026-XXXX" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white" />
+								<input type="text" bind:value={bcfsaLicense} placeholder="e.g. BCFSA-STR-2026-XXXX" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 							</div>
 						{/if}
 					</div>
@@ -259,11 +259,11 @@
 					<div class="grid sm:grid-cols-3 gap-4 mb-6">
 						<div>
 							<label class="block text-xs font-semibold text-slate-600 mb-1">Number of Units</label>
-							<input type="number" bind:value={unitCount} min="1" max="500" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white" />
+							<input type="number" bind:value={unitCount} min="1" max="500" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 						</div>
 						<div>
 							<label class="block text-xs font-semibold text-slate-600 mb-1">Avg Sq Ft</label>
-							<input type="number" bind:value={defaultSqft} min="300" max="5000" step="50" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white" />
+							<input type="number" bind:value={defaultSqft} min="300" max="5000" step="50" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 						</div>
 						<div class="flex items-end">
 							<button class="rounded-xl bg-brand-100 px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-200 transition-all w-full" onclick={addUnit}>+ Add Unit</button>
@@ -271,7 +271,7 @@
 					</div>
 					<div class="max-h-72 overflow-y-auto space-y-2 pr-2" style="scrollbar-width:thin">
 						{#each units as unit, i}
-							<div class="flex items-center gap-3 rounded-xl border border-border p-3 hover:border-brand-200 transition-all {i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+							<div class="flex items-center gap-3 rounded-xl border border-border p-3 hover:border-brand-200 transition-all {i % 2 === 0 ? 'bg-surface-2' : 'bg-surface-3'}">
 								<span class="font-bold text-slate-700 w-14">#{unit.id}</span>
 								<span class="text-sm text-slate-500 w-20">{unit.sqft} sqft</span>
 								<div class="flex gap-3 flex-1">
@@ -295,13 +295,13 @@
 						<div class="grid sm:grid-cols-2 gap-4">
 							<div>
 								<label class="block text-sm font-semibold text-slate-700 mb-1.5">Operating Fund Bank</label>
-								<select bind:value={operatingBank} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white">
+								<select bind:value={operatingBank} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2">
 									<option>Vancouver Credit Union</option><option>Royal Bank of Canada</option><option>TD Canada Trust</option><option>Coast Capital Savings</option><option>Vancity</option>
 								</select>
 							</div>
 							<div>
 								<label class="block text-sm font-semibold text-slate-700 mb-1.5">CRF Trust Bank</label>
-								<select bind:value={crfBank} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white">
+								<select bind:value={crfBank} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2">
 									<option>Vancouver Credit Union \u2014 CRF Trust</option><option>Royal Bank of Canada \u2014 CRF</option><option>TD Canada Trust \u2014 Reserve</option>
 								</select>
 							</div>
@@ -315,7 +315,7 @@
 							<label class="block text-sm font-semibold text-slate-700 mb-3">Sub-Accounts <span class="text-slate-400 font-normal">(optional)</span></label>
 							<div class="grid sm:grid-cols-2 gap-2">
 								{#each subAccounts as sa}
-									<label class="flex items-center gap-3 rounded-xl border border-border p-3 cursor-pointer hover:border-brand-200 transition-all {sa.enabled ? 'bg-brand-50 border-brand-200' : 'bg-white'}">
+									<label class="flex items-center gap-3 rounded-xl border border-border p-3 cursor-pointer hover:border-brand-200 transition-all {sa.enabled ? 'bg-brand-50 border-brand-200' : 'bg-surface-2'}">
 										<input type="checkbox" bind:checked={sa.enabled} class="rounded text-brand-500" />
 										<span>{sa.icon}</span><span class="text-sm text-slate-700">{sa.name}</span>
 									</label>
@@ -332,7 +332,7 @@
 					</div>
 					<div class="grid sm:grid-cols-2 gap-3">
 						{#each availableServices as svc}
-							<button class="flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all {selectedServices.includes(svc.id) ? 'border-brand-500 bg-brand-50' : 'border-border bg-white hover:border-brand-200'}" onclick={() => toggleService(svc.id)}>
+							<button class="flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all {selectedServices.includes(svc.id) ? 'border-brand-500 bg-brand-50' : 'border-border bg-surface-2 hover:border-brand-200'}" onclick={() => toggleService(svc.id)}>
 								<span class="text-2xl">{svc.icon}</span>
 								<div><span class="text-sm font-semibold text-slate-800">{svc.label}</span><span class="block text-[10px] text-slate-400">{selectedServices.includes(svc.id) ? 'Active' : 'Click to enable'}</span></div>
 							</button>
@@ -347,7 +347,7 @@
 					</div>
 					<div class="space-y-3">
 						{#each paymentRails as rail}
-							<label class="flex items-center gap-4 rounded-2xl border-2 p-5 cursor-pointer transition-all {rail.enabled ? 'border-brand-500 bg-brand-50' : 'border-border bg-white hover:border-brand-200'}">
+							<label class="flex items-center gap-4 rounded-2xl border-2 p-5 cursor-pointer transition-all {rail.enabled ? 'border-brand-500 bg-brand-50' : 'border-border bg-surface-2 hover:border-brand-200'}">
 								<input type="checkbox" bind:checked={rail.enabled} class="rounded text-brand-500 h-5 w-5" />
 								<span class="text-2xl">{rail.icon}</span>
 								<div class="flex-1"><span class="font-bold text-slate-800">{rail.label}</span><p class="text-xs text-slate-500 mt-0.5">{rail.desc}</p></div>
@@ -369,13 +369,13 @@
 						<div><h2 class="text-xl font-bold text-slate-900">Bylaws</h2><p class="text-sm text-slate-500">Use the BC Standard Bylaws pack or import your existing document.</p></div>
 					</div>
 					<div class="grid sm:grid-cols-2 gap-4">
-						<button class="rounded-2xl border-2 p-6 text-left transition-all {bylawChoice === 'standard' ? 'border-brand-500 bg-brand-50' : 'border-border bg-white hover:border-brand-200'}" onclick={() => (bylawChoice = 'standard')}>
+						<button class="rounded-2xl border-2 p-6 text-left transition-all {bylawChoice === 'standard' ? 'border-brand-500 bg-brand-50' : 'border-border bg-surface-2 hover:border-brand-200'}" onclick={() => (bylawChoice = 'standard')}>
 							<span class="text-3xl">{'\u{1F4DC}'}</span>
 							<h3 class="mt-3 font-bold text-slate-800">BC Standard Bylaws</h3>
 							<p class="mt-1 text-sm text-slate-500">Pre-loaded standard pack. CRT-tested. SPA-compliant.</p>
 							<div class="mt-3 flex gap-1.5"><span class="rounded-md bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">SPA s.124\u2013128</span><span class="rounded-md bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">CRT-proof</span></div>
 						</button>
-						<button class="rounded-2xl border-2 p-6 text-left transition-all {bylawChoice === 'import' ? 'border-brand-500 bg-brand-50' : 'border-border bg-white hover:border-brand-200'}" onclick={() => (bylawChoice = 'import')}>
+						<button class="rounded-2xl border-2 p-6 text-left transition-all {bylawChoice === 'import' ? 'border-brand-500 bg-brand-50' : 'border-border bg-surface-2 hover:border-brand-200'}" onclick={() => (bylawChoice = 'import')}>
 							<span class="text-3xl">{'\u{1F4C1}'}</span>
 							<h3 class="mt-3 font-bold text-slate-800">Import Existing Bylaws</h3>
 							<p class="mt-1 text-sm text-slate-500">Upload existing registered bylaws. Hermes maps them to the compliance engine.</p>

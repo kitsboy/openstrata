@@ -15,7 +15,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col mesh-bg">
-	<header class="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md">
+	<header class="sticky top-0 z-50 border-b border-border bg-surface-2/80 backdrop-blur-md">
 		<nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
 			<a href="/" class="flex items-center gap-3 no-underline group">
 				<img
@@ -27,7 +27,7 @@
 					<span class="block text-lg font-bold tracking-tight text-slate-800 group-hover:text-brand-700 transition-colors">
 						Opens Strata
 					</span>
-					<span class="block text-[10px] font-medium uppercase tracking-widest text-slate-400">
+					<span class="block text-[10px] font-medium uppercase tracking-widest text-brand-600/70">
 						Always Open · Give A Bit
 					</span>
 				</div>
@@ -50,7 +50,7 @@
 			<div class="flex items-center gap-3">
 				<select
 					bind:value={selectedJurisdiction}
-					class="hidden sm:block rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-300"
+					class="hidden sm:block rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-300"
 					aria-label="Jurisdiction"
 				>
 					{#each jurisdictions as j}
@@ -85,7 +85,7 @@
 		</nav>
 
 		{#if mobileNavOpen}
-			<div class="lg:hidden border-t border-border bg-white px-6 py-4 space-y-1">
+			<div class="lg:hidden border-t border-border bg-surface-2 px-6 py-4 space-y-1">
 				{#each navItems as item}
 					<a
 						href={item.href}
@@ -111,7 +111,7 @@
 		{@render children()}
 	</main>
 
-	<footer class="border-t border-border bg-white">
+	<footer class="border-t border-border bg-surface-2">
 		<div class="mx-auto max-w-7xl px-6 py-14">
 			<div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
 				<div class="lg:col-span-1">

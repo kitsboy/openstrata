@@ -115,7 +115,7 @@
 							<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
 							{liveLabel} data · synced {updatedAt}
 						</span>
-						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 text-xs font-semibold text-slate-600">
+						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold text-slate-600">
 							₿ ${btcCad.toLocaleString('en-CA', { maximumFractionDigits: 0 })} CAD
 						</span>
 					</div>
@@ -134,7 +134,7 @@
 	</section>
 
 	<!-- Slide 2: Problem -->
-	<section class="pitch-slide bg-white border-y border-border">
+	<section class="pitch-slide bg-surface-2/60 border-y border-border">
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">The Problem</p>
 			<h2 class="text-3xl font-bold text-slate-900 mb-8">
@@ -221,7 +221,7 @@
 	</section>
 
 	<!-- Slide 4: Live treasury + competitive -->
-	<section class="pitch-slide bg-white border-y border-border">
+	<section class="pitch-slide bg-surface-2/60 border-y border-border">
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Live Operations</p>
 			<h2 class="text-3xl font-bold text-slate-900 mb-8">Treasury & Competitive Edge</h2>
@@ -320,7 +320,7 @@
 					<h2 class="text-3xl font-bold text-slate-900 mb-6">What's Next</h2>
 					<div class="space-y-3">
 						{#each roadmapSnapshot as item}
-							<div class="flex gap-4 items-start rounded-xl border border-border bg-white p-4">
+							<div class="flex gap-4 items-start rounded-xl border border-border bg-surface-2 p-4">
 								<span
 									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold
 										{item.status === 'complete'
@@ -367,7 +367,7 @@
 				</a>
 				<a
 					href="/tools/wizard"
-					class="inline-flex items-center gap-2 rounded-xl border-2 border-brand-200 bg-white px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors"
+					class="inline-flex items-center gap-2 rounded-xl border-2 border-brand-200 bg-surface-2 px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors"
 				>
 					Try Building Wizard
 				</a>
@@ -375,7 +375,7 @@
 					href={pitchMeta.github}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-8 py-3.5 text-sm font-semibold text-slate-600 no-underline hover:border-brand-300 transition-colors"
+					class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-8 py-3.5 text-sm font-semibold text-slate-600 no-underline hover:border-brand-300 transition-colors"
 				>
 					<Icon name="github" class="h-4 w-4" />
 					GitHub

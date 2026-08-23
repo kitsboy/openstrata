@@ -69,10 +69,10 @@
 				</div>
 			</div>
 
-			<div class="flex rounded-xl bg-slate-100 p-1 mb-6">
+			<div class="flex rounded-xl bg-surface-3 p-1 mb-6">
 				<button
 					class="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all
-						{tab === 'btc' ? 'bg-white text-bitcoin shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+						{tab === 'btc' ? 'bg-surface-2 text-bitcoin shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
 					onclick={() => (tab = 'btc')}
 				>
 					<Icon name="bitcoin" class="h-4 w-4" />
@@ -80,7 +80,7 @@
 				</button>
 				<button
 					class="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all
-						{tab === 'ln' ? 'bg-white text-lightning shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+						{tab === 'ln' ? 'bg-surface-2 text-lightning shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
 					onclick={() => (tab = 'ln')}
 				>
 					<Icon name="lightning" class="h-4 w-4" />
@@ -106,7 +106,7 @@
 			{#if tab === 'btc'}
 				<div class="space-y-4">
 					<div class="flex justify-center">
-						<div class="rounded-xl border-2 border-dashed border-slate-200 bg-white p-4">
+						<div class="rounded-xl border-2 border-dashed border-brand-200 bg-surface-2 p-4">
 							<svg viewBox="0 0 100 100" class="h-32 w-32">
 								<rect width="100" height="100" fill="white"/>
 								{#each Array(8) as _, row}

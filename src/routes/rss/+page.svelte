@@ -55,7 +55,7 @@
 				class="rounded-full px-4 py-2 text-sm font-semibold transition-all
 					{selectedCategory === cat
 						? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-						: 'bg-white border border-border text-slate-600 hover:border-brand-300'}"
+						: 'bg-surface-2 border border-border text-slate-600 hover:border-brand-300'}"
 				onclick={() => (selectedCategory = cat)}
 			>
 				{cat}
@@ -116,7 +116,7 @@
 </section>
 
 <!-- API Section -->
-<section class="border-t border-border bg-white">
+<section class="border-t border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="text-center mb-10">
 			<h2 class="text-2xl font-bold text-slate-900">Hermes REST API</h2>

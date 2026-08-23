@@ -73,7 +73,7 @@
 </section>
 
 <!-- Manager time savings -->
-<section class="border-y border-border bg-white">
+<section class="border-y border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<h2 class="text-2xl font-bold text-slate-900 mb-8">Manager Time Savings</h2>
 		<div class="overflow-x-auto">
@@ -158,7 +158,7 @@
 			<h3 class="text-xl font-bold text-slate-800 mb-4">By the Numbers</h3>
 			<div class="grid grid-cols-2 gap-3">
 				{#each competitiveAdvantages as adv}
-					<div class="rounded-xl bg-white border border-border p-4 text-center">
+					<div class="rounded-xl bg-surface-2 border border-border p-4 text-center">
 						<div class="text-2xl font-bold text-brand-600">{adv.metric}</div>
 						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
 						<div class="text-[10px] text-slate-400">vs {adv.vs}</div>
@@ -173,7 +173,7 @@
 	<div class="mx-auto max-w-7xl px-6 py-14 text-center text-white">
 		<h2 class="text-2xl font-bold">Ready to run smarter?</h2>
 		<div class="mt-6 flex flex-wrap justify-center gap-4">
-			<a href="/tools" class="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors">
+			<a href="/tools" class="rounded-xl bg-surface-2 px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors">
 				Explore Strata Tool →
 			</a>
 			<a href="/roadmap" class="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-bold text-white no-underline hover:bg-white/10 transition-colors">

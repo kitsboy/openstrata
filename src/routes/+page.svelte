@@ -147,7 +147,7 @@
 						<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
 						BC-First · BCFSA-Aware Software
 					</span>
-					<span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 text-xs font-semibold text-slate-600">
+					<span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold text-slate-600">
 						{toolStats.total} Strata Tool modules · {toolStats.live} live
 					</span>
 				</div>
@@ -166,7 +166,7 @@
 					<a href="/about" class="inline-flex items-center gap-2 rounded-xl border border-amber-700/30 bg-amber-50 px-6 py-3.5 text-sm font-semibold text-amber-700 no-underline hover:border-bitcoin/50 transition-all">
 						Why Trusted Money
 					</a>
-					<a href="/roadmap" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all">
+					<a href="/roadmap" class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-6 py-3.5 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 hover:shadow-[0_0_18px_-4px_rgba(103,232,249,0.4)] transition-all">
 						Roadmap
 					</a>
 				</div>
@@ -228,7 +228,7 @@
 </section>
 
 <!-- Competitive advantages + savings -->
-<section class="border-b border-border bg-white">
+<section class="border-b border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-14">
 		<div class="grid lg:grid-cols-2 gap-10 items-center">
 			<div>
@@ -238,7 +238,7 @@
 			</div>
 			<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 				{#each competitiveAdvantages as adv}
-					<div class="rounded-xl border border-border bg-slate-50 p-4 text-center hover:border-brand-200 transition-colors">
+					<div class="rounded-xl border border-border bg-surface-3/70 p-4 text-center hover:border-brand-300 hover:shadow-[0_0_16px_-4px_rgba(103,232,249,0.3)] transition-all">
 						<div class="text-xl font-bold text-brand-600">{adv.metric}</div>
 						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
 					</div>
@@ -257,10 +257,10 @@
 </section>
 
 <!-- Architecture strip -->
-<section class="border-b border-border bg-slate-50">
+<section class="border-b border-border bg-surface-3/50">
 	<div class="mx-auto max-w-7xl px-6 py-8">
 		<div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm">
-			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-border">
+			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-2 border border-border hover:border-brand-300 hover:shadow-[0_0_14px_-4px_rgba(103,232,249,0.3)] transition-all">
 				<span class="text-lg">📱</span>
 				<span class="font-medium text-slate-700">Mobile PWA</span>
 			</div>
@@ -270,7 +270,7 @@
 				<span class="font-medium text-brand-700">Tailscale Gateway</span>
 			</div>
 			<span class="text-slate-300 hidden sm:block">→</span>
-			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-border">
+			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-2 border border-border hover:border-brand-300 hover:shadow-[0_0_14px_-4px_rgba(103,232,249,0.3)] transition-all">
 				<span class="font-medium text-slate-700">Rosa + Ziggy</span>
 			</div>
 			<span class="text-slate-300 hidden sm:block">→</span>
@@ -361,7 +361,7 @@
 </section>
 
 <!-- Core Modules -->
-<section class="border-b border-border bg-white">
+<section class="border-b border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="text-center mb-12">
 			<h2 class="text-2xl font-bold text-slate-900 sm:text-3xl">Core Modules</h2>
@@ -419,7 +419,7 @@
 </section>
 
 <!-- RSS preview + FAQ -->
-<section class="border-b border-border bg-white">
+<section class="border-b border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="grid lg:grid-cols-2 gap-12">
 			<div>
@@ -473,15 +473,15 @@
 			Progressive disclosure — 3 taps max to any task.
 		</p>
 		<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-			<a href="https://github.com/kitsboy/openstrata" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all" target="_blank" rel="noopener noreferrer">
+			<a href="https://github.com/kitsboy/openstrata" class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 hover:shadow-[0_0_18px_-4px_rgba(103,232,249,0.35)] transition-all" target="_blank" rel="noopener noreferrer">
 				<Icon name="github" class="h-5 w-5" />
 				GitHub
 			</a>
-			<a href="https://x.com/giveabit" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all" target="_blank" rel="noopener noreferrer">
+			<a href="https://x.com/giveabit" class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 hover:shadow-[0_0_18px_-4px_rgba(103,232,249,0.35)] transition-all" target="_blank" rel="noopener noreferrer">
 				<Icon name="x" class="h-5 w-5" />
 				Follow on X
 			</a>
-			<a href="mailto:hello@giveabit.io" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-all">
+			<a href="mailto:hello@giveabit.io" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 hover:shadow-[0_0_22px_-4px_rgba(103,232,249,0.5)] transition-all">
 				<Icon name="mail" class="h-4 w-4" />
 				hello@giveabit.io
 			</a>

@@ -29,7 +29,7 @@
 
 <div class="relative" data-jobs-dropdown>
 	<button
-		class="flex items-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-brand-300 hover:text-brand-700 transition-all"
+		class="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-brand-300 hover:text-brand-700 transition-all"
 		onclick={toggle}
 		aria-expanded={open}
 		aria-haspopup="true"

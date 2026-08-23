@@ -35,7 +35,7 @@
 <!-- Header -->
 <section class="border-b border-border bg-gradient-to-b from-bc-blue/5 via-brand-50/30 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<div class="inline-flex items-center gap-2 rounded-full bg-white border border-border px-4 py-1.5 text-xs font-bold text-bc-blue mb-4">
+		<div class="inline-flex items-center gap-2 rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue mb-4">
 			<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
 			KNOWLEDGE BASE — RETAIN & DO NOT FORGET
 		</div>
@@ -46,13 +46,13 @@
 			Canada-to-US localization — preserved for Hermes, Rosa, and Kimi.
 		</p>
 		<div class="mt-6 flex flex-wrap gap-3 text-sm">
-			<span class="rounded-full bg-white border border-border px-3 py-1 font-semibold text-slate-600">
+			<span class="rounded-full bg-surface-2 border border-border px-3 py-1 font-semibold text-slate-600">
 				{regulatoryFramework.primaryActs[0]}
 			</span>
-			<span class="rounded-full bg-white border border-border px-3 py-1 font-semibold text-slate-600">
+			<span class="rounded-full bg-surface-2 border border-border px-3 py-1 font-semibold text-slate-600">
 				{regulatoryFramework.regulator}
 			</span>
-			<span class="rounded-full bg-white border border-border px-3 py-1 font-semibold text-slate-600">
+			<span class="rounded-full bg-surface-2 border border-border px-3 py-1 font-semibold text-slate-600">
 				Disputes: {regulatoryFramework.disputeBody}
 			</span>
 		</div>
@@ -60,7 +60,7 @@
 </section>
 
 <!-- Section nav -->
-<div class="sticky top-[65px] z-40 border-b border-border bg-white/90 backdrop-blur-md">
+<div class="sticky top-[65px] z-40 border-b border-border bg-surface-2/90 backdrop-blur-md">
 	<div class="mx-auto max-w-7xl px-6 py-3 overflow-x-auto">
 		<div class="flex gap-2 min-w-max">
 			{#each sections as sec}
@@ -380,7 +380,7 @@
 </div>
 
 <!-- Footer CTA -->
-<section class="border-t border-border bg-white">
+<section class="border-t border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-12 text-center">
 		<p class="text-sm text-slate-500">
 			This knowledge base is the source of truth for Hermes architecture.

@@ -58,7 +58,7 @@
 </section>
 
 <!-- Timeline -->
-<section class="border-y border-border bg-white">
+<section class="border-y border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-14">
 		<h2 class="text-2xl font-bold text-slate-900 mb-10">Development Timeline</h2>
 		<div class="space-y-6">

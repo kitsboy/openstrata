@@ -25,7 +25,7 @@
 	const statusColor = (s: string) =>
 		s === 'live' ? 'bg-success/10 text-success' :
 		s === 'beta' ? 'bg-brand-100 text-brand-700' :
-		'bg-slate-100 text-slate-500';
+		'bg-surface-3 text-slate-500';
 
 	// ---- Tooltip state -----------------------------------------------------
 	type TipState = { mod: any; top: number; left: number; above: boolean; maxWidth: number };
@@ -91,19 +91,19 @@
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-3">
-				<div class="rounded-xl bg-white border border-border px-4 py-3 text-center shadow-sm">
+				<div class="rounded-xl bg-surface-2 border border-border px-4 py-3 text-center shadow-sm">
 					<div class="text-2xl font-bold text-success">{stats.live}</div>
 					<div class="text-[10px] font-bold text-slate-400 uppercase">Live</div>
 				</div>
-				<div class="rounded-xl bg-white border border-border px-4 py-3 text-center shadow-sm">
+				<div class="rounded-xl bg-surface-2 border border-border px-4 py-3 text-center shadow-sm">
 					<div class="text-2xl font-bold text-brand-600">{stats.beta}</div>
 					<div class="text-[10px] font-bold text-slate-400 uppercase">Beta</div>
 				</div>
-				<div class="rounded-xl bg-white border border-border px-4 py-3 text-center shadow-sm">
+				<div class="rounded-xl bg-surface-2 border border-border px-4 py-3 text-center shadow-sm">
 					<div class="text-2xl font-bold text-slate-500">{stats.planned}</div>
 					<div class="text-[10px] font-bold text-slate-400 uppercase">Planned</div>
 				</div>
-				<div class="rounded-xl bg-white border border-bc-blue/20 px-4 py-3 text-center shadow-sm">
+				<div class="rounded-xl bg-surface-2 border border-bc-blue/20 px-4 py-3 text-center shadow-sm">
 					<div class="text-2xl font-bold text-bc-blue">{stats.bcfsaModules}</div>
 					<div class="text-[10px] font-bold text-slate-400 uppercase">BCFSA</div>
 				</div>
@@ -114,7 +114,7 @@
 			<div class="relative">
 				<input type="checkbox" bind:checked={sovereignMode} class="sr-only peer" />
 				<div class="h-7 w-14 rounded-full bg-slate-200 peer-checked:bg-bitcoin transition-colors"></div>
-				<div class="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow peer-checked:translate-x-7 transition-transform"></div>
+				<div class="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-surface-2 shadow peer-checked:translate-x-7 transition-transform"></div>
 			</div>
 			<span class="text-sm font-semibold text-slate-700">Sovereign Mode <span class="font-normal text-slate-400">— multisig / JSON / advanced rails</span></span>
 		</label>
@@ -122,7 +122,7 @@
 </section>
 
 <!-- Domain filter -->
-<div class="sticky top-[65px] z-40 border-b border-border bg-white/90 backdrop-blur-md">
+<div class="sticky top-[65px] z-40 border-b border-border bg-surface-2/90 backdrop-blur-md">
 	<div class="mx-auto max-w-7xl px-6 py-3 overflow-x-auto">
 		<div class="flex gap-2 min-w-max">
 			<button
@@ -134,7 +134,7 @@
 				{@const count = strataToolModules.filter((m) => m.domain === domain.id).length}
 				<button
 					class="rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all flex items-center gap-1.5
-						{activeDomain === domain.id ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+						{activeDomain === domain.id ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-surface-3'}"
 					onclick={() => { activeDomain = domain.id; closeTip(); }}
 				>
 					<span>{domain.icon}</span>
@@ -223,7 +223,7 @@
 			<h3 class="font-bold text-slate-800 mb-4">⚖️ Bylaw Enforcement</h3>
 			<div class="space-y-2">
 				{#each bylawEnforcementWorkflow as step}
-					<div class="flex items-center gap-3 rounded-lg p-3 text-sm {step.systemLock ? 'bg-danger/5 border border-danger/20' : 'bg-slate-50'}">
+					<div class="flex items-center gap-3 rounded-lg p-3 text-sm {step.systemLock ? 'bg-danger/5 border border-danger/20' : 'bg-surface-3'}">
 						<span class="font-bold text-brand-600 w-6">{step.step}</span>
 						<span class="flex-1 text-slate-700">{step.title}</span>
 						{#if step.systemLock}<span class="text-[10px] font-bold text-danger">🔒</span>{/if}
@@ -235,7 +235,7 @@
 			<h3 class="font-bold text-slate-800 mb-4">📄 Forms B & F</h3>
 			<div class="space-y-3">
 				{#each conveyancingWorkflow as step}
-					<div class="rounded-lg p-3 text-sm {step.blocking ? 'bg-danger/5 border border-danger/20' : 'bg-slate-50'}">
+					<div class="rounded-lg p-3 text-sm {step.blocking ? 'bg-danger/5 border border-danger/20' : 'bg-surface-3'}">
 						<span class="font-bold text-slate-800">{step.title}</span>
 						<p class="text-xs text-slate-500 mt-1">{step.action}</p>
 					</div>
