@@ -1,3 +1,27 @@
+## Session — 2026-08-25 (Phase 3 completion: rails hardening, CLI, API doc, tests)
+
+**Done:**
+- Completed Phase 3 end-to-end across five commits, all pushed (`0db3ce3`, `1112968`, `f7bdc2d`, `3c17beb`, `40db03f`):
+- **Form B/F + meetings + payment flows** (`0db3ce3`): `POST /api/v1/forms` (Form B / Form F issuance with 7-day deadline + WITHHELD on debtor units), `POST /api/v1/meetings/quorum` + `/vote` (AGM/SGM/council/rescheduled quorum, majority/3-4/80%/unanimous voting with abstentions excluded), `POST /api/v1/payments/confirm` (marks a quoted payment paid AND posts credit to the unit's AR ledger — reconciles like an e-transfer), idempotent `payments/quote` backed by a persisted `PaymentRequestStore` (Postgres + in-memory) keyed on `(refId, unitRef, rail)`, `Idempotency-Key` dedupe on ledger/billing writes, and Fastify JSON-schema body validation on write routes
+- **Rails hardening** (`1112968`): real **BIP-173 bech32/bech32m checksums** for `bc1`/`bc1p` (taproot), LNURL, `npub` via `decodeBech32` + `bech32Encode` (round-trip test vectors); pluggable **`cadPerBtc` `RateProvider`** (env-seedable, static fallback) threaded through `/rails/status` + `/payments/quote`; **watch-only xpub → deterministic per-unit BIP32 child index** (`deriveUnitAddress`/`unitChildIndex`)
+- **Operational CLI + docs** (`f7bdc2d`, `3c17beb`): `npm run cli -- rosa ingest` (validate + probe the BC corpus), `npm run cli -- ziggy simulate` (walk treasury scenarios through the state machine); full `backend/API.md` request/response reference linked from README
+- **API test coverage** (`40db03f`): 13 new route tests (payments/confirm edge cases, Form B/F, meeting quorum + voting rejections). Fixed `MemPaymentRequestStore.markStatus` to propagate status to both by-ref and by-key indexes. **Backend suite now 99 tests / 9 files, all passing; typecheck clean.** Frontend untouched and green
+- All `.ai_docs` refreshed to v0.3.0; `docs/KIMI-HANDOFF.md` + `LATEST-UPDATE.md` updated
+
+**Remaining (external / not yet built):**
+- Rails are **prepared, not connected**: no LND / Liquid daemon / PayNym / Nostr relay running on a host; no live `cadPerBtc` rate feed; real payment-confirm → on-chain/LN broadcast pending daemons. Enable + point endpoints via `.env` when daemons exist
+- Rosa pgvector embedding + Ollama model choice not selected; `0002` migration + `keywordRetriever` seam ready — `rosa ingest` currently validates the keyword corpus, not real embeddings
+- Docker stack needs a real deployment on a host behind Tailscale; run a Postgres migration + `/api/v1/ledger`, `/api/v1/payments/*`, `/api/v1/forms`, `/api/v1/meetings/*` smoke test
+- Verify `MemPaymentRequestStore.markStatus` single-row semantics hold on the Postgres payment-store adapter at first deploy
+- Professional human review of the machine-drafted locale overrides before they are treated as reviewed
+- Tighten organizational mapping, user workflow + recording (member/lot ledger, unit→payment→form traceability) in preparation for live Bitcoin/L2 payments
+
+**Git State:**
+- HEAD: `40db03f` (`40db03f3dd571e7544c14e9284fc8552fdfe8321`)
+- Unpushed: none (all pushed to `origin/main`)
+
+---
+
 ## Session — 2026-08-25 (Bitcoin + Layer-2 rails)
 
 **Done:**

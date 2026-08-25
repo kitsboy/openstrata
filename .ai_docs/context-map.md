@@ -1,6 +1,6 @@
 # Context Map — OpenStrata (Hermes Strata)
 
-Updated: 2026-07-16
+Updated: 2026-08-25
 
 ## Stack
 Framework: SvelteKit 2 + Svelte 5
@@ -16,23 +16,33 @@ DB: PostgreSQL 17 + pgvector
 Orchestration: Docker Compose (Tailscale-only exposure)
 Tests: Vitest (isolated from frontend suite)
 
-Services: ledger (append-only trust ledger), rosa (compliance RAG), ziggy (treasury state machine), api (Fastify).
-Commands (from backend/): `npm run typecheck`, `npm test`, `npm run dev`. Migrate: `npm run migrate`.
+Services: ledger (append-only trust ledger), rosa (compliance RAG), ziggy (treasury state machine), billing (strata-fee billing + late notices), enforcement (bylaw state machine), forms (Form B/F), meetings (quorum + voting), rails (Bitcoin/L2 payments), api (Fastify).
+
+Commands (from backend/):
+- `npm run typecheck`, `npm test`, `npm run dev`
+- `npm run cli -- rosa ingest`   validate + probe the BC compliance corpus (pure, no DB)
+- `npm run cli -- ziggy simulate` walk treasury scenarios through the state machine (pure)
+- Migrate: `npm run migrate`; seed: `npm run seed`
+
+API reference: `backend/API.md` (full request/response shapes).
 
 ## Directory Structure
 openstrata/
 backend/
   docker-compose.yml
-  src/{config.ts,index.ts}
+  API.md
+  src/{config.ts,index.ts,cli.ts}
   src/ledger/     schema.sql, migrations/*.sql, model.ts, ledger.ts, store.ts
   src/rosa/       rosa.ts, bc-corpus.ts
   src/ziggy/      ziggy.ts
   src/trf/        recon.ts
   src/billing/    billing.ts
   src/enforcement/ enforcement.ts
-  src/rails/      rails.ts
+  src/forms/      forms.ts
+  src/meetings/   meetings.ts
+  src/rails/      rails.ts, payment-request.ts, payment-store.ts
   src/api/        server.ts
-  tests/          memstore.ts, {ledger,rosa,ziggy,billing,enforcement,rails,server}.test.ts
+  tests/          memstore.ts, {ledger,rosa,ziggy,billing,enforcement,forms,meetings,rails,server}.test.ts
 src/
   app.html                  SvelteKit HTML shell
   app.css                   Tailwind CSS entry point

@@ -2,7 +2,7 @@
 
 **What:** A SvelteKit-based strata property management and compliance platform.
 **Domain:** openstrata.giveabit.io
-**Version:** v0.2.6 (SvelteKit 2 + Svelte 5)
+**Version:** v0.3.0 (SvelteKit 2 + Svelte 5, backend Phase 3)
 **Last Updated:** 2026-08-25
 
 ## One-Liner
@@ -24,10 +24,11 @@ Static SPA deployed to Cloudflare Pages
 
 ## Integrations
 - Satohash API client present in `src/lib/satohash.ts` (thin HTTP client, graceful offline) — UI wiring deferred until Satohash API is confirmed ready
-- Lightning/payment rails planned for Phase 4
+- Phase 3 backend (`backend/`): immutable trust ledger, Rosa compliance RAG, Ziggy treasury, fee billing + late notices, bylaw enforcement, Form B/F, meetings, and sovereign payment rails (Bitcoin on-chain, Lightning/LNURL, Liquid, PayNym BIP-47, Nostr) with BIP-173 checksum validation, wired as `/api/v1/*` behind Fastify. Rails are prepared-but-not-connected (daemons provisioned later)
 
 ## Quality gates
 - `npm run check` passes (0 errors, 0 warnings)
-- `npm run audit:i18n` passes (461 keys, hard-coded-copy scanner)
+- `npm run audit:i18n` passes (509 keys, hard-coded-copy scanner)
 - `npm run build` passes via Cloudflare Pages auto-deploy from main
+- `backend/` — `npm run typecheck` clean, `npm test` 99 tests / 9 files green
 
