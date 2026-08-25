@@ -126,6 +126,8 @@ is supplied to the API to convert CAD to sats for BTC-denominated rails.
   BIP32 child index per unit (hash → index) from a public key only. Full child
   public-key derivation is the seam for a BIP32 lib; the path + index are real.
 
+Full payload + response shapes for every endpoint live in [`API.md`](API.md).
+
 ## Operational CLI
 
 Pure subcommands for smoke-testing the deterministic engines (no Postgres needed):
