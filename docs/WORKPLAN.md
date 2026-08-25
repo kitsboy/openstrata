@@ -37,9 +37,9 @@
 - [x] Multi-account trust ledger (Operating, CRF, Special Levy) — append-only data model + migrations + API
 - [ ] Rosa RAG pgvector/Ollama adapter (keyword fallback wired; embeddings pending model choice)
 - [ ] Ziggy PSBT/multisig execution (authorization gate done; broadcast/reconcile stub)
-- [ ] Automated fee billing + late notices
+- [x] Automated fee billing + late notices — `backend/src/billing/` + `POST /api/v1/billing/run`
 - [ ] Form B/F generator with deadline tracking
-- [ ] Bylaw enforcement state machine API (`BLOCK_FINE_ACTIONS`)
+- [x] Bylaw enforcement state machine API (`BLOCK_FINE_ACTIONS`, fine caps) — `backend/src/enforcement/` + `/api/v1/bylaw/*`
 - [ ] Meeting quorum calculator + voting engine
 - [ ] PWA manifest + service worker
 

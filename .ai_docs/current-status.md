@@ -25,6 +25,7 @@
 - Phase 2 complete: **E-Transfer Auto-Reconciliation prototype** — pure `src/lib/reconcile.ts` matching engine (auto-match by unit reference codes, flag ambiguous/multi-unit references, leave unmatched for review; brief/full match modes) with 9 unit tests, driving `ETransferReconciler.svelte` (interactive /tools demo with Received/Resolved/Auto/Needs-review stats, match-mode toggle, per-transfer manual assign dropdown). 16 new catalog keys added across all 9 locales (509 keys total, parity guard green) — machine-drafted overrides require professional review
 - Build fix (SHA `6ff5fc3`): PWA service-worker registration guarded with `browser` from `$app/environment` instead of `import.meta.env.PROD`, fixing a Node 20 prerender crash on Cloudflare Pages that previously failed every production build
 - **Phase 3 backend scaffolding begun** — new `backend/` workspace: Docker Compose stack (`pgvector/pgvector:pg17` + Fastify API, Tailscale-only exposure), append-only immutable trust ledger (Operating/CRF/Special Levy isolation, hash-chain `tally_root` diffs, `diff()` across ledger copies), Rosa compliance RAG (keyword retriever + BC corpus; pgvector/Ollama seam + `0002` migration), Ziggy treasury state machine (CRF hard cap, PO verification, no-guess reconciliation). 35 backend Vitest tests (incl. Fastify route tests) + isolated backend CI job; idempotent `npm run seed` demo community; SOURCE-OF-TRUTH + DEPLOYMENT aligned. Frontend fully green (check 0/0, audit 509, tests 25/25, build clean).
+- **Phase 3 builds added:** automated fee billing + late notices (`backend/src/billing/` + `POST /api/v1/billing/run`, per-unit AR ledger posts) and the CRT-proof bylaw enforcement state machine (`backend/src/enforcement/`, `BLOCK_FINE_ACTIONS` 14-day lock, $200/$1,000 fine caps, `REQUIRE_QUORUM_AND_MINUTES`) wired as `/api/v1/bylaw/*`. Backend suite now 52 tests.
 
 ## Known Issues
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English/data-driven until reviewed translations are available
@@ -36,6 +37,6 @@
 ## Next Steps
 - Pick Rosa embedding/chat models, then wire the pgvector + Ollama adapters (migration `0002` + `keywordRetriever` seam ready)
 - Deploy the stack on a host behind Tailscale (Umbrel per framework doc) and run a real Postgres migration + smoke test of `/api/v1/ledger`
-- Continue Phase 3: fee billing + late-notice API on the trust ledger, Form B/F generator with deadline tracking, bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`)
+- Continue Phase 3: Form B/F generator with deadline tracking, meeting quorum calculator + voting engine, PWA hardening
 - The backend's `/docs` bootstrap mentions future `rosa ingest` / `ziggy simulate` CLIs — those are not yet built; add them when the vector adapter lands
 - Professional human review of the machine-drafted hi/fil/pl/uk/sw overrides (incl. the 16 new reconciliation keys) before they are marked as reviewed

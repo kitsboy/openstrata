@@ -10,6 +10,14 @@ import type { LedgerEngine } from '../ledger/ledger.js';
 import { type Retriever, composeAnswer } from '../rosa/rosa.js';
 import { authorizeSpend } from '../ziggy/ziggy.js';
 import type { Reconciler, UnitRefs } from '../trf/recon.js';
+import { runBilling, type UnitFee } from '../billing/billing.js';
+import {
+  newComplaint,
+  issueNotice,
+  canImposeFine,
+  imposeFine,
+  decideNoFine
+} from '../enforcement/enforcement.js';
 
 export interface ApiDeps {
   ledger: LedgerEngine;
@@ -134,6 +142,111 @@ export async function buildServer(
     Body: { reference: string; units: UnitRefs[] };
   }>('/api/v1/treasury/reconcile', async (req) => {
     return deps.reconcile(req.body.reference, req.body.units);
+  });
+
+  // ------------------------------------------------ Billing
+  // Run a monthly billing cycle: compute charges + late notices, then post the
+  // charges to the trust ledger so AR is wired end-to-end.
+  app.post<{
+    Body: {
+      community: string;
+      period: string;
+      fees: UnitFee[];
+      dueDay: number;
+      graceDays: number;
+      lateFeeBasis: number;
+      arrears: Record<string, number>;
+      asOf?: string;
+    };
+  }>('/api/v1/billing/run', async (req) => {
+    const b = req.body;
+    const run = runBilling(
+      b.fees,
+      (unitId) => b.arrears[unitId] ?? 0,
+      { period: b.period, dueDay: b.dueDay, graceDays: b.graceDays, lateFlatBasis: b.lateFeeBasis },
+      b.asOf ? new Date(b.asOf) : new Date()
+    );
+    // AR isolation: post each charge to a per-unit AR ledger account.
+    const posted: Array<{ unitId: string; seq: number }> = [];
+    for (const charge of run.charges) {
+      const row = await deps.ledger.post(
+        b.community,
+        charge.referenceCode,
+        charge.amountBasis,
+        'credit',
+        { type: 'strata_fee', referenceCode: charge.referenceCode, reconRef: charge.referenceCode }
+      );
+      posted.push({ unitId: charge.unitId, seq: row.seq });
+    }
+    return { run, postedCount: posted.length, posted };
+  });
+
+  // ------------------------------------------------ Bylaw enforcement
+  // Stateless over the pure state machine: each request submits the current
+  // complaint facts and receives the validated next state or a rejection.
+  app.post<{
+    Body: {
+      id: string;
+      unitId: string;
+      bylawRef: string;
+      breachKind: 'standard' | 'short_term_rental';
+      receivedAt: string;
+      evidence: boolean;
+    };
+  }>('/api/v1/bylaw/complaint', async (req) => {
+    try {
+      const c = newComplaint(req.body);
+      return { ok: true, complaint: c };
+    } catch (err) {
+      return { ok: false, reason: (err as Error).message };
+    }
+  });
+
+  app.post<{
+    Body: { complaint: string; issuedAt: string };
+  }>('/api/v1/bylaw/complaint/notice', async (req) => {
+    try {
+      const c = issueNotice(JSON.parse(req.body.complaint), req.body.issuedAt);
+      return { ok: true, complaint: c };
+    } catch (err) {
+      return { ok: false, reason: (err as Error).message };
+    }
+  });
+
+  app.post<{
+    Body: { complaint: string; now: string; amountBasis: number; councilMinutesRef: string };
+  }>('/api/v1/bylaw/fine', async (req) => {
+    let state: ReturnType<typeof JSON.parse>;
+    try {
+      state = JSON.parse(req.body.complaint) as Parameters<typeof imposeFine>[0];
+    } catch {
+      return { ok: false, reason: 'invalid complaint payload' };
+    }
+    const res = imposeFine(state, req.body.now, {
+      councilMinutesRef: req.body.councilMinutesRef,
+      amountBasis: req.body.amountBasis
+    });
+    return res.ok ? { ok: true, complaint: res.complaint } : { ok: false, reason: res.reason };
+  });
+
+  app.post<{ Body: { complaint: string; now: string } }>('/api/v1/bylaw/status', async (req) => {
+    let state;
+    try {
+      state = JSON.parse(req.body.complaint) as Parameters<typeof canImposeFine>[0];
+    } catch {
+      return { ok: false, reason: 'invalid complaint payload' };
+    }
+    const gate = canImposeFine(state, req.body.now);
+    return { ...gate, fineCapsBp: { standard: 20_000, short_term_rental: 100_000 } };
+  });
+
+  app.post<{ Body: { complaint: string; councilMinutesRef: string } }>('/api/v1/bylaw/nofine', async (req) => {
+    try {
+      const c = decideNoFine(JSON.parse(req.body.complaint), req.body.councilMinutesRef);
+      return { ok: true, complaint: c };
+    } catch (err) {
+      return { ok: false, reason: (err as Error).message };
+    }
   });
 
   return app;

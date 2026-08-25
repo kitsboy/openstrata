@@ -12,6 +12,8 @@ site's `/docs` bootstrap steps describe.
 | **Ledger API** | Immutable, append-only trust ledger (Operating / CRF / Special Levy isolation). Hash-chain tallies make copies diffable and tamper-evident. | `src/ledger/` |
 | **Rosa** | BC SPA/RTA/CRT compliance RAG — strict, citation-only answers. | `src/rosa/` |
 | **Ziggy** | Treasury state machine — CRF hard cap, expense verification, no-guess reconciliation. | `src/ziggy/` |
+| **Billing** | Automated monthly strata-fee billing + late notices (posts charges to the ledger). | `src/billing/` |
+| **Enforcement** | CRT-proof bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps). | `src/enforcement/` |
 | **API** | Fastify wire-up exposing `/api/v1/*` + `/health`. | `src/api/server.ts` |
 
 ## Stack
@@ -77,6 +79,8 @@ Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 - `POST /api/v1/rosa/query`
 - `GET  /api/v1/rosa/sources?q=`
 - `POST /api/v1/treasury/reconcile`
+- `POST /api/v1/billing/run` — fee schedule + arrears -> charges/late notices, posts charges to ledger
+- `POST /api/v1/bylaw/complaint` | `/notice` | `/status` | `/fine` | `/nofine` — enforcement state machine
 
 > **Scaffold note:** the Postgres/pgvector + Ollama adapters are the integration
 > seams. Currently the API boots Rosa with the keyword fallback retriever and a

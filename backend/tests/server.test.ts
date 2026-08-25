@@ -117,4 +117,66 @@ describe('fastify API', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ status: 'auto', unitId: '302' });
   });
+
+  it('POST /api/v1/billing/run posts charges and flags late notices', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/billing/run',
+      payload: {
+        community: 'bdemo',
+        period: '2026-09',
+        dueDay: 1,
+        graceDays: 5,
+        lateFeeBasis: 2000,
+        fees: [
+          { unitId: '101', monthlyBasis: 35_000 },
+          { unitId: '302', monthlyBasis: 48_500 }
+        ],
+        arrears: { '302': 99_000 },
+        asOf: '2026-09-08'
+      }
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.run.charges).toHaveLength(2);
+    expect(body.postedCount).toBe(2);
+    expect(body.posted[0].seq).toBeGreaterThan(0);
+    expect(body.run.lateNotices.map((n: { unitId: string }) => n.unitId)).toEqual(['302']);
+  });
+
+  it('bylaw lifecycle returns BLOCK_FINE_ACTIONS then allows a capped fine', async () => {
+    // Create complaint
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/v1/bylaw/complaint',
+      payload: {
+        id: 'C-1', unitId: '302', bylawRef: 'STR ban', breachKind: 'short_term_rental',
+        receivedAt: '2026-08-01', evidence: true
+      }
+    });
+    expect(created.json().ok).toBe(true);
+    const complaint = created.json().complaint;
+
+    // Issue notice -> 14-day lock
+    const notice = await app.inject({
+      method: 'POST', url: '/api/v1/bylaw/complaint/notice',
+      payload: { complaint: JSON.stringify(complaint), issuedAt: '2026-08-03' }
+    });
+    const underReview = notice.json().complaint;
+
+    // In the window -> blocked
+    const status = await app.inject({
+      method: 'POST', url: '/api/v1/bylaw/status',
+      payload: { complaint: JSON.stringify(underReview), now: '2026-08-16' }
+    });
+    expect(status.json().blocked).toBe('BLOCK_FINE_ACTIONS');
+
+    // After window + minutes -> applied
+    const fine = await app.inject({
+      method: 'POST', url: '/api/v1/bylaw/fine',
+      payload: { complaint: JSON.stringify(underReview), now: '2026-08-17', amountBasis: 40_000, councilMinutesRef: 'M-9' }
+    });
+    expect(fine.json().ok).toBe(true);
+    expect(fine.json().complaint.state).toBe('fine_posted');
+  });
 });

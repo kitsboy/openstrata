@@ -61,9 +61,11 @@
 | backend/src/ledger/ | Append-only trust ledger (schema, migrations, engine, PG store) |
 | backend/src/rosa/ | Compliance RAG — strict retrieval + BC corpus |
 | backend/src/ziggy/ | Treasury state machine — CRF cap, authorize, reconcile |
+| backend/src/billing/ | Automated fee billing + late notices (posts charges to ledger) |
+| backend/src/enforcement/ | Bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps) |
 | backend/src/trf/recon.ts | No-guess reconciliation (mirrors front-end reconcile.ts) |
 | backend/src/api/server.ts | Fastify wire-up — /health + /api/v1/* |
-| backend/tests/ | Vitest — ledger invariants, Rosa, Ziggy (29 tests) |
+| backend/tests/ | Vitest — ledger, Rosa, Ziggy, billing, enforcement, API routes (52 tests) |
 
 ### Code — Routes
 
