@@ -5,6 +5,7 @@ export const navItems = [
 	{ href: '/tools', label: 'Strata Tool' },
 	{ href: '/compliance', label: 'Compliance' },
 	{ href: '/legal', label: 'Legal library' },
+	{ href: '/templates', label: 'Templates' },
 	{ href: '/roadmap', label: 'Roadmap' },
 	{ href: '/docs', label: 'Docs' },
 	{ href: '/rss', label: 'RSS & API' }

@@ -180,9 +180,7 @@
 
 	{#if activeSection === 'bylaw'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.bylawEnforcementFlow}</h2>
-		<p class="text-slate-500 mb-8">
-			Precise statutory order — skipping steps risks CRT overturn. Backend must enforce locks.
-		</p>
+		<p class="text-slate-500 mb-8">{$copy.statutoryOrderHint}</p>
 
 		<div class="relative">
 			{#each bylawEnforcementWorkflow as step, i}

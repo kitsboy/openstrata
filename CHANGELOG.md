@@ -2,6 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.2.2
+    date: 2026-08-25
+    summary: Templates and remaining wizard/compliance localization
   - version: 0.2.1
     date: 2026-08-25
     summary: Blog localization and source-linked legal library
@@ -17,6 +20,17 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.2.2] — 2026-08-25
+
+### Added
+- Reusable `/templates` library for legal, governance, and finance workflows
+- Source and professional-review notes on every starter template
+- Shared locale keys for template descriptions and sources
+
+### Changed
+- Finished remaining visible wizard and compliance interface copy through the shared locale catalog
+- Added `/templates` to the site navigation
 
 ## [0.2.1] — 2026-08-25
 

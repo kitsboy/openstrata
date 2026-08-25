@@ -132,7 +132,7 @@
 </script>
 
 <svelte:head>
-	<title>Building Template Wizard \u2014 Hermes Strata</title>
+	<title>{$copy.wizardPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-br from-brand-50/80 via-white to-amber-50/30">
@@ -175,7 +175,7 @@
 			<div class="flex items-center justify-between mb-4">
 				<h3 class="font-bold text-slate-800">{$copy.configJson}</h3>
 				<button class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-all"
-					onclick={() => navigator.clipboard.writeText(configJson)}>{'\u{1F4CB}'} Copy</button>
+					onclick={() => navigator.clipboard.writeText(configJson)}>{'\u{1F4CB}'} {$copy.copyConfig}</button>
 			</div>
 			<pre class="text-xs font-mono text-slate-700 bg-slate-50 rounded-xl p-4 overflow-x-auto max-h-96 border border-border leading-relaxed">{configJson}</pre>
 		</div>
@@ -185,7 +185,7 @@
 				<div>
 					<div class="flex items-center gap-3 mb-6">
 						<span class="text-3xl">{'\u{1F30D}'}</span>
-						<div><h2 class="text-xl font-bold text-slate-900">Pick Jurisdiction</h2><p class="text-sm text-slate-500">Your strata\u2019s legal framework. BC is fully supported; others coming soon.</p></div>
+						<div><h2 class="text-xl font-bold text-slate-900">{$copy.pickJurisdiction}</h2><p class="text-sm text-slate-500">{$copy.jurisdictionDescription}</p></div>
 					</div>
 					<div class="grid sm:grid-cols-2 gap-4">
 						{#each jurisdictions as j}
@@ -244,7 +244,7 @@
 						</div>
 						{#if !isSelfManaged}
 							<div>
-								<label for="bcfsa-license" class="block text-sm font-semibold text-slate-700 mb-1.5">BCFSA License #</label>
+								<label for="bcfsa-license" class="block text-sm font-semibold text-slate-700 mb-1.5">{$copy.bcLicenseLabel}</label>
 								<input id="bcfsa-license" type="text" bind:value={bcfsaLicense} placeholder="e.g. BCFSA-STR-2026-XXXX" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 							</div>
 						{/if}
@@ -289,7 +289,7 @@
 				<div>
 					<div class="flex items-center gap-3 mb-6">
 						<span class="text-3xl">{'\u{1F4B0}'}</span>
-						<div><h2 class="text-xl font-bold text-slate-900">Configure Funds</h2><p class="text-sm text-slate-500">Trust accounts per SPA s.92\u201396. Operating and CRF are mandatory.</p></div>
+						<div><h2 class="text-xl font-bold text-slate-900">{$copy.configureFunds}</h2><p class="text-sm text-slate-500">{$copy.fundsDescription}</p></div>
 					</div>
 					<div class="space-y-5">
 						<div class="grid sm:grid-cols-2 gap-4">
@@ -357,7 +357,7 @@
 					</div>
 					{#if paymentRails.find(r => r.id === 'lightning')?.enabled}
 						<div class="mt-6 rounded-xl bg-amber-50 border border-amber-200 p-4">
-							<p class="text-sm font-semibold text-amber-800">{'\u26A1'} Sovereign Instant Pay Enabled</p>
+							<p class="text-sm font-semibold text-amber-800">{'\u26A1'} {$copy.sovereignPay}</p>
 							<p class="text-xs text-amber-700 mt-1">{$copy.sovereignPayDescription}</p>
 						</div>
 					{/if}
@@ -396,12 +396,12 @@
 						</div>
 						<div class="rounded-xl bg-slate-50 border border-border p-4">
 							<span class="text-xs font-bold text-slate-400 uppercase tracking-wide">{$copy.entitySummary}</span>
-							<p class="text-sm text-slate-800 mt-1 font-semibold">{corpName || 'Unnamed Strata Corporation'}</p>
-							<p class="text-xs text-slate-500">{address || 'No address set'} \u00b7 {isSelfManaged ? 'Self-Managed' : 'Brokerage-Managed'}</p>
+							<p class="text-sm text-slate-800 mt-1 font-semibold">{corpName || $copy.unnamedStrata}</p>
+							<p class="text-xs text-slate-500">{address || $copy.noAddress} \u00b7 {isSelfManaged ? $copy.selfManaged : $copy.brokerageManaged}</p>
 						</div>
 						<div class="rounded-xl bg-slate-50 border border-border p-4">
-							<span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Units</span>
-							<p class="text-sm text-slate-800 mt-1">{units.length} units \u00b7 {units.filter(u => u.parking).length} parking \u00b7 {units.filter(u => u.ev).length} EV ready</p>
+							<span class="text-xs font-bold text-slate-400 uppercase tracking-wide">{$copy.unitsSummary}</span>
+							<p class="text-sm text-slate-800 mt-1">{units.length} {$copy.units} \u00b7 {units.filter(u => u.parking).length} {$copy.parkingSummary} \u00b7 {units.filter(u => u.ev).length} {$copy.evSummary}</p>
 						</div>
 						<div class="rounded-xl bg-slate-50 border border-border p-4">
 							<span class="text-xs font-bold text-slate-400 uppercase tracking-wide">{$copy.fundsSummary}</span>
@@ -426,8 +426,8 @@
 							<p class="text-sm text-slate-800 mt-1">{bylawChoice === 'standard' ? $copy.standardBylawsPack : $copy.importedBylawsPending}</p>
 						</div>
 						<div class="rounded-xl bg-success/5 border border-success/20 p-4">
-							<p class="text-sm font-semibold text-success">{'\u2705'} BCFSA-Aware Configuration</p>
-							<p class="text-xs text-slate-600 mt-1">Trust fund isolation \u00b7 SPA s.35 retention \u00b7 CRT-proof bylaw workflow \u00b7 Forms B/F ready</p>
+							<p class="text-sm font-semibold text-success">{'\u2705'} {$copy.complianceConfig}</p>
+							<p class="text-xs text-slate-600 mt-1">{$copy.trustIsolationSummary}</p>
 						</div>
 					</div>
 					<button class="mt-8 w-full rounded-xl bg-brand-600 px-6 py-4 text-base font-bold text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/25" onclick={generateConfig}>
@@ -437,9 +437,9 @@
 			{/if}
 		</div>
 		<div class="mt-6 flex items-center justify-between">
-			<button class="rounded-xl border border-border px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all {step === 0 ? 'invisible' : ''}" onclick={prevStep}>{'\u2190'} Back</button>
+			<button class="rounded-xl border border-border px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all {step === 0 ? 'invisible' : ''}" onclick={prevStep}>{'\u2190'} {$copy.back}</button>
 			{#if step < totalSteps - 1}
-				<button class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20" onclick={nextStep}>Continue {'\u2192'}</button>
+				<button class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-500/20" onclick={nextStep}>{$copy.continue} {'\u2192'}</button>
 			{/if}
 		</div>
 	{/if}
