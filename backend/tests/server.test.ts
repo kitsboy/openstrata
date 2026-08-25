@@ -296,3 +296,143 @@ describe('fastify API', () => {
     expect(res.json().passed).toBe(false);
   });
 });
+
+describe('payments/confirm edge cases', () => {
+  it('rejects an unknown referenceCode', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/payments/confirm',
+      payload: { referenceCode: 'pay-nope-missing' }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ ok: false, reason: 'unknown referenceCode' });
+  });
+
+  it('rejects a confirm without a referenceCode (schema 400)', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/payments/confirm',
+      payload: {}
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('refuses to confirm twice (already paid)', async () => {
+    const quote = await app.inject({
+      method: 'POST', url: '/api/v1/payments/quote',
+      payload: {
+        rail: 'lightning', refId: 'CONF2X', unitRef: 'unit-101', amountBasis: 12_000,
+        currency: 'CAD', recipient: LNURL
+      }
+    });
+    const ref = quote.json().invoice.referenceCode;
+
+    const first = await app.inject({
+      method: 'POST', url: '/api/v1/payments/confirm',
+      payload: { referenceCode: ref, community: 'demo' }
+    });
+    expect(first.json().ok).toBe(true);
+
+    const second = await app.inject({
+      method: 'POST', url: '/api/v1/payments/confirm',
+      payload: { referenceCode: ref, community: 'demo' }
+    });
+    expect(second.json().ok).toBe(false);
+    expect(second.json().reason).toMatch(/not quoted/);
+  });
+
+  it('re-quoting after a confirm still returns the same (paid) request, not a new quote', async () => {
+    const body = {
+      rail: 'lightning', refId: 'REQ1', unitRef: 'unit-302', amountBasis: 8_000,
+      currency: 'CAD', recipient: LNURL
+    };
+    const quote = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    const ref = quote.json().invoice.referenceCode;
+    await app.inject({ method: 'POST', url: '/api/v1/payments/confirm', payload: { referenceCode: ref, community: 'demo' } });
+
+    const re = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    // Same (refId, unitRef, rail) -> not a fresh quote; the paid request is returned.
+    expect(re.json().created).toBe(false);
+    expect(re.json().invoice.referenceCode).toBe(ref);
+    expect(re.json().invoice.status).toBe('paid');
+  });
+});
+
+describe('forms / meetings coverage', () => {
+  it('issues a Form B with a 7-day due date', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/forms',
+      payload: { kind: 'B', unitId: '101', requestedAt: '2026-08-25', balanceBasis: 0 }
+    });
+    const f = res.json();
+    expect(f.state).toBe('issued');
+    expect(f.kind).toBe('B');
+    expect(f.dueDate).toBe('2026-09-01'); // +7 days
+    expect(f.disclosures).toContain('Balance: $0.00');
+    expect(f.withheldReason).toBeUndefined();
+  });
+
+  it('issues a Form F on a clear unit (not withheld)', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/forms',
+      payload: { kind: 'F', unitId: '101', requestedAt: '2026-08-25', balanceBasis: 0, arrearsBasis: 0 }
+    });
+    const f = res.json();
+    expect(f.state).toBe('issued');
+    expect(f.disclosures).toContain('Balance $0.00 — certificate issued');
+  });
+
+  it('AGM quorum needs 1/3 of eligible voters (10 of 30)', async () => {
+    const fail = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/quorum',
+      payload: { type: 'AGM', eligible: 30, present: 9 }
+    });
+    expect(fail.json()).toMatchObject({ quorumMet: false, required: 10, present: 9, shortfall: 1 });
+    const pass = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/quorum',
+      payload: { type: 'AGM', eligible: 30, present: 10 }
+    });
+    expect(pass.json().quorumMet).toBe(true);
+  });
+
+  it('council quorum is a majority of the council size', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/quorum',
+      payload: { type: 'council', eligible: 0, present: 3, councilSize: 5 }
+    });
+    expect(res.json()).toMatchObject({ quorumMet: true, required: 3, present: 3 });
+  });
+
+  it('a rescheduled meeting needs anyone present', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/quorum',
+      payload: { type: 'rescheduled', eligible: 30, present: 2 }
+    });
+    expect(res.json().quorumMet).toBe(true);
+    const empty = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/quorum',
+      payload: { type: 'rescheduled', eligible: 30, present: 0 }
+    });
+    expect(empty.json().quorumMet).toBe(false);
+  });
+
+  it('meetings/vote rejects yes+no beyond those present', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/vote',
+      payload: { threshold: 'majority', eligible: 5, present: 3, yes: 3, no: 1, abstain: 0 }
+    });
+    expect(res.json().ok).toBe(false);
+    expect(res.json().reason).toMatch(/exceed present/);
+  });
+
+  it('meetings/vote passes unanimity only when every effective voter says yes', async () => {
+    const aye = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/vote',
+      payload: { threshold: 'unanimous', eligible: 5, present: 5, yes: 5, no: 0, abstain: 0 }
+    });
+    expect(aye.json().passed).toBe(true);
+    const nay = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/vote',
+      payload: { threshold: 'unanimous', eligible: 5, present: 5, yes: 4, no: 1, abstain: 0 }
+    });
+    expect(nay.json().passed).toBe(false);
+  });
+});
