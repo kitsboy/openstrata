@@ -18,6 +18,7 @@ import {
   imposeFine,
   decideNoFine
 } from '../enforcement/enforcement.js';
+import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rails/rails.js';
 
 export interface ApiDeps {
   ledger: LedgerEngine;
@@ -26,6 +27,8 @@ export interface ApiDeps {
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
+    rails?: RailRegistry;
+    cadPerBtc?: number; // live rate for convertible rails
   };
 }
 
@@ -135,6 +138,50 @@ export async function buildServer(
         score: c.score
       }))
     };
+  });
+
+  // ------------------------------------------------ Sovereign rails
+  app.get('/api/v1/rails/status', async () => ({
+    rails: enabledRails(deps.config.rails ?? {}),
+    cadPerBtc: deps.config.cadPerBtc ?? null
+  }));
+
+  // Build a rail-specific payment quote (LNURL 15-min CAD lock enforced in rails module).
+  app.post<{
+    Body: {
+      rail: Rail;
+      refId: string;
+      unitRef: string;
+      amountBasis: number;
+      currency: 'CAD' | 'BTC';
+      recipient: string;
+      note?: string;
+    };
+  }>('/api/v1/payments/quote', async (req) => {
+    const b = req.body;
+    const registry = deps.config.rails ?? {};
+    if (!registry[b.rail]?.enabled) {
+      return { ok: false, reason: `rail '${b.rail}' is not enabled` };
+    }
+    try {
+      const invoice = quotePayment(
+        {
+          refId: b.refId,
+          communityId: '',
+          unitRef: b.unitRef,
+          amountBasis: b.amountBasis,
+          currency: b.currency,
+          rail: b.rail,
+          note: b.note
+        },
+        b.recipient,
+        new Date(),
+        deps.config.cadPerBtc ?? 0
+      );
+      return { ok: true, invoice };
+    } catch (err) {
+      return { ok: false, reason: (err as Error).message };
+    }
   });
 
   // Reconciliation: auto-post decision for one inbound transfer.

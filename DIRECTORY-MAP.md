@@ -63,9 +63,10 @@
 | backend/src/ziggy/ | Treasury state machine — CRF cap, authorize, reconcile |
 | backend/src/billing/ | Automated fee billing + late notices (posts charges to ledger) |
 | backend/src/enforcement/ | Bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps) |
+| backend/src/rails/ | Sovereign payment rails — onchain/LN/Liquid/PayNym (BIP-47)/Nostr validation + quoting |
 | backend/src/trf/recon.ts | No-guess reconciliation (mirrors front-end reconcile.ts) |
 | backend/src/api/server.ts | Fastify wire-up — /health + /api/v1/* |
-| backend/tests/ | Vitest — ledger, Rosa, Ziggy, billing, enforcement, API routes (52 tests) |
+| backend/tests/ | Vitest — ledger, Rosa, Ziggy, billing, enforcement, rails, API routes (66 tests) |
 
 ### Code — Routes
 

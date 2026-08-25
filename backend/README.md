@@ -14,6 +14,7 @@ site's `/docs` bootstrap steps describe.
 | **Ziggy** | Treasury state machine — CRF hard cap, expense verification, no-guess reconciliation. | `src/ziggy/` |
 | **Billing** | Automated monthly strata-fee billing + late notices (posts charges to the ledger). | `src/billing/` |
 | **Enforcement** | CRT-proof bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps). | `src/enforcement/` |
+| **Rails** | Sovereign payment rails — Bitcoin on-chain, Lightning (LNURL/BOLT-12), Liquid, PayNym (BIP-47), Nostr. Recipient validation + quoting (LNURL 15-min CAD lock). | `src/rails/` |
 | **API** | Fastify wire-up exposing `/api/v1/*` + `/health`. | `src/api/server.ts` |
 
 ## Stack
@@ -81,9 +82,30 @@ Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 - `POST /api/v1/treasury/reconcile`
 - `POST /api/v1/billing/run` — fee schedule + arrears -> charges/late notices, posts charges to ledger
 - `POST /api/v1/bylaw/complaint` | `/notice` | `/status` | `/fine` | `/nofine` — enforcement state machine
+- `GET  /api/v1/rails/status` — enabled sovereign rails + rate
+- `POST /api/v1/payments/quote` — rail-specific payment quote (LN 15-min CAD lock), shared reconciliation reference
 
 > **Scaffold note:** the Postgres/pgvector + Ollama adapters are the integration
 > seams. Currently the API boots Rosa with the keyword fallback retriever and a
 > small BC corpus (`src/rosa/bc-corpus.ts`) so it runs before models are
 > provisioned. Ledger reads/writes against Postgres are implemented; the
 > in-memory store backs the unit tests.
+
+## Sovereign rails (Bitcoin + Layer-2)
+
+Rails are **off by default** and become available when enabled in `.env` and
+their daemons are provisioned on the host:
+
+| Rail | Enable | Endpoint | Purpose |
+|------|--------|----------|---------|
+| Fiat (ledger) | always | — | CAD trust ledger (never custody) |
+| Bitcoin on-chain | `BITCOIN_RAIL_ENABLED=true` | `BITCOIN_NODE_URL` | SegWit/taproot inbound + 3-of-5 PSBT outbound |
+| Lightning | `LIGHTNING_RAIL_ENABLED=true` | `LND_URL` | LNURL/BOLT-11 with 15-min CAD rate lock |
+| Liquid | `LIQUID_RAIL_ENABLED=true` | `LIQUID_URL` | Confidential L-BTC/L-USD assets |
+| PayNym (BIP-47) | `PAYNYM_RAIL_ENABLED=true` | `PAYNYM_NOTIFIER_URL` | Reusable payment codes (comment-code) |
+| Nostr | `NOSTR_RAIL_ENABLED=true` | `NOSTR_RELAYS` | Unit identity / receipts / DMs (not a transfer) |
+
+`POST /api/v1/payments/quote` returns a rail-specific invoice/request carrying a
+shared `referenceCode` (e.g. `pay-<refId>-<unit>`) so Ziggy + the ledger
+reconcile confirmed payments the same way e-transfers do. The `cadPerBtc` rate
+is supplied to the API to convert CAD to sats for BTC-denominated rails.

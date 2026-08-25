@@ -4,6 +4,8 @@
  * committed secret.
  */
 
+import type { RailRegistry } from './rails/rails.js';
+
 export interface BackendConfig {
   dbUrl: string;
   host: string;
@@ -14,6 +16,8 @@ export interface BackendConfig {
   vectorCollection: string;
   crfMandatoryPct: number;
   reconScanDays: number;
+  /** Sovereign payment rails — which are enabled and where their daemons live. */
+  rails: RailRegistry;
 }
 
 const int = (v: string | undefined, fallback: number): number => {
@@ -33,6 +37,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     ollamaChatModel: env.OLLAMA_CHAT_MODEL ?? 'llama3.2',
     vectorCollection: env.VECTOR_COLLECTION ?? 'bc_spa_rta_crt',
     crfMandatoryPct: int(env.CRF_MANDATORY_PCT, 10),
-    reconScanDays: int(env.RECON_SCAN_DAYS, 90)
+    reconScanDays: int(env.RECON_SCAN_DAYS, 90),
+    rails: {
+      fiat: { enabled: true },
+      onchain: { enabled: env.BITCOIN_RAIL_ENABLED === 'true', endpoint: env.LND_URL || env.BITCOIN_NODE_URL },
+      lightning: { enabled: env.LIGHTNING_RAIL_ENABLED === 'true', endpoint: env.LND_URL, network: (env.LIGHTNING_NETWORK as never) || 'mainnet' },
+      liquid: { enabled: env.LIQUID_RAIL_ENABLED === 'true', endpoint: env.LIQUID_URL },
+      paynym_bip47: { enabled: env.PAYNYM_RAIL_ENABLED === 'true', endpoint: env.PAYNYM_NOTIFIER_URL },
+      nostr: { enabled: env.NOSTR_RAIL_ENABLED === 'true', endpoint: env.NOSTR_RELAYS }
+    }
   };
 }

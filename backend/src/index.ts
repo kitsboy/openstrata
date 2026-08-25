@@ -31,7 +31,9 @@ async function main(): Promise<void> {
     reconcile,
     config: {
       crfMandatoryPct: config.crfMandatoryPct,
-      vectorCollection: config.vectorCollection
+      vectorCollection: config.vectorCollection,
+      rails: config.rails,
+      cadPerBtc: Number(process.env.CAD_PER_BTC ?? 0) || 0
     }
   });
 

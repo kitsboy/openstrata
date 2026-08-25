@@ -46,8 +46,8 @@
 ## Phase 4 — Sovereign Layer (Q4 2026)
 
 - [ ] Satohash API integration (payment/rule stamping)
-- [ ] Lightning LNURL with CAD rate lock
-- [ ] Nostr npub per unit identity
+- [x] Lightning LNURL with CAD rate lock — `backend/src/rails/` + `POST /api/v1/payments/quote`
+- [x] Nostr npub per unit identity + BIP-47 PayNym + Liquid recipients — validated/quoteable in `backend/src/rails/`
 - [ ] External multisig watch-only (xpub import)
 - [ ] CRT evidence export (PDF bundle)
 - [ ] Transparent sub-accounts (Pool, Garden, War Chest)

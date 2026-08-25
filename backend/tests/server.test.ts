@@ -23,7 +23,16 @@ beforeAll(async () => {
       ledger: new LedgerEngine(new MemLedgerStore()),
       rosa: keywordRetriever(corpus),
       reconcile,
-      config: { crfMandatoryPct: 10, vectorCollection: 'bc_spa_rta_crt' }
+      config: {
+        crfMandatoryPct: 10,
+        vectorCollection: 'bc_spa_rta_crt',
+        rails: {
+          fiat: { enabled: true },
+          onchain: { enabled: true },
+          lightning: { enabled: true, endpoint: 'grpc://127.0.0.1:10009' }
+        },
+        cadPerBtc: 50_000
+      }
     },
     { logger: false }
   );
@@ -178,5 +187,52 @@ describe('fastify API', () => {
     });
     expect(fine.json().ok).toBe(true);
     expect(fine.json().complaint.state).toBe('fine_posted');
+  });
+
+  it('GET /api/v1/rails/status lists enabled rails', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/rails/status' });
+    expect(res.statusCode).toBe(200);
+    const rails = res.json().rails.find((r: { rail: string }) => r.rail === 'lightning');
+    expect(rails.enabled).toBe(true);
+  });
+
+  it('POST /api/v1/payments/quote returns an LN 15-min-locked quote', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/payments/quote',
+      payload: {
+        rail: 'lightning',
+        refId: 'A9F',
+        unitRef: 'unit-302',
+        amountBasis: 50_000,
+        currency: 'CAD',
+        recipient: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw'
+      }
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.ok).toBe(true);
+    expect(body.invoice.referenceCode).toBe('pay-a9f-unit302');
+    expect(body.invoice.amountSat).toBe(1_000_000); // $500 @ $50k/BTC
+    expect(body.invoice.fiatLockedBasis).toBe(50_000);
+    expect(body.invoice.expiresAt).toBeTruthy();
+  });
+
+  it('POST /api/v1/payments/quote refuses a disabled rail', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/payments/quote',
+      payload: {
+        rail: 'nostr',
+        refId: 'B2',
+        unitRef: 'unit-101',
+        amountBasis: 1000,
+        currency: 'CAD',
+        recipient: 'npub' + 'a'.repeat(60)
+      }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(false);
+    expect(res.json().reason).toMatch(/not enabled/);
   });
 });

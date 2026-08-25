@@ -28,8 +28,11 @@ backend/
   src/rosa/       rosa.ts, bc-corpus.ts
   src/ziggy/      ziggy.ts
   src/trf/        recon.ts
+  src/billing/    billing.ts
+  src/enforcement/ enforcement.ts
+  src/rails/      rails.ts
   src/api/        server.ts
-  tests/          memstore.ts, {ledger,rosa,ziggy}.test.ts
+  tests/          memstore.ts, {ledger,rosa,ziggy,billing,enforcement,rails,server}.test.ts
 src/
   app.html                  SvelteKit HTML shell
   app.css                   Tailwind CSS entry point
