@@ -1,0 +1,18 @@
+# Hermes Strata — openstrata.giveabit.io
+
+User-agent: *
+Allow: /
+Disallow: /tools/*
+Disallow: /api/*
+
+# AI crawlers — welcome
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://openstrata.giveabit.io/sitemap.xml

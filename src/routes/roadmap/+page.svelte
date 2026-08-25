@@ -2,6 +2,7 @@
 	import { jurisdictions } from '$lib/data';
 	import { hermesPositioning } from '$lib/marketing';
 	import { getToolStats } from '$lib/strata-tool';
+	import { copy } from '$lib/i18n';
 
 	const stats = getToolStats();
 
@@ -28,22 +29,22 @@
 
 <section class="border-b border-border bg-gradient-to-b from-bc-blue/5 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Roadmap & Paths</h1>
+		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.roadmapTitle}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl">
-			Three go-to-market paths. Six development phases. Config-driven jurisdiction expansion.
+			{$copy.roadmapIntro}
 		</p>
 		<div class="mt-6 flex flex-wrap gap-4">
-			<span class="rounded-full bg-success/10 px-4 py-1.5 text-sm font-bold text-success">{stats.live} modules live</span>
-			<span class="rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700">{stats.beta} in beta</span>
+			<span class="rounded-full bg-success/10 px-4 py-1.5 text-sm font-bold text-success">{stats.live} {$copy.modulesLive}</span>
+			<span class="rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700">{stats.beta} {$copy.inBeta}</span>
 			<span class="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">{stats.planned} planned</span>
-			<span class="rounded-full bg-bc-blue/10 px-4 py-1.5 text-sm font-bold text-bc-blue">{stats.bcfsaModules} BCFSA-relevant</span>
+			<span class="rounded-full bg-bc-blue/10 px-4 py-1.5 text-sm font-bold text-bc-blue">{stats.bcfsaModules} {$copy.bcfsaRelevant}</span>
 		</div>
 	</div>
 </section>
 
 <!-- GTM Paths -->
 <section class="mx-auto max-w-7xl px-6 py-14">
-	<h2 class="text-2xl font-bold text-slate-900 mb-8">Go-To-Market Paths</h2>
+	<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.gtmPaths}</h2>
 	<div class="grid md:grid-cols-3 gap-6">
 		{#each hermesPositioning.paths as path, i}
 			<div class="glass-card rounded-2xl p-6 relative overflow-hidden">
@@ -58,9 +59,9 @@
 </section>
 
 <!-- Timeline -->
-<section class="border-y border-border bg-white">
+<section class="border-y border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-14">
-		<h2 class="text-2xl font-bold text-slate-900 mb-10">Development Timeline</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-10">{$copy.developmentTimeline}</h2>
 		<div class="space-y-6">
 			{#each phases as phase}
 				<div class="flex gap-6 items-start">
@@ -79,9 +80,7 @@
 							<span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase
 								{phase.status === 'complete' ? 'bg-success/10 text-success' :
 								 phase.status === 'current' ? 'bg-brand-100 text-brand-700' :
-								 'bg-slate-100 text-slate-500'}">
-								{phase.status}
-							</span>
+								 'bg-slate-100 text-slate-500'}">{phase.status === 'current' ? $copy.currentStatus : phase.status}</span>
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each phase.items as item}
@@ -97,7 +96,7 @@
 
 <!-- Jurisdictions -->
 <section class="mx-auto max-w-7xl px-6 py-14">
-	<h2 class="text-2xl font-bold text-slate-900 mb-8">Jurisdiction Expansion</h2>
+	<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.jurisdictionExpansion}</h2>
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 		{#each jurisdictions as j, i}
 			<div class="glass-card rounded-xl p-5 flex items-center justify-between {j.active ? 'border-brand-200' : 'opacity-70'}">
@@ -120,7 +119,7 @@
 <!-- Integrations -->
 <section class="border-t border-border bg-slate-50">
 	<div class="mx-auto max-w-7xl px-6 py-14">
-		<h2 class="text-2xl font-bold text-slate-900 mb-8">Ecosystem Integrations</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.ecosystemIntegrations}</h2>
 		<div class="grid sm:grid-cols-2 gap-4">
 			{#each integrations as int}
 				<div class="glass-card rounded-xl p-5 flex items-center justify-between">

@@ -38,14 +38,81 @@
 			? `${linePath} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`
 			: ''
 	);
+
+	// Interactive hover tooltip (design-tokens: rich cyan tooltip on hover/tap)
+	let tip = $state<{ value: number; index: number; left: number; top: number } | null>(null);
+
+	function openTip(e: MouseEvent | TouchEvent, i: number) {
+		const p = points[i];
+		if (!p) return;
+		const rect = (e.currentTarget as SVGGElement).getBoundingClientRect();
+		tip = { value: data[i], index: i, left: rect.left + rect.width / 2, top: rect.top - 8 };
+	}
+	const closeTip = () => (tip = null);
 </script>
 
-<svg viewBox="0 0 {width} {height}" class="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-	{#if areaPath}
-		<path d={areaPath} fill={fillColor} />
-		<path d={linePath} fill="none" stroke={color} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-		{#each points as p, i}
-			<circle cx={p.x} cy={p.y} r="3.5" fill="white" stroke={color} stroke-width="2" />
-		{/each}
-	{/if}
-</svg>
+<div style="position:relative;width:100%">
+	<svg viewBox="0 0 {width} {height}" class="w-full h-auto" preserveAspectRatio="xMidYMid meet" style="display:block">
+		{#if areaPath}
+			<path d={areaPath} fill={fillColor} />
+			<path d={linePath} fill="none" stroke={color} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chart-line" />
+			{#each points as p, i}
+				<!-- Invisible hover zone per point (design-tokens: .hv pattern) -->
+				<rect
+					class="hv"
+					x={p.x - 12}
+					y="4"
+					width="24"
+					height={height - 28}
+					fill="transparent"
+					style="cursor:pointer;touch-action:manipulation"
+					onmouseenter={(e) => openTip(e, i)}
+					onmousemove={(e) => openTip(e, i)}
+					onmouseleave={closeTip}
+					ontouchstart={(e) => openTip(e, i)}
+				/>
+				<circle
+					class="chart-dot"
+					cx={p.x}
+					cy={p.y}
+					r="3.5"
+					fill="white"
+					stroke={color}
+					stroke-width="2"
+					style="cursor:pointer;touch-action:manipulation"
+					onmouseenter={(e) => openTip(e, i)}
+					onmousemove={(e) => openTip(e, i)}
+					onmouseleave={closeTip}
+					ontouchstart={(e) => openTip(e, i)}
+				/>
+			{/each}
+		{/if}
+	</svg>
+</div>
+
+{#if tip}
+	<div
+		class="tooltip-bubble"
+		role="tooltip"
+		data-above="true"
+		style="left:{tip.left}px; top:{tip.top}px; pointer-events:none;"
+	>
+		<div class="tooltip-inner">
+			<p class="tooltip-title">Point {tip.index + 1}</p>
+			<p class="tooltip-what">
+				Value: <strong>{tip.value.toLocaleString('en-CA')}</strong>
+			</p>
+		</div>
+	</div>
+{/if}
+
+<style>
+	.chart-line { transition: filter 0.15s ease; }
+	.chart-dot { transition: r 0.15s ease, filter 0.15s ease; }
+	svg:hover .chart-line { filter: drop-shadow(0 0 4px rgba(20, 184, 166, 0.5)); }
+	.hv:hover ~ .chart-dot,
+	.chart-dot:hover {
+		filter: drop-shadow(0 0 5px rgba(20, 184, 166, 0.6));
+	}
+	.hv:hover ~ .chart-dot { r: 5; }
+</style>

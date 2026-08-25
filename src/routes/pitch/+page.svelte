@@ -15,6 +15,7 @@
 	import BarChart from '$lib/components/BarChart.svelte';
 	import LineChart from '$lib/components/LineChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import { copy } from '$lib/i18n';
 
 	const updatedAt = new Date().toLocaleDateString('en-CA', {
 		year: 'numeric',
@@ -115,7 +116,7 @@
 							<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
 							{liveLabel} data · synced {updatedAt}
 						</span>
-						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 text-xs font-semibold text-slate-600">
+						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold text-slate-600">
 							₿ ${btcCad.toLocaleString('en-CA', { maximumFractionDigits: 0 })} CAD
 						</span>
 					</div>
@@ -134,9 +135,9 @@
 	</section>
 
 	<!-- Slide 2: Problem -->
-	<section class="pitch-slide bg-white border-y border-border">
+	<section class="pitch-slide bg-surface-2/60 border-y border-border">
 		<div class="mx-auto max-w-7xl px-6 py-16">
-			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">The Problem</p>
+			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.pitchProblem}</p>
 			<h2 class="text-3xl font-bold text-slate-900 mb-8">
 				BC Strata Management Is Regulated, Labour-Intensive, and Expensive
 			</h2>
@@ -175,12 +176,9 @@
 	<!-- Slide 3: Solution + charts -->
 	<section class="pitch-slide">
 		<div class="mx-auto max-w-7xl px-6 py-16">
-			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">The Solution</p>
-			<h2 class="text-3xl font-bold text-slate-900 mb-2">Three-Layer Sovereignty Stack</h2>
-			<p class="text-slate-500 mb-10 max-w-3xl">
-				We sell software — not unlicensed management services. Hermes powers operations;
-				Satohash proves every action; OpenStrata keeps data portable.
-			</p>
+			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.pitchSolution}</p>
+			<h2 class="text-3xl font-bold text-slate-900 mb-2">{$copy.sovereigntyStack}</h2>
+			<p class="text-slate-500 mb-10 max-w-3xl">{$copy.pitchSolutionDescription}</p>
 
 			<div class="grid md:grid-cols-3 gap-6 mb-12">
 				{#each productStack as product, i}
@@ -221,16 +219,16 @@
 	</section>
 
 	<!-- Slide 4: Live treasury + competitive -->
-	<section class="pitch-slide bg-white border-y border-border">
+	<section class="pitch-slide bg-surface-2/60 border-y border-border">
 		<div class="mx-auto max-w-7xl px-6 py-16">
-			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Live Operations</p>
-			<h2 class="text-3xl font-bold text-slate-900 mb-8">Treasury & Competitive Edge</h2>
+			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.liveOperations}</p>
+			<h2 class="text-3xl font-bold text-slate-900 mb-8">{$copy.treasuryEdge}</h2>
 
 			<div class="grid lg:grid-cols-3 gap-8">
 				<div class="lg:col-span-2 glass-card rounded-2xl p-6">
 					<div class="flex items-center justify-between mb-4">
-						<h3 class="font-bold text-slate-800">Monthly Income vs Expenses</h3>
-						<span class="text-xs font-semibold text-slate-400">Teal = income · Orange = expenses</span>
+						<h3 class="font-bold text-slate-800">{$copy.monthlyIncomeExpenses}</h3>
+						<span class="text-xs font-semibold text-slate-400">{$copy.incomeExpensesLegend}</span>
 					</div>
 					<BarChart
 						data={treasuryChart}
@@ -246,7 +244,7 @@
 						<p class="mt-2 text-3xl font-bold text-brand-700 stat-flash">
 							${crfBalance.toLocaleString()}
 						</p>
-						<p class="mt-1 text-xs text-slate-400">Simulated live ledger</p>
+						<p class="mt-1 text-xs text-slate-400">{$copy.simulatedLedger}</p>
 					</div>
 					<div class="glass-card rounded-2xl p-6">
 						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">War Chest</p>
@@ -273,7 +271,7 @@
 	<!-- Slide 5: BCFSA paths -->
 	<section class="pitch-slide">
 		<div class="mx-auto max-w-7xl px-6 py-16">
-			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Go-To-Market</p>
+			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.goToMarket}</p>
 			<h2 class="text-3xl font-bold text-slate-900 mb-2">Smart Within the Law</h2>
 			<p class="text-slate-500 mb-8 max-w-3xl">
 				{bcfsaFacts.regulator} requires licensed brokerages for management services.
@@ -298,8 +296,8 @@
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<div class="grid lg:grid-cols-2 gap-12">
 				<div>
-					<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Revenue Model</p>
-					<h2 class="text-3xl font-bold text-slate-900 mb-6">Pricing Tiers</h2>
+					<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.revenueModel}</p>
+					<h2 class="text-3xl font-bold text-slate-900 mb-6">{$copy.pricingTiers}</h2>
 					<div class="space-y-3">
 						{#each revenueTiers as tier}
 							<div class="glass-card rounded-xl p-4 flex items-center justify-between gap-4">
@@ -316,11 +314,11 @@
 					</div>
 				</div>
 				<div>
-					<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Roadmap</p>
-					<h2 class="text-3xl font-bold text-slate-900 mb-6">What's Next</h2>
+					<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.roadmap}</p>
+					<h2 class="text-3xl font-bold text-slate-900 mb-6">{$copy.whatsNext}</h2>
 					<div class="space-y-3">
 						{#each roadmapSnapshot as item}
-							<div class="flex gap-4 items-start rounded-xl border border-border bg-white p-4">
+							<div class="flex gap-4 items-start rounded-xl border border-border bg-surface-2 p-4">
 								<span
 									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold
 										{item.status === 'complete'
@@ -352,10 +350,10 @@
 				class="h-20 w-20 rounded-2xl object-cover shadow-xl shadow-brand-500/25 mx-auto mb-6"
 			/>
 			<h2 class="text-3xl sm:text-4xl font-bold text-slate-900">
-				Let's Build Sovereign Strata Operations
+				{$copy.buildSovereign}
 			</h2>
 			<p class="mt-4 text-lg text-slate-600 max-w-xl mx-auto">
-				Partner with Give A Bit. Fiat rails today. Bitcoin proof when you're ready.
+				{$copy.pitchCtaDescription}
 			</p>
 			<div class="mt-10 flex flex-wrap justify-center gap-4">
 				<a
@@ -367,22 +365,22 @@
 				</a>
 				<a
 					href="/tools/wizard"
-					class="inline-flex items-center gap-2 rounded-xl border-2 border-brand-200 bg-white px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors"
+					class="inline-flex items-center gap-2 rounded-xl border-2 border-brand-200 bg-surface-2 px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors"
 				>
-					Try Building Wizard
+					{$copy.tryWizard}
 				</a>
 				<a
 					href={pitchMeta.github}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-8 py-3.5 text-sm font-semibold text-slate-600 no-underline hover:border-brand-300 transition-colors"
+					class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-8 py-3.5 text-sm font-semibold text-slate-600 no-underline hover:border-brand-300 transition-colors"
 				>
 					<Icon name="github" class="h-4 w-4" />
 					GitHub
 				</a>
 			</div>
 			<p class="mt-12 text-xs text-slate-400 max-w-lg mx-auto">
-				Safe Harbour: Educational purposes only. Consult qualified professionals for legal and financial decisions.
+				{$copy.educationalDisclaimer}
 				Data synced from marketing.ts — update numbers once, pitch stays current.
 			</p>
 		</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { jurisdictions, currencies } from '$lib/data';
 	import { getToolStats } from '$lib/strata-tool';
+	import { copy } from '$lib/i18n';
 
 	const stats = getToolStats();
 
@@ -28,13 +29,13 @@
 
 <section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Documentation Hub</h1>
+		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.documentationHub}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl">
-			BC-first MVP. {stats.total} Strata Tool modules. All docs in <code class="text-sm bg-slate-100 px-1.5 py-0.5 rounded">docs/</code> folder.
+			{$copy.bcFirstMvp} {stats.total} {$copy.strataToolModules}. {$copy.allDocsIn} <code class="text-sm bg-slate-100 px-1.5 py-0.5 rounded">docs/</code> folder.
 		</p>
 		<div class="mt-6 flex flex-wrap gap-3">
-			<a href="/compliance" class="rounded-xl bg-bc-blue/5 border border-bc-blue/20 px-5 py-3 text-sm font-semibold text-bc-blue no-underline hover:bg-bc-blue/10">Compliance KB →</a>
-			<a href="/tools" class="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500">Strata Tool →</a>
+			<a href="/compliance" class="rounded-xl bg-bc-blue/5 border border-bc-blue/20 px-5 py-3 text-sm font-semibold text-bc-blue no-underline hover:bg-bc-blue/10">{$copy.complianceKb} →</a>
+			<a href="/tools" class="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500">{$copy.strataTool} →</a>
 		</div>
 	</div>
 </section>
@@ -42,7 +43,7 @@
 <div class="mx-auto max-w-7xl px-6 py-12">
 	<!-- Doc index -->
 	<section class="mb-16">
-		<h2 class="text-xl font-bold text-slate-900 mb-6">Document Index</h2>
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.documentIndex}</h2>
 		<div class="grid sm:grid-cols-2 gap-4">
 			{#each docIndex as doc}
 				<div class="glass-card rounded-xl p-5">
@@ -50,7 +51,7 @@
 					<h3 class="font-bold text-slate-800 mt-1">{doc.title}</h3>
 					<p class="text-sm text-slate-500 mt-1">{doc.desc}</p>
 					{#if doc.href}
-						<a href={doc.href} class="mt-3 inline-block text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">View on site →</a>
+						<a href={doc.href} class="mt-3 inline-block text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">{$copy.viewOnSite} →</a>
 					{/if}
 				</div>
 			{/each}
@@ -60,7 +61,7 @@
 
 	<!-- Architecture -->
 	<section class="mb-16">
-		<h2 class="text-xl font-bold text-slate-900 mb-6">Architecture</h2>
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.architecture}</h2>
 		<div class="glass-card rounded-2xl p-8 font-mono text-sm space-y-3">
 			<div class="rounded-xl bg-brand-50 border border-brand-200 p-4 text-center text-brand-800 font-semibold">Mobile PWA / Desktop Console</div>
 			<div class="text-center text-slate-400">↓ Tailscale Secure Gateway</div>
@@ -75,7 +76,7 @@
 
 	<!-- Install SOP -->
 	<section class="mb-16">
-		<h2 class="text-xl font-bold text-slate-900 mb-6">Install SOP</h2>
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.installSop}</h2>
 		<div class="space-y-4">
 			{#each installSteps as s}
 				<div class="glass-card rounded-xl p-5 flex gap-4">
@@ -92,7 +93,7 @@
 
 	<!-- Jurisdictions -->
 	<section>
-		<h2 class="text-xl font-bold text-slate-900 mb-6">Jurisdictions & Currencies</h2>
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.jurisdictionsCurrencies}</h2>
 		<div class="grid lg:grid-cols-2 gap-8">
 			<div class="space-y-2">
 				{#each jurisdictions as j}

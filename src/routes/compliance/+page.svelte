@@ -12,18 +12,19 @@
 		architectureMandates,
 		moduleDomainMap
 	} from '$lib/compliance';
+	import { copy } from '$lib/i18n';
 
 	let activeSection = $state('pillars');
 	let expandedDomain = $state<string | null>('financial');
 
 	const sections = [
-		{ id: 'pillars', label: 'Five Pillars', icon: '🏛️' },
-		{ id: 'bylaw', label: 'Bylaw Flow', icon: '⚖️' },
-		{ id: 'conveyancing', label: 'Forms B & F', icon: '📄' },
-		{ id: 'meetings', label: 'Quorum & Voting', icon: '🗳️' },
-		{ id: 'retention', label: 'Record Retention', icon: '📁' },
-		{ id: 'localization', label: 'BC → US Map', icon: '🌐' },
-		{ id: 'architecture', label: 'Build Mandates', icon: '🔧' }
+		{ id: 'pillars', label: 'fivePillars', icon: '🏛️' },
+		{ id: 'bylaw', label: 'bylawFlow', icon: '⚖️' },
+		{ id: 'conveyancing', label: 'formsBf', icon: '📄' },
+		{ id: 'meetings', label: 'quorumVoting', icon: '🗳️' },
+		{ id: 'retention', label: 'recordRetention', icon: '📁' },
+		{ id: 'localization', label: 'bcUsMap', icon: '🌐' },
+		{ id: 'architecture', label: 'buildMandates', icon: '🔧' }
 	] as const;
 </script>
 
@@ -35,32 +36,30 @@
 <!-- Header -->
 <section class="border-b border-border bg-gradient-to-b from-bc-blue/5 via-brand-50/30 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<div class="inline-flex items-center gap-2 rounded-full bg-white border border-border px-4 py-1.5 text-xs font-bold text-bc-blue mb-4">
+		<div class="inline-flex items-center gap-2 rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue mb-4">
 			<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
-			KNOWLEDGE BASE — RETAIN & DO NOT FORGET
+			{$copy.knowledgeBase}
 		</div>
-		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">BC Strata Compliance Reference</h1>
+		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.complianceReference}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl leading-relaxed">
-			End-to-end breakdown of BC strata operations under the <strong>Strata Property Act (SPA)</strong> and
-			<strong>BCFSA</strong> licensing. Architecture blueprints, workflow triggers, governance logic, and
-			Canada-to-US localization — preserved for Hermes, Rosa, and Kimi.
+			{$copy.complianceIntro}
 		</p>
 		<div class="mt-6 flex flex-wrap gap-3 text-sm">
-			<span class="rounded-full bg-white border border-border px-3 py-1 font-semibold text-slate-600">
+			<span class="rounded-full bg-surface-2 border border-border px-3 py-1 font-semibold text-slate-600">
 				{regulatoryFramework.primaryActs[0]}
 			</span>
-			<span class="rounded-full bg-white border border-border px-3 py-1 font-semibold text-slate-600">
+			<span class="rounded-full bg-surface-2 border border-border px-3 py-1 font-semibold text-slate-600">
 				{regulatoryFramework.regulator}
 			</span>
-			<span class="rounded-full bg-white border border-border px-3 py-1 font-semibold text-slate-600">
-				Disputes: {regulatoryFramework.disputeBody}
+			<span class="rounded-full bg-surface-2 border border-border px-3 py-1 font-semibold text-slate-600">
+				{$copy.disputes}: {regulatoryFramework.disputeBody}
 			</span>
 		</div>
 	</div>
 </section>
 
 <!-- Section nav -->
-<div class="sticky top-[65px] z-40 border-b border-border bg-white/90 backdrop-blur-md">
+<div class="sticky top-[65px] z-40 border-b border-border bg-surface-2/90 backdrop-blur-md">
 	<div class="mx-auto max-w-7xl px-6 py-3 overflow-x-auto">
 		<div class="flex gap-2 min-w-max">
 			{#each sections as sec}
@@ -72,7 +71,7 @@
 					onclick={() => (activeSection = sec.id)}
 				>
 					<span>{sec.icon}</span>
-					{sec.label}
+					{$copy[sec.label]}
 				</button>
 			{/each}
 		</div>
@@ -83,15 +82,15 @@
 	<!-- Agent role callout -->
 	<div class="glass-card rounded-2xl p-6 mb-10 border-l-4 border-l-bc-blue">
 		<p class="text-sm text-slate-700 leading-relaxed">
-			<strong>Agent model:</strong> {regulatoryFramework.agentRole}.
+			<strong>{$copy.agentModel}:</strong> {regulatoryFramework.agentRole}.
 			Hermes modules below map to statutory requirements — Rosa cites sources; Ziggy enforces fund isolation and CRF caps.
 			Questions: <a href="mailto:hello@giveabit.io" class="text-brand-600 hover:underline">hello@giveabit.io</a>
 		</p>
 	</div>
 
 	{#if activeSection === 'pillars'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">Five Functional Domains</h2>
-		<p class="text-slate-500 mb-8">Every Hermes module must cover one of these pillars. Click to expand.</p>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.functionalDomains}</h2>
+		<p class="text-slate-500 mb-8">{$copy.functionalDomainsHint}</p>
 
 		<div class="space-y-4">
 			{#each functionalDomains as domain}
@@ -111,7 +110,7 @@
 					{#if expandedDomain === domain.id}
 						<div class="px-6 pb-6 border-t border-border pt-5 animate-slide-up">
 							{#if domain.funds.length > 0}
-								<h4 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Trust Funds (isolated)</h4>
+								<h4 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">{$copy.trustFunds}</h4>
 								<div class="grid sm:grid-cols-2 gap-3 mb-5">
 									{#each domain.funds as fund}
 										<div class="rounded-xl bg-slate-50 border border-border p-4">
@@ -130,7 +129,7 @@
 								</div>
 							{/if}
 
-							<h4 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">App Features</h4>
+							<h4 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">{$copy.appFeatures}</h4>
 							<ul class="space-y-2 mb-5">
 								{#each domain.features as feature}
 									<li class="flex items-start gap-2 text-sm text-slate-600">
@@ -153,7 +152,7 @@
 
 		<!-- Module mapping -->
 		<div class="mt-12">
-			<h3 class="text-xl font-bold text-slate-800 mb-4">Hermes Module → Domain Map</h3>
+			<h3 class="text-xl font-bold text-slate-800 mb-4">{$copy.moduleDomainMap}</h3>
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
@@ -180,7 +179,7 @@
 	{/if}
 
 	{#if activeSection === 'bylaw'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">Bylaw Enforcement Flow</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.bylawEnforcementFlow}</h2>
 		<p class="text-slate-500 mb-8">
 			Precise statutory order — skipping steps risks CRT overturn. Backend must enforce locks.
 		</p>
@@ -228,7 +227,7 @@
 	{/if}
 
 	{#if activeSection === 'conveyancing'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">Real Estate Conveyancing — Forms B & F</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.conveyancingForms}</h2>
 		<p class="text-slate-500 mb-8">When an owner sells, their lawyer requests documents. Balance due blocks the sale.</p>
 
 		<div class="space-y-6">
@@ -259,7 +258,7 @@
 	{/if}
 
 	{#if activeSection === 'meetings'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">Governance — Quorum & Voting</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.governanceVoting}</h2>
 		<p class="text-slate-500 mb-8">Hardcoded thresholds. Abstentions excluded from all calculations.</p>
 
 		<h3 class="text-lg font-bold text-slate-800 mb-4">Quorum Rules</h3>
@@ -316,7 +315,7 @@
 	{/if}
 
 	{#if activeSection === 'retention'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">SPA s.35 Record Retention</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.recordRetentionTitle}</h2>
 		<p class="text-slate-500 mb-8">Archive module must enforce these timelines. Rosa flags premature deletion.</p>
 
 		<div class="grid sm:grid-cols-2 gap-3">
@@ -336,7 +335,7 @@
 	{/if}
 
 	{#if activeSection === 'localization'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">Localization Engine — BC → US</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.localizationEngine}</h2>
 		<p class="text-slate-500 mb-8">
 			Decouple core code from regional terminology day one. Database uses neutral keys; UI maps via config.
 		</p>
@@ -364,7 +363,7 @@
 	{/if}
 
 	{#if activeSection === 'architecture'}
-		<h2 class="text-2xl font-bold text-slate-900 mb-2">Architecture Mandates</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.architectureMandates}</h2>
 		<p class="text-slate-500 mb-8">Non-negotiable design requirements from compliance review.</p>
 
 		<div class="grid gap-5 sm:grid-cols-2">
@@ -380,7 +379,7 @@
 </div>
 
 <!-- Footer CTA -->
-<section class="border-t border-border bg-white">
+<section class="border-t border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-12 text-center">
 		<p class="text-sm text-slate-500">
 			This knowledge base is the source of truth for Hermes architecture.

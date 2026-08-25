@@ -2,6 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.2.1
+    date: 2026-08-25
+    summary: Blog localization and source-linked legal library
   - version: 0.2.0
     date: 2026-08-25
     summary: Responsive OpenStrata operations dashboard and multilingual GUI foundation
@@ -14,6 +17,14 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.2.1] — 2026-08-25
+
+### Added
+- Shared locale coverage for the public blog interface
+- Source-linked `/legal` library for BC legislation, regulations, official guidance, and tribunal information
+- Legal-information notice separating workflow support from legal advice
+
 
 All notable changes to this project are documented here.
 

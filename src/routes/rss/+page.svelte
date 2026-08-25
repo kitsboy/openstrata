@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { rssFeeds, rssItems, apiEndpoints } from '$lib/data';
 	import Icon from '$lib/components/Icon.svelte';
+	import { copy } from '$lib/i18n';
 
 	let selectedCategory = $state('All');
 	let apiTab = $state<'rest' | 'webhooks' | 'feeds'>('rest');
@@ -36,12 +37,11 @@
 		<div class="max-w-3xl">
 			<div class="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700 mb-4">
 				<Icon name="rss" class="h-3.5 w-3.5" />
-				GROWABLE FEED INFRASTRUCTURE
+				{$copy.feedInfrastructure}
 			</div>
-			<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">RSS, Social & API Hub</h1>
+			<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.rssTitle}</h1>
 			<p class="mt-4 text-lg text-slate-600 leading-relaxed">
-				Aggregate BC housing regulations, CRT decisions, rental market data, Bitcoin protocol news,
-				and Twitter/X lists. Expose everything through a clean REST API for your strata stack.
+				{$copy.rssIntro}
 			</p>
 		</div>
 	</div>
@@ -55,7 +55,7 @@
 				class="rounded-full px-4 py-2 text-sm font-semibold transition-all
 					{selectedCategory === cat
 						? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-						: 'bg-white border border-border text-slate-600 hover:border-brand-300'}"
+						: 'bg-surface-2 border border-border text-slate-600 hover:border-brand-300'}"
 				onclick={() => (selectedCategory = cat)}
 			>
 				{cat}
@@ -66,7 +66,7 @@
 	<div class="grid lg:grid-cols-3 gap-8">
 		<!-- Feed sources -->
 		<div class="lg:col-span-1">
-			<h2 class="text-lg font-bold text-slate-800 mb-4">Feed Sources</h2>
+			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.feedSources}</h2>
 			<div class="space-y-3">
 				{#each filteredFeeds as feed}
 					<div class="glass-card rounded-xl p-4">
@@ -83,8 +83,8 @@
 			</div>
 
 			<div class="mt-6 glass-card rounded-xl p-5 border-dashed">
-				<h3 class="font-semibold text-slate-800 text-sm">Add Custom Feed</h3>
-				<p class="mt-1 text-xs text-slate-500">RSS URLs, Twitter/X lists, Nostr relays — plug in via config.yaml</p>
+				<h3 class="font-semibold text-slate-800 text-sm">{$copy.addCustomFeed}</h3>
+				<p class="mt-1 text-xs text-slate-500">{$copy.customFeedHint}</p>
 				<code class="mt-3 block rounded-lg bg-slate-100 p-3 text-[10px] font-mono text-slate-600 overflow-x-auto">
 					feeds:<br/>
 					&nbsp;&nbsp;- url: https://...<br/>
@@ -96,7 +96,7 @@
 
 		<!-- Feed items -->
 		<div class="lg:col-span-2">
-			<h2 class="text-lg font-bold text-slate-800 mb-4">Latest Items</h2>
+			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.latestItems}</h2>
 			<div class="space-y-4">
 				{#each filteredItems as item}
 					{@const feed = rssFeeds.find((f) => f.id === item.feed)}
@@ -116,15 +116,15 @@
 </section>
 
 <!-- API Section -->
-<section class="border-t border-border bg-white">
+<section class="border-t border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="text-center mb-10">
-			<h2 class="text-2xl font-bold text-slate-900">Hermes REST API</h2>
-			<p class="mt-2 text-slate-500">Local-first API on your M4 Docker stack · Tailscale-secured</p>
+			<h2 class="text-2xl font-bold text-slate-900">{$copy.apiTitle}</h2>
+			<p class="mt-2 text-slate-500">{$copy.apiIntro}</p>
 		</div>
 
 		<div class="flex justify-center gap-2 mb-8">
-			{#each [['rest', 'REST Endpoints'], ['webhooks', 'Webhooks'], ['feeds', 'Feeds & Market']] as [tab, label]}
+			{#each [['rest', $copy.restEndpoints], ['webhooks', $copy.webhooks], ['feeds', $copy.feedsMarket]] as [tab, label]}
 				<button
 					class="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all
 						{apiTab === tab
@@ -153,7 +153,7 @@
 		</div>
 
 		<div class="mt-10 max-w-4xl mx-auto glass-card rounded-2xl p-6">
-			<h3 class="font-bold text-slate-800 mb-3">Quick Start</h3>
+			<h3 class="font-bold text-slate-800 mb-3">{$copy.quickStart}</h3>
 			<pre class="rounded-xl bg-slate-900 text-slate-100 p-5 text-sm font-mono overflow-x-auto leading-relaxed"><code># Fetch live market rates (BTC/CAD + vacancy)
 curl -H "Authorization: Bearer $HERMES_TOKEN" \\
   https://hermes.local/api/v1/market/rates?jurisdiction=BC

@@ -9,6 +9,7 @@
 	} from '$lib/marketing';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import { copy } from '$lib/i18n';
 
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
@@ -28,32 +29,29 @@
 <section class="border-b border-border bg-gradient-to-br from-brand-50 via-white to-amber-50/30">
 	<div class="mx-auto max-w-7xl px-6 py-20">
 		<h1 class="text-4xl font-bold text-slate-900 sm:text-5xl tracking-tight">
-			Trusted Money.<br />
-			<span class="bg-gradient-to-r from-brand-600 to-bitcoin bg-clip-text text-transparent">Proven Operations.</span>
+			{$copy.aboutHeroTitle}<br />
+			<span class="bg-gradient-to-r from-brand-600 to-bitcoin bg-clip-text text-transparent">{$copy.aboutHeroAccent}</span>
 		</h1>
 		<p class="mt-6 text-xl text-slate-600 max-w-3xl leading-relaxed">
-			Opens Strata is BCFSA-aware software that does everything a management company does —
-			cheaper, faster, with fewer errors. Fiat rails today. Bitcoin sovereignty when you're ready.
-			Every payment provable on Bitcoin via Satohash.
+			{$copy.aboutHeroDescription}
 		</p>
 	</div>
 </section>
 
 <!-- Cost savings -->
 <section class="mx-auto max-w-7xl px-6 py-16">
-	<h2 class="text-2xl font-bold text-slate-900 mb-2">The Cost of How Strata Pays Today</h2>
+	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.costOfStrata}</h2>
 	<p class="text-slate-500 mb-8">
 		{costSavings.scenario.units} units × ${costSavings.scenario.monthlyFee}/mo =
-		<strong class="text-slate-800">${costSavings.annualFeeFlow.toLocaleString()}/year</strong> in fee flow
+		<strong class="text-slate-800">${costSavings.annualFeeFlow.toLocaleString()}/year</strong> {$copy.feeFlow}
 	</p>
 
 	<div class="grid lg:grid-cols-2 gap-10">
 		<div class="glass-card rounded-2xl p-6">
-			<h3 class="font-bold text-slate-800 mb-4">Annual Payment Processing Cost</h3>
+			<h3 class="font-bold text-slate-800 mb-4">{$copy.annualProcessingCost}</h3>
 			<BarChart data={paymentChart} height={220} barColor="#14b8a6" />
 			<p class="mt-4 text-sm text-slate-500">
-				Credit cards alone cost <strong class="text-danger">$9,000+/year</strong> per building.
-				That's CRF money going to Visa, not your roof.
+				{$copy.cardCostWarning}
 			</p>
 		</div>
 		<div class="space-y-4">
@@ -73,17 +71,17 @@
 </section>
 
 <!-- Manager time savings -->
-<section class="border-y border-border bg-white">
+<section class="border-y border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h2 class="text-2xl font-bold text-slate-900 mb-8">Manager Time Savings</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.managerTimeSavings}</h2>
 		<div class="overflow-x-auto">
 			<table class="w-full text-sm glass-card rounded-2xl overflow-hidden">
 				<thead class="bg-slate-50">
 					<tr class="text-left">
-						<th class="p-4 font-bold text-slate-600">Task</th>
-						<th class="p-4 font-bold text-slate-600">Traditional</th>
-						<th class="p-4 font-bold text-slate-600">OpenStrata</th>
-						<th class="p-4 font-bold text-slate-600">Saving</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.task}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.traditional}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.openStrataLabel}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.saving}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -103,11 +101,11 @@
 
 <!-- BCFSA positioning -->
 <section class="mx-auto max-w-7xl px-6 py-16">
-	<h2 class="text-2xl font-bold text-slate-900 mb-2">Smart Within the Law</h2>
+	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.smartWithinLaw}</h2>
 	<p class="text-slate-500 mb-8 max-w-3xl">
 		{bcfsaFacts.regulator} requires licensed brokerages for management services.
-		<strong class="text-slate-700">OpenStrata is software — not an unlicensed management company.</strong>
-		Three compliant paths:
+		<strong class="text-slate-700">{$copy.softwareNotManagement}</strong>
+		{$copy.threePaths}
 	</p>
 	<div class="grid md:grid-cols-3 gap-6">
 		{#each hermesPositioning.paths as path}
@@ -123,7 +121,7 @@
 <!-- Product stack -->
 <section class="border-t border-border bg-gradient-to-b from-slate-50 to-white">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">Three Layers of Trust</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">{$copy.layersTrust}</h2>
 		<div class="grid md:grid-cols-3 gap-6">
 			{#each productStack as product, i}
 				<div class="glass-card rounded-2xl p-8 text-center relative">
@@ -138,7 +136,7 @@
 			{/each}
 		</div>
 		<p class="mt-8 text-center text-slate-600 max-w-2xl mx-auto">
-			<strong>OpenStrata runs your building. Satohash proves it happened. The protocol lets you take your history with you.</strong>
+			<strong>{$copy.runBuildingProof}</strong>
 		</p>
 	</div>
 </section>
@@ -147,7 +145,7 @@
 <section class="mx-auto max-w-7xl px-6 py-16">
 	<div class="grid lg:grid-cols-2 gap-10">
 		<div class="glass-card rounded-2xl p-8 border-l-4 border-l-bitcoin">
-			<h3 class="text-xl font-bold text-slate-800">BTC War Chest</h3>
+			<h3 class="text-xl font-bold text-slate-800">{$copy.btcWarChest}</h3>
 			<p class="mt-3 text-slate-600 leading-relaxed">
 				Council votes to allocate <strong>{warChest.allocPct}</strong> of annual budget into a multisig treasury hedge.
 				Keys stay on council hardware wallets. OpenStrata watches — never custodies.
@@ -155,10 +153,10 @@
 			</p>
 		</div>
 		<div>
-			<h3 class="text-xl font-bold text-slate-800 mb-4">By the Numbers</h3>
+			<h3 class="text-xl font-bold text-slate-800 mb-4">{$copy.byNumbers}</h3>
 			<div class="grid grid-cols-2 gap-3">
 				{#each competitiveAdvantages as adv}
-					<div class="rounded-xl bg-white border border-border p-4 text-center">
+					<div class="rounded-xl bg-surface-2 border border-border p-4 text-center">
 						<div class="text-2xl font-bold text-brand-600">{adv.metric}</div>
 						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
 						<div class="text-[10px] text-slate-400">vs {adv.vs}</div>
@@ -171,13 +169,11 @@
 
 <section class="border-t border-border bg-brand-600">
 	<div class="mx-auto max-w-7xl px-6 py-14 text-center text-white">
-		<h2 class="text-2xl font-bold">Ready to run smarter?</h2>
+		<h2 class="text-2xl font-bold">{$copy.readySmarter}</h2>
 		<div class="mt-6 flex flex-wrap justify-center gap-4">
-			<a href="/tools" class="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors">
-				Explore Strata Tool →
-			</a>
+			<a href="/tools" class="rounded-xl bg-surface-2 px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors">{$copy.exploreStrataTool} →</a>
 			<a href="/roadmap" class="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-bold text-white no-underline hover:bg-white/10 transition-colors">
-				See Roadmap
+				{$copy.seeRoadmap}
 			</a>
 			<a href="mailto:hello@giveabit.io" class="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-bold text-white no-underline hover:bg-white/10 transition-colors inline-flex items-center gap-2">
 				<Icon name="mail" class="h-4 w-4" />

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { rssItems } from '$lib/data';
 	import Icon from '$lib/components/Icon.svelte';
+	import { copy } from '$lib/i18n';
 
 	const posts = [
 		...rssItems.map((item) => ({
@@ -30,8 +31,8 @@
 
 <section class="border-b border-border bg-gradient-to-b from-amber-50/50 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Blog & Announcements</h1>
-		<p class="mt-3 text-lg text-slate-600">Deep dives, ecosystem updates, and strata sovereignty news from Give A Bit</p>
+		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.blogTitle}</h1>
+		<p class="mt-3 text-lg text-slate-600">{$copy.blogIntro}</p>
 	</div>
 </section>
 
@@ -45,19 +46,15 @@
 				</div>
 				<h2 class="text-xl font-bold text-slate-800 group-hover:text-brand-700 transition-colors">{post.title}</h2>
 				<p class="mt-3 text-slate-500 leading-relaxed">{post.excerpt}</p>
-				<a href="/rss" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">
-					Read more →
-				</a>
+				<a href="/rss" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">{$copy.readMore} →</a>
 			</article>
 		{/each}
 	</div>
 
 	<div class="mt-12 glass-card rounded-2xl p-8 text-center border-dashed">
 		<Icon name="rss" class="h-8 w-8 text-brand-500 mx-auto mb-3" />
-		<h2 class="font-bold text-slate-800">Subscribe via RSS</h2>
-		<p class="mt-2 text-sm text-slate-500">Get all posts in your favourite reader</p>
-		<a href="/rss" class="mt-4 inline-block text-sm font-semibold text-brand-600 no-underline hover:underline">
-			View RSS feeds & API →
-		</a>
+		<h2 class="font-bold text-slate-800">{$copy.subscribeRss}</h2>
+		<p class="mt-2 text-sm text-slate-500">{$copy.subscribeRssHint}</p>
+		<a href="/rss" class="mt-4 inline-block text-sm font-semibold text-brand-600 no-underline hover:underline">{$copy.viewRssApi} →</a>
 	</div>
 </div>

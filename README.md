@@ -1,6 +1,6 @@
 # OpenStrata — Sovereign Data Portability
 
-**Current release: v0.2.0**
+**Current release: v0.2.1**
 
 **Open data marketplace built on Bitcoin, Lightning, and Nostr.**  
 Sovereign data portability — own your data, control who accesses it, get paid when it's used.
@@ -36,5 +36,6 @@ npm run dev
 - `docs/KIMI-HANDOFF.md` — Session handoff log
 - `docs/diligence/` — Investor and partner packs
 - `CHANGELOG.md` — Release history and version markers
+- `/legal` — Primary legal and official source library
 
 *Safe Harbour · Part of the [Give A Bit](https://giveabit.io) family.*

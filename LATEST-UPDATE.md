@@ -1,4 +1,10 @@
-# openstrata — Last Updated 2026-07-19 by Grok
-Brief: Thin Satohash API client (src/lib/satohash.ts)
-Commit: b57f2257682b32b634ea1da0c7f1d17baeb3358a
-Feature: 9f188236da4da2713d8261368c15dabe12004b6e
+# OpenStrata — Last Updated 2026-08-25 by Buffy
+
+Brief: v0.2.1 Batch 1 adds shared blog localization and a source-linked BC legal library, alongside the previously staged GUI/deployment sweep.
+
+Release: v0.2.1
+Verification: `npm run build` passes. `npm run check` is blocked because `svelte-check` is missing from `node_modules`.
+
+Batch 1 complete: `/blog`, `/legal`, shared locale catalog additions, visible version bump, changelog, README, and project status records.
+
+Next batch: templates, forms, and remaining wizard/compliance copy gaps.

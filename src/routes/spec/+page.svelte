@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { copy } from '$lib/i18n';
+
 	const layers = [
 		{ name: 'Identity Layer', protocol: 'NIP-05 + OpenStrata Key', desc: 'Single sovereign keypair bridges Bitcoin, Lightning, and Nostr identity.' },
 		{ name: 'Data Layer', protocol: 'Signed Nostr Events', desc: 'Portable strata records, bylaws hashes, and council decisions as verifiable events.' },
@@ -23,17 +25,16 @@
 
 <section class="border-b border-border bg-gradient-to-b from-slate-50 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">OpenStrata Specification</h1>
+		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.specTitle}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl">
-			An open standard for sovereign data portability across Bitcoin, Lightning, and Nostr —
-			extended for strata corporation governance, treasury, and compliance.
+			{$copy.specIntro}
 		</p>
 	</div>
 </section>
 
 <div class="mx-auto max-w-7xl px-6 py-12">
 	<section class="mb-16">
-		<h2 class="text-2xl font-bold text-slate-900 mb-6">Protocol Layers</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.protocolLayers}</h2>
 		<div class="space-y-4">
 			{#each layers as layer, i}
 				<div class="glass-card rounded-xl p-5 flex gap-5 items-start">
@@ -53,7 +54,7 @@
 	</section>
 
 	<section class="mb-16">
-		<h2 class="text-2xl font-bold text-slate-900 mb-6">Core Primitives</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.corePrimitives}</h2>
 		<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 			{#each primitives as p}
 				<div class="glass-card rounded-xl p-6 hover:border-brand-200 transition-all">
@@ -66,7 +67,7 @@
 	</section>
 
 	<section class="mb-16">
-		<h2 class="text-2xl font-bold text-slate-900 mb-6">How It Works</h2>
+		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.howItWorks}</h2>
 		<div class="grid sm:grid-cols-3 gap-6">
 			{#each [
 				{ n: 1, title: 'Generate Your Key', desc: 'One sovereign keypair becomes your identity across all protocols. Self-custodied.' },
@@ -87,14 +88,11 @@
 	<section>
 		<div class="glass-card rounded-2xl p-8 text-center">
 			<div class="text-4xl mb-4">📜</div>
-			<h2 class="text-xl font-bold text-slate-800">Full Wire Protocol — Coming Soon</h2>
+			<h2 class="text-xl font-bold text-slate-800">{$copy.fullWireProtocol}</h2>
 			<p class="mt-2 text-slate-500 max-w-lg mx-auto">
-				Identity layers, data formats, verification rules, and wire protocols.
-				Watch the repo for updates.
+				{$copy.fullWireProtocolDescription}
 			</p>
-			<a href="https://github.com/kitsboy/openstrata" class="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors" target="_blank" rel="noopener noreferrer">
-				Watch on GitHub →
-			</a>
+			<a href="https://github.com/kitsboy/openstrata" class="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors" target="_blank" rel="noopener noreferrer">{$copy.watchOnGithub} →</a>
 		</div>
 	</section>
 </div>
