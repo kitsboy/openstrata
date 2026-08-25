@@ -19,11 +19,15 @@ import {
   decideNoFine
 } from '../enforcement/enforcement.js';
 import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rails/rails.js';
+import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-request.js';
+import { generateForm } from '../forms/forms.js';
+import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
 
 export interface ApiDeps {
   ledger: LedgerEngine;
   rosa: Retriever;
   reconcile: Reconciler;
+  payments: PaymentRequestStore;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
@@ -31,6 +35,9 @@ export interface ApiDeps {
     cadPerBtc?: number; // live rate for convertible rails
   };
 }
+
+/** In-memory seen-set for Idempotency-Key on idempotent POSTs (ledger/billing). */
+const lastResults = new Map<string, unknown>();
 
 export async function buildServer(
   deps: ApiDeps,
@@ -58,7 +65,7 @@ export async function buildServer(
     }
   );
 
-  // Post a single credit/debit.
+  // Post a single credit/debit (idempotent via Idempotency-Key header).
   app.post<{
     Body: {
       community: string;
@@ -70,21 +77,50 @@ export async function buildServer(
       referenceCode?: string;
       reconRef?: string;
     };
-  }>('/api/v1/ledger/post', async (req) => {
-    const row = await deps.ledger.post(
-      req.body.community,
-      req.body.fund,
-      req.body.amountBasis,
-      req.body.kind,
-      {
-        type: req.body.type,
-        description: req.body.description,
-        referenceCode: req.body.referenceCode,
-        reconRef: req.body.reconRef
+  }>(
+    '/api/v1/ledger/post',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['community', 'fund', 'amountBasis', 'kind', 'type'],
+          additionalProperties: false,
+          properties: {
+            community: { type: 'string', minLength: 1 },
+            fund: { type: 'string' },
+            amountBasis: { type: 'integer', not: { const: 0 } },
+            kind: { type: 'string', enum: ['credit', 'debit'] },
+            type: { type: 'string' },
+            description: { type: 'string' },
+            referenceCode: { type: 'string' },
+            reconRef: { type: 'string' }
+          }
+        }
       }
-    );
-    return { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
-  });
+    },
+    async (req) => {
+      const idem = req.headers['idempotency-key'];
+      if (idem) {
+        const cached = lastResults.get(`ledger:${idem}`);
+        if (cached) return cached;
+      }
+      const row = await deps.ledger.post(
+        req.body.community,
+        req.body.fund,
+        req.body.amountBasis,
+        req.body.kind,
+        {
+          type: req.body.type,
+          description: req.body.description,
+          referenceCode: req.body.referenceCode,
+          reconRef: req.body.reconRef
+        }
+      );
+      const result = { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
+      if (idem) lastResults.set(`ledger:${idem}`, result);
+      return result;
+    }
+  );
 
   // Ziggy: treasury spend verdict (authorization gate, not execution).
   app.post<{
@@ -146,7 +182,7 @@ export async function buildServer(
     cadPerBtc: deps.config.cadPerBtc ?? null
   }));
 
-  // Build a rail-specific payment quote (LNURL 15-min CAD lock enforced in rails module).
+  // Build a rail quote; idempotent per (refId, unitRef, rail) via the payment store.
   app.post<{
     Body: {
       rail: Rail;
@@ -155,6 +191,7 @@ export async function buildServer(
       amountBasis: number;
       currency: 'CAD' | 'BTC';
       recipient: string;
+      communityId?: string;
       note?: string;
     };
   }>('/api/v1/payments/quote', async (req) => {
@@ -164,25 +201,82 @@ export async function buildServer(
       return { ok: false, reason: `rail '${b.rail}' is not enabled` };
     }
     try {
-      const invoice = quotePayment(
+      const { request, created } = await getOrCreateQuote(
+        deps.payments,
         {
           refId: b.refId,
-          communityId: '',
           unitRef: b.unitRef,
+          communityId: b.communityId ?? '',
+          rail: b.rail,
           amountBasis: b.amountBasis,
           currency: b.currency,
-          rail: b.rail,
-          note: b.note
+          recipient: b.recipient
         },
-        b.recipient,
-        new Date(),
-        deps.config.cadPerBtc ?? 0
+        () =>
+          quotePayment(
+            {
+              refId: b.refId,
+              communityId: b.communityId ?? '',
+              unitRef: b.unitRef,
+              amountBasis: b.amountBasis,
+              currency: b.currency,
+              rail: b.rail,
+              note: b.note
+            },
+            b.recipient,
+            new Date(),
+            deps.config.cadPerBtc ?? 0
+          )
       );
-      return { ok: true, invoice };
+      const invoice = {
+        rail: request.rail,
+        referenceCode: request.referenceCode,
+        recipient: request.recipient,
+        invoice: request.invoice || undefined,
+        fiatLockedBasis: request.fiatLockedBasis || undefined,
+        amountSat: request.amountSat || undefined,
+        expiresAt: request.expiresAt,
+        status: request.status
+      };
+      return { ok: true, created, invoice };
     } catch (err) {
       return { ok: false, reason: (err as Error).message };
     }
   });
+
+  // Confirm a rail payment by its shared referenceCode -> mark paid AND post to
+  // the unit's AR ledger account (reconciles like an e-transfer would).
+  app.post<{ Body: { referenceCode: string; community?: string } }>(
+    '/api/v1/payments/confirm',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['referenceCode'],
+          additionalProperties: false,
+          properties: { referenceCode: { type: 'string', minLength: 1 }, community: { type: 'string' } }
+        }
+      }
+    },
+    async (req) => {
+      const req0 = await deps.payments.findByReference(req.body.referenceCode);
+      if (!req0) return { ok: false, reason: 'unknown referenceCode' };
+      if (req0.status !== 'quoted') return { ok: false, reason: `request is ${req0.status}, not quoted` };
+
+      // Post the confirmed amount to the unit's AR ledger (credit).
+      const community = (req.body.community ?? req0.communityId) || 'demo';
+      const kind = req0.amountBasis >= 0 ? ('credit' as const) : ('debit' as const);
+      const row = await deps.ledger.post(
+        community,
+        req0.referenceCode,
+        Math.abs(req0.amountBasis),
+        kind,
+        { type: 'strata_fee', referenceCode: req0.referenceCode, reconRef: req0.referenceCode }
+      );
+      await deps.payments.markStatus(req0.referenceCode, 'paid');
+      return { ok: true, seq: row.seq, referenceCode: req0.referenceCode, status: 'paid' };
+    }
+  );
 
   // Reconciliation: auto-post decision for one inbound transfer.
   app.post<{
@@ -291,6 +385,69 @@ export async function buildServer(
     try {
       const c = decideNoFine(JSON.parse(req.body.complaint), req.body.councilMinutesRef);
       return { ok: true, complaint: c };
+    } catch (err) {
+      return { ok: false, reason: (err as Error).message };
+    }
+  });
+
+  // ------------------------------------------------ Conveyancing (Form B/F)
+  app.post<{
+    Body: {
+      kind: 'B' | 'F';
+      unitId: string;
+      requestedAt: string;
+      balanceBasis: number;
+      arrearsBasis?: number;
+      crfBasis?: number;
+      pendingCases?: string[];
+      eprDisclosed?: boolean;
+      requester?: string;
+    };
+  }>('/api/v1/forms', async (req) => {
+    const b = req.body;
+    const form = generateForm(
+      { kind: b.kind, unitId: b.unitId, requestedAt: b.requestedAt, requester: b.requester },
+      {
+        unitId: b.unitId,
+        balanceBasis: b.balanceBasis,
+        arrearsBasis: b.arrearsBasis ?? b.balanceBasis,
+        crfBasis: b.crfBasis,
+        pendingCases: b.pendingCases,
+        eprDisclosed: b.eprDisclosed
+      },
+      new Date().toISOString().slice(0, 10)
+    );
+    return form;
+  });
+
+  // ------------------------------------------------ Meetings (quorum + voting)
+  app.post<{
+    Body: {
+      type: 'AGM' | 'SGM' | 'council' | 'rescheduled';
+      eligible: number;
+      present: number;
+      councilSize?: number;
+    };
+  }>('/api/v1/meetings/quorum', async (req) => {
+    const b = req.body;
+    return b.type === 'rescheduled'
+      ? checkQuorumRescheduled(b.present)
+      : checkQuorum(b.type, b.eligible, b.present, b.councilSize ?? 0);
+  });
+
+  app.post<{
+    Body: {
+      threshold: 'majority' | 'three_quarter' | 'eighty' | 'unanimous';
+      eligible: number;
+      present: number;
+      yes: number;
+      no: number;
+      abstain: number;
+    };
+  }>('/api/v1/meetings/vote', async (req) => {
+    const b = req.body;
+    try {
+      return countVote(b.threshold, { eligible: b.eligible, present: b.present, yes: b.yes, no: b.no, abstain: b.abstain });
     } catch (err) {
       return { ok: false, reason: (err as Error).message };
     }

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore } from './memstore.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
@@ -23,6 +23,7 @@ beforeAll(async () => {
       ledger: new LedgerEngine(new MemLedgerStore()),
       rosa: keywordRetriever(corpus),
       reconcile,
+      payments: new MemPaymentRequestStore(),
       config: {
         crfMandatoryPct: 10,
         vectorCollection: 'bc_spa_rta_crt',
@@ -234,5 +235,60 @@ describe('fastify API', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().ok).toBe(false);
     expect(res.json().reason).toMatch(/not enabled/);
+  });
+
+  it('POST payments/quote is idempotent per (refId, unitRef, rail)', async () => {
+    const body = {
+      rail: 'lightning',
+      refId: 'IDEM1',
+      unitRef: 'unit-101',
+      amountBasis: 10_000,
+      currency: 'CAD',
+      recipient: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw'
+    };
+    const a = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    const b = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    expect(a.json().created).toBe(true);
+    expect(b.json().created).toBe(false);
+    expect(b.json().invoice.referenceCode).toBe(a.json().invoice.referenceCode);
+  });
+
+  it('POST payments/confirm posts the confirmed amount to the AR ledger', async () => {
+    const quote = await app.inject({
+      method: 'POST', url: '/api/v1/payments/quote',
+      payload: {
+        rail: 'lightning', refId: 'CONF1', unitRef: 'unit-302', amountBasis: 50_000,
+        currency: 'CAD', recipient: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw'
+      }
+    });
+    const ref = quote.json().invoice.referenceCode;
+    const confirm = await app.inject({
+      method: 'POST', url: '/api/v1/payments/confirm',
+      payload: { referenceCode: ref, community: 'demo' }
+    });
+    expect(confirm.statusCode).toBe(200);
+    expect(confirm.json().ok).toBe(true);
+    const bal = await app.inject({
+      method: 'GET', url: `/api/v1/ledger/balance?community=demo&fund=${encodeURIComponent(ref)}`
+    });
+    expect(bal.json().balanceBasis).toBe(50_000);
+  });
+
+  it('POST /api/v1/forms issues a Form F WITHHELD on a debtor unit', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/forms',
+      payload: { kind: 'F', unitId: '302', requestedAt: '2026-08-25', balanceBasis: 14_500 }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().state).toBe('withheld');
+    expect(res.json().kind).toBe('F');
+  });
+
+  it('POST /api/v1/meetings/vote enforces an unresolvable 80% vote', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/v1/meetings/vote',
+      payload: { threshold: 'eighty', eligible: 10, present: 10, yes: 7, no: 3, abstain: 0 }
+    });
+    expect(res.json().passed).toBe(false);
   });
 });
