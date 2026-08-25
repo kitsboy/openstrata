@@ -10,12 +10,15 @@
   import SearchModal from '$lib/components/SearchModal.svelte';
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
+  import { browser } from '$app/environment';
   import packageJson from '../../package.json';
 
   let { children } = $props();
 
-  // Register the PWA service worker (production only; never in dev or SSR).
-  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // Register the PWA service worker. `browser` keeps this out of SSR/prerender:
+  // Node 20 (Cloudflare Pages) has no global `navigator`, so an unguarded check
+  // crashes the production build during prerendering.
+  if (browser && import.meta.env.PROD && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {
       /* offline caching is progressive enhancement */
     });
