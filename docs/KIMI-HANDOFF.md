@@ -1,3 +1,22 @@
+## Session — 2026-08-25 (Bitcoin + Layer-2 rails)
+
+**Done:**
+- Added the **sovereign payment-rails module** (`backend/src/rails/`, commit `b5203a8`) accepting Bitcoin on-chain (SegWit/taproot), **Lightning** (LNURL/BOLT-11 with 15-min CAD rate lock), **Liquid** (confidential L-BTC/L-USD), **PayNym (BIP-47)** payment codes, and **Nostr** identity. Pure recipient validation + rail quoting, unit-tested (11 tests).
+- Wired into the Fastify API: `GET /api/v1/rails/status` and `POST /api/v1/payments/quote` return a shared `referenceCode` (e.g. `pay-<refId>-<unit>`) so Ziggy + the ledger reconcile confirmed payments the same way e-transfers do. Rails are **off by default**, enabled via `.env` (`BITCOIN_RAIL_ENABLED`, `LIGHTNING_RAIL_ENABLED`, `LIQUID_RAIL_ENABLED`, `PAYNYM_RAIL_ENABLED`, `NOSTR_RAIL_ENABLED`); LND / Liquid node / PayNym notifier / Nostr relay endpoints are configuration seams.
+- Backend suite now **66 tests** (added 3 API rail-route tests); typecheck clean. Frontend stays green (check 0/0, build clean). Workplan Phase 4, DIRECTORY-MAP, `.ai_docs`, README and `.env.example` updated.
+
+**Remaining (external / not yet built):**
+- Rails are **prepared, not connected**: no LND / Liquid daemon / PayNym / Nostr relay is running on a host yet, and there is no live `cadPerBtc` rate feed. Enable + point endpoints via `.env` when daemons exist; wire the rate feed and a real payment-confirm → ledger-post path.
+- Rosa pgvector embedding + Ollama model choice not selected; `0002` migration + `keywordRetriever` seam ready.
+- Docker stack needs a real deployment on a host behind Tailscale (Umbrel).
+- Form B/F generator with deadline tracking, meeting quorum + voting engine, PWA hardening.
+
+**Git State:**
+- SHA: `b5203a8`
+- Unpushed: `git log --oneline origin/main..HEAD`
+
+---
+
 ## Session — 2026-08-25 (Phase 3: fee billing + bylaw enforcement)
 
 **Done:**
