@@ -126,7 +126,80 @@
 	const stepLabels = ['jurisdiction', 'entityAddress', 'configureUnits', 'configureFunds', 'toggleServices', 'paymentRails', 'bylaws', 'reviewGenerate'] as const satisfies ReadonlyArray<keyof Translation>;
 	const stepIcons = ['\u{1F30D}', '\u{1F3E2}', '\u{1F3E0}', '\u{1F4B0}', '\u{1F527}', '\u{1F4B3}', '\u2696\uFE0F', '\u2705'];
 
-	const nextStep = () => { if (step < totalSteps - 1) step++; };
+	// Saved buildings (localStorage) + template prefill + validation
+	type SavedBuilding = { name: string; config: string; savedAt: string };
+	const BUILDINGS_KEY = 'openstrata-saved-buildings';
+	const PREFILL_KEY = 'openstrata-wizard-prefill';
+	let myBuildings = $state<SavedBuilding[]>([]);
+	let nameError = $state('');
+	let savedToast = $state('');
+
+	function loadBuildings(): SavedBuilding[] {
+		try {
+			const parsed = JSON.parse(localStorage.getItem(BUILDINGS_KEY) ?? '[]');
+			return Array.isArray(parsed) ? parsed : [];
+		} catch {
+			return [];
+		}
+	}
+
+	$effect(() => {
+		myBuildings = loadBuildings();
+		// Template prefill: templates page stores a name before navigating here.
+		try {
+			const prefill = localStorage.getItem(PREFILL_KEY);
+			if (prefill) {
+				const data = JSON.parse(prefill) as { name?: string };
+				if (data.name) {
+					corpName = data.name;
+					savedToast = `${data.name} — ${$copy.workspaceOpened}`;
+					setTimeout(() => (savedToast = ''), 3000);
+				}
+				localStorage.removeItem(PREFILL_KEY);
+			}
+		} catch {
+			/* ignore malformed prefill */
+		}
+	});
+
+	const saveBuilding = () => {
+		const name = corpName.trim() || 'Unnamed Strata Corporation';
+		const list = [
+			{ name, config: configJson, savedAt: new Date().toISOString() },
+			...loadBuildings().filter((b) => b.name !== name)
+		].slice(0, 20);
+		localStorage.setItem(BUILDINGS_KEY, JSON.stringify(list));
+		myBuildings = list;
+		savedToast = $copy.buildingSavedToast;
+		setTimeout(() => (savedToast = ''), 3000);
+	};
+
+	const loadBuilding = (saved: SavedBuilding) => {
+		configJson = saved.config;
+		completed = true;
+		step = totalSteps - 1;
+		savedToast = `${saved.name} — ${$copy.workspaceOpened}`;
+		setTimeout(() => (savedToast = ''), 3000);
+	};
+
+	const downloadConfig = () => {
+		const blob = new Blob([configJson], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = `${(corpName.trim() || 'strata-building').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+		link.click();
+		URL.revokeObjectURL(url);
+	};
+
+	const nextStep = () => {
+		if (step === 1 && !corpName.trim()) {
+			nameError = $copy.nameRequired;
+			return;
+		}
+		nameError = '';
+		if (step < totalSteps - 1) step++;
+	};
 	const prevStep = () => { if (step > 0) step--; };
 	const goToStep = (s: number) => { if (s >= 0 && s < totalSteps) step = s; };
 
@@ -171,10 +244,13 @@
 			<div class="mt-6 flex flex-wrap justify-center gap-3">
 				<button class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500 transition-all"
 					onclick={() => { completed = false; step = 0; }}>{$copy.startNew}</button>
+				<button class="rounded-xl bg-success/10 px-6 py-3 text-sm font-semibold text-success hover:bg-success/20 transition-all" onclick={saveBuilding}>{'\u{1F4BE}'} {$copy.saveBuilding}</button>
+				<button class="rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-all" onclick={downloadConfig}>{'\u{2B07}'} {$copy.downloadConfig}</button>
 			</div>
+			{#if savedToast}<p class="mt-4 text-sm font-semibold text-success">{savedToast}</p>{/if}
 		</div>
 		<div class="glass-card rounded-2xl p-6">
-			<div class="flex items-center justify-between mb-4">
+			<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
 				<h3 class="font-bold text-slate-800">{$copy.configJson}</h3>
 				<button class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-all"
 					onclick={() => navigator.clipboard.writeText(configJson)}>{'\u{1F4CB}'} {$copy.copyConfig}</button>
@@ -185,6 +261,17 @@
 		<div class="glass-card rounded-2xl p-8">
 			{#if step === 0}
 				<div>
+					{#if myBuildings.length > 0}
+						<div class="mb-6 rounded-xl border border-brand-200 bg-brand-50/50 p-4">
+							<label for="load-building" class="block text-sm font-semibold text-brand-800 mb-2">{$copy.savedBuildings} ({myBuildings.length})</label>
+							<select id="load-building" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" onchange={(e) => { const saved = myBuildings.find((b) => b.name === (e.currentTarget as HTMLSelectElement).value); if (saved) loadBuilding(saved); }}>
+								<option value="">— {$copy.loadBuilding} —</option>
+								{#each myBuildings as saved}
+									<option value={saved.name}>{saved.name}</option>
+								{/each}
+							</select>
+						</div>
+					{/if}
 					<div class="flex items-center gap-3 mb-6">
 						<span class="text-3xl">{'\u{1F30D}'}</span>
 						<div><h2 class="text-xl font-bold text-slate-900">{$copy.pickJurisdiction}</h2><p class="text-sm text-slate-500">{$copy.jurisdictionDescription}</p></div>
@@ -218,7 +305,8 @@
 					<div class="space-y-5">
 						<div>
 							<label for="corp-name" class="block text-sm font-semibold text-slate-700 mb-1.5">{$copy.corporationName}</label>
-							<input id="corp-name" type="text" bind:value={corpName} placeholder={$copy.corpNamePlaceholder} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
+							<input id="corp-name" type="text" bind:value={corpName} placeholder={$copy.corpNamePlaceholder} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2 {nameError ? 'border-danger' : 'border-border'}" />
+							{#if nameError}<p class="mt-1.5 text-xs font-semibold text-danger">{nameError}</p>{/if}
 						</div>
 						<div>
 							<label for="building-address" class="block text-sm font-semibold text-slate-700 mb-1.5">{$copy.buildingAddress}</label>

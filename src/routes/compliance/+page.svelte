@@ -17,6 +17,7 @@
 
 	let activeSection = $state('pillars');
 	let expandedDomain = $state<string | null>('financial');
+	let sectionQuery = $state('');
 
 	const sections = [
 		{ id: 'pillars', label: 'fivePillars', icon: '🏛️' },
@@ -27,6 +28,12 @@
 		{ id: 'localization', label: 'bcUsMap', icon: '🌐' },
 		{ id: 'architecture', label: 'buildMandates', icon: '🔧' }
 	] as const satisfies ReadonlyArray<{ id: string; label: keyof Translation; icon: string }>;
+
+	const visibleSections = $derived(
+		sectionQuery.trim()
+			? sections.filter((sec) => $copy[sec.label].toLowerCase().includes(sectionQuery.trim().toLowerCase()))
+			: sections
+	);
 </script>
 
 <svelte:head>
@@ -62,8 +69,18 @@
 <!-- Section nav -->
 <div class="sticky top-[65px] z-40 border-b border-border bg-surface-2/90 backdrop-blur-md">
 	<div class="mx-auto max-w-7xl px-6 py-3 overflow-x-auto">
-		<div class="flex gap-2 min-w-max">
-			{#each sections as sec}
+		<div class="flex items-center gap-2">
+			<label class="relative">
+				<span class="sr-only">{$copy.search}</span>
+				<input
+					type="search"
+					bind:value={sectionQuery}
+					placeholder={$copy.search}
+					class="w-40 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+				/>
+			</label>
+			<div class="flex gap-2 min-w-max">
+			{#each visibleSections as sec}
 				<button
 					class="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all
 						{activeSection === sec.id
@@ -75,6 +92,7 @@
 					{$copy[sec.label]}
 				</button>
 			{/each}
+			</div>
 		</div>
 	</div>
 </div>

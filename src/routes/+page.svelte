@@ -42,17 +42,48 @@
     { date: '02', month: 'JUL', title: 'Quarterly financial package', place: 'All communities · Due date', tone: 'blue' }
   ];
 
-  let active = 'overview';
-  let showLanguageMenu = false;
-  let showMobileMenu = false;
-  let showNewStrata = false;
-  let search = '';
-  let toast = '';
+  import SatohashStatus from '$lib/components/SatohashStatus.svelte';
+  import { onMount } from 'svelte';
 
-  $: selectedLanguage = $locale;
-  $: selectedLanguageName = locales.find((item) => item.code === selectedLanguage)?.nativeName ?? 'English';
-  $: t = $copy;
-  $: filteredBuildings = buildings.filter((building) => `${building.name} ${building.location}`.toLowerCase().includes(search.toLowerCase()));
+  let active = $state('overview');
+  let showLanguageMenu = $state(false);
+  let showMobileMenu = $state(false);
+  let showNewStrata = $state(false);
+  let search = $state('');
+  let toast = $state('');
+  let selectedBuilding = $state<typeof buildings[number] | null>(null);
+  let notifications = $state<string[]>([]);
+  let showNotifications = $state(false);
+
+  const NOTIFICATIONS_KEY = 'openstrata-notifications';
+
+  onMount(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) ?? '[]');
+      if (Array.isArray(saved)) notifications = saved.map(String).slice(0, 12);
+    } catch {
+      /* corrupt storage — start fresh */
+    }
+  });
+
+  function rememberNotification(message: string) {
+    notifications = [message, ...notifications.filter((n) => n !== message)].slice(0, 12);
+    try {
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    } catch {
+      /* storage full or unavailable */
+    }
+  }
+
+  const selectedLanguage = $derived($locale);
+  const selectedLanguageName = $derived(
+    locales.find((item) => item.code === selectedLanguage)?.nativeName ?? 'English'
+  );
+  const filteredBuildings = $derived(
+    buildings.filter((building) =>
+      `${building.name} ${building.location}`.toLowerCase().includes(search.toLowerCase())
+    )
+  );
 
   function selectNav(id: string) {
     active = id;
@@ -63,6 +94,7 @@
 
   function openAction(message: string) {
     toast = message;
+    rememberNotification(message);
     setTimeout(() => (toast = ''), 2600);
   }
 </script>
@@ -131,7 +163,19 @@
             </div>
           {/if}
         </div>
-        <button class="icon-button notification-button" aria-label={$copy.notifications} onclick={() => openAction($copy.caughtUpToast)}><span>♢</span><i></i></button>
+        <button class="icon-button notification-button" aria-expanded={showNotifications} aria-label={$copy.notifications} onclick={() => (showNotifications = !showNotifications)}><span>♢</span><i></i></button>
+        {#if showNotifications}
+          <div class="notifications-panel" role="menu" aria-label={$copy.notifications}>
+            <div class="menu-heading">{$copy.notifications}</div>
+            {#if notifications.length === 0}
+              <p class="notifications-empty">{$copy.notificationsEmpty}</p>
+            {:else}
+              {#each notifications as notification}
+                <button class="notification-item" onclick={() => { toast = notification; setTimeout(() => (toast = ''), 2600); }}>{notification}</button>
+              {/each}
+            {/if}
+          </div>
+        {/if}
         <button class="profile-button" aria-label={$copy.openProfileMenu}><span class="profile-avatar">CM</span><span class="profile-name">Camille</span><span class="chevron">⌄</span></button>
       </div>
     </header>
@@ -154,7 +198,7 @@
           <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => selectNav('buildings')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
             {#each filteredBuildings as building}
-              <div class="building-card" onclick={() => openAction(`${building.name} ${$copy.workspaceOpened}`)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && openAction(`${building.name} ${$copy.workspaceOpened}`)}>				<div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
+              <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>				<div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol">{building.tone === 'green' ? '✓' : building.tone === 'amber' ? '!' : '↗'}</span>{building.issue}<span class="status-arrow">→</span></div>
@@ -170,6 +214,7 @@
         </div>
 
         <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}>{activity.icon}</span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
+		  <section><SatohashStatus /></section>
         </aside>
       </section>
     </main>
@@ -179,6 +224,28 @@
     </footer>
   </div>	  <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><button class:active={active === 'overview'} onclick={() => selectNav('overview')}><span>⌂</span>{$copy.overview}</button><button class:active={active === 'buildings'} onclick={() => selectNav('buildings')}><span>▦</span>{$copy.buildings}</button><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><span>＋</span></button><button class:active={active === 'operations'} onclick={() => selectNav('operations')}><span>⌁</span>{$copy.operations}</button><button onclick={() => (showMobileMenu = true)}><span>☰</span>{$copy.menu}</button></nav>
 </div>
+
+{#if selectedBuilding}
+  <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (selectedBuilding = null)}>
+    <dialog open class="modal" aria-labelledby="building-detail-title">
+      <button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (selectedBuilding = null)}>×</button>
+      <div class="modal-icon">▦</div>
+      <div class="eyebrow">{$copy.yourBuildings}</div>
+      <h2 id="building-detail-title">{selectedBuilding.name}</h2>
+      <p>{selectedBuilding.location} <span>·</span> {selectedBuilding.units}</p>
+      <div class="building-detail-row">
+        <div><span class="metric-label">{$copy.communityHealth}</span><strong>{selectedBuilding.health}%</strong><div class="health-bar"><span style="width: {selectedBuilding.health}%"></span></div></div>
+        <div><span class="metric-label">{$copy.reserveFunds}</span><strong>{formatCurrency(Math.round(selectedBuilding.health * 2400), $locale, { maximumFractionDigits: 0 })}</strong></div>
+        <div><span class="metric-label">{$copy.openActions}</span><strong>{formatNumber(selectedBuilding.tone === 'green' ? 0 : selectedBuilding.tone === 'amber' ? 2 : 4, $locale)}</strong></div>
+      </div>
+      <div class="building-detail-issue {selectedBuilding.tone}"><span class="status-symbol">!</span>{selectedBuilding.issue}</div>
+      <div class="modal-actions">
+        <button class="secondary-button" onclick={() => (selectedBuilding = null)}>{$copy.close}</button>
+        <button class="primary-button" onclick={() => { openAction($copy.buildingActionsToast); selectedBuilding = null; }}>{$copy.openActions} <span>→</span></button>
+      </div>
+    </dialog>
+  </div>
+{/if}
 
 {#if showNewStrata}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (showNewStrata = false)}>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SatohashStatus from '$lib/components/SatohashStatus.svelte';
 	import { copy } from '$lib/i18n';
 
 	const layers = [
@@ -94,5 +95,9 @@
 			</p>
 			<a href="https://github.com/kitsboy/openstrata" class="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors" target="_blank" rel="noopener noreferrer">{$copy.watchOnGithub} →</a>
 		</div>
+	</section>
+
+	<section class="mt-10">
+		<SatohashStatus />
 	</section>
 </div>

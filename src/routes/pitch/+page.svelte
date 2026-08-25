@@ -361,6 +361,12 @@
 				>
 					{$copy.tryWizard}
 				</a>
+				<button
+					onclick={() => window.print()}
+					class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-8 py-3.5 text-sm font-semibold text-slate-600 no-underline hover:border-brand-300 transition-colors print:hidden"
+				>
+					🖨 { $copy.printDeck }
+				</button>
 				<a
 					href={pitchMeta.github}
 					target="_blank"
@@ -380,6 +386,12 @@
 </div>
 
 <style>
+	@media print {
+		:global(header), :global(footer), :global(.search-backdrop) { display: none !important; }
+		.pitch-deck { scroll-snap-type: none; }
+		.pitch-deck > section { scroll-snap-align: none; min-height: auto !important; break-inside: avoid; }
+	}
+
 	.pitch-deck {
 		scroll-snap-type: y proximity;
 	}

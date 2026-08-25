@@ -3,7 +3,17 @@
   import { jurisdictions } from '$lib/data';
   import { legalSources } from '$lib/legal';
 
-  const sources = legalSources;
+  let sourceQuery = $state('');
+
+  const sources = $derived(
+    sourceQuery.trim()
+      ? legalSources.filter((source) =>
+          `${source.title} ${source.authority} ${source.kind} ${source.jurisdiction}`
+            .toLowerCase()
+            .includes(sourceQuery.trim().toLowerCase())
+        )
+      : legalSources
+  );
 </script>
 
 <svelte:head>
@@ -27,7 +37,18 @@
   <section class="mb-14">
     <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div><h2 class="text-2xl font-bold text-slate-900">{$copy.primarySources}</h2><p class="mt-1 text-slate-500">{$copy.primarySourcesHint}</p></div>
-      <span class="rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">{sources.length} {$copy.sourceLinks}</span>
+      <div class="flex items-center gap-3">
+        <label class="relative">
+          <span class="sr-only">{$copy.search}</span>
+          <input
+            type="search"
+            bind:value={sourceQuery}
+            placeholder={$copy.search}
+            class="w-52 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+          />
+        </label>
+        <span class="rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">{sources.length} {$copy.sourceLinks}</span>
+      </div>
     </div>
     <div class="grid gap-4 md:grid-cols-2">
       {#each sources as source}
