@@ -1,0 +1,64 @@
+# Phase 3 — Core product backend stack: Ledger (Postgres + pgvector),
+# Rosa (compliance RAG), Ziggy (treasury state machine), and the Fastify API.
+#
+# Self-hosted, sovereign-first. Expose only on the Tailscale interface (private)
+# or via the API container. Never publish Postgres to 0.0.0.0.
+#
+#   docker compose up -d            # bring up postgres + api
+#   docker compose run api node scripts/migrate.mjs   # apply ledger migrations
+#   docker compose logs -f api
+#
+name: openstrata
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-openstrata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openstrata-dev-only}
+      POSTGRES_DB: ${POSTGRES_DB:-openstrata}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Idempotent ledger DDL is auto-applied on first boot via initdb scripts.
+      - ./src/ledger/schema.sql:/docker-entrypoint-initdb.d/01-ledger.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      # Local dev only. In production delete this mapping and reach db via the
+      # Tailscale overlay network.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - ops
+
+  api:
+    # Build from the backend/ workspace (docker context is ./).
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-openstrata}:${POSTGRES_PASSWORD:-openstrata-dev-only}@db:5432/${POSTGRES_DB:-openstrata}
+      HOST: 0.0.0.0
+      PORT: ${API_PORT:-8080}
+      # Rosa embedding/LLM endpoints (local Ollama on the same host by default).
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      VECTOR_COLLECTION: ${VECTOR_COLLECTION:-bc_spa_rta_crt}
+    ports:
+      # Local dev only; reach the API over Tailscale in production.
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    networks:
+      - ops
+
+networks:
+  ops:
+    driver: bridge
+
+volumes:
+  pgdata:

@@ -1,3 +1,29 @@
+## Session — 2026-08-25 (Phase 3 backend scaffolding)
+
+**Done:**
+- Scaffolded the **Phase 3 core-product backend** in a new `backend/` workspace (in-repo, per user decision). Docker Compose stack (`pgvector/pgvector:pg17` + Fastify API, Tailscale-only exposure) + `.env.example` + Dockerfile + `.dockerignore`.
+- **Trust ledger data model + migrations:** append-only journal (`ledger_entry`) with fund isolation (Operating / CRF / Special Levy / sub-accounts), integer basis-point math, a sha256 `prev_tally`/`tally_root` hash chain, and a `verifyChain` tamper-evidence helper. Two numbered migrations (`0001_trust_ledger.sql`, `0002_rosa_vector.sql` + pgvector) run by `backend/scripts/migrate.mjs`; `schema.sql` seeded into fresh volumes via initdb.
+- **Services (TypeScript/Node):** Rosa compliance RAG (`src/rosa/` — strict retrieval + BC SPA/RTA corpus, keyword fallback retriever, pgvector/Ollama seam), Ziggy treasury state machine (`src/ziggy/` — CRF hard cap, PO-expense verification, no-guess reconciliation), Fastify API (`src/api/server.ts` — `/health` + `/api/v1/*`), and `src/trf/recon.ts` mirroring the Phase 2 no-guess reconciliation rule so both layers agree.
+- **Tests + CI:** 29 backend Vitest tests (ledger invariants + tamper evidence + diff, Rosa, Ziggy) — pass; backend typecheck clean. CI gets a dedicated `backend` job; frontend suite stays green (check 0/0, audit 509, tests 25/25, build clean).
+- **Docs:** WORKPLAN/ROADMAP/roadmap page mark Phase 3 in progress; DIRECTORY-MAP + `.ai_docs/context-map.md` list `backend/`.
+
+**Decisions (confirmed with Cam):**
+- In-repo `backend/` (single source of truth), TypeScript/Node + Fastify, PostgreSQL + pgvector for the immutable ledger + Rosa embeddings.
+- Ledger is append-only + hash-chain diffable; cross-fund transfers require a `resolution_id` (BCFSA no-co-mingling). Amounts are integer basis points.
+- Rosa currently boots with a keyword fallback retriever over a small BC corpus so the API runs before the embed/chat model is chosen. Ziggy's PSBT/multisig execution is stubbed (authorization gate is real).
+- Backend and frontend scripts are separate (`npm run check`/`test`/`build` = frontend at root; `npm run typecheck`/`test` in `backend/`) so the static Cloudflare deploy is unaffected.
+
+**Next for Phase 3 (recommended order):**
+1. Choose Rosa embed/chat models; wire pgvector + Ollama adapters (`0002` migration is ready).
+2. Pick the self-hosted host (Umbrel/Tailscale per framework doc); run a real Postgres smoke test.
+3. Fee billing API, Form B/F generator, bylaw enforcement state machine, PWA hardening.
+
+**Git State:**
+- SHA: (fill from `git log -1 --format=%H` after commit/push)
+- Unpushed: `git log --oneline origin/main..HEAD`
+
+---
+
 ## Session — 2026-08-25 (upgrade list, 5 batches)
 
 **Done:**

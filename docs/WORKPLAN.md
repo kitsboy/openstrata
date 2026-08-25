@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
-**Last updated:** 2026-08-25 (Phase 2 complete)  
-**Status:** Phase 1 complete. Phase 2 complete.
+**Last updated:** 2026-08-25 (Phase 3 backend scaffolding begun)  
+**Status:** Phase 1 complete. Phase 2 complete. Phase 3 in progress.
 
 ---
 
@@ -33,8 +33,10 @@
 
 ## Phase 3 — Core Product (Q3 2026)
 
-- [ ] Docker stack: Rosa RAG + Ziggy treasury + API + web
-- [ ] Multi-account trust ledger (Operating, CRF, Special Levy)
+- [x] Docker stack: Rosa RAG + Ziggy treasury + API (+ Postgres/pgvector) — scaffold in `backend/`
+- [x] Multi-account trust ledger (Operating, CRF, Special Levy) — append-only data model + migrations + API
+- [ ] Rosa RAG pgvector/Ollama adapter (keyword fallback wired; embeddings pending model choice)
+- [ ] Ziggy PSBT/multisig execution (authorization gate done; broadcast/reconcile stub)
 - [ ] Automated fee billing + late notices
 - [ ] Form B/F generator with deadline tracking
 - [ ] Bylaw enforcement state machine API (`BLOCK_FINE_ACTIONS`)

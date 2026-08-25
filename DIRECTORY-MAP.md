@@ -53,6 +53,18 @@
 | src/lib/nav.ts | Navigation items | UI |
 | src/lib/icons.ts | SVG icon set | UI |
 
+### Code — Phase 3 Backend (`backend/`)
+
+| File | Purpose |
+|------|---------|
+| backend/docker-compose.yml | Postgres+pgvector, API; Tailscale-only exposure |
+| backend/src/ledger/ | Append-only trust ledger (schema, migrations, engine, PG store) |
+| backend/src/rosa/ | Compliance RAG — strict retrieval + BC corpus |
+| backend/src/ziggy/ | Treasury state machine — CRF cap, authorize, reconcile |
+| backend/src/trf/recon.ts | No-guess reconciliation (mirrors front-end reconcile.ts) |
+| backend/src/api/server.ts | Fastify wire-up — /health + /api/v1/* |
+| backend/tests/ | Vitest — ledger invariants, Rosa, Ziggy (29 tests) |
+
 ### Code — Routes
 
 | Route | File | Description |
@@ -97,8 +109,9 @@
 
 ## Agents & Workflows
 
-- **Rosa** — Compliance RAG (strict BC SPA/RTA/CRT corpus, source citations only)
-- **Ziggy** — Treasury state machine (invoice → CRF cap → PSBT → reconcile)
+- **Rosa** — Compliance RAG (strict BC SPA/RTA/CRT corpus, source citations only) — `backend/src/rosa/`
+- **Ziggy** — Treasury state machine (invoice → CRF cap → PSBT → reconcile) — `backend/src/ziggy/`
+- **Trust ledger** — append-only, fund-isolated (Operating/CRF/Special Levy), hash-chain diffable — `backend/src/ledger/`
 - Bylaw locks: BLOCK_FINE_ACTIONS (14-day min), REQUIRE_QUORUM, REQUIRE_MINUTES
 
 ---

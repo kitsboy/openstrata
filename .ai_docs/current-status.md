@@ -24,15 +24,17 @@
 - Upgrade batch: test suite (16 Vitest unit/component tests), GitHub Actions CI, localized 404/error page, PWA (manifest + service worker + iOS meta), dark mode (persisted, system-aware, FOUC-free), Cmd/Ctrl+K site search, OG/twitter meta, per-category RSS feeds, auto-generated sitemap, Satohash health + stamp/verify UI, wizard save/load/download/validate/prefill, templates filter + wizard prefill, compliance/legal/FAQ search + FAQ anchors, pitch print-to-PDF, dashboard building detail modal + persistent notification center
 - Phase 2 complete: **E-Transfer Auto-Reconciliation prototype** — pure `src/lib/reconcile.ts` matching engine (auto-match by unit reference codes, flag ambiguous/multi-unit references, leave unmatched for review; brief/full match modes) with 9 unit tests, driving `ETransferReconciler.svelte` (interactive /tools demo with Received/Resolved/Auto/Needs-review stats, match-mode toggle, per-transfer manual assign dropdown). 16 new catalog keys added across all 9 locales (509 keys total, parity guard green) — machine-drafted overrides require professional review
 - Build fix (SHA `6ff5fc3`): PWA service-worker registration guarded with `browser` from `$app/environment` instead of `import.meta.env.PROD`, fixing a Node 20 prerender crash on Cloudflare Pages that previously failed every production build
+- **Phase 3 backend scaffolding begun** — new `backend/` workspace: Docker Compose stack (`pgvector/pgvector:pg17` + Fastify API, Tailscale-only exposure), append-only immutable trust ledger (Operating/CRF/Special Levy isolation, hash-chain `tally_root` diffs), Rosa compliance RAG (keyword retriever + BC corpus; pgvector/Ollama seam), Ziggy treasury state machine (CRF hard cap, PO verification, no-guess reconciliation). 29 backend Vitest tests + isolated backend CI job; frontend fully green (check 0/0, audit 509, tests 25/25, build clean).
 
 ## Known Issues
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English/data-driven until reviewed translations are available
 - Template source records and statutory body records still need reviewed translations
-- Backend phases (Rosa/Ziggy Docker stack, real payment rails, DB/auth) are not implemented — the site is a fully functional front-end product demo; legal/statutory content awaits professional review
+- Phase 3 backend is a **scaffold**: Rosa uses a keyword-fallback retriever (pgvector embeddings + Ollama model not yet selected/provisioned); Ziggy PSBT/multisig execution is stubbed; Postgres ledger adapter needs a real deployment smoke test and a secrets path (`backend/.env` is gitignored)
+- The live site remains a fully functional front-end product demo; legal/statutory content awaits professional review
 - The 16 new e-transfer/reconciliation catalog keys are machine-drafted across all 9 locales and need professional review (alongside the earlier hi/fil/pl/uk/sw overrides)
 
 ## Next Steps
-- Review legal and statutory translations with qualified professionals and preserve source links/effective dates
-- Domain-specific statutory, financial, feed, module, and protocol records remain canonical English until reviewed translations exist
-- Phase 3+ backend build (Docker stack, treasury, billing, Form B/F, enforcement state machine)
+- Pick Rosa embedding/chat models and wire the pgvector + Ollama adapters (migration 0002 is ready)
+- Select a host for the self-hosted stack (Umbrel/Tailscale per framework doc) and run a real Postgres smoke test
+- Continue Phase 3: fee billing API, Form B/F generator, bylaw enforcement state machine
 - Professional human review of the machine-drafted hi/fil/pl/uk/sw overrides (incl. the 16 new reconciliation keys) before they are marked as reviewed

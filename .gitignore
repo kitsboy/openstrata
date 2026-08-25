@@ -8,3 +8,9 @@ build/
 .env.*.local
 .DS_Store
 *.tsbuildinfo
+
+# Phase 3 backend
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/*.log

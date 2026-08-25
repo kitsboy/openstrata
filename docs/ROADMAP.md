@@ -30,8 +30,8 @@ Marketing site, compliance KB, Strata Tool hub, docs, graphs
 ### Phase 2 — Supercharge (Jul–Aug 2026) ✅ COMPLETE
 About page, roadmap, building template wizard, FAQ, RSS feed, full interface localization, passing typecheck, e-transfer auto-reconciliation prototype
 
-### Phase 3 — Core Product (Q3 2026)
-Docker stack, trust ledger, fee billing, Form B/F API, bylaw state machine, PWA
+### Phase 3 — Core Product (Q3 2026) 🔄 IN PROGRESS
+Docker stack (Rosa + Ziggy + Postgres/pgvector) scaffolded in `backend/`, immutable multi-account trust ledger (append-only, hash-chain diffable), fee billing, Form B/F API, bylaw state machine, PWA
 
 ### Phase 4 — Sovereign (Q4 2026)
 Satohash integration, Lightning, Nostr identity, multisig watch, CRT export

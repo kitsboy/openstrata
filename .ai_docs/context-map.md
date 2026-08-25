@@ -9,8 +9,27 @@ Build: Vite 6
 CSS: Tailwind CSS v4
 Hosting: Cloudflare Pages (static SPA)
 
+## Phase 3 Backend (`backend/`)
+Runtime: Node 22 + TypeScript (ESM)
+API: Fastify 5
+DB: PostgreSQL 17 + pgvector
+Orchestration: Docker Compose (Tailscale-only exposure)
+Tests: Vitest (isolated from frontend suite)
+
+Services: ledger (append-only trust ledger), rosa (compliance RAG), ziggy (treasury state machine), api (Fastify).
+Commands (from backend/): `npm run typecheck`, `npm test`, `npm run dev`. Migrate: `npm run migrate`.
+
 ## Directory Structure
 openstrata/
+backend/
+  docker-compose.yml
+  src/{config.ts,index.ts}
+  src/ledger/     schema.sql, migrations/*.sql, model.ts, ledger.ts, store.ts
+  src/rosa/       rosa.ts, bc-corpus.ts
+  src/ziggy/      ziggy.ts
+  src/trf/        recon.ts
+  src/api/        server.ts
+  tests/          memstore.ts, {ledger,rosa,ziggy}.test.ts
 src/
   app.html                  SvelteKit HTML shell
   app.css                   Tailwind CSS entry point

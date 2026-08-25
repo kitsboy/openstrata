@@ -1,0 +1,29 @@
+{
+  "name": "openstrata-backend",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Phase 3 core product backend — Rosa (compliance RAG), Ziggy (treasury state machine), immutable trust ledger API.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migrate": "node scripts/migrate.mjs"
+  },
+  "dependencies": {
+    "@fastify/postgres": "^5.2.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.3.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.11"
+  }
+}
