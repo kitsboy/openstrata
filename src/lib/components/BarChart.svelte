@@ -6,8 +6,7 @@
 		height = 160,
 		barColor = '#14b8a6',
 		secondaryColor = '#f7931a',
-		showSecondary = false,
-		secondaryKey = 'value2' as const
+		showSecondary = false
 	}: {
 		data: Array<DataPoint & { value2?: number }>;
 		height?: number;
@@ -49,6 +48,8 @@
 				width={barWidth + 12}
 				height={height - 34}
 				fill="transparent"
+				role="graphics-symbol"
+				aria-label="{point.label}"
 				style="cursor:pointer;touch-action:manipulation"
 				onmouseenter={(e) => openTip(e, point)}
 				onmousemove={(e) => openTip(e, point)}
@@ -64,6 +65,8 @@
 				fill={point.color ?? barColor}
 				opacity="0.85"
 				class="transition-all duration-500 chart-bar"
+				role="graphics-symbol"
+				aria-label="{point.label}"
 				onmouseenter={(e) => openTip(e, point)}
 				onmousemove={(e) => openTip(e, point)}
 				onmouseleave={closeTip}
@@ -79,6 +82,8 @@
 					fill={secondaryColor}
 					opacity="0.75"
 					class="transition-all duration-500 chart-bar chart-bar--secondary"
+					role="graphics-symbol"
+					aria-label="{point.label}"
 					onmouseenter={(e) => openTip(e, point)}
 					onmousemove={(e) => openTip(e, point)}
 					onmouseleave={closeTip}

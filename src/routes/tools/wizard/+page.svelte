@@ -2,6 +2,7 @@
 	import { jurisdictions } from '$lib/data';
 	import Icon from '$lib/components/Icon.svelte';
 	import { copy } from '$lib/i18n';
+	import type { Translation } from '$lib/i18n';
 	import packageJson from '../../../../package.json';
 
 	// State
@@ -122,7 +123,7 @@
 	};
 
 	const totalSteps = 8;
-	const stepLabels = ['jurisdiction', 'entityAddress', 'configureUnits', 'configureFunds', 'toggleServices', 'paymentRails', 'bylaws', 'reviewGenerate'];
+	const stepLabels = ['jurisdiction', 'entityAddress', 'configureUnits', 'configureFunds', 'toggleServices', 'paymentRails', 'bylaws', 'reviewGenerate'] as const satisfies ReadonlyArray<keyof Translation>;
 	const stepIcons = ['\u{1F30D}', '\u{1F3E2}', '\u{1F3E0}', '\u{1F4B0}', '\u{1F527}', '\u{1F4B3}', '\u2696\uFE0F', '\u2705'];
 
 	const nextStep = () => { if (step < totalSteps - 1) step++; };

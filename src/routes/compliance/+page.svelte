@@ -13,6 +13,7 @@
 		moduleDomainMap
 	} from '$lib/compliance';
 	import { copy } from '$lib/i18n';
+	import type { Translation } from '$lib/i18n';
 
 	let activeSection = $state('pillars');
 	let expandedDomain = $state<string | null>('financial');
@@ -25,7 +26,7 @@
 		{ id: 'retention', label: 'recordRetention', icon: '📁' },
 		{ id: 'localization', label: 'bcUsMap', icon: '🌐' },
 		{ id: 'architecture', label: 'buildMandates', icon: '🔧' }
-	] as const;
+	] as const satisfies ReadonlyArray<{ id: string; label: keyof Translation; icon: string }>;
 </script>
 
 <svelte:head>

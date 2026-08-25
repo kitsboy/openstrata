@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import packageJson from '../../package.json';
   import { copy, locale, locales, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
 
@@ -21,7 +21,7 @@
   const navGroups = [
     { label: 'Workspace', items: [['overview', 'Overview', '⌂'], ['buildings', 'Buildings', '▦'], ['governance', 'Governance', '◈']] },
     { label: 'Run the building', items: [['operations', 'Operations', '⌁'], ['finances', 'Finances', '$'], ['legal', 'Legal library', '§'], ['insights', 'Insights', '◒']] }
-  ];
+  ] as const;
 
   const buildings = [
     { name: 'Harbour House', location: 'Vancouver, BC', units: '72 units', health: 96, tone: 'green', issue: 'All systems clear', glyph: 'HH' },
@@ -54,14 +54,14 @@
   $: t = $copy;
   $: filteredBuildings = buildings.filter((building) => `${building.name} ${building.location}`.toLowerCase().includes(search.toLowerCase()));
 
-  function selectNav(id) {
+  function selectNav(id: string) {
     active = id;
     showMobileMenu = false;
     toast = `${id.charAt(0).toUpperCase() + id.slice(1)} ${$copy.workspaceSelected}`;
     setTimeout(() => (toast = ''), 2400);
   }
 
-  function openAction(message) {
+  function openAction(message: string) {
     toast = message;
     setTimeout(() => (toast = ''), 2600);
   }

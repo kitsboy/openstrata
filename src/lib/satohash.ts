@@ -74,7 +74,7 @@ export async function sha256Hex(
 	if (typeof input === 'string') {
 		data = new TextEncoder().encode(input);
 	} else if (input instanceof Uint8Array) {
-		data = input;
+		data = new Uint8Array(input);
 	} else {
 		data = input;
 	}

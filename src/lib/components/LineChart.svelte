@@ -65,6 +65,8 @@
 					width="24"
 					height={height - 28}
 					fill="transparent"
+					role="graphics-symbol"
+					aria-label="Point {i + 1}"
 					style="cursor:pointer;touch-action:manipulation"
 					onmouseenter={(e) => openTip(e, i)}
 					onmousemove={(e) => openTip(e, i)}
@@ -79,6 +81,8 @@
 					fill="white"
 					stroke={color}
 					stroke-width="2"
+					role="graphics-symbol"
+					aria-label="Point {i + 1}"
 					style="cursor:pointer;touch-action:manipulation"
 					onmouseenter={(e) => openTip(e, i)}
 					onmousemove={(e) => openTip(e, i)}

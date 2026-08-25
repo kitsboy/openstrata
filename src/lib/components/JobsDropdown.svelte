@@ -2,7 +2,7 @@
 	import { jobCategories } from '$lib/data';
 
 	let open = $state(false);
-	let activeCategory = $state(jobCategories[0].id);
+	let activeCategory = $state<string>(jobCategories[0].id);
 
 	const activeJobs = $derived(
 		jobCategories.find((c) => c.id === activeCategory)?.jobs ?? []

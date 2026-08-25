@@ -58,6 +58,16 @@
 		return map[s] ?? s;
 	};
 
+	function handleCardKey(e: KeyboardEvent) {
+		const target = e.currentTarget as HTMLElement;
+		if (!(e.key === 'Enter' || e.key === ' ')) return;
+		const href = target.getAttribute('data-href');
+		if (href) {
+			e.preventDefault();
+			goto(href);
+		}
+	}
+
 	function openTip(mod: any, el: HTMLElement) {
 		const r = el.getBoundingClientRect();
 		const bw = Math.min(320, window.innerWidth - 24);
@@ -149,7 +159,7 @@
 	<!-- Module grid -->
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
 		{#each filteredModules as mod}
-			<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} onclick={() => { if (mod.href) goto(mod.href); }}>
+			<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} role="button" tabindex="0" data-href={mod.href ?? undefined} onclick={() => { if (mod.href) goto(mod.href); }} onkeydown={handleCardKey}>
 				<div class="flex items-start justify-between gap-2 mb-3">
 					<span class="text-2xl">{mod.icon}</span>
 					<div class="flex items-center gap-1.5">
