@@ -1,8 +1,38 @@
-# Hermes Strata
+# OpenStrata
 
-Sovereign Strata Corporation dashboard — strata governance, treasury, and property-management tools on Bitcoin rails.
+Sovereign strata corporation operations — strata governance, treasury, and property-management tools on Bitcoin rails. BCFSA-aware software built for British Columbia first, config-driven everywhere.
 
-- [Hermes Strata](https://openstrata.giveabit.io/)
-- [Tools](https://openstrata.giveabit.io/tools)
-- [About](https://openstrata.giveabit.io/about)
-- [Roadmap](https://openstrata.giveabit.io/roadmap)
+## Core pages
+
+- [Home / Dashboard](https://openstrata.giveabit.io/) — community operations dashboard
+- [About](https://openstrata.giveabit.io/about) — trusted money, proven operations
+- [Pitch](https://openstrata.giveabit.io/pitch) — investor deck with live data
+- [Strata Tool](https://openstrata.giveabit.io/tools) — 30+ management modules
+- [Building Template Wizard](https://openstrata.giveabit.io/tools/wizard) — generate a portable building config JSON
+- [Compliance Knowledge Base](https://openstrata.giveabit.io/compliance) — SPA + BCFSA compliance reference
+- [Legal Library](https://openstrata.giveabit.io/legal) — primary BC legal sources
+- [Templates](https://openstrata.giveabit.io/templates) — governance, finance, and conveyancing workflows
+- [FAQ](https://openstrata.giveabit.io/faq) — plain-language BC strata answers
+- [Roadmap](https://openstrata.giveabit.io/roadmap) — go-to-market paths and phases
+- [Docs](https://openstrata.giveabit.io/docs) — architecture and documentation hub
+- [Blog](https://openstrata.giveabit.io/blog) — announcements and deep dives
+- [RSS & API](https://openstrata.giveabit.io/rss) — feeds and REST endpoints
+- [OpenStrata Spec](https://openstrata.giveabit.io/spec) — sovereign data portability standard
+
+## Feeds
+
+- [All feeds](https://openstrata.giveabit.io/rss.xml)
+- [Bitcoin](https://openstrata.giveabit.io/rss/bitcoin.xml) · [Regulation](https://openstrata.giveabit.io/rss/regulation.xml) · [Legal](https://openstrata.giveabit.io/rss/legal.xml) · [Market data](https://openstrata.giveabit.io/rss/market-data.xml) · [Social](https://openstrata.giveabit.io/rss/social.xml)
+
+## Key documents (repository)
+
+- [Product plan](https://github.com/kitsboy/openstrata/blob/main/docs/PRODUCT-BUILD-PLAN.md)
+- [Roadmap](https://github.com/kitsboy/openstrata/blob/main/docs/ROADMAP.md)
+- [Compliance diligence](https://github.com/kitsboy/openstrata/blob/main/DILIGENCE.md)
+- [i18n guide](https://github.com/kitsboy/openstrata/blob/main/docs/I18N.md)
+- [Deployment guide](https://github.com/kitsboy/openstrata/blob/main/docs/DEPLOYMENT.md)
+- [Security policy](https://github.com/kitsboy/openstrata/blob/main/docs/SECURITY.md)
+- [Privacy policy](https://github.com/kitsboy/openstrata/blob/main/docs/PRIVACY-POLICY.md)
+- [Terms of service](https://github.com/kitsboy/openstrata/blob/main/docs/TERMS-OF-SERVICE.md)
+- [Accessibility statement](https://github.com/kitsboy/openstrata/blob/main/docs/ACCESSIBILITY-STATEMENT.md)
+- [Known limitations](https://github.com/kitsboy/openstrata/blob/main/docs/KNOWN-LIMITATIONS.md)

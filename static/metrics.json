@@ -2,11 +2,11 @@
   "schema": "gab.product-metrics.v1",
   "productId": "openstrata",
   "name": "OpenStrata",
-  "updatedAt": "2026-07-21T22:00:00Z",
+  "updatedAt": "2026-08-25T18:00:00Z",
   "window": {
     "label": "all",
     "from": "2026-01-01T00:00:00Z",
-    "to": "2026-07-21T22:00:00Z"
+    "to": "2026-08-25T18:00:00Z"
   },
   "health": {
     "status": "green",
@@ -21,8 +21,8 @@
       },
       {
         "id": "satohash",
-        "status": "amber",
-        "detail": "OTS for meeting minutes planned — not wired on origin yet"
+        "status": "green",
+        "detail": "Health indicator + stamp/verify form live on the dashboard and spec page"
       },
       {
         "id": "umami",

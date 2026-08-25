@@ -22,6 +22,38 @@ const errors = [];
 const warnings = [];
 
 // ---------------------------------------------------------------------------
+// Locale parity guard: every non-English locale must override exactly the same
+// key set as the French benchmark (full coverage). This forces new catalog keys
+// to be translated across all locales instead of silently falling back.
+// ---------------------------------------------------------------------------
+const LOCALE_BLOCK = /^  ([a-z]{2,3}): \{ \.\.\.english, (.*?)( \},?)$/gm;
+const localeBlocks = new Map();
+for (const match of catalog.matchAll(LOCALE_BLOCK)) {
+  // Keys are lowercase-camelCase identifiers immediately followed by a quote
+  // (a string value). Requiring the quote avoids matching "Word:" patterns
+  // that appear inside translated values (e.g. French "BCFSA :", Spanish
+  // "Sellado:", or "marketing.ts:").
+  localeBlocks.set(
+    match[1],
+    new Set([...match[2].matchAll(/\b([a-z][A-Za-z0-9]*)\s*:\s*'/g)].map((m) => m[1]))
+  );
+}
+
+const frKeys = localeBlocks.get('fr');
+if (!frKeys) throw new Error('Could not locate the French override block (parity benchmark).');
+for (const [code, keys] of localeBlocks) {
+  if (code === 'fr') continue;
+  const missing = [...frKeys].filter((key) => !keys.has(key));
+  const extra = [...keys].filter((key) => !frKeys.has(key));
+  if (missing.length > 0 || extra.length > 0) {
+    errors.push(
+      `locale ${code} is out of parity with fr (${missing.length} missing, ${extra.length} extra). ` +
+        `Missing: ${missing.slice(0, 8).join(', ')}${missing.length > 8 ? '…' : ''}`
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Hard-coded copy scanner: flags static English text that should live in the
 // shared catalog. Warn-level because domain records legitimately stay
 // canonical English until reviewed translations exist.
