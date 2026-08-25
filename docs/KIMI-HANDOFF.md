@@ -90,7 +90,7 @@
 - Keep the prototype front-end only (no backend) — consistent with the Phase 3 boundary.
 
 **Git State:**
-- SHA: `4a78235`
+- SHA: `49e85b9`
 - Unpushed: none (all commits in this session pushed to `origin/main`)
 
 ---
