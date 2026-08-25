@@ -1,10 +1,10 @@
 ---
 title: Mission
 project: Hermes Strata / OpenStrata
-version: 0.2.0
+version: 0.2.6
 audience: internal
 tags: [hermes-strata, openstrata, mission, bc-strata, bitcoin]
-last_updated: 2026-07-01
+last_updated: 2026-08-25
 owner: Cam (Give A Bit)
 ---
 

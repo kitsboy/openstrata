@@ -27,8 +27,8 @@ flowchart LR
 ### Phase 1 — Foundation ✅ (Jul 2026)
 Marketing site, compliance KB, Strata Tool hub, docs, graphs
 
-### Phase 2 — Supercharge (Jul–Aug 2026)
-About page, roadmap, building template wizard, e-transfer prototype
+### Phase 2 — Supercharge (Jul–Aug 2026) ✅ (except e-transfer prototype)
+About page, roadmap, building template wizard, FAQ, RSS feed, full interface localization, passing typecheck
 
 ### Phase 3 — Core Product (Q3 2026)
 Docker stack, trust ledger, fee billing, Form B/F API, bylaw state machine, PWA

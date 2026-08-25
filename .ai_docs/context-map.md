@@ -15,17 +15,20 @@ src/
   app.html                  SvelteKit HTML shell
   app.css                   Tailwind CSS entry point
   routes/                   SvelteKit file-based routes
-    +layout.ts              Root layout
     +layout.svelte          Root layout (UI shell)
     +page.svelte            Homepage
     about/+page.svelte
     blog/+page.svelte
     compliance/+page.svelte    BCFSA compliance tools
     docs/+page.svelte
+    faq/+page.svelte
+    legal/+page.svelte
     pitch/+page.svelte
     roadmap/+page.svelte
     rss/+page.svelte
+    rss.xml/+server.ts      Prerendered RSS 2.0 feed
     spec/+page.svelte
+    templates/+page.svelte
     tools/+page.svelte
     tools/wizard/+page.svelte
   lib/
@@ -40,8 +43,8 @@ docs/
   diligence/               Self-evolving packs
 
 ## Routes
-/  /about  /blog  /compliance  /docs  /pitch
-/roadmap  /rss  /spec  /tools  /tools/wizard
+/  /about  /blog  /compliance  /docs  /faq  /legal  /pitch
+/roadmap  /rss  /rss.xml  /spec  /templates  /tools  /tools/wizard
 
 ## Deployment
 Auto-deploy from GitHub main to Cloudflare Pages (project: openstrata)

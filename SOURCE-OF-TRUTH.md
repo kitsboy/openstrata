@@ -68,7 +68,11 @@ npm run build                 # output: build/
 | /tools | Strata Tool hub (30+ modules) |
 | /tools/wizard | Building Template Wizard — 8-step onboarding |
 | /docs | Framework docs index |
+| /legal | Legal source library |
+| /templates | Template library |
+| /faq | Frequently asked questions |
 | /rss | RSS feeds + API reference |
+| /rss.xml | Prerendered RSS 2.0 feed |
 | /spec | OpenStrata protocol spec |
 | /blog | Announcements |
 

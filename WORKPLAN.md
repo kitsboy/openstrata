@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
-**Last updated:** July 2026 (Hermes Desktop update — wizard live)  
-**Status:** Phase 1 complete (marketing site). Phase 2 in progress.
+**Last updated:** 2026-08-25 (v0.2.6 release)  
+**Status:** Phase 1 complete. Phase 2 complete except e-transfer prototype.
 
 ---
 
@@ -26,6 +26,9 @@
 - [x] Roadmap/paths page
 - [x] Supercharged homepage with graphs and competitive facts
 - [x] Building Template Wizard (onboarding flow) — live at /tools/wizard
+- [x] Full interface localization across all routes (461 catalog keys, hardened `npm run audit:i18n`)
+- [x] FAQ page (/faq) and prerendered RSS feed (/rss.xml)
+- [x] `npm run check` passing — 0 type errors, 0 accessibility warnings
 - [ ] E-transfer auto-reconciliation prototype
 
 ## Phase 3 — Core Product (Q3 2026)

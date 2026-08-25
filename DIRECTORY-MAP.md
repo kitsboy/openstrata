@@ -64,7 +64,11 @@
 | /tools | src/routes/tools/+page.svelte | Strata Tool hub — 30+ modules |
 | /tools/wizard | src/routes/tools/wizard/+page.svelte | **Building Template Wizard** — 8-step onboarding |
 | /docs | src/routes/docs/+page.svelte | Framework docs index |
+| /legal | src/routes/legal/+page.svelte | Legal source library |
+| /templates | src/routes/templates/+page.svelte | Template library |
+| /faq | src/routes/faq/+page.svelte | FAQ (data-driven) |
 | /rss | src/routes/rss/+page.svelte | RSS feeds + API reference |
+| /rss.xml | src/routes/rss.xml/+server.ts | Prerendered RSS 2.0 feed |
 | /spec | src/routes/spec/+page.svelte | OpenStrata protocol spec |
 | /blog | src/routes/blog/+page.svelte | Announcements |
 

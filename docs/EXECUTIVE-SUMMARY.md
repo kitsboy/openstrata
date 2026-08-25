@@ -2,7 +2,7 @@
 
 **Project:** OpenStrata / Hermes Strata  
 **Parent:** [Give A Bit](https://giveabit.io)  
-**Version:** 0.2.0 | July 2026  
+**Version:** 0.2.6 | August 2026  
 **Contact:** hello@giveabit.io
 
 ---
@@ -82,11 +82,11 @@ Legacy software (Yardi, AppFolio equivalents for strata) is expensive, US-centri
 
 | Phase | Timeline | Deliverable |
 |-------|----------|-------------|
-| 1 | Now | Marketing site, compliance KB, Strata Tool hub |
-| 2 | Q3 2026 | Building template wizard, e-transfer auto-match |
-| 3 | Q4 2026 | Lightning Dual Pay, Satohash API integration |
-| 4 | 2027 | War chest DCA, multisig PSBT, agent payments |
-| 5 | 2028 | ON/AB/US expansion via config.yaml |
+| 1 | Done | Marketing site, compliance KB, Strata Tool hub |
+| 2 | Done (except e-transfer prototype) | Building template wizard, FAQ, RSS feed, full i18n |
+| 3 | Q3 2026 | Docker stack, trust ledger, fee billing, Form B/F API |
+| 4 | Q4 2026 | Satohash integration, Lightning, multisig watch |
+| 5 | 2027+ | War chest DCA, agent payments, ON/AB/US expansion |
 
 ---
 

@@ -18,7 +18,9 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "audit:i18n": "node scripts/audit-i18n.mjs"
   },
   "buildOutputDir": "build",
   "devPort": 5173,
@@ -27,17 +29,21 @@
   "repository": "https://github.com/kitsboy/openstrata",
   "branch": "main",
   "hasRuntimeDependencies": false,
-  "routeCount": 11,
+  "routeCount": 15,
   "routes": [
     "/",
     "/about",
     "/blog",
     "/compliance",
     "/docs",
+    "/faq",
+    "/legal",
     "/pitch",
     "/roadmap",
     "/rss",
+    "/rss.xml",
     "/spec",
+    "/templates",
     "/tools",
     "/tools/wizard"
   ],
@@ -45,5 +51,5 @@
   "isSvelteKit": true,
   "isReact": false,
   "isNextjs": false,
-  "agentDocsVersion": "1.0.0"
+  "agentDocsVersion": "1.1.0"
 }
