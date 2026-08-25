@@ -3,9 +3,16 @@
   <url><loc>https://openstrata.giveabit.io/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/about</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/pitch</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://openstrata.giveabit.io/roadmap</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/tools</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/tools/wizard</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/compliance</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/legal</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/templates</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/faq</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/roadmap</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/docs</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/rss</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://openstrata.giveabit.io/rss.xml</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/blog</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/spec</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://openstrata.giveabit.io/llms.txt</loc><priority>0.4</priority><changefreq>monthly</changefreq></url>

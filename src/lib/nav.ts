@@ -6,6 +6,7 @@ export const navItems = [
 	{ href: '/compliance', label: 'Compliance' },
 	{ href: '/legal', label: 'Legal library' },
 	{ href: '/templates', label: 'Templates' },
+	{ href: '/faq', label: 'FAQ' },
 	{ href: '/roadmap', label: 'Roadmap' },
 	{ href: '/docs', label: 'Docs' },
 	{ href: '/rss', label: 'RSS & API' }

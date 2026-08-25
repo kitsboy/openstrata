@@ -146,10 +146,10 @@
 		</p>
 		{#if !completed}
 			<div class="mt-8">
-				<div class="flex items-center gap-0.5 mb-3">
+				<div class="flex items-center gap-0.5 mb-3 overflow-x-auto pb-1">
 					{#each stepLabels as label, i}
 						<button
-							class="flex-1 text-center py-2 rounded-lg text-xs font-semibold transition-all {i === step ? 'bg-brand-600 text-white' : i < step ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400'}"
+							class="flex-1 min-w-max text-center py-2 px-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all {i === step ? 'bg-brand-600 text-white' : i < step ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400'}"
 							onclick={() => goToStep(i)} disabled={i > step}
 						>{stepIcons[i]} {$copy[label]}</button>
 					{/each}

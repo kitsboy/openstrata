@@ -43,6 +43,10 @@
 			<p class="mt-4 text-lg text-slate-600 leading-relaxed">
 				{$copy.rssIntro}
 			</p>
+			<a href="/rss.xml" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">
+				<Icon name="rss" class="h-4 w-4" />
+				{$copy.rssFeedLabel}
+			</a>
 		</div>
 	</div>
 </section>
