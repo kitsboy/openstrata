@@ -1,3 +1,23 @@
+## Session — 2026-08-25 (Phase 3: fee billing + bylaw enforcement)
+
+**Done:**
+- Added **automated fee billing + late notices** (`backend/src/billing/`, commit `b7e4559`): pure monthly per-unit strata-fee charge generation + late notices (grace window) exposed as `POST /api/v1/billing/run`, which posts each charge to the per-unit AR ledger account (4 unit tests).
+- Added the **CRT-proof bylaw enforcement state machine** (`backend/src/enforcement/`): received → notice_issued → reviewing → fine_posted / no-fine, with the `BLOCK_FINE_ACTIONS` 14-day review lock, `REQUIRE_QUORUM_AND_MINUTES`, and $200 standard / $1,000 STR fine caps — wired as `/api/v1/bylaw/{complaint,notice,status,fine,nofine}` (11 tests).
+- Backend suite is now **52 tests** (was 35); typecheck clean. Frontend untouched and green (check 0/0, build clean).
+
+**Remaining (external / not yet built):**
+- Rosa pgvector embedding + Ollama model choice not selected; `0002` migration + `keywordRetriever` seam ready.
+- Docker stack needs a real deployment on a host behind Tailscale (Umbrel) — pending a Postgres migration + `/api/v1/ledger` smoke test.
+- Form B/F generator with deadline tracking, meeting quorum calculator + voting engine, PWA hardening.
+- `/docs` bootstrap references `rosa ingest` / `ziggy simulate` CLIs that are not yet built; add when the vector adapter lands.
+- Compliance-domain records / the 16 machine-drafted e-transfer keys across 9 locales still need professional human review.
+
+**Git State:**
+- SHA: `b7e4559`
+- Unpushed: `git log --oneline origin/main..HEAD`
+
+---
+
 ## Session — 2026-08-25 (Phase 3 backend scaffolding)
 
 **Done:**

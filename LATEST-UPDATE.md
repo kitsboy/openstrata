@@ -1,5 +1,5 @@
 # OpenStrata — Last Updated 2026-08-25 by Grok
 
-Brief: Scaffolded the Phase 3 core-product backend in a new `backend/` workspace — Docker Compose stack (Postgres/pgvector + Fastify API), an immutable append-only trust ledger (Operating/CRF/Special Levy isolation, hash-chain diffable), Rosa compliance RAG (keyword retriever + BC corpus, pgvector/Ollama seam), and Ziggy treasury state machine (CRF hard cap + no-guess reconciliation) with 29 passing backend tests and an isolated CI job.
+Brief: Phase 3 backend in `backend/` — Docker Compose stack (Postgres/pgvector + Fastify API), immutable append-only trust ledger (Operating/CRF/Special Levy isolation, hash-chain diffable), Rosa RAG, Ziggy treasury, automated fee billing + late notices, and a CRT-proof bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`). 52 backend tests + isolated CI job; frontend green.
 
-Commit: e844449
+Commit: b7e4559
