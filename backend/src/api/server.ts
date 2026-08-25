@@ -20,6 +20,7 @@ import {
 } from '../enforcement/enforcement.js';
 import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rails/rails.js';
 import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-request.js';
+import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
 
@@ -28,11 +29,12 @@ export interface ApiDeps {
   rosa: Retriever;
   reconcile: Reconciler;
   payments: PaymentRequestStore;
+  resolver?: RateProvider;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
     rails?: RailRegistry;
-    cadPerBtc?: number; // live rate for convertible rails
+    cadPerBtc?: number; // fallback static rate for convertible rails
   };
 }
 
@@ -174,12 +176,13 @@ export async function buildServer(
         score: c.score
       }))
     };
-  });
+  });  const cadPerBtc = async (): Promise<number> =>
+    (await deps.resolver?.cadPerBtc()) ?? deps.config.cadPerBtc ?? 0;
 
-  // ------------------------------------------------ Sovereign rails
+  // ------------------------------------------------  Sovereign rails
   app.get('/api/v1/rails/status', async () => ({
     rails: enabledRails(deps.config.rails ?? {}),
-    cadPerBtc: deps.config.cadPerBtc ?? null
+    cadPerBtc: await cadPerBtc()
   }));
 
   // Build a rail quote; idempotent per (refId, unitRef, rail) via the payment store.
@@ -201,6 +204,7 @@ export async function buildServer(
       return { ok: false, reason: `rail '${b.rail}' is not enabled` };
     }
     try {
+      const rate = await cadPerBtc(); // resolve outside the sync buildInvoice()
       const { request, created } = await getOrCreateQuote(
         deps.payments,
         {
@@ -225,7 +229,7 @@ export async function buildServer(
             },
             b.recipient,
             new Date(),
-            deps.config.cadPerBtc ?? 0
+            rate
           )
       );
       const invoice = {

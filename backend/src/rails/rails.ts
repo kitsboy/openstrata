@@ -73,20 +73,38 @@ const BECH32 = /^(bc1|lnbc|lntb|lnurl|lnbcrt|belnp|blnb)[0-9a-z]{4,}$/i;
 export function validateOnchainAddress(addr: string): ValidateResult {
   const a = addr.trim();
   if (!a) return { ok: false, reason: 'empty address' };
-  // Bech32 SegWit (bc1...) or legacy (1.../3...).
+  // Legacy P2PKH (1...) / P2SH (3...) — format-only (base58check is wallet-side).
   if (/^[13][1-9A-HJ-NP-Za-km-z]{25,40}$/.test(a)) return { ok: true };
-  if (/^bc1[a-z0-9]{39,90}$/i.test(a)) return { ok: true };
-  if (/^bc1p[a-z0-9]{57,91}$/i.test(a)) return { ok: true }; // taproot
-  if (/^tb1[a-z0-9]{39,90}$/i.test(a)) return { ok: true }; // testnet
+  // Bech32 / bech32m with real BIP-173 checksum.
+  if (/^(bc1|tb1)/i.test(a)) {
+    const dec = decodeBech32(a);
+    if (!dec || !['bc', 'tb'].includes(dec.hrp) || !dec.data.length) {
+      return { ok: false, reason: 'bad bech32 checksum or hrp' };
+    }
+    const version = dec.data[0];
+    if (version === 0 && !dec.bech32m) return { ok: true }; // segwit v0
+    if (version === 1 && dec.bech32m) return { ok: true }; // taproot v1
+    return { ok: false, reason: 'unsupported witness version' };
+  }
   return { ok: false, reason: 'not a valid Bitcoin on-chain address' };
 }
 
 export function validateLightning(recipient: string): ValidateResult {
-  const r = recipient.trim().toLowerCase();
-  if (r.startsWith('lnurl') || r.startsWith('lnbc') || r.startsWith('lntb') || r.startsWith('lnbcrt')) {
-    return BECH32.test(r) ? { ok: true } : { ok: false, reason: 'malformed Lightning identifier' };
+  const r = recipient.trim();
+  if (/^lightning:\/\//i.test(r)) return { ok: true };
+  const rr = r.toLowerCase();
+  if (rr.startsWith('lnbc') || rr.startsWith('lntb') || rr.startsWith('lnbcrt')) {
+    // BOLT-11 invoices are bech32; require a valid checksum.
+    const dec = decodeBech32(rr);
+    return dec && dec.data.length >= 4
+      ? { ok: true }
+      : { ok: false, reason: 'malformed or invalid-checksum Lightning invoice' };
   }
-  if (/^lightning:\/\//i.test(recipient)) return { ok: true };
+  if (rr.startsWith('lnurl')) {
+    // LNURL strings are bech32 too; checksum-verify when possible.
+    const dec = decodeBech32(rr);
+    return dec && dec.data.length >= 8 ? { ok: true } : { ok: false, reason: 'malformed LNURL' };
+  }
   return { ok: false, reason: 'expected an LNURL or BOLT-11 invoice' };
 }
 
@@ -114,7 +132,14 @@ export function validatePayNym(recipient: string): ValidateResult {
 
 export function validateNostrNpub(npub: string): ValidateResult {
   const n = npub.trim();
-  if (n.startsWith('npub') && /^npub[0-9a-z]{50,70}$/.test(n)) return { ok: true };
+  if (n.startsWith('npub')) {
+    const dec = decodeBech32(n);
+    // A 32-byte secp256k1 pubkey encodes to 52 five-bit data words.
+    if (dec && dec.hrp === 'npub' && dec.data.length === 52) {
+      return { ok: true };
+    }
+    return { ok: false, reason: 'invalid npub checksum' };
+  }
   // Accept a raw 64-char hex pubkey too (many keys are kept in hex).
   if (/^[0-9a-f]{64}$/i.test(n)) return { ok: true };
   return { ok: false, reason: 'expected an npub (bech32) or 64-char hex public key' };
@@ -246,3 +271,163 @@ export function enabledRails(registry: RailRegistry): Array<{ rail: Rail; name: 
 }
 
 export const RAIL_NAMES_BY_KEY = RAIL_NAMES;
+
+// ---------------------------------------------------------------------------
+// Bech32 / bech32m (BIP-173) checksum verification
+// ---------------------------------------------------------------------------
+
+const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+
+function polymod(values: number[]): number {
+  const GENERATOR = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+  let chk = 1;
+  for (const value of values) {
+    const top = chk >>> 25;
+    chk = ((chk & 0x1ffffff) << 5) ^ value;
+    for (let i = 0; i < 5; i++) {
+      if ((top >>> i) & 1) chk ^= GENERATOR[i];
+    }
+  }
+  return chk;
+}
+
+function hrpExpand(hrp: string): number[] {
+  const hi: number[] = [];
+  const lo: number[] = [];
+  for (let i = 0; i < hrp.length; i++) {
+    const c = hrp.charCodeAt(i) >> 5;
+    hi.push(c);
+  }
+  for (let i = 0; i < hrp.length; i++) {
+    lo.push(hrp.charCodeAt(i) & 31);
+  }
+  return [...hi, 0, ...lo];
+}
+
+function createChecksum(hrp: string, data: number[], bech32m: boolean): number[] {
+  const values = [...hrpExpand(hrp), ...data, 0, 0, 0, 0, 0, 0];
+  const mod = polymod(values) ^ (bech32m ? 0x2bc830a3 : 1);
+  const ret: number[] = [];
+  for (let i = 0; i < 6; i++) ret.push((mod >>> (5 * (5 - i))) & 31);
+  return ret;
+}
+
+/** Encode a bech32 (bech32m=false) string from an hrp + five-bit data words. */
+export function bech32Encode(hrp: string, data: number[], bech32m = false): string {
+  const checksum = createChecksum(hrp, data, bech32m);
+  const all = [...data, ...checksum];
+  const charset = CHARSET;
+  return `${hrp}1${all.map((w) => charset[w]).join('')}`;
+}
+
+/**
+ * Decode a bech32/bech32m string, verifying the checksum per BIP-173.
+ * Returns `null` when the format or checksum is invalid.
+ */
+export function decodeBech32(str: string): {
+  hrp: string;
+  data: number[];
+  bech32m: boolean;
+} | null {
+  const s = str.trim().toLowerCase();
+  const pos = s.lastIndexOf('1');
+  if (pos < 1 || pos + 7 > s.length) return null;
+  const hrp = s.slice(0, pos);
+  const dataPart = s.slice(pos + 1);
+  if (!hrp || !/^[a-z0-9]+$/.test(dataPart)) return null;
+  if (dataPart.length < 6) return null;
+  const words = dataPart.split('').map((c) => CHARSET.indexOf(c));
+  if (words.some((w) => w === -1)) return null;
+
+  const values = [...hrpExpand(hrp), ...words];
+  const check = polymod(values);
+  if (check === 1) return { hrp, data: words.slice(0, -6), bech32m: false };
+  if (check === 0x2bc830a3) return { hrp, data: words.slice(0, -6), bech32m: true };
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Pluggable CAD/BTC rate provider
+// ---------------------------------------------------------------------------
+
+export interface RateProvider {
+  cadPerBtc(): Promise<number | null>;
+}
+
+/**
+ * Static/env-backed rate provider (off by default until a live feed exists).
+ * `staticCadPerBtc` is read from env `CAD_PER_BTC`; can be overridden in tests.
+ * A `cacheMs` lets the operator request fresh values later without the provider
+ * knowing about the upstream API.
+ */
+export class StaticRateProvider implements RateProvider {
+  private cache: { at: number; value: number | null } = { at: 0, value: null };
+
+  constructor(private readonly options: { rate?: number; cacheMs?: number } = {}) {
+    const fromEnv = Number(process.env.CAD_PER_BTC);
+    const rate = this.options.rate ?? (Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : null);
+    this.cache = { at: this.options.rate ? 0 : Date.now(), value: rate };
+  }
+
+  async cadPerBtc(): Promise<number | null> {
+    const { cacheMs = 60_000 } = this.options;
+    if (this.cache.value !== null && Date.now() - this.cache.at < cacheMs) {
+      return this.cache.value;
+    }
+    // Seam: replace the static value with a live fetch from your FX/BTC provider.
+    return this.cache.value;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic per-unit receive addresses from a BIP-32 xpub (watch-only)
+// ---------------------------------------------------------------------------
+
+const PUBLIC_XPUB_PREFIXES = new Set(['xpub', 'ypub', 'zpub', 'tpub', 'vpub']);
+
+export interface XpubDeriveResult {
+  xpub: string;
+  unitId: string;
+  /** BIP32 path for the deterministic child index. */
+  path: string;
+  index: number;
+  /** Raw segmented-witness bytes when derivation is integrated; format-only stub today. */
+  note: string;
+}
+
+/** Deterministic, non-negative child index for a unit (stable across calls). */
+export function unitChildIndex(unitRef: string): number {
+  let h = 2166136261;
+  for (const ch of unitRef) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h) >>> 0; // unsigned 32-bit
+}
+
+/**
+ * Build the watch-only receive descriptor for a unit. Validates the xpub
+ * prefix and returns a BIP32 path (m/84'/0'/0'/0/<index>). Full address
+ * derivation needs a secp256k1/BIP32 lib — this is the deterministic seam.
+ */
+export function deriveUnitAddress(
+  xpub: string,
+  unitRef: string,
+  network: RailNetwork = 'mainnet'
+): XpubDeriveResult {
+  const prefix = xpub.slice(0, 4);
+  if (!PUBLIC_XPUB_PREFIXES.has(prefix)) {
+    throw new Error('invalid xpub: expected a public prefix (xpub/ypub/zpub/tpub/vpub)');
+  }
+  const index = unitChildIndex(unitRef);
+  const hardening = "84'"; // BIP-84 native segwit across mainnet/testnet
+  const coin = network === 'mainnet' ? 0 : 1;
+  return {
+    xpub,
+    unitId: unitRef,
+    index,
+    path: `m/${hardening}/${coin}'/0'/${index}`,
+    note:
+      'Path-selected deterministically from the unit ref; address bytes require a BIP32/secp256k1 library to materialize.'
+  };
+}

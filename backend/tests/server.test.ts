@@ -2,6 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
 import { MemLedgerStore, MemPaymentRequestStore } from './memstore.js';
+import { bech32Encode } from '../src/rails/rails.js';
+
+// Valid LNURL checksummed string (bech32) so rail validation passes.
+const LNURL = bech32Encode('lnurl', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
@@ -207,7 +211,7 @@ describe('fastify API', () => {
         unitRef: 'unit-302',
         amountBasis: 50_000,
         currency: 'CAD',
-        recipient: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw'
+        recipient: LNURL
       }
     });
     expect(res.statusCode).toBe(200);
@@ -244,7 +248,7 @@ describe('fastify API', () => {
       unitRef: 'unit-101',
       amountBasis: 10_000,
       currency: 'CAD',
-      recipient: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw'
+      recipient: LNURL
     };
     const a = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
     const b = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
@@ -258,7 +262,7 @@ describe('fastify API', () => {
       method: 'POST', url: '/api/v1/payments/quote',
       payload: {
         rail: 'lightning', refId: 'CONF1', unitRef: 'unit-302', amountBasis: 50_000,
-        currency: 'CAD', recipient: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw'
+        currency: 'CAD', recipient: LNURL
       }
     });
     const ref = quote.json().invoice.referenceCode;

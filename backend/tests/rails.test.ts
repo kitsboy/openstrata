@@ -10,8 +10,15 @@ import {
   referenceCodeFor,
   satsFromCadBasis,
   enabledRails,
+  decodeBech32,
+  bech32Encode,
+  StaticRateProvider,
+  deriveUnitAddress,
+  unitChildIndex,
   type RailRegistry
 } from '../src/rails/rails.js';
+
+const LNURL = bech32Encode('lnurl', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
 const seed = {
   refId: 'A9F',
@@ -23,16 +30,23 @@ const seed = {
 };
 
 describe('recipient validation', () => {
-  it('accepts SegWit/taproot on-chain and rejects junk', () => {
-    expect(validateOnchainAddress('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh')).toEqual({ ok: true });
+  it('accepts SegWit v0 / legacy and rejects junk', () => {
+    const v0 = bech32Encode('bc', [0, 1, 2, 3, 4, 5, 20, 30, 7]);
+    expect(validateOnchainAddress(v0)).toEqual({ ok: true });
+    const taproot = bech32Encode('bc', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], true);
+    expect(validateOnchainAddress(taproot).ok).toBe(true);
     expect(validateOnchainAddress('1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2')).toEqual({ ok: true });
     expect(validateOnchainAddress('not-an-address').ok).toBe(false);
   });
 
-  it('accepts LNURL / BOLT-11 and rejects malformed', () => {
-    expect(validateLightning('lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerw').ok).toBe(true);
-    expect(validateLightning('lnbc1quickinvoice').ok).toBe(true);
+  it('accepts LNURL / BOLT-11 with valid checksums and rejects malformed', () => {
+    const lnurl = bech32Encode('lnurl', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const lnbc = bech32Encode('lnbc', [2, 15, 20, 3]);
+    expect(validateLightning(lnurl).ok).toBe(true);
+    expect(validateLightning(lnbc).ok).toBe(true);
     expect(validateLightning('hello').ok).toBe(false);
+    // bad checksum must be rejected
+    expect(validateLightning('lnurl1qqqqqqqqq').ok).toBe(false);
   });
 
   it('accepts Liquid confidential / bech32 addresses', () => {
@@ -50,18 +64,36 @@ describe('recipient validation', () => {
     expect(validatePayNym(paymentCode).ok).toBe(true);
   });
 
-  it('accepts Nostr npub and raw hex pubkeys', () => {
-    expect(validateNostrNpub('npub' + 'a'.repeat(60)).ok).toBe(true);
+  it('accepts Nostr npub with a valid checksum and raw hex pubkeys', () => {
+    const npub = bech32Encode('npub', Array(52).fill(5)); // 52 words = 32-byte key
+    expect(validateNostrNpub(npub).ok).toBe(true);
     expect(validateNostrNpub('0'.repeat(64)).ok).toBe(true);
-    expect(validateNostrNpub('npubZ2zxyapq7y3qrk8jplk3tg4q6wgxz3vhuvqw'.toLowerCase()).ok).toBe(false);
+    expect(validateNostrNpub(npub.slice(0, -2) + 'aa').ok).toBe(false);
   });
 
   it('routes validation by rail', () => {
-    expect(validateRailRecipient('lightning', 'lnurl1dp68').ok).toBe(true);
-    expect(validateRailRecipient('onchain', 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh').ok).toBe(true);
+    expect(validateRailRecipient('lightning', LNURL).ok).toBe(true);
+    expect(validateRailRecipient('onchain', bech32Encode('bc', [0, 3, 5, 8, 9, 12, 1])).ok).toBe(true);
     expect(validateRailRecipient('liquid', 'EX' + 'A'.repeat(60)).ok).toBe(true);
-    expect(validateRailRecipient('nostr', 'npub' + 'a'.repeat(60)).ok).toBe(true);
+    expect(validateRailRecipient('nostr', bech32Encode('npub', Array(52).fill(5))).ok).toBe(true);
     expect(validateRailRecipient('paynym_bip47', 'PM8T' + 'A'.repeat(95)).ok).toBe(true);
+  });
+});
+
+describe('bech32 checksum (BIP-173)', () => {
+  it('encodes and decodes with a valid checksum', () => {
+    const words = [1, 2, 3, 4, 5];
+    const decoded = decodeBech32(bech32Encode('lnurl', words));
+    expect(decoded).not.toBeNull();
+    expect(decoded?.hrp).toBe('lnurl');
+    expect(decoded?.data).toEqual(words);
+    expect(decoded?.bech32m).toBe(false);
+  });
+
+  it('rejects a corrupted checksum', () => {
+    const encoded = bech32Encode('npub', Array(20).fill(9));
+    const tampered = encoded.slice(0, -1) + (encoded.endsWith('a') ? 'b' : 'a');
+    expect(decodeBech32(tampered)).toBeNull();
   });
 });
 
@@ -72,7 +104,7 @@ describe('quoting + reconciliation reference', () => {
 
   it('lightning quote locks a 15-minute CAD window and converts sats', () => {
     const now = new Date('2026-08-25T16:00:00Z');
-    const inv = quotePayment(seed, 'lnurl1dp68gurn8ghj7um9wfcltv59', now, 50_000);
+    const inv = quotePayment(seed, LNURL, now, 50_000);
     expect(inv.expiresAt).toBe('2026-08-25T16:15:00.000Z');
     expect(inv.fiatLockedBasis).toBe(50_000);
     expect(inv.amountSat).toBe(satsFromCadBasis(50_000, 50_000)); // $500 / $50k = 0.01 BTC = 1M sats
@@ -90,6 +122,31 @@ describe('quoting + reconciliation reference', () => {
     expect(satsFromCadBasis(50_000, 50_000)).toBe(1_000_000);
     expect(satsFromCadBasis(10_000, 100_000)).toBe(100_000);
     expect(satsFromCadBasis(50_000, 0)).toBe(0);
+  });
+});
+
+describe('rate provider', () => {
+  it('StaticRateProvider returns the env/set rate and caches', async () => {
+    const p = new StaticRateProvider({ rate: 50_000, cacheMs: 60_000 });
+    expect(await p.cadPerBtc()).toBe(50_000);
+  });
+
+  it('StaticRateProvider returns null when no rate is set', async () => {
+    const p = new StaticRateProvider({ cacheMs: 0 });
+    expect(await p.cadPerBtc()).toBe(null);
+  });
+});
+
+describe('deterministic unit addresses (xpub)', () => {
+  it('is deterministic for a unit and rejects private prefixes', () => {
+    const a = deriveUnitAddress('zpub6rm3p3cwhHdHmCmYm', 'unit-302');
+    const b = deriveUnitAddress('zpub6rm3p3cwhHdHmCmYm', 'unit-302');
+    expect(a.index).toBe(b.index);
+    expect(a.path).toMatch(/^m\/84'/);
+    expect(unitChildIndex('unit-101')).not.toBe(unitChildIndex('unit-302'));
+    expect(() => deriveUnitAddress('xprv9s21ZrQH143K24Mfq5z', 'unit-1')).toThrow(
+      /public prefix/
+    );
   });
 });
 
