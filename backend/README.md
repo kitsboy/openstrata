@@ -74,6 +74,7 @@ Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 ## API surface (scaffold)
 
 - `GET  /health`
+- `GET  /api/v1/units` — canonical unit/lot master data + AR fund codes
 - `GET  /api/v1/ledger/balance?community=&fund=`
 - `POST /api/v1/ledger/post`
 - `POST /api/v1/treasury/authorize`

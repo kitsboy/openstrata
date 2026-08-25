@@ -92,14 +92,25 @@ export const apiEndpoints = [
 	{ method: 'GET', path: '/api/v1/records/retention', desc: 'SPA s.35 retention schedule — flags documents approaching expiry' }
 ] as const;
 
-export const units = [
-	{ id: '101', floor: 1, sqft: 780, status: 'occupied', tenant: 'M. Chen', rent: 2450, eht: true, formK: 'signed', evCharger: false },
-	{ id: '102', floor: 1, sqft: 820, status: 'occupied', tenant: 'J. Williams', rent: 2580, eht: true, formK: 'signed', evCharger: true },
-	{ id: '201', floor: 2, sqft: 950, status: 'vacant', tenant: null, rent: 2890, eht: false, formK: 'missing', evCharger: false },
-	{ id: '202', floor: 2, sqft: 1100, status: 'occupied', tenant: 'A. Patel', rent: 3100, eht: true, formK: 'signed', evCharger: false },
-	{ id: '301', floor: 3, sqft: 1200, status: 'occupied', tenant: 'S. O\'Brien', rent: 3350, eht: true, formK: 'signed', evCharger: true },
-	{ id: '302', floor: 3, sqft: 1450, status: 'short-term', tenant: 'Airbnb', rent: 4200, eht: true, formK: 'signed', evCharger: false }
-] as const;
+import { demoUnits as canonicalUnits, unitArFundCode, buildingOrder } from '$lib/units';
+
+/**
+ * Unit display list for the dashboard/tools matrix, derived from the single
+ * canonical unit source (`$lib/units.ts`, mirrored by the backend
+ * `UnitRegistry`) so the site and API never disagree on what a unit is.
+ */
+export const units = buildingOrder(canonicalUnits).map((u) => ({
+	id: u.unitRef,
+	floor: u.floor,
+	sqft: u.sqft ?? 0,
+	status: u.occupancy,
+	tenant: u.tenant ?? null,
+	rent: u.rent ?? null,
+	eht: u.eht ?? false,
+	formK: u.formK ?? 'missing',
+	evCharger: u.evCharger ?? false,
+	arFundCode: unitArFundCode(u.unitRef)
+}));
 
 export const treasuryHistory = [
 	{ month: 'Jan', income: 42000, expenses: 38500, crf: 4200 },

@@ -13,6 +13,7 @@ import { keywordRetriever, type SourceRecord } from './rosa/rosa.js';
 import { reconcile } from './trf/recon.js';
 import { PostgresPaymentRequestStore } from './rails/payment-store.js';
 import { buildServer } from './api/server.js';
+import { DEFAULT_UNITS } from './units/seed.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -32,6 +33,7 @@ async function main(): Promise<void> {
     rosa,
     reconcile,
     payments,
+    units: DEFAULT_UNITS,
     config: {
       crfMandatoryPct: config.crfMandatoryPct,
       vectorCollection: config.vectorCollection,

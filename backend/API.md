@@ -38,6 +38,32 @@ Body validation via Fastify JSON schema: `required` = community, fund,
 amountBasis, kind, type; `amountBasis` must be a non-zero integer; `kind` is
 `credit|debit`.
 
+## Units — canonical master data
+
+### `GET /api/v1/units`
+The single source of unit identity (building → unit → AR ledger fund code). Every
+unit carries its reconciliation keys + deterministic `arFundCode` so clients
+never re-derive them on their own. Requires a unit registry dependency.
+```json
+{
+  "ok": true,
+  "units": [
+    {
+      "unitRef": "302",
+      "floor": 3,
+      "sqft": 1450,
+      "occupancy": "short-term",
+      "tenant": "Airbnb",
+      "eht": true,
+      "formK": "signed",
+      "arFundCode": "ar:unit-302",
+      "reconciliationRefs": ["302"]
+    }
+  ]
+}
+```
+Without a registered source: `{ "ok": false, "reason": "unit registry not configured" }`.
+
 ## Ziggy — treasury
 
 ### `POST /api/v1/treasury/authorize`

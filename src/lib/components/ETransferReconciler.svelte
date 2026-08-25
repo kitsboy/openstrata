@@ -1,6 +1,7 @@
 <script lang="ts">
   import { copy, formatCurrency } from '$lib/i18n';
-  import { reconcileTransfers, type ETransfer, type UnitRef } from '$lib/reconcile';
+  import { reconcileTransfers, type ETransfer } from '$lib/reconcile';
+  import { demoUnits, unitsToUnitRefs } from '$lib/units';
 
   // ---- Simulated inbound e-transfer notifications (bank format) ----
   const INITIAL_TRANSFERS: ETransfer[] = [
@@ -12,14 +13,8 @@
     { id: 'ET-1047', from: 'Marie Chen', message: '302 overpayment to CRF', amount: 200.0, date: '2026-08-03' }
   ];
 
-  const UNITS: UnitRef[] = [
-    { id: '101', names: ['Chen', 'M Chen'], aliases: ['101', 'unit 101'] },
-    { id: '102', names: ['Williams', 'J Williams'], aliases: ['102', 'unit 102'] },
-    { id: '201', names: [], aliases: ['201', 'unit 201'] },
-    { id: '202', names: ['Patel', 'A Patel'], aliases: ['202', 'unit 202'] },
-    { id: '301', names: ['OBrien', 'S OBrien'], aliases: ['301', 'unit 301'] },
-    { id: '302', names: ['Chen', 'M Chen'], aliases: ['302', 'unit 302'] }
-  ];
+  // Match against the single canonical building (mirrors backend units).
+  const UNITS = unitsToUnitRefs(demoUnits);
 
   let transfers = $state<ETransfer[]>([...INITIAL_TRANSFERS]);
   // Manual override: transferId -> chosen unitId (resolves unmatched/ambiguous).

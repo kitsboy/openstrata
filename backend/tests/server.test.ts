@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
 import { MemLedgerStore, MemPaymentRequestStore } from './memstore.js';
 import { bech32Encode } from '../src/rails/rails.js';
+import { DEFAULT_UNITS } from '../src/units/seed.js';
 
 // Valid LNURL checksummed string (bech32) so rail validation passes.
 const LNURL = bech32Encode('lnurl', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
@@ -28,6 +29,7 @@ beforeAll(async () => {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
+      units: DEFAULT_UNITS,
       config: {
         crfMandatoryPct: 10,
         vectorCollection: 'bc_spa_rta_crt',
@@ -192,6 +194,18 @@ describe('fastify API', () => {
     });
     expect(fine.json().ok).toBe(true);
     expect(fine.json().complaint.state).toBe('fine_posted');
+  });
+
+  it('GET /api/v1/units lists the canonical building', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/units' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.ok).toBe(true);
+    expect(body.units).toHaveLength(6);
+    expect(body.units[0]).toMatchObject({ unitRef: '101', floor: 1 });
+    const u302 = body.units.find((u: { unitRef: string }) => u.unitRef === '302');
+    expect(u302).toMatchObject({ arFundCode: 'ar:unit-302', occupancy: 'short-term' });
+    expect(u302.reconciliationRefs).toContain('302');
   });
 
   it('GET /api/v1/rails/status lists enabled rails', async () => {

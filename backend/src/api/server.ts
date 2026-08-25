@@ -23,6 +23,7 @@ import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-req
 import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
+import type { UnitRegistry } from '../units/model.js';
 
 export interface ApiDeps {
   ledger: LedgerEngine;
@@ -30,6 +31,8 @@ export interface ApiDeps {
   reconcile: Reconciler;
   payments: PaymentRequestStore;
   resolver?: RateProvider;
+  /** Canonical unit/lot master data. Resolves every unitRef in the product. */
+  units?: UnitRegistry;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
@@ -54,6 +57,30 @@ export async function buildServer(
   };
 
   app.get('/health', async () => ({ ok: true, service: 'openstrata-backend' }));
+
+  // Canonical unit/lot master data — the single source of unit identity.
+  // Every unit carries its reconciliation keys + AR ledger fund code so clients
+  // never re-derive them on their own. If a registry isn't injected, degrade.
+  app.get('/api/v1/units', async () => {
+    const reg = deps.units;
+    if (!reg) return { ok: false, reason: 'unit registry not configured' };
+    return {
+      ok: true,
+      units: reg.all().map((u) => ({
+        unitRef: u.unitRef,
+        floor: u.floor,
+        sqft: u.sqft,
+        occupancy: u.occupancy,
+        tenant: u.tenant ?? null,
+        rent: u.rent ?? null,
+        eht: u.eht ?? false,
+        evCharger: u.evCharger ?? false,
+        formK: u.formK ?? 'missing',
+        arFundCode: ('ar:unit-' + u.unitRef.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()) as string,
+        reconciliationRefs: reg.refs(u.unitRef)
+      }))
+    };
+  });
 
   // Ledger balance (verified against the hash chain).
   app.get<{ Querystring: { community: string; fund: string } }>(
