@@ -1,3 +1,23 @@
+## Session — 2026-08-25
+
+**Done:**
+- Completed the v0.2.5 release: centralized version markers on `package.json`, verified (`npm ci`/`build`/`audit:i18n`), committed `54cb99c`, pushed, and confirmed the live deployment serves v0.2.5
+- Migrated every remaining hard-coded interface string across all 14 routes to the shared catalog (458 keys): compliance, tools, docs, pitch, dashboard footer/toasts, wizard (incl. placeholders), about, blog, templates, legal, roadmap, rss, spec
+- Hardened `npm run audit:i18n` with a hard-coded-copy scanner (static text nodes, placeholders, meta content) — clean with 0 warnings across all routes
+- Added first French (fr-CA) locale overrides for all new interface copy (123 keys); other locales fall back to English
+- Released v0.2.6 with changelog, README, and `.ai_docs`/LATEST-UPDATE updated
+
+**Decisions:**
+- Statutory/domain data records (compliance.ts, strata-tool.ts, marketing.ts, data.ts, page data arrays) stay canonical English until reviewed translations exist — per the documented guardrail, no machine translation of legal content
+- Hardened audit is warn-level so legitimate canonical-English records never block builds
+- French first for locale overrides (BC bilingual priority); es/zh/hi/fil/pl/uk/sw follow the same pattern
+
+**Git State:**
+- SHA: (see `git log -1 --format=%H` after push)
+- Unpushed: none after `git push origin main`
+
+---
+
 ## Session — 2026-07-19
 
 **Done:**

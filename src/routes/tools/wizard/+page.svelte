@@ -138,7 +138,7 @@
 
 <section class="border-b border-border bg-gradient-to-br from-brand-50/80 via-white to-amber-50/30">
 	<div class="mx-auto max-w-4xl px-6 py-12">
-		<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">Phase 2 \u2014 Onboarding</p>
+		<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.onboardingPhase}</p>
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.wizardTitle}</h1>
 		<p class="mt-3 text-slate-600 max-w-2xl">
 			{$copy.wizardIntro}
@@ -217,11 +217,11 @@
 					<div class="space-y-5">
 						<div>
 							<label for="corp-name" class="block text-sm font-semibold text-slate-700 mb-1.5">{$copy.corporationName}</label>
-							<input id="corp-name" type="text" bind:value={corpName} placeholder="e.g. The Towers Strata Corporation" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
+							<input id="corp-name" type="text" bind:value={corpName} placeholder={$copy.corpNamePlaceholder} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 						</div>
 						<div>
 							<label for="building-address" class="block text-sm font-semibold text-slate-700 mb-1.5">{$copy.buildingAddress}</label>
-							<input id="building-address" type="text" bind:value={address} placeholder="e.g. 1234 Maple Street, Vancouver BC" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
+							<input id="building-address" type="text" bind:value={address} placeholder={$copy.addressPlaceholder} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 						</div>
 						<div class="grid sm:grid-cols-2 gap-4">
 							<div>
@@ -246,7 +246,7 @@
 						{#if !isSelfManaged}
 							<div>
 								<label for="bcfsa-license" class="block text-sm font-semibold text-slate-700 mb-1.5">{$copy.bcLicenseLabel}</label>
-								<input id="bcfsa-license" type="text" bind:value={bcfsaLicense} placeholder="e.g. BCFSA-STR-2026-XXXX" class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
+								<input id="bcfsa-license" type="text" bind:value={bcfsaLicense} placeholder={$copy.bcfsaLicensePlaceholder} class="w-full rounded-xl border border-border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-surface-2" />
 							</div>
 						{/if}
 					</div>
@@ -406,7 +406,7 @@
 						</div>
 						<div class="rounded-xl bg-slate-50 border border-border p-4">
 							<span class="text-xs font-bold text-slate-400 uppercase tracking-wide">{$copy.fundsSummary}</span>
-							<p class="text-sm text-slate-800 mt-1">{operatingBank} \u00b7 CRF: {crfPct}% \u00b7 {enabledSubAccounts.length} sub-accounts</p>
+							<p class="text-sm text-slate-800 mt-1">{operatingBank} · {$copy.crfLabel}: {crfPct}% · {enabledSubAccounts.length} {$copy.subAccountsCount}</p>
 						</div>
 						<div class="grid sm:grid-cols-2 gap-4">
 							<div class="rounded-xl bg-slate-50 border border-border p-4">

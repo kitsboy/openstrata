@@ -2,6 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.2.6
+    date: 2026-08-25
+    summary: Full interface localization, hardened audit, and French locale overrides
   - version: 0.2.5
     date: 2026-08-25
     summary: Single-source version markers across deployed metadata and generated config
@@ -29,6 +32,16 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.2.6] — 2026-08-25
+
+### Added
+- Migrated remaining hard-coded interface copy across all 14 routes (dashboard footer, wizard, about, blog, templates, legal, roadmap, rss, spec, compliance, tools, docs, pitch) to the shared locale catalog — 458 keys total
+- First reviewed locale overrides for French (fr-CA), covering all interface copy added in v0.2.6
+- `npm run audit:i18n` now scans for hard-coded text nodes, placeholders, and meta content, so new English chrome can be caught before release
+
+### Changed
+- Version markers (layout, pitch, wizard config) derive from `package.json` v0.2.6
 
 ## [0.2.5] — 2026-08-25
 

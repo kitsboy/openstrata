@@ -23,7 +23,7 @@
 </script>
 
 <svelte:head>
-	<title>About — Opens Strata | Trusted Money for BC Strata</title>
+	<title>{$copy.aboutPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-br from-brand-50 via-white to-amber-50/30">
@@ -42,8 +42,8 @@
 <section class="mx-auto max-w-7xl px-6 py-16">
 	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.costOfStrata}</h2>
 	<p class="text-slate-500 mb-8">
-		{costSavings.scenario.units} units × ${costSavings.scenario.monthlyFee}/mo =
-		<strong class="text-slate-800">{formatCurrency(costSavings.annualFeeFlow, $locale)}/year</strong> {$copy.feeFlow}
+		{costSavings.scenario.units} {$copy.units} × ${costSavings.scenario.monthlyFee}{$copy.perMonth} =
+		<strong class="text-slate-800">{formatCurrency(costSavings.annualFeeFlow, $locale)}{$copy.perYear}</strong> {$copy.feeFlow}
 	</p>
 
 	<div class="grid lg:grid-cols-2 gap-10">
@@ -103,7 +103,7 @@
 <section class="mx-auto max-w-7xl px-6 py-16">
 	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.smartWithinLaw}</h2>
 	<p class="text-slate-500 mb-8 max-w-3xl">
-		{bcfsaFacts.regulator} requires licensed brokerages for management services.
+		{bcfsaFacts.regulator} {$copy.requiresLicensedBrokerages}
 		<strong class="text-slate-700">{$copy.softwareNotManagement}</strong>
 		{$copy.threePaths}
 	</p>
@@ -147,9 +147,8 @@
 		<div class="glass-card rounded-2xl p-8 border-l-4 border-l-bitcoin">
 			<h3 class="text-xl font-bold text-slate-800">{$copy.btcWarChest}</h3>
 			<p class="mt-3 text-slate-600 leading-relaxed">
-				Council votes to allocate <strong>{warChest.allocPct}</strong> of annual budget into a multisig treasury hedge.
-				Keys stay on council hardware wallets. OpenStrata watches — never custodies.
-				Disclosed on Form B. Purpose: {warChest.purpose}.
+				{$copy.warChestIntro} <strong>{warChest.allocPct}</strong> {$copy.warChestMiddle}
+				{$copy.purposeLabel}: {warChest.purpose}.
 			</p>
 		</div>
 		<div>
@@ -159,7 +158,7 @@
 					<div class="rounded-xl bg-surface-2 border border-border p-4 text-center">
 						<div class="text-2xl font-bold text-brand-600">{adv.metric}</div>
 						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
-						<div class="text-[10px] text-slate-400">vs {adv.vs}</div>
+						<div class="text-[10px] text-slate-400">{$copy.vsLabel} {adv.vs}</div>
 					</div>
 				{/each}
 			</div>

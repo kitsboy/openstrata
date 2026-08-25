@@ -15,8 +15,7 @@
 </script>
 
 <svelte:head>
-  <title>{$copy.legalLibrary} — OpenStrata</title>
-  <meta name="description" content="Primary legal and official guidance sources for OpenStrata jurisdictions." />
+  <title>{$copy.legalLibrary} — OpenStrata</title>	<meta name="description" content={$copy.legalMetaDescription} />
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-br from-bc-blue/5 via-brand-50/30 to-transparent">

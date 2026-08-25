@@ -1,6 +1,6 @@
 # Current Status — OpenStrata
 
-**Version:** v0.2.5
+**Version:** v0.2.6
 **Last Updated:** 2026-08-25
 **Domain:** openstrata.giveabit.io
 
@@ -16,6 +16,7 @@
 - Batch 3 adds shared locale-aware date, number, and CAD currency formatters plus `npm run audit:i18n`
 - v0.2.4 repairs the package lockfile after Cloudflare Pages failed recent `main` deployments during `npm ci`
 - v0.2.5 makes active metadata, pitch, homepage, and generated-config version markers derive from `package.json`
+- v0.2.6 migrates every remaining hard-coded interface string across all 14 routes to the shared locale catalog (458 keys), hardens `npm run audit:i18n` with a hard-coded-copy scanner, and adds the first reviewed French (fr-CA) locale overrides for the new interface copy
 
 ## Known Issues
 - `npm run check` is blocked in this workspace because `svelte-check` is not present in `node_modules`
@@ -25,6 +26,7 @@
 - Cloudflare Pages had been serving the last successful deployment because recent `main` builds failed during dependency installation; v0.2.4 repairs this lockfile mismatch
 
 ## Next Steps
-- Continue migrating remaining compliance and domain data copy with reviewed translations
-- Review legal translations with qualified professionals and preserve source links/effective dates
+- Extend locale overrides to the remaining languages (es, zh, hi, fil, pl, uk, sw) following the French pattern established in v0.2.6
+- Review legal and statutory translations with qualified professionals and preserve source links/effective dates
+- Domain-specific statutory, financial, feed, module, and protocol records remain canonical English until reviewed translations exist
 - Restore/install the dependency set needed for `npm run check`

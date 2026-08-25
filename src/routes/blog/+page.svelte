@@ -26,7 +26,7 @@
 </script>
 
 <svelte:head>
-	<title>Blog — Hermes Strata & OpenStrata</title>
+	<title>{$copy.blogPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-b from-amber-50/50 to-transparent">

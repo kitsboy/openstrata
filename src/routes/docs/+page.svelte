@@ -24,7 +24,7 @@
 </script>
 
 <svelte:head>
-	<title>Docs — Hermes Strata</title>
+	<title>{$copy.docsPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
@@ -56,20 +56,20 @@
 				</div>
 			{/each}
 		</div>
-		<p class="mt-4 text-sm text-slate-400">Also: <code class="text-xs bg-slate-100 px-1 rounded">SOURCE-OF-TRUTH.md</code> at project root.</p>
+		<p class="mt-4 text-sm text-slate-400">{$copy.alsoLabel}: <code class="text-xs bg-slate-100 px-1 rounded">SOURCE-OF-TRUTH.md</code> {$copy.atProjectRoot}</p>
 	</section>
 
 	<!-- Architecture -->
 	<section class="mb-16">
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.architecture}</h2>
 		<div class="glass-card rounded-2xl p-8 font-mono text-sm space-y-3">
-			<div class="rounded-xl bg-brand-50 border border-brand-200 p-4 text-center text-brand-800 font-semibold">Mobile PWA / Desktop Console</div>
-			<div class="text-center text-slate-400">↓ Tailscale Secure Gateway</div>
-			<div class="rounded-xl bg-slate-100 p-4 text-center font-semibold">Hermes Core — Rosa (Compliance RAG) · Ziggy (Treasury)</div>
+			<div class="rounded-xl bg-brand-50 border border-brand-200 p-4 text-center text-brand-800 font-semibold">{$copy.archMobilePwa}</div>
+			<div class="text-center text-slate-400">{$copy.archTailscaleGateway}</div>
+			<div class="rounded-xl bg-slate-100 p-4 text-center font-semibold">{$copy.archHermesCore}</div>
 			<div class="text-center text-slate-400">↓</div>
 			<div class="grid sm:grid-cols-2 gap-4">
-				<div class="rounded-xl bg-bc-blue/5 border p-4 text-center"><strong>Fiat Rail</strong><p class="text-xs text-slate-500 mt-1 font-sans">CAD + 10% CRF</p></div>
-				<div class="rounded-xl bg-bitcoin/5 border p-4 text-center"><strong>Bitcoin Rail</strong><p class="text-xs text-slate-500 mt-1 font-sans">3-of-5 PSBT + Lightning</p></div>
+				<div class="rounded-xl bg-bc-blue/5 border p-4 text-center"><strong>{$copy.archFiatRail}</strong><p class="text-xs text-slate-500 mt-1 font-sans">{$copy.archCadCrf}</p></div>
+				<div class="rounded-xl bg-bitcoin/5 border p-4 text-center"><strong>{$copy.archBitcoinRail}</strong><p class="text-xs text-slate-500 mt-1 font-sans">{$copy.archPsbtLightning}</p></div>
 			</div>
 		</div>
 	</section>

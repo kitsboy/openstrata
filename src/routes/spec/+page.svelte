@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-	<title>OpenStrata Spec — Sovereign Data Portability</title>
+	<title>{$copy.specPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-b from-slate-50 to-transparent">

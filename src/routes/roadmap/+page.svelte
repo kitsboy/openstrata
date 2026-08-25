@@ -24,7 +24,7 @@
 </script>
 
 <svelte:head>
-	<title>Roadmap & Paths — Hermes Strata</title>
+	<title>{$copy.roadmapPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-b from-bc-blue/5 to-transparent">
@@ -36,7 +36,7 @@
 		<div class="mt-6 flex flex-wrap gap-4">
 			<span class="rounded-full bg-success/10 px-4 py-1.5 text-sm font-bold text-success">{stats.live} {$copy.modulesLive}</span>
 			<span class="rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700">{stats.beta} {$copy.inBeta}</span>
-			<span class="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">{stats.planned} planned</span>
+			<span class="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">{stats.planned} {$copy.plannedLabel}</span>
 			<span class="rounded-full bg-bc-blue/10 px-4 py-1.5 text-sm font-bold text-bc-blue">{stats.bcfsaModules} {$copy.bcfsaRelevant}</span>
 		</div>
 	</div>
@@ -109,7 +109,7 @@
 				</div>
 				<span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold
 					{j.active ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400'}">
-					{j.active ? 'LIVE' : `Phase ${Math.min(i + 3, 6)}`}
+					{j.active ? $copy.liveBadge : `${$copy.phaseLabel} ${Math.min(i + 3, 6)}`}
 				</span>
 			</div>
 		{/each}

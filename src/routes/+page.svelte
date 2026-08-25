@@ -57,7 +57,7 @@
   function selectNav(id) {
     active = id;
     showMobileMenu = false;
-    toast = `${id.charAt(0).toUpperCase() + id.slice(1)} workspace selected`;
+    toast = `${id.charAt(0).toUpperCase() + id.slice(1)} ${$copy.workspaceSelected}`;
     setTimeout(() => (toast = ''), 2400);
   }
 
@@ -68,24 +68,24 @@
 </script>
 
 <svelte:head>
-  <title>OpenStrata v{appVersion} · Community operations, beautifully organized</title>
-  <meta name="description" content="OpenStrata is the modern operating system for strata and condominium communities." />
+  <title>OpenStrata v{appVersion} · {$copy.homePageTitle}</title>
+  <meta name="description" content={$copy.homeMetaDescription} />
 </svelte:head>
 
 <div class="app-shell">
-  <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label="Primary navigation">
+  <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label={$copy.primaryNavigation}>
     <div class="brand-lockup">
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <div class="brand-name">open<span>strata</span></div>
         <div class="brand-subtitle">community operations</div>
       </div>
-      <button class="icon-button sidebar-close" aria-label="Close navigation" onclick={() => (showMobileMenu = false)}>×</button>
+      <button class="icon-button sidebar-close" aria-label={$copy.closeNavigation} onclick={() => (showMobileMenu = false)}>×</button>
     </div>
 
     <div class="workspace-switcher">
       <div class="workspace-avatar">OS</div>
-      <div class="workspace-copy"><span class="eyebrow">{$copy.workspace}</span><strong>Give A Bit workspace</strong></div>
+      <div class="workspace-copy"><span class="eyebrow">{$copy.workspace}</span><strong>Give A Bit {$copy.workspace}</strong></div>
       <span class="chevron">⌄</span>
     </div>
 
@@ -106,18 +106,18 @@
     <div class="sidebar-spacer"></div>
     <div class="sidebar-help">
       <div class="help-orbit">?</div>
-      <div><strong>Need a hand?</strong><span>Visit the resource centre</span></div>
+      <div><strong>{$copy.needAHand}</strong><span>{$copy.visitResourceCentre}</span></div>
       <span class="arrow">↗</span>
     </div>
-    <div class="sidebar-footer"><span class="status-dot"></span><span>All systems operational</span><button class="mini-settings" aria-label="Open settings">⚙</button></div>
+    <div class="sidebar-footer"><span class="status-dot"></span><span>{$copy.allSystemsOperational}</span><button class="mini-settings" aria-label={$copy.openSettings}>⚙</button></div>
   </aside>
 
-  {#if showMobileMenu}<button class="scrim" aria-label="Close navigation" onclick={() => (showMobileMenu = false)}></button>{/if}
+  {#if showMobileMenu}<button class="scrim" aria-label={$copy.closeNavigation} onclick={() => (showMobileMenu = false)}></button>{/if}
 
   <div class="main-column">
     <header class="topbar">
-      <div class="mobile-brand"><button class="icon-button menu-button" aria-label="Open navigation" onclick={() => (showMobileMenu = true)}>☰</button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
-      <div class="breadcrumbs"><span>Give A Bit workspace</span><b>/</b><strong>{$copy.overview}</strong></div>
+      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}>☰</button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
+      <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
         <label class="search-box"><span aria-hidden="true">⌕</span><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
         <div class="language-wrap">
@@ -131,8 +131,8 @@
             </div>
           {/if}
         </div>
-        <button class="icon-button notification-button" aria-label="Notifications" onclick={() => openAction('You are all caught up')}><span>♢</span><i></i></button>
-        <button class="profile-button" aria-label="Open profile menu"><span class="profile-avatar">CM</span><span class="profile-name">Camille</span><span class="chevron">⌄</span></button>
+        <button class="icon-button notification-button" aria-label={$copy.notifications} onclick={() => openAction($copy.caughtUpToast)}><span>♢</span><i></i></button>
+        <button class="profile-button" aria-label={$copy.openProfileMenu}><span class="profile-avatar">CM</span><span class="profile-name">Camille</span><span class="chevron">⌄</span></button>
       </div>
     </header>
 
@@ -142,9 +142,9 @@
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>
       </section>
 
-      <section class="metric-grid" aria-label="Community overview">
-        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon">⌂</span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot"><span class="trend up">↗ 1 this month</span><span>{$copy.activeWorkspaces}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon">!</span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot"><span class="trend warning">2 urgent</span><span>{$copy.acrossBuildings}</span></div></article>
+      <section class="metric-grid" aria-label={$copy.communityOverview}>
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon">⌂</span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon">!</span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon">$</span></div><strong>{formatCurrency(248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot"><span class="trend up">↗ 4.8%</span><span>{$copy.yearToDate}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon">◈</span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
@@ -154,44 +154,35 @@
           <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => selectNav('buildings')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
             {#each filteredBuildings as building}
-              <div class="building-card" onclick={() => openAction(`${building.name} workspace opened`)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && openAction(`${building.name} workspace opened`)}>
-                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% health</span><button class="more-button" aria-label={`More options for ${building.name}`} onclick={(event) => { event.stopPropagation(); openAction('Building actions opened'); }}>•••</button></div>
+              <div class="building-card" onclick={() => openAction(`${building.name} ${$copy.workspaceOpened}`)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && openAction(`${building.name} ${$copy.workspaceOpened}`)}>				<div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol">{building.tone === 'green' ? '✓' : building.tone === 'amber' ? '!' : '↗'}</span>{building.issue}<span class="status-arrow">→</span></div>
               </div>
-            {:else}
-              <div class="empty-state">No buildings match “{search}”.</div>
+            {:else}			  <div class="empty-state">{$copy.noBuildings} “{search}”.</div>
             {/each}
           </div>
 
           <div class="section-heading action-heading"><div><h2>{$copy.quickActions}</h2><p>Common work, made one tap away.</p></div></div>
           <div class="action-grid">
-            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph">＋</span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>
-            <button class="action-card purple" onclick={() => openAction('Meeting planner opened')}><span class="action-glyph">◴</span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
-            <button class="action-card blue" onclick={() => openAction('Legal library opened')}><span class="action-glyph">§</span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>
-            <button class="action-card green" onclick={() => openAction('Maintenance request started')}><span class="action-glyph">⌁</span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
+            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph">＋</span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>			<button class="action-card purple" onclick={() => openAction($copy.meetingPlannerToast)}><span class="action-glyph">◴</span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>			<button class="action-card blue" onclick={() => openAction($copy.legalLibraryToast)}><span class="action-glyph">§</span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>			<button class="action-card green" onclick={() => openAction($copy.maintenanceToast)}><span class="action-glyph">⌁</span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
           </div>
         </div>
 
-        <aside class="right-stack">
-          <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label="Activity filters" onclick={() => openAction('Activity filters opened')}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}>{activity.icon}</span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction('Activity history opened')}>{$copy.activityHistory} <span>→</span></button></section>
-          <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label="Calendar options" onclick={() => openAction('Calendar options opened')}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction('Calendar opened')}>{$copy.seeCalendar} <span>→</span></button></section>
+        <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}>{activity.icon}</span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
         </aside>
       </section>
     </main>
 
     <footer class="site-footer">
-      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div><div class="footer-links"><div><h3>Product</h3><a href="/">Overview</a><a href="/">Buildings</a><a href="/">Governance</a><a href="/">Roadmap</a></div><div><h3>Trust & legal</h3><a href="/">Legal library</a><a href="/">Privacy</a><a href="/">Security</a><a href="/">Accessibility</a></div><div><h3>Resources</h3><a href="/">Help centre</a><a href="/">BC sources</a><a href="/">Templates</a><a href="/">Contact us</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>Information is general and not legal advice.</span><span><a href="/">Status</a> <a href="/">GitHub ↗</a></span></div>
+      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/">{$copy.buildings}</a><a href="/">{$copy.governance}</a><a href="/">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/">{$copy.legal}</a><a href="/">{$copy.privacy}</a><a href="/">{$copy.security}</a><a href="/">{$copy.accessibility}</a></div><div><h3>{$copy.resources}</h3><a href="/">{$copy.helpCentre}</a><a href="/">{$copy.bcSources}</a><a href="/">{$copy.templates}</a><a href="/">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/">{$copy.status}</a> <a href="/">{$copy.githubLabel} ↗</a></span></div>
     </footer>
-  </div>
-
-  <nav class="mobile-nav" aria-label="Mobile navigation"><button class:active={active === 'overview'} onclick={() => selectNav('overview')}><span>⌂</span>{$copy.overview}</button><button class:active={active === 'buildings'} onclick={() => selectNav('buildings')}><span>▦</span>{$copy.buildings}</button><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><span>＋</span></button><button class:active={active === 'operations'} onclick={() => selectNav('operations')}><span>⌁</span>{$copy.operations}</button><button onclick={() => (showMobileMenu = true)}><span>☰</span>Menu</button></nav>
+  </div>	  <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><button class:active={active === 'overview'} onclick={() => selectNav('overview')}><span>⌂</span>{$copy.overview}</button><button class:active={active === 'buildings'} onclick={() => selectNav('buildings')}><span>▦</span>{$copy.buildings}</button><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><span>＋</span></button><button class:active={active === 'operations'} onclick={() => selectNav('operations')}><span>⌁</span>{$copy.operations}</button><button onclick={() => (showMobileMenu = true)}><span>☰</span>{$copy.menu}</button></nav>
 </div>
 
 {#if showNewStrata}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (showNewStrata = false)}>
-    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label="Close dialog" onclick={() => (showNewStrata = false)}>×</button><div class="modal-icon">＋</div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p><label>{$copy.communityName}<input placeholder="e.g. Seaside Gardens" /></label><label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => (showNewStrata = false)}>{$copy.cancel}</button><button class="primary-button" onclick={() => { showNewStrata = false; openAction('Formation workspace created'); }}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
+    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}>×</button><div class="modal-icon">＋</div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label>{$copy.communityName}<input placeholder={$copy.communityNamePlaceholder} /></label><label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => (showNewStrata = false)}>{$copy.cancel}</button>	<button class="primary-button" onclick={() => { showNewStrata = false; openAction($copy.formationCreatedToast); }}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
   </div>
 {/if}
 

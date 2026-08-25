@@ -54,7 +54,6 @@
 
 	let btcCad = $state(135820);
 	let crfBalance = $state(treasuryHistory[treasuryHistory.length - 1].crf * 58);
-	let liveLabel = $state('Live');
 
 	$effect(() => {
 		const interval = setInterval(() => {
@@ -72,11 +71,8 @@
 </script>
 
 <svelte:head>
-	<title>Pitch — Hermes Strata | Investor Deck</title>
-	<meta
-		name="description"
-		content="Live investor pitch for Hermes Strata — BCFSA-aware strata operations with real cost savings, charts, and roadmap."
-	/>
+	<title>{$copy.pitchPageTitle}</title>
+	<meta name="description" content={$copy.pitchMetaDescription} />
 </svelte:head>
 
 <div class="pitch-deck">
@@ -99,9 +95,9 @@
 						</div>
 					</div>
 					<h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-tight">
-						Trusted Money.<br />
+						{$copy.aboutHeroTitle}<br />
 						<span class="bg-gradient-to-r from-brand-600 to-bitcoin bg-clip-text text-transparent">
-							Proven Operations.
+							{$copy.aboutHeroAccent}
 						</span>
 					</h1>
 					<p class="mt-6 text-xl text-slate-600 max-w-2xl leading-relaxed">
@@ -110,7 +106,7 @@
 					<div class="mt-8 flex flex-wrap gap-3">
 						<span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-700">
 							<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
-							{liveLabel} data · synced {formatDate(updatedAt, $locale, { year: 'numeric', month: 'long', day: 'numeric' })}
+							{$copy.liveLabel} {$copy.liveDataBadge} {formatDate(updatedAt, $locale, { year: 'numeric', month: 'long', day: 'numeric' })}
 						</span>
 						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold text-slate-600">
 							₿ {formatCurrency(btcCad, $locale, { maximumFractionDigits: 0 })}
@@ -122,7 +118,7 @@
 						<div class="glass-card rounded-2xl p-5 text-center">
 							<p class="text-3xl font-bold text-brand-700">{adv.metric}</p>
 							<p class="mt-1 text-xs font-semibold text-slate-700">{adv.label}</p>
-							<p class="mt-1 text-[10px] text-slate-400">vs {adv.vs}</p>
+							<p class="mt-1 text-[10px] text-slate-400">{$copy.vsLabel} {adv.vs}</p>
 						</div>
 					{/each}
 				</div>
@@ -135,7 +131,7 @@
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.pitchProblem}</p>
 			<h2 class="text-3xl font-bold text-slate-900 mb-8">
-				BC Strata Management Is Regulated, Labour-Intensive, and Expensive
+				{$copy.pitchProblemHeading}
 			</h2>
 			<div class="grid lg:grid-cols-2 gap-10 items-start">
 				<ul class="space-y-3">
@@ -147,22 +143,22 @@
 					{/each}
 				</ul>
 				<div class="glass-card rounded-2xl p-6">
-					<h3 class="font-bold text-slate-800 mb-2">Fee Flow Scenario</h3>
+					<h3 class="font-bold text-slate-800 mb-2">{$copy.feeFlowScenario}</h3>
 					<p class="text-sm text-slate-500 mb-4">
-						{costSavings.scenario.units} units × ${costSavings.scenario.monthlyFee}/mo
+						{costSavings.scenario.units} {$copy.units} × ${costSavings.scenario.monthlyFee}{$copy.perMonth}
 					</p>
 					<p class="text-4xl font-bold text-slate-900">
 						{formatCurrency(costSavings.annualFeeFlow, $locale)}
-						<span class="text-lg font-medium text-slate-400">/year</span>
+						<span class="text-lg font-medium text-slate-400">{$copy.perYear}</span>
 					</p>
 					<p class="mt-4 text-sm text-slate-500">
-						Metro Vancouver rental index (live trend):
+						{$copy.rentalIndexLine}
 					</p>
 					<div class="mt-2">
 						<LineChart data={rentalChart} height={100} color="#0d9488" />
 					</div>
 					<p class="mt-2 text-xs text-slate-400">
-						Avg 1BR: ${rentalTrend[rentalTrend.length - 1].avg}/mo · Vacancy {rentalTrend[rentalTrend.length - 1].vacancy}%
+						{$copy.avg1brLabel}: ${rentalTrend[rentalTrend.length - 1].avg}{$copy.perMonth} · {$copy.vacancyLabel} {rentalTrend[rentalTrend.length - 1].vacancy}%
 					</p>
 				</div>
 			</div>
@@ -188,16 +184,16 @@
 
 			<div class="grid lg:grid-cols-2 gap-8">
 				<div class="glass-card rounded-2xl p-6">
-					<h3 class="font-bold text-slate-800 mb-1">Annual Payment Processing Cost</h3>
-					<p class="text-xs text-slate-400 mb-4">Source: marketing.ts · {costSavings.scenario.units}-unit building</p>
+					<h3 class="font-bold text-slate-800 mb-1">{$copy.annualProcessingCost}</h3>
+					<p class="text-xs text-slate-400 mb-4">{$copy.sourceLabel}: marketing.ts · {costSavings.scenario.units}{$copy.unitBuildingSuffix}</p>
 					<BarChart data={paymentChart} height={200} barColor="#14b8a6" />
 					<p class="mt-4 rounded-xl bg-success/10 px-4 py-3 text-sm text-success font-semibold">
-						OpenStrata saves {formatCurrency(annualSavings, $locale)}/yr vs credit cards alone
+						{$copy.openStrataSaves} {formatCurrency(annualSavings, $locale)}{$copy.savesSuffix}
 					</p>
 				</div>
 				<div class="glass-card rounded-2xl p-6">
-					<h3 class="font-bold text-slate-800 mb-1">Manager Hours per Cycle</h3>
-					<p class="text-xs text-slate-400 mb-4">Grey = traditional · Teal = Hermes</p>
+					<h3 class="font-bold text-slate-800 mb-1">{$copy.managerHoursTitle}</h3>
+					<p class="text-xs text-slate-400 mb-4">{$copy.legendGrayTeal}</p>
 					<BarChart
 						data={managerChart}
 						height={200}
@@ -206,8 +202,8 @@
 						showSecondary={true}
 					/>
 					<p class="mt-4 text-sm text-slate-500">
-						<strong class="text-slate-800">{totalManagerHrsTraditional} hrs</strong> traditional →
-						<strong class="text-brand-700">{totalManagerHrsHermes.toFixed(1)} hrs</strong> with Hermes
+						<strong class="text-slate-800">{totalManagerHrsTraditional} {$copy.hrsTraditional}</strong> →
+						<strong class="text-brand-700">{totalManagerHrsHermes.toFixed(1)} {$copy.hrsWithHermes}</strong>
 					</p>
 				</div>
 			</div>
@@ -236,14 +232,14 @@
 				</div>
 				<div class="space-y-4">
 					<div class="glass-card rounded-2xl p-6">
-						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">CRF Balance</p>
+						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">{$copy.crfBalanceLabel}</p>
 						<p class="mt-2 text-3xl font-bold text-brand-700 stat-flash">
 							{formatCurrency(crfBalance, $locale, { maximumFractionDigits: 0 })}
 						</p>
 						<p class="mt-1 text-xs text-slate-400">{$copy.simulatedLedger}</p>
 					</div>
 					<div class="glass-card rounded-2xl p-6">
-						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">War Chest</p>
+						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">{$copy.warChestLabel}</p>
 						<p class="mt-2 text-sm text-slate-600">{warChest.allocPct} of budget · {warChest.custody}</p>
 						<p class="mt-2 text-xs text-slate-400">{warChest.purpose}</p>
 					</div>
@@ -256,7 +252,7 @@
 						<span class="text-2xl font-bold text-brand-700 shrink-0">{adv.metric}</span>
 						<div>
 							<p class="text-sm font-semibold text-slate-800">{adv.label}</p>
-							<p class="text-xs text-slate-400">vs {adv.vs}</p>
+							<p class="text-xs text-slate-400">{$copy.vsLabel} {adv.vs}</p>
 						</div>
 					</div>
 				{/each}
@@ -268,10 +264,10 @@
 	<section class="pitch-slide">
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<p class="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{$copy.goToMarket}</p>
-			<h2 class="text-3xl font-bold text-slate-900 mb-2">Smart Within the Law</h2>
+			<h2 class="text-3xl font-bold text-slate-900 mb-2">{$copy.smartWithinLaw}</h2>
 			<p class="text-slate-500 mb-8 max-w-3xl">
-				{bcfsaFacts.regulator} requires licensed brokerages for management services.
-				<strong class="text-slate-700">Hermes is software — not an unlicensed management company.</strong>
+				{bcfsaFacts.regulator} {$copy.requiresLicensedBrokerages}
+				<strong class="text-slate-700">{$copy.pitchSoftwareNotManagement}</strong>
 			</p>
 			<div class="grid md:grid-cols-3 gap-6">
 				{#each hermesPositioning.paths as path}
@@ -372,12 +368,12 @@
 					class="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-8 py-3.5 text-sm font-semibold text-slate-600 no-underline hover:border-brand-300 transition-colors"
 				>
 					<Icon name="github" class="h-4 w-4" />
-					GitHub
+					{$copy.githubLabel}
 				</a>
 			</div>
 			<p class="mt-12 text-xs text-slate-400 max-w-lg mx-auto">
 				{$copy.educationalDisclaimer}
-				Data synced from marketing.ts — update numbers once, pitch stays current.
+				{$copy.pitchDataNote}
 			</p>
 		</div>
 	</section>

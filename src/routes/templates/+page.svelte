@@ -12,8 +12,7 @@
 </script>
 
 <svelte:head>
-  <title>{$copy.templatesTitle} — OpenStrata</title>
-  <meta name="description" content="OpenStrata strata governance, finance, conveyancing, and workflow templates." />
+  <title>{$copy.templatesTitle} — OpenStrata</title>	<meta name="description" content={$copy.templatesMetaDescription} />
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-br from-brand-50/50 via-white to-bc-blue/5">

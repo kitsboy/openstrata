@@ -29,8 +29,8 @@
 </script>
 
 <svelte:head>
-	<title>BC Strata Compliance — Hermes Knowledge Base</title>
-	<meta name="description" content="SPA + BCFSA compliance reference: trust accounting, bylaw enforcement workflows, quorum rules, Forms B/F, CRT export, and Canada-to-US localization mapping." />
+	<title>{$copy.compliancePageTitle}</title>
+	<meta name="description" content={$copy.complianceMetaDescription} />
 </svelte:head>
 
 <!-- Header -->
@@ -83,8 +83,8 @@
 	<div class="glass-card rounded-2xl p-6 mb-10 border-l-4 border-l-bc-blue">
 		<p class="text-sm text-slate-700 leading-relaxed">
 			<strong>{$copy.agentModel}:</strong> {regulatoryFramework.agentRole}.
-			Hermes modules below map to statutory requirements — Rosa cites sources; Ziggy enforces fund isolation and CRF caps.
-			Questions: <a href="mailto:hello@giveabit.io" class="text-brand-600 hover:underline">hello@giveabit.io</a>
+			{$copy.agentRoleCallout}
+			{$copy.questionsLabel}: <a href="mailto:hello@giveabit.io" class="text-brand-600 hover:underline">hello@giveabit.io</a>
 		</p>
 	</div>
 
@@ -121,7 +121,7 @@
 											<p class="text-xs text-slate-500 mt-1">{fund.purpose}</p>
 											{#if 'mandatoryPct' in fund && fund.mandatoryPct}
 												<span class="mt-2 inline-block rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
-													{fund.mandatoryPct}% minimum allocation
+													{fund.mandatoryPct}% {$copy.minimumAllocation}
 												</span>
 											{/if}
 										</div>
@@ -157,9 +157,9 @@
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b border-border text-left">
-							<th class="pb-3 pr-4 font-bold text-slate-600">Module</th>
-							<th class="pb-3 pr-4 font-bold text-slate-600">Domain</th>
-							<th class="pb-3 font-bold text-slate-600">Workflow Trigger</th>
+							<th class="pb-3 pr-4 font-bold text-slate-600">{$copy.moduleHeader}</th>
+							<th class="pb-3 pr-4 font-bold text-slate-600">{$copy.domainHeader}</th>
+							<th class="pb-3 font-bold text-slate-600">{$copy.workflowTriggerHeader}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -204,7 +204,7 @@
 						</div>
 						<h3 class="font-bold text-slate-800">{step.title}</h3>
 						<p class="mt-2 text-sm text-slate-600 leading-relaxed">{step.action}</p>
-						<p class="mt-3 text-xs text-warning font-semibold">CRT risk: {step.crtRisk}</p>
+						<p class="mt-3 text-xs text-warning font-semibold">{$copy.crtRiskLabel}: {step.crtRisk}</p>
 					</div>
 				</div>
 			{/each}
@@ -212,21 +212,21 @@
 
 		<div class="mt-8 grid sm:grid-cols-2 gap-4">
 			<div class="rounded-xl bg-slate-50 border border-border p-5">
-				<h4 class="font-bold text-slate-800">Standard Fine Cap</h4>
+				<h4 class="font-bold text-slate-800">{$copy.standardFineCap}</h4>
 				<p class="text-3xl font-bold text-slate-800 mt-2">$200</p>
-				<p class="text-sm text-slate-500">Per standard bylaw infraction</p>
+				<p class="text-sm text-slate-500">{$copy.perStandardBylawInfraction}</p>
 			</div>
 			<div class="rounded-xl bg-amber-50 border border-amber-200 p-5">
-				<h4 class="font-bold text-slate-800">Short-Term Rental Cap</h4>
+				<h4 class="font-bold text-slate-800">{$copy.shortTermRentalCap}</h4>
 				<p class="text-3xl font-bold text-amber-700 mt-2">$1,000</p>
-				<p class="text-sm text-slate-500">Airbnb / STR violations in BC</p>
+				<p class="text-sm text-slate-500">{$copy.strViolationsBc}</p>
 			</div>
 		</div>
 	{/if}
 
 	{#if activeSection === 'conveyancing'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.conveyancingForms}</h2>
-		<p class="text-slate-500 mb-8">When an owner sells, their lawyer requests documents. Balance due blocks the sale.</p>
+		<p class="text-slate-500 mb-8">{$copy.conveyancingIntro}</p>
 
 		<div class="space-y-6">
 			{#each conveyancingWorkflow as step}
@@ -241,7 +241,7 @@
 								<span class="rounded-full bg-bc-blue text-white px-3 py-0.5 text-xs font-bold">{step.form}</span>
 							{/if}
 							{#if step.blocking}
-								<span class="rounded-full bg-danger/10 px-2.5 py-0.5 text-xs font-bold text-danger">SALE BLOCKING</span>
+								<span class="rounded-full bg-danger/10 px-2.5 py-0.5 text-xs font-bold text-danger">{$copy.saleBlocking}</span>
 							{/if}
 							{#if step.deadline}
 								<span class="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-bold text-warning">⏱ {step.deadline}</span>
@@ -257,9 +257,9 @@
 
 	{#if activeSection === 'meetings'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.governanceVoting}</h2>
-		<p class="text-slate-500 mb-8">Hardcoded thresholds. Abstentions excluded from all calculations.</p>
+		<p class="text-slate-500 mb-8">{$copy.meetingsIntro}</p>
 
-		<h3 class="text-lg font-bold text-slate-800 mb-4">Quorum Rules</h3>
+		<h3 class="text-lg font-bold text-slate-800 mb-4">{$copy.quorumRulesTitle}</h3>
 		<div class="grid gap-4 mb-10">
 			{#each quorumRules as rule}
 				<div class="glass-card rounded-xl p-5">
@@ -267,28 +267,28 @@
 						<h4 class="font-bold text-slate-800">{rule.meetingType}</h4>
 						<code class="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-brand-700">{rule.spaRef}</code>
 					</div>
-					<p class="text-sm text-slate-700"><strong>Requirement:</strong> {rule.requirement}</p>
-					<p class="text-sm text-slate-500 mt-1 font-mono">Formula: {rule.formula}</p>
+					<p class="text-sm text-slate-700"><strong>{$copy.requirementLabel}:</strong> {rule.requirement}</p>
+					<p class="text-sm text-slate-500 mt-1 font-mono">{$copy.formulaLabel}: {rule.formula}</p>
 					<p class="text-sm text-slate-500 mt-2">{rule.conditions}</p>
 					{#if rule.delayRule}
 						<div class="mt-3 rounded-lg bg-warning/5 border border-warning/20 p-3 text-sm text-amber-800">
-							<strong>30-Minute Rule:</strong> {rule.delayRule}
+							<strong>{$copy.minuteRuleLabel}:</strong> {rule.delayRule}
 						</div>
 					{/if}
 				</div>
 			{/each}
 		</div>
 
-		<h3 class="text-lg font-bold text-slate-800 mb-4">Voting Threshold Matrix</h3>
+		<h3 class="text-lg font-bold text-slate-800 mb-4">{$copy.votingThresholdMatrix}</h3>
 		<div class="overflow-x-auto mb-8">
 			<table class="w-full text-sm glass-card rounded-2xl overflow-hidden">
 				<thead class="bg-slate-50">
 					<tr class="text-left">
-						<th class="p-4 font-bold text-slate-600">Type</th>
-						<th class="p-4 font-bold text-slate-600">Threshold</th>
-						<th class="p-4 font-bold text-slate-600">Denominator</th>
-						<th class="p-4 font-bold text-slate-600">Used For</th>
-						<th class="p-4 font-bold text-slate-600">Formula</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.typeHeader}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.thresholdHeader}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.denominatorHeader}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.usedForHeader}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.formulaLabel}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -306,15 +306,15 @@
 		</div>
 
 		<div class="glass-card rounded-xl p-5 border-l-4 border-l-brand-500">
-			<h4 class="font-bold text-slate-800">Tie-Breaker</h4>
+			<h4 class="font-bold text-slate-800">{$copy.tieBreakerTitle}</h4>
 			<p class="text-sm text-slate-600 mt-1">{tieBreakerRule.description}</p>
-			<p class="text-xs text-slate-400 mt-2">Exception: {tieBreakerRule.exception} · Source: {tieBreakerRule.source}</p>
+			<p class="text-xs text-slate-400 mt-2">{$copy.exceptionLabel}: {tieBreakerRule.exception} · {$copy.sourceLabel}: {tieBreakerRule.source}</p>
 		</div>
 	{/if}
 
 	{#if activeSection === 'retention'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.recordRetentionTitle}</h2>
-		<p class="text-slate-500 mb-8">Archive module must enforce these timelines. Rosa flags premature deletion.</p>
+		<p class="text-slate-500 mb-8">{$copy.retentionIntro}</p>
 
 		<div class="grid sm:grid-cols-2 gap-3">
 			{#each recordRetention as record}
@@ -335,16 +335,16 @@
 	{#if activeSection === 'localization'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.localizationEngine}</h2>
 		<p class="text-slate-500 mb-8">
-			Decouple core code from regional terminology day one. Database uses neutral keys; UI maps via config.
+			{$copy.localizationIntro}
 		</p>
 
 		<div class="overflow-x-auto">
 			<table class="w-full text-sm glass-card rounded-2xl overflow-hidden">
 				<thead class="bg-slate-50">
 					<tr class="text-left">
-						<th class="p-4 font-bold text-slate-600">🇨🇦 BC Concept</th>
-						<th class="p-4 font-bold text-slate-600">🇺🇸 US Equivalent</th>
-						<th class="p-4 font-bold text-slate-600">Database Element</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.bcConceptHeader}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.usEquivalentHeader}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.databaseElementHeader}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -362,7 +362,7 @@
 
 	{#if activeSection === 'architecture'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.architectureMandates}</h2>
-		<p class="text-slate-500 mb-8">Non-negotiable design requirements from compliance review.</p>
+		<p class="text-slate-500 mb-8">{$copy.architectureIntro}</p>
 
 		<div class="grid gap-5 sm:grid-cols-2">
 			{#each architectureMandates as mandate}
@@ -380,16 +380,15 @@
 <section class="border-t border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-12 text-center">
 		<p class="text-sm text-slate-500">
-			This knowledge base is the source of truth for Hermes architecture.
-			Also stored in <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">docs/BC-STRATA-COMPLIANCE.md</code> and
+			{$copy.kbSourceNote} <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">docs/BC-STRATA-COMPLIANCE.md</code> and
 			<code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">src/lib/compliance.ts</code>
 		</p>
 		<div class="mt-6 flex flex-wrap justify-center gap-4">
 			<a href="/tools" class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">
-				Open Strata Tools →
+				{$copy.openStrataToolsCta} →
 			</a>
 			<a href="/docs" class="rounded-xl border border-border px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-colors">
-				Hermes Framework Docs
+				{$copy.hermesFrameworkDocsCta}
 			</a>
 		</div>
 	</div>

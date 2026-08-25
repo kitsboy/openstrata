@@ -3,19 +3,19 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { copy } from '$lib/i18n';
 
-	let selectedCategory = $state('All');
+	let selectedCategory = $state($copy.allLabel);
 	let apiTab = $state<'rest' | 'webhooks' | 'feeds'>('rest');
 
-	const categories = $derived(['All', ...new Set(rssFeeds.map((f) => f.category))]);
+	const categories = $derived([$copy.allLabel, ...new Set(rssFeeds.map((f) => f.category))]);
 
 	const filteredFeeds = $derived(
-		selectedCategory === 'All'
+		selectedCategory === $copy.allLabel
 			? rssFeeds
 			: rssFeeds.filter((f) => f.category === selectedCategory)
 	);
 
 	const filteredItems = $derived(
-		selectedCategory === 'All'
+		selectedCategory === $copy.allLabel
 			? rssItems
 			: rssItems.filter((item) => {
 					const feed = rssFeeds.find((f) => f.id === item.feed);
@@ -29,7 +29,7 @@
 </script>
 
 <svelte:head>
-	<title>RSS Feeds & API — Hermes Strata</title>
+	<title>{$copy.rssPageTitle}</title>
 </svelte:head>
 
 <section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">

@@ -76,7 +76,7 @@
 </script>
 
 <svelte:head>
-	<title>Strata Tool — Hermes Strata | 30+ Modules</title>
+	<title>{$copy.toolsPageTitle}</title>
 </svelte:head>
 
 <!-- Hero -->
@@ -155,12 +155,12 @@
 					<div class="flex items-center gap-1.5">
 						<span class="rounded-full px-2 py-0.5 text-[10px] font-bold {statusColor(mod.status)}">{mod.status}</span>
 						{#if mod.bcfsaRelevant}
-							<span class="rounded-full bg-bc-blue/10 px-2 py-0.5 text-[10px] font-bold text-bc-blue">BCFSA</span>
+							<span class="rounded-full bg-bc-blue/10 px-2 py-0.5 text-[10px] font-bold text-bc-blue">{$copy.bcfsaLabel}</span>
 						{/if}
 						<button
 							type="button"
 							class="tooltip-trigger"
-							aria-label="More about {mod.title}: {mod.desc}"
+							aria-label="{$copy.moreAboutLabel} {mod.title}: {mod.desc}"
 							onmouseenter={(e) => openTip(mod, e.currentTarget)}
 							onmouseleave={closeTip}
 							onclick={(e) => {
@@ -271,7 +271,7 @@
 				</ul>
 			{/if}
 			{#if plainSavings(tip.mod.savings)}
-				<p class="tooltip-why"><span class="tooltip-why-label">Why it matters:</span> {plainSavings(tip.mod.savings)}</p>
+				<p class="tooltip-why"><span class="tooltip-why-label">{$copy.whyItMattersLabel}:</span> {plainSavings(tip.mod.savings)}</p>
 			{/if}
 		</div>
 	</div>
