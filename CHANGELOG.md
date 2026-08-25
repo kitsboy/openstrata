@@ -2,6 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.2.4
+    date: 2026-08-25
+    summary: Deployment repair and synchronized dependency lockfile
   - version: 0.2.3
     date: 2026-08-25
     summary: Locale-aware formatting and translation audit
@@ -23,6 +26,12 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.2.4] — 2026-08-25
+
+### Fixed
+- Synchronized `package-lock.json` with `package.json` so Cloudflare Pages can complete `npm ci`
+- Added a versioned deployment repair release after stale production output was detected
 
 ## [0.2.3] — 2026-08-25
 

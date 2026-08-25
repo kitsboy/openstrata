@@ -68,7 +68,7 @@
 </script>
 
 <svelte:head>
-  <title>OpenStrata · Community operations, beautifully organized</title>
+  <title>OpenStrata v{appVersion} · Community operations, beautifully organized</title>
   <meta name="description" content="OpenStrata is the modern operating system for strata and condominium communities." />
 </svelte:head>
 

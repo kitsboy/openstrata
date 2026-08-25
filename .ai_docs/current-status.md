@@ -1,6 +1,6 @@
 # Current Status — OpenStrata
 
-**Version:** v0.2.3
+**Version:** v0.2.4
 **Last Updated:** 2026-08-25
 **Domain:** openstrata.giveabit.io
 
@@ -14,13 +14,14 @@
 - New `/legal` route provides primary-source links for BC legislation, regulations, official guidance, and tribunal information
 - Batch 2 adds `/templates` plus remaining wizard and compliance interface localization
 - Batch 3 adds shared locale-aware date, number, and CAD currency formatters plus `npm run audit:i18n`
+- v0.2.4 repairs the package lockfile after Cloudflare Pages failed recent `main` deployments during `npm ci`
 
 ## Known Issues
 - `npm run check` is blocked in this workspace because `svelte-check` is not present in `node_modules`
 - `npm run build` passes, with existing non-blocking accessibility warnings in chart components and the `/tools` module-card interaction
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English/data-driven until reviewed translations are available
 - Template source records and statutory body records still need reviewed translations
-- `npm run check` still requires the installed `svelte-check` dependency in the workspace
+- Cloudflare Pages had been serving the last successful deployment because recent `main` builds failed during dependency installation; v0.2.4 repairs this lockfile mismatch
 
 ## Next Steps
 - Continue migrating remaining compliance and domain data copy with reviewed translations
