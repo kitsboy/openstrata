@@ -82,8 +82,11 @@ Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 - `POST /api/v1/treasury/reconcile`
 - `POST /api/v1/billing/run` — fee schedule + arrears -> charges/late notices, posts charges to ledger
 - `POST /api/v1/bylaw/complaint` | `/notice` | `/status` | `/fine` | `/nofine` — enforcement state machine
-- `GET  /api/v1/rails/status` — enabled sovereign rails + rate
-- `POST /api/v1/payments/quote` — rail-specific payment quote (LN 15-min CAD lock), shared reconciliation reference
+- `GET  /api/v1/rails/status` — enabled sovereign rails + live/static rate
+- `POST /api/v1/payments/quote` — rail-specific payment quote (LN 15-min CAD lock), shared reconciliation reference; idempotent per `(refId, unitRef, rail)`
+- `POST /api/v1/payments/confirm` — mark a quoted payment paid AND post it to the unit's AR ledger (reconcile like an e-transfer)
+- `POST /api/v1/forms` — Form B (information certificate) / Form F (payment certificate) issuance
+- `POST /api/v1/meetings/quorum` | `/vote` — AGM/SGM/council quorum + threshold voting
 
 > **Scaffold note:** the Postgres/pgvector + Ollama adapters are the integration
 > seams. Currently the API boots Rosa with the keyword fallback retriever and a
@@ -109,3 +112,25 @@ their daemons are provisioned on the host:
 shared `referenceCode` (e.g. `pay-<refId>-<unit>`) so Ziggy + the ledger
 reconcile confirmed payments the same way e-transfers do. The `cadPerBtc` rate
 is supplied to the API to convert CAD to sats for BTC-denominated rails.
+
+### Rails hardening (validators + keying)
+
+- **BIP-173 checksums** — `bc1` (segwit v0), `bc1p` (taproot v1), LNURL and
+  `npub` recipients are verified against a real bech32/bech32m checksum, not
+  just a format regex. `bech32Encode`/`decodeBech32` are exposed for tests and
+  for generating addresses.
+- **Pluggable rate provider** — the `RateProvider` seam behind `cadPerBtc`
+  resolves a live rate (env-seeded, cached) with the static `CAD_PER_BTC`
+  config as fallback.
+- **Watch-only xpub** — `deriveUnitAddress(xpub, unit)` derives a deterministic
+  BIP32 child index per unit (hash → index) from a public key only. Full child
+  public-key derivation is the seam for a BIP32 lib; the path + index are real.
+
+## Operational CLI
+
+Pure subcommands for smoke-testing the deterministic engines (no Postgres needed):
+
+```bash
+npm run cli -- rosa ingest         # validate + smoke-test the BC compliance corpus
+npm run cli -- ziggy simulate      # walk treasury scenarios through the state machine
+```
