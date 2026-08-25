@@ -1,7 +1,9 @@
 /** Facts, savings math, and competitive positioning for presentations */
 
+import packageJson from '../../package.json';
+
 export const pitchMeta = {
-	version: '0.2.0',
+	version: packageJson.version,
 	contact: 'hello@giveabit.io',
 	github: 'https://github.com/kitsboy/openstrata',
 	parent: 'https://giveabit.io',

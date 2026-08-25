@@ -1,6 +1,6 @@
 # Current Status — OpenStrata
 
-**Version:** v0.2.4
+**Version:** v0.2.5
 **Last Updated:** 2026-08-25
 **Domain:** openstrata.giveabit.io
 
@@ -15,6 +15,7 @@
 - Batch 2 adds `/templates` plus remaining wizard and compliance interface localization
 - Batch 3 adds shared locale-aware date, number, and CAD currency formatters plus `npm run audit:i18n`
 - v0.2.4 repairs the package lockfile after Cloudflare Pages failed recent `main` deployments during `npm ci`
+- v0.2.5 makes active metadata, pitch, homepage, and generated-config version markers derive from `package.json`
 
 ## Known Issues
 - `npm run check` is blocked in this workspace because `svelte-check` is not present in `node_modules`

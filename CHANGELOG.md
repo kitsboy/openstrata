@@ -2,6 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.2.5
+    date: 2026-08-25
+    summary: Single-source version markers across deployed metadata and generated config
   - version: 0.2.4
     date: 2026-08-25
     summary: Deployment repair and synchronized dependency lockfile
@@ -26,6 +29,12 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.2.5] — 2026-08-25
+
+### Fixed
+- Centralized visible, metadata, pitch, and generated-config version markers on the package version
+- Removed stale `v0.2.0` and `0.1.0` release identifiers from active application surfaces
 
 ## [0.2.4] — 2026-08-25
 

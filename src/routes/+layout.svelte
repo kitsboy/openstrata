@@ -18,6 +18,11 @@
   let selectedJurisdiction = $state('BC');
 </script>
 
+<svelte:head>
+  <meta name="openstrata-version" content={appVersion} />
+  <meta name="description" content={`OpenStrata v${appVersion} — modern operations for strata and condominium communities.`} />
+</svelte:head>
+
 <div class="flex min-h-screen flex-col mesh-bg">
   <header class="sticky top-0 z-50 border-b border-border bg-surface-2/80 backdrop-blur-md">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">

@@ -2,6 +2,7 @@
 	import { jurisdictions } from '$lib/data';
 	import Icon from '$lib/components/Icon.svelte';
 	import { copy } from '$lib/i18n';
+	import packageJson from '../../../../package.json';
 
 	// State
 	let step = $state(0);
@@ -101,7 +102,7 @@
 	// Step 8 — Review & Generate
 	const generateConfig = () => {
 		const config = {
-			meta: { generated: new Date().toISOString(), version: '0.1.0' },
+			meta: { generated: new Date().toISOString(), version: packageJson.version },
 			jurisdiction,
 			entity: {
 				name: corpName || 'Unnamed Strata Corporation',
