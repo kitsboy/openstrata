@@ -19,7 +19,7 @@
 3. Fee billing API, Form B/F generator, bylaw enforcement state machine, PWA hardening.
 
 **Git State:**
-- SHA: (fill from `git log -1 --format=%H` after commit/push)
+- SHA: `9ab1908`
 - Unpushed: `git log --oneline origin/main..HEAD`
 
 ---
