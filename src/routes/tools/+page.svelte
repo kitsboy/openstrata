@@ -3,6 +3,7 @@
 	import { units } from '$lib/data';
 	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';
 	import Icon from '$lib/components/Icon.svelte';
+	import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 
@@ -226,6 +227,11 @@
 			{/each}
 		</div>
 	</section>
+
+	<!-- E-Transfer Reconciliation (live demo) -->
+	<div class="mb-8">
+		<ETransferReconciler />
+	</div>
 
 	<!-- Bylaw + Conveyancing -->
 	<div class="grid lg:grid-cols-2 gap-8">

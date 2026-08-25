@@ -76,6 +76,25 @@
 
 ---
 
+## Session — 2026-08-25 (e-transfer prototype + build fix)
+
+**Done:**
+- **E-Transfer Auto-Reconciliation prototype (Phase 2 complete):** pure `src/lib/reconcile.ts` matching engine + `ETransferReconciler.svelte` interactive demo on `/tools`. Auto-matches inbound e-transfers to units by reference code, flags ambiguous references that hit multiple units, leaves unmatched for manual review. Brief (message-only) and full (message + payer) match modes. 9 new unit tests (total suite now 25).
+- **9-locale parity for the new feature:** 16 catalog keys (`etransfer*` / `recon*`) added to the Translation type, English base, and all 8 override blocks via `scripts/inject-recon-i18n.mjs` — audit green at 509 keys. Machine-drafted overrides — **require professional review**.
+- **Docs:** WORKPLAN Phase 2 marked complete; ROADMAP.md + roadmap page Phase 2 set complete; LATEST-UPDATE + current-status updated.
+- Recorded prior fix (SHA `6ff5fc3`): Cloudflare Pages build crash fixed — `browser` guard on PWA service-worker registration.
+
+**Decisions:**
+- Reconciliation never guesses: only a reference unique to one unit auto-posts; everything else is flagged for a human. Matches are reviewable before any ledger post.
+- New catalog keys were injected programmatically (the i18n file is huge and per-locale blocks live on single lines) via a re-runnable script, then verified with `check`/`test`/`audit`/`build`.
+- Keep the prototype front-end only (no backend) — consistent with the Phase 3 boundary.
+
+**Git State:**
+- SHA: `4a78235`
+- Unpushed: none (all commits in this session pushed to `origin/main`)
+
+---
+
 # KIMI HANDOFF — Hermes Strata / OpenStrata
 
 **Date:** July 2026  

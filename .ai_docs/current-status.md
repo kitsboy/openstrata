@@ -22,14 +22,17 @@
 - Docs sweep: DEPLOYMENT.md and I18N.md rewritten to match reality; all version/status docs refreshed; new policy docs: SECURITY.md, PRIVACY-POLICY.md, TERMS-OF-SERVICE.md, ACCESSIBILITY-STATEMENT.md, KNOWN-LIMITATIONS.md
 - **All 9 locales now translate the full interface catalog (217 keys each, exact parity with the French benchmark)** — hi/fil/pl/uk/sw completed; `audit:i18n` enforces parity as a hard error
 - Upgrade batch: test suite (16 Vitest unit/component tests), GitHub Actions CI, localized 404/error page, PWA (manifest + service worker + iOS meta), dark mode (persisted, system-aware, FOUC-free), Cmd/Ctrl+K site search, OG/twitter meta, per-category RSS feeds, auto-generated sitemap, Satohash health + stamp/verify UI, wizard save/load/download/validate/prefill, templates filter + wizard prefill, compliance/legal/FAQ search + FAQ anchors, pitch print-to-PDF, dashboard building detail modal + persistent notification center
+- Phase 2 complete: **E-Transfer Auto-Reconciliation prototype** — pure `src/lib/reconcile.ts` matching engine (auto-match by unit reference codes, flag ambiguous/multi-unit references, leave unmatched for review; brief/full match modes) with 9 unit tests, driving `ETransferReconciler.svelte` (interactive /tools demo with Received/Resolved/Auto/Needs-review stats, match-mode toggle, per-transfer manual assign dropdown). 16 new catalog keys added across all 9 locales (509 keys total, parity guard green) — machine-drafted overrides require professional review
+- Build fix (SHA `6ff5fc3`): PWA service-worker registration guarded with `browser` from `$app/environment` instead of `import.meta.env.PROD`, fixing a Node 20 prerender crash on Cloudflare Pages that previously failed every production build
 
 ## Known Issues
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English/data-driven until reviewed translations are available
 - Template source records and statutory body records still need reviewed translations
 - Backend phases (Rosa/Ziggy Docker stack, real payment rails, DB/auth) are not implemented — the site is a fully functional front-end product demo; legal/statutory content awaits professional review
+- The 16 new e-transfer/reconciliation catalog keys are machine-drafted across all 9 locales and need professional review (alongside the earlier hi/fil/pl/uk/sw overrides)
 
 ## Next Steps
 - Review legal and statutory translations with qualified professionals and preserve source links/effective dates
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English until reviewed translations exist
 - Phase 3+ backend build (Docker stack, treasury, billing, Form B/F, enforcement state machine)
-- Professional human review of the machine-drafted hi/fil/pl/uk/sw overrides before they are marked as reviewed
+- Professional human review of the machine-drafted hi/fil/pl/uk/sw overrides (incl. the 16 new reconciliation keys) before they are marked as reviewed

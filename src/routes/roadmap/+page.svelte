@@ -8,7 +8,7 @@
 
 	const phases = [
 		{ id: 1, name: 'Foundation', when: 'Jul 2026', status: 'complete', items: ['Marketing site', 'Compliance KB', 'Strata Tool hub', 'Executive docs', 'About + Roadmap'] },
-		{ id: 2, name: 'Supercharge', when: 'Jul–Aug 2026', status: 'current', items: ['Building template wizard', 'E-transfer prototype', 'Enhanced graphs', 'Kimi handoff'] },
+		{ id: 2, name: 'Supercharge', when: 'Jul–Aug 2026', status: 'complete', items: ['Building template wizard', 'E-transfer auto-reconciliation', 'Enhanced graphs', 'Full 9-locale i18n', 'Kimi handoff'] },
 		{ id: 3, name: 'Core Product', when: 'Q3 2026', status: 'planned', items: ['Docker stack (Rosa + Ziggy)', 'Trust ledger', 'Fee billing API', 'Form B/F generator', 'Bylaw state machine', 'PWA'] },
 		{ id: 4, name: 'Sovereign Layer', when: 'Q4 2026', status: 'planned', items: ['Satohash integration', 'Lightning Dual Pay', 'Nostr unit identity', 'Multisig watch', 'CRT export', 'Sub-accounts'] },
 		{ id: 5, name: 'Scale', when: '2027', status: 'planned', items: ['Brokerage multi-building', 'Bank feeds', 'War chest DCA', 'Agent payments', 'ON/AB law packs'] },
