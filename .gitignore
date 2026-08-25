@@ -2,6 +2,7 @@ node_modules/
 .svelte-kit/
 dist/
 build/
+.wrangler/
 .env
 .env.local
 .env.*.local

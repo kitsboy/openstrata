@@ -1,490 +1,214 @@
-<script lang="ts">
-	import {
-		units,
-		treasuryHistory,
-		rentalTrend,
-		faqItems,
-		rssItems
-	} from '$lib/data';
-	import { competitiveAdvantages, costSavings, hermesPositioning } from '$lib/marketing';
-	import { getToolStats } from '$lib/strata-tool';
-	import Icon from '$lib/components/Icon.svelte';
-	import BarChart from '$lib/components/BarChart.svelte';
-	import LineChart from '$lib/components/LineChart.svelte';
+<script>
+  import packageJson from '../../package.json';
 
-	const toolStats = getToolStats();
-	const savingsChart = costSavings.paymentMethods.map((p) => ({
-		label: p.method.split(' ')[0],
-		value: p.annualCost,
-		color: 'recommended' in p && p.recommended ? '#14b8a6' : p.method.includes('Credit') ? '#ef4444' : '#94a3b8'
-	}));
+  const appVersion = packageJson.version;
 
-	let btcCad = $state(135820);
-	let occupancyRate = $state(83.3);
-	let crfBalance = $state(248500);
-	let eprProgress = $state(67);
-	let pendingInvoices = $state(3);
-	let lightningPayments = $state(12);
-	let tick = $state(0);
+  const languages = [
+    ['en', 'English'],
+    ['fr', 'Français'],
+    ['es', 'Español'],
+    ['zh', '中文'],
+    ['hi', 'हिन्दी'],
+    ['fil', 'Filipino'],
+    ['pl', 'Polski'],
+    ['uk', 'Українська'],
+    ['sw', 'Kiswahili']
+  ];
 
-	const treasuryChart = $derived(
-		treasuryHistory.map((m) => ({
-			label: m.month,
-			value: m.income,
-			value2: m.expenses
-		}))
-	);
+  const translations = {
+    en: { workspace: 'Workspace', overview: 'Overview', buildings: 'Buildings', governance: 'Governance', operations: 'Operations', finances: 'Finances', legal: 'Legal library', insights: 'Insights', newStrata: 'New strata', viewAll: 'View all', goodMorning: 'Good morning, Camille', subtitle: 'Here is the pulse of your communities.', actions: 'Quick actions', activity: 'Live activity', upcoming: 'Upcoming', seeCalendar: 'See calendar', footerTag: 'The operating system for communities that govern themselves.' },
+    fr: { workspace: 'Espace de travail', overview: 'Vue d’ensemble', buildings: 'Immeubles', governance: 'Gouvernance', operations: 'Opérations', finances: 'Finances', legal: 'Bibliothèque juridique', insights: 'Analyses', newStrata: 'Nouvelle copropriété', viewAll: 'Tout voir', goodMorning: 'Bonjour, Camille', subtitle: 'Voici l’état de vos communautés.', actions: 'Actions rapides', activity: 'Activité en direct', upcoming: 'À venir', seeCalendar: 'Voir le calendrier', footerTag: 'Le système d’exploitation des communautés autonomes.' },
+    es: { workspace: 'Espacio de trabajo', overview: 'Resumen', buildings: 'Edificios', governance: 'Gobernanza', operations: 'Operaciones', finances: 'Finanzas', legal: 'Biblioteca legal', insights: 'Análisis', newStrata: 'Nueva comunidad', viewAll: 'Ver todo', goodMorning: 'Buenos días, Camille', subtitle: 'Este es el estado de tus comunidades.', actions: 'Acciones rápidas', activity: 'Actividad en vivo', upcoming: 'Próximamente', seeCalendar: 'Ver calendario', footerTag: 'El sistema operativo para comunidades autónomas.' },
+    zh: { workspace: '工作区', overview: '总览', buildings: '楼宇', governance: '治理', operations: '运营', finances: '财务', legal: '法律资料库', insights: '洞察', newStrata: '新建社区', viewAll: '查看全部', goodMorning: '早上好，Camille', subtitle: '这是您的社区状态。', actions: '快捷操作', activity: '实时活动', upcoming: '即将到来', seeCalendar: '查看日历', footerTag: '为自治社区打造的运营系统。' },
+    hi: { workspace: 'कार्यस्थल', overview: 'अवलोकन', buildings: 'इमारतें', governance: 'शासन', operations: 'संचालन', finances: 'वित्त', legal: 'कानूनी पुस्तकालय', insights: 'अंतर्दृष्टि', newStrata: 'नई सोसायटी', viewAll: 'सभी देखें', goodMorning: 'सुप्रभात, Camille', subtitle: 'आपकी समुदायों की स्थिति यहाँ है।', actions: 'त्वरित कार्य', activity: 'लाइव गतिविधि', upcoming: 'आगामी', seeCalendar: 'कैलेंडर देखें', footerTag: 'स्वशासित समुदायों के लिए ऑपरेटिंग सिस्टम।' },
+    fil: { workspace: 'Workspace', overview: 'Pangkalahatang-ideya', buildings: 'Mga gusali', governance: 'Pamamahala', operations: 'Operasyon', finances: 'Pananalapi', legal: 'Aklatan ng batas', insights: 'Mga insight', newStrata: 'Bagong strata', viewAll: 'Tingnan lahat', goodMorning: 'Magandang umaga, Camille', subtitle: 'Narito ang kalagayan ng iyong mga komunidad.', actions: 'Mabilis na aksyon', activity: 'Live na aktibidad', upcoming: 'Paparating', seeCalendar: 'Tingnan ang kalendaryo', footerTag: 'Operating system para sa mga komunidad na namamahala sa sarili.' },
+    pl: { workspace: 'Obszar roboczy', overview: 'Przegląd', buildings: 'Budynki', governance: 'Zarządzanie', operations: 'Operacje', finances: 'Finanse', legal: 'Biblioteka prawna', insights: 'Analizy', newStrata: 'Nowa wspólnota', viewAll: 'Zobacz wszystko', goodMorning: 'Dzień dobry, Camille', subtitle: 'Oto stan Twoich wspólnot.', actions: 'Szybkie akcje', activity: 'Aktywność na żywo', upcoming: 'Nadchodzące', seeCalendar: 'Zobacz kalendarz', footerTag: 'System operacyjny dla samorządnych wspólnot.' },
+    uk: { workspace: 'Робочий простір', overview: 'Огляд', buildings: 'Будинки', governance: 'Управління', operations: 'Операції', finances: 'Фінанси', legal: 'Правова бібліотека', insights: 'Аналітика', newStrata: 'Нова спільнота', viewAll: 'Переглянути все', goodMorning: 'Доброго ранку, Camille', subtitle: 'Ось стан ваших спільнот.', actions: 'Швидкі дії', activity: 'Активність наживо', upcoming: 'Найближчі події', seeCalendar: 'Відкрити календар', footerTag: 'Операційна система для спільнот із самоврядуванням.' },
+    sw: { workspace: 'Nafasi ya kazi', overview: 'Muhtasari', buildings: 'Majengo', governance: 'Utawala', operations: 'Uendeshaji', finances: 'Fedha', legal: 'Maktaba ya sheria', insights: 'Maarifa', newStrata: 'Jumuiya mpya', viewAll: 'Tazama zote', goodMorning: 'Habari za asubuhi, Camille', subtitle: 'Hii ndiyo hali ya jumuiya zako.', actions: 'Vitendo vya haraka', activity: 'Shughuli za moja kwa moja', upcoming: 'Yanayokuja', seeCalendar: 'Tazama kalenda', footerTag: 'Mfumo wa uendeshaji kwa jumuiya zinazojitawala.' }
+  };
 
-	const rentalChart = $derived(rentalTrend.map((m) => m.avg));
+  const navGroups = [
+    { label: 'Workspace', items: [['overview', 'Overview', '⌂'], ['buildings', 'Buildings', '▦'], ['governance', 'Governance', '◈']] },
+    { label: 'Run the building', items: [['operations', 'Operations', '⌁'], ['finances', 'Finances', '$'], ['legal', 'Legal library', '§'], ['insights', 'Insights', '◒']] }
+  ];
 
-	const occupiedUnits = $derived(units.filter((u) => u.status === 'occupied').length);
-	const alertUnits = $derived(units.filter((u) => u.formK === 'missing' || !u.eht).length);
+  const buildings = [
+    { name: 'Harbour House', location: 'Vancouver, BC', units: '72 units', health: 96, tone: 'green', issue: 'All systems clear', glyph: 'HH' },
+    { name: 'Cedar Lane', location: 'Burnaby, BC', units: '48 units', health: 82, tone: 'amber', issue: '2 actions due this week', glyph: 'CL' },
+    { name: 'Northline Lofts', location: 'Victoria, BC', units: '31 units', health: 74, tone: 'red', issue: 'Depreciation report due', glyph: 'NL' }
+  ];
 
-	$effect(() => {
-		const interval = setInterval(() => {
-			tick++;
-			btcCad += (Math.random() - 0.48) * 280;
-			occupancyRate = Math.min(100, Math.max(75, occupancyRate + (Math.random() - 0.5) * 0.3));
-			crfBalance += Math.floor((Math.random() - 0.3) * 200);
-			if (Math.random() > 0.85) lightningPayments++;
-		}, 4000);
-		return () => clearInterval(interval);
-	});
+  const activities = [
+    { icon: '✓', tone: 'green', title: 'AGM minutes approved', meta: 'Harbour House · 12 min ago' },
+    { icon: '$', tone: 'blue', title: 'Reserve fund transfer reconciled', meta: 'Cedar Lane · 46 min ago' },
+    { icon: '!', tone: 'amber', title: 'Insurance renewal reminder sent', meta: 'Northline Lofts · 2 hrs ago' },
+    { icon: '↗', tone: 'purple', title: 'Form B request received', meta: 'Harbour House · 3 hrs ago' }
+  ];
 
-	const modules = $derived([
-		{
-			id: 'form-k',
-			icon: '📋',
-			title: 'Form K Hub',
-			law: 'SPA §146',
-			desc: 'Signed/Missing toggle, CSV occupants, evacuation manifest, bylaw received checkbox. Rosa 14-day auto-reminder.',
-			status: '2 missing',
-			statusColor: 'warning'
-		},
-		{
-			id: 'epr',
-			icon: '⚡',
-			title: 'EPR 2026 Monitor',
-			law: 'Metro Van mandatory',
-			desc: 'Pro credentials dropdown, kW capacity, visual progress to Dec 31 2026, EV % cap with breach alerts.',
-			status: `${eprProgress}% complete`,
-			statusColor: 'brand'
-		},
-		{
-			id: 'tax',
-			icon: '🏠',
-			title: 'Tax / Occupancy Matrix',
-			law: 'EHT · SVT',
-			desc: 'Unit cards with Vancouver EHT and BC SVT auto-flags. Auto declaration reminders. Verified / Alert states.',
-			status: `${alertUnits} alerts`,
-			statusColor: alertUnits > 0 ? 'danger' : 'success'
-		},
-		{
-			id: 'dual-pay',
-			icon: '💳',
-			title: 'Dual Pay Treasury',
-			law: 'Fiat + Bitcoin',
-			desc: 'E-transfer upload or Sovereign Instant Lightning QR with 15-min CAD rate lock. 3-of-5 PSBT multisig council approval.',
-			status: `${lightningPayments} LN payments`,
-			statusColor: 'bitcoin'
-		},
-		{
-			id: 'bylaw',
-			icon: '⚖️',
-			title: 'Bylaw Enforcement Engine',
-			law: 'SPA s.124–128',
-			desc: 'Written complaint → Notice → 14-day lock → Council vote → Fine. CRT-proof workflow with BLOCK_FINE_ACTIONS.',
-			status: '14-day lock active',
-			statusColor: 'warning'
-		},
-		{
-			id: 'forms',
-			icon: '📄',
-			title: 'Forms B & F',
-			law: 'Conveyancing',
-			desc: 'Form F blocks sale on arrears. Form B within 7 days — fees, CRT cases, CRF balance, EPR disclosure.',
-			status: '1 WITHHELD',
-			statusColor: 'danger'
-		},
-		{
-			id: 'meetings',
-			icon: '🗳️',
-			title: 'Meetings & Voting',
-			law: 'SPA s.48–51',
-			desc: 'Quorum calculator, 30-min reschedule rule, hybrid AGM voting. Majority / 3-4 / 80% / unanimous engine.',
-			status: 'AGM in 42 days',
-			statusColor: 'brand'
-		},
-		{
-			id: 'depreciation',
-			icon: '📊',
-			title: 'Depreciation Reports',
-			law: 'SPA s.94',
-			desc: '5-year renewal cycle, 30-year capital projection. Link line items to CRF budget. Vendor WCB compliance.',
-			status: 'Due 2027',
-			statusColor: 'brand'
-		}
-	]);
+  const upcoming = [
+    { date: '24', month: 'JUN', title: 'Council meeting', place: 'Harbour House · 6:30 PM', tone: 'orange' },
+    { date: '28', month: 'JUN', title: 'Depreciation report review', place: 'Northline Lofts · 10:00 AM', tone: 'purple' },
+    { date: '02', month: 'JUL', title: 'Quarterly financial package', place: 'All communities · Due date', tone: 'blue' }
+  ];
 
-	const agents = [
-		{ name: 'Rosa', role: 'Compliance RAG', desc: 'BC SPA/RTA/CRT/bylaws strict RAG. Source citations only. Auto-remind loops.', color: 'brand' },
-		{ name: 'Ziggy', role: 'Treasury State Machine', desc: 'Invoice parse → CRF 10% cap → PSBT → 3-sig quorum → reconcile.', color: 'bitcoin' }
-	];
+  let selectedLanguage = 'en';
+  let active = 'overview';
+  let showLanguageMenu = false;
+  let showMobileMenu = false;
+  let showNewStrata = false;
+  let search = '';
+  let toast = '';
+
+  $: copy = translations[selectedLanguage];
+  $: selectedLanguageName = languages.find(([code]) => code === selectedLanguage)?.[1] ?? 'English';
+  $: filteredBuildings = buildings.filter((building) => `${building.name} ${building.location}`.toLowerCase().includes(search.toLowerCase()));
+
+  function selectNav(id) {
+    active = id;
+    showMobileMenu = false;
+    toast = `${id.charAt(0).toUpperCase() + id.slice(1)} workspace selected`;
+    setTimeout(() => (toast = ''), 2400);
+  }
+
+  function selectLanguage(code) {
+    selectedLanguage = code;
+    showLanguageMenu = false;
+    toast = `Language: ${languages.find(([item]) => item === code)?.[1]}`;
+    setTimeout(() => (toast = ''), 2400);
+  }
+
+  function openAction(message) {
+    toast = message;
+    setTimeout(() => (toast = ''), 2600);
+  }
 </script>
 
 <svelte:head>
-	<title>Hermes Strata — Sovereign Strata Corporation Dashboard</title>
+  <title>OpenStrata · Community operations, beautifully organized</title>
+  <meta name="description" content="OpenStrata is the modern operating system for strata and condominium communities." />
 </svelte:head>
 
-<!-- Hero -->
-<section class="relative overflow-hidden border-b border-border">
-	<div class="absolute inset-0 bg-gradient-to-br from-brand-50/80 via-transparent to-amber-50/40 pointer-events-none"></div>
-	<div class="mx-auto max-w-7xl px-6 py-16 sm:py-24 relative">
-		<div class="grid lg:grid-cols-2 gap-12 items-center">
-			<div>
-				<div class="mb-5 flex flex-wrap gap-2">
-					<span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-700">
-						<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
-						BC-First · BCFSA-Aware Software
-					</span>
-					<span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 text-xs font-semibold text-slate-600">
-						{toolStats.total} Strata Tool modules · {toolStats.live} live
-					</span>
-				</div>
-				<h1 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] leading-[1.1]">
-					Everything a Management<br />
-					<span class="bg-gradient-to-r from-brand-600 to-bc-blue bg-clip-text text-transparent">Company Does — Better.</span>
-				</h1>
-				<p class="mt-6 text-lg leading-relaxed text-slate-600 max-w-xl">
-					Cheaper, faster, fewer errors. Trust accounting, compliance, payments, governance —
-					for licensed brokerages, self-managed councils, or hybrid. Fiat today. Bitcoin sovereignty optional.
-				</p>
-				<div class="mt-8 flex flex-wrap gap-3">
-					<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3.5 text-sm font-semibold text-white no-underline shadow-lg shadow-brand-500/25 hover:bg-brand-500 hover:shadow-xl transition-all">
-						Strata Tool →
-					</a>
-					<a href="/about" class="inline-flex items-center gap-2 rounded-xl border border-bitcoin/30 bg-amber-50 px-6 py-3.5 text-sm font-semibold text-bitcoin no-underline hover:border-bitcoin/50 transition-all">
-						Why Trusted Money
-					</a>
-					<a href="/roadmap" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all">
-						Roadmap
-					</a>
-				</div>
-			</div>
+<div class="app-shell">
+  <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label="Primary navigation">
+    <div class="brand-lockup">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div>
+        <div class="brand-name">open<span>strata</span></div>
+        <div class="brand-subtitle">community operations</div>
+      </div>
+      <button class="icon-button sidebar-close" aria-label="Close navigation" onclick={() => (showMobileMenu = false)}>×</button>
+    </div>
 
-			<!-- Live stats grid -->
-			<div class="grid grid-cols-2 gap-4">
-				<div class="glass-card rounded-2xl p-5 col-span-2">
-					<div class="flex items-center justify-between mb-3">
-						<span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Treasury Balance</span>
-						<span class="live-dot flex items-center gap-1 text-[10px] font-bold text-success uppercase">
-							<span class="h-1.5 w-1.5 rounded-full bg-success"></span> Live
-						</span>
-					</div>
-					<div class="text-3xl font-bold text-slate-800 stat-flash" key={tick}>
-						${(crfBalance * 4.2).toLocaleString('en-CA')}
-						<span class="text-base font-normal text-slate-400">CAD</span>
-					</div>
-					<div class="mt-1 flex items-center gap-3 text-sm">
-						<span class="text-bitcoin font-semibold">₿{(crfBalance * 4.2 / btcCad).toFixed(4)}</span>
-						<span class="text-slate-400">CRF: ${crfBalance.toLocaleString()} (10%)</span>
-					</div>
-				</div>
+    <div class="workspace-switcher">
+      <div class="workspace-avatar">OS</div>
+      <div class="workspace-copy"><span class="eyebrow">{copy.workspace}</span><strong>Give A Bit workspace</strong></div>
+      <span class="chevron">⌄</span>
+    </div>
 
-				<div class="glass-card rounded-2xl p-5">
-					<span class="text-xs font-semibold uppercase tracking-wide text-slate-400">BTC/CAD</span>
-					<div class="mt-2 text-2xl font-bold text-bitcoin stat-flash" key={tick}>
-						${btcCad.toLocaleString('en-CA', { maximumFractionDigits: 0 })}
-					</div>
-				</div>
+    <nav class="nav-groups">
+      {#each navGroups as group}
+        <div class="nav-group">
+          <div class="nav-label">{group.label === 'Workspace' ? copy.workspace : 'Run the building'}</div>
+          {#each group.items as item}
+            <button class:active={active === item[0]} class="nav-item" onclick={() => selectNav(item[0])}>
+              <span class="nav-icon">{item[2]}</span><span>{copy[item[0]]}</span>
+              {#if item[0] === 'legal'}<span class="nav-count">12</span>{/if}
+            </button>
+          {/each}
+        </div>
+      {/each}
+    </nav>
 
-				<div class="glass-card rounded-2xl p-5">
-					<span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Occupancy</span>
-					<div class="mt-2 text-2xl font-bold text-bc-green stat-flash" key={tick}>
-						{occupancyRate.toFixed(1)}%
-					</div>
-					<div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-						<div class="h-full rounded-full bg-gradient-to-r from-bc-green to-brand-400 transition-all duration-700" style="width: {occupancyRate}%"></div>
-					</div>
-				</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-help">
+      <div class="help-orbit">?</div>
+      <div><strong>Need a hand?</strong><span>Visit the resource centre</span></div>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="sidebar-footer"><span class="status-dot"></span><span>All systems operational</span><button class="mini-settings" aria-label="Open settings">⚙</button></div>
+  </aside>
 
-				<div class="glass-card rounded-2xl p-5">
-					<span class="text-xs font-semibold uppercase tracking-wide text-slate-400">EPR 2026</span>
-					<div class="mt-2 text-2xl font-bold text-brand-700">{eprProgress}%</div>
-					<div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-						<div class="h-full rounded-full bg-brand-500 transition-all" style="width: {eprProgress}%"></div>
-					</div>
-					<p class="mt-1.5 text-[10px] text-slate-400">Deadline: Dec 31, 2026</p>
-				</div>
+  {#if showMobileMenu}<button class="scrim" aria-label="Close navigation" onclick={() => (showMobileMenu = false)}></button>{/if}
 
-				<div class="glass-card rounded-2xl p-5">
-					<span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Pending</span>
-					<div class="mt-2 text-2xl font-bold text-warning">{pendingInvoices}</div>
-					<p class="text-xs text-slate-400">Invoices awaiting sig</p>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
+  <div class="main-column">
+    <header class="topbar">
+      <div class="mobile-brand"><button class="icon-button menu-button" aria-label="Open navigation" onclick={() => (showMobileMenu = true)}>☰</button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
+      <div class="breadcrumbs"><span>Give A Bit workspace</span><b>/</b><strong>{copy.overview}</strong></div>
+      <div class="topbar-actions">
+        <label class="search-box"><span aria-hidden="true">⌕</span><input aria-label="Search OpenStrata" bind:value={search} placeholder="Search anything" /><kbd>⌘ K</kbd></label>
+        <div class="language-wrap">
+          <button class="language-button" aria-expanded={showLanguageMenu} onclick={() => (showLanguageMenu = !showLanguageMenu)}><span class="globe">◎</span><span class="language-current">{selectedLanguageName}</span><span class="chevron">⌄</span></button>
+          {#if showLanguageMenu}
+            <div class="language-menu">
+              <div class="menu-heading">Choose language</div>
+              {#each languages as language}
+                <button class:chosen={language[0] === selectedLanguage} onclick={() => selectLanguage(language[0])}><span>{language[1]}</span>{#if language[0] === selectedLanguage}<b>✓</b>{/if}</button>
+              {/each}
+            </div>
+          {/if}
+        </div>
+        <button class="icon-button notification-button" aria-label="Notifications" onclick={() => openAction('You are all caught up')}><span>♢</span><i></i></button>
+        <button class="profile-button" aria-label="Open profile menu"><span class="profile-avatar">CM</span><span class="profile-name">Camille</span><span class="chevron">⌄</span></button>
+      </div>
+    </header>
 
-<!-- Competitive advantages + savings -->
-<section class="border-b border-border bg-white">
-	<div class="mx-auto max-w-7xl px-6 py-14">
-		<div class="grid lg:grid-cols-2 gap-10 items-center">
-			<div>
-				<h2 class="text-2xl font-bold text-slate-900">Save $9,000+/Year Per Building</h2>
-				<p class="mt-2 text-slate-500">50 units × $500/mo — credit cards vs Hermes e-transfer/Lightning</p>
-				<BarChart data={savingsChart} height={180} barColor="#14b8a6" />
-			</div>
-			<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-				{#each competitiveAdvantages as adv}
-					<div class="rounded-xl border border-border bg-slate-50 p-4 text-center hover:border-brand-200 transition-colors">
-						<div class="text-xl font-bold text-brand-600">{adv.metric}</div>
-						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-		<div class="mt-10 grid md:grid-cols-3 gap-4">
-			{#each hermesPositioning.paths as path}
-				<div class="rounded-xl border border-border p-4 text-center">
-					<span class="text-sm font-bold text-slate-800">{path.title}</span>
-					<p class="text-xs text-slate-500 mt-1">{path.legal}</p>
-				</div>
-			{/each}
-		</div>
-	</div>
-</section>
+    <main class="content">
+      <section class="welcome-row">
+        <div><div class="date-kicker">TUESDAY, JUNE 18, 2026 <span class="live-pill"><span class="status-dot"></span> LIVE</span></div><h1>{copy.goodMorning}</h1><p>{copy.subtitle}</p></div>
+        <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{copy.newStrata}<span class="button-arrow">↗</span></button>
+      </section>
 
-<!-- Architecture strip -->
-<section class="border-b border-border bg-slate-50">
-	<div class="mx-auto max-w-7xl px-6 py-8">
-		<div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm">
-			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-border">
-				<span class="text-lg">📱</span>
-				<span class="font-medium text-slate-700">Mobile PWA</span>
-			</div>
-			<span class="text-slate-300 hidden sm:block">→</span>
-			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-50 border border-brand-200">
-				<span class="text-lg">🔒</span>
-				<span class="font-medium text-brand-700">Tailscale Gateway</span>
-			</div>
-			<span class="text-slate-300 hidden sm:block">→</span>
-			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-border">
-				<span class="font-medium text-slate-700">Rosa + Ziggy</span>
-			</div>
-			<span class="text-slate-300 hidden sm:block">→</span>
-			<div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
-				<Icon name="bitcoin" class="h-4 w-4 text-bitcoin" />
-				<span class="font-medium text-bitcoin">BTC + Lightning</span>
-			</div>
-		</div>
-	</div>
-</section>
+      <section class="metric-grid" aria-label="Community overview">
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">COMMUNITIES</span><span class="metric-icon">⌂</span></div><strong>03</strong><div class="metric-foot"><span class="trend up">↗ 1 this month</span><span>Active workspaces</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">OPEN ACTIONS</span><span class="metric-icon amber-icon">!</span></div><strong>07</strong><div class="metric-foot"><span class="trend warning">2 urgent</span><span>Across all buildings</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">RESERVE FUNDS</span><span class="metric-icon blue-icon">$</span></div><strong>$248.5k</strong><div class="metric-foot"><span class="trend up">↗ 4.8%</span><span>Year to date</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">COMPLIANCE HEALTH</span><span class="metric-icon purple-icon">◈</span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">Excellent</span><span>Across all buildings</span></div></article>
+      </section>
 
-<!-- Charts + Units -->
-<section class="border-b border-border">
-	<div class="mx-auto max-w-7xl px-6 py-16">
-		<div class="grid lg:grid-cols-3 gap-8">
-			<div class="lg:col-span-2 glass-card rounded-2xl p-6">
-				<div class="flex items-center justify-between mb-6">
-					<div>
-						<h2 class="text-lg font-bold text-slate-800">Treasury Flow</h2>
-						<p class="text-sm text-slate-500">Monthly income vs expenses · CRF 10% auto-allocated</p>
-					</div>
-					<div class="flex gap-4 text-xs">
-						<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span> Income</span>
-						<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-bitcoin"></span> Expenses</span>
-					</div>
-				</div>
-				<BarChart data={treasuryChart} height={200} showSecondary={true} />
-			</div>
+      <section class="main-grid">
+        <div class="left-stack">
+          <div class="section-heading"><div><h2>Your buildings</h2><p>At a glance, every community you care for.</p></div><button class="text-button" onclick={() => selectNav('buildings')}>{copy.viewAll}<span>→</span></button></div>
+          <div class="building-grid">
+            {#each filteredBuildings as building}
+              <div class="building-card" onclick={() => openAction(`${building.name} workspace opened`)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && openAction(`${building.name} workspace opened`)}>
+                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% health</span><button class="more-button" aria-label={`More options for ${building.name}`} onclick={(event) => { event.stopPropagation(); openAction('Building actions opened'); }}>•••</button></div>
+                <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
+                <div class="building-progress"><div class="progress-label"><span>Community health</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
+                <div class={`building-status ${building.tone}`}><span class="status-symbol">{building.tone === 'green' ? '✓' : building.tone === 'amber' ? '!' : '↗'}</span>{building.issue}<span class="status-arrow">→</span></div>
+              </div>
+            {:else}
+              <div class="empty-state">No buildings match “{search}”.</div>
+            {/each}
+          </div>
 
-			<div class="glass-card rounded-2xl p-6">
-				<h2 class="text-lg font-bold text-slate-800">Rental Market</h2>
-				<p class="text-sm text-slate-500 mb-4">Metro Vancouver avg 1BR · Vacancy {rentalTrend[rentalTrend.length - 1].vacancy}%</p>
-				<LineChart data={rentalChart} height={140} color="#2d6a4f" fillColor="rgba(45, 106, 79, 0.08)" />
-				<div class="mt-4 grid grid-cols-2 gap-3">
-					<div class="rounded-xl bg-bc-green/5 p-3 text-center">
-						<div class="text-xl font-bold text-bc-green">${rentalTrend[rentalTrend.length - 1].avg}</div>
-						<div class="text-[10px] text-slate-400 uppercase">Avg Rent/mo</div>
-					</div>
-					<div class="rounded-xl bg-brand-50 p-3 text-center">
-						<div class="text-xl font-bold text-brand-700">{occupiedUnits}/{units.length}</div>
-						<div class="text-[10px] text-slate-400 uppercase">Units Occupied</div>
-					</div>
-				</div>
-			</div>
-		</div>
+          <div class="section-heading action-heading"><div><h2>{copy.actions}</h2><p>Common work, made one tap away.</p></div></div>
+          <div class="action-grid">
+            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph">＋</span><span><strong>Create a strata</strong><small>Start a new community workspace</small></span><b>→</b></button>
+            <button class="action-card purple" onclick={() => openAction('Meeting planner opened')}><span class="action-glyph">◴</span><span><strong>Plan a meeting</strong><small>AGM, council, or special meeting</small></span><b>→</b></button>
+            <button class="action-card blue" onclick={() => openAction('Legal library opened')}><span class="action-glyph">§</span><span><strong>Find a legal source</strong><small>Official law, forms, and guidance</small></span><b>→</b></button>
+            <button class="action-card green" onclick={() => openAction('Maintenance request started')}><span class="action-glyph">⌁</span><span><strong>Log a request</strong><small>Repairs, access, or an incident</small></span><b>→</b></button>
+          </div>
+        </div>
 
-		<!-- Unit cards -->
-		<div class="mt-10">
-			<div class="flex items-center justify-between mb-6">
-				<h2 class="text-xl font-bold text-slate-800">Unit Matrix</h2>
-				<a href="/tools" class="text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">View all tools →</a>
-			</div>
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each units as unit}
-					<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group cursor-pointer">
-						<div class="flex items-start justify-between">
-							<div>
-								<span class="text-2xl font-bold text-slate-800">#{unit.id}</span>
-								<span class="ml-2 text-sm text-slate-400">Floor {unit.floor} · {unit.sqft} sqft</span>
-							</div>
-							<span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase
-								{unit.status === 'occupied' ? 'bg-success/10 text-success' :
-								 unit.status === 'vacant' ? 'bg-warning/10 text-warning' :
-								 'bg-purple-100 text-purple-600'}">
-								{unit.status}
-							</span>
-						</div>
-						{#if unit.tenant}
-							<p class="mt-2 text-sm text-slate-600">{unit.tenant}</p>
-						{/if}
-						<div class="mt-3 text-lg font-semibold text-slate-800">${unit.rent.toLocaleString()}<span class="text-sm font-normal text-slate-400">/mo</span></div>
-						<div class="mt-3 flex flex-wrap gap-1.5">
-							<span class="rounded-md px-2 py-0.5 text-[10px] font-semibold {unit.formK === 'signed' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}">
-								Form K: {unit.formK}
-							</span>
-							<span class="rounded-md px-2 py-0.5 text-[10px] font-semibold {unit.eht ? 'bg-brand-50 text-brand-700' : 'bg-danger/10 text-danger'}">
-								EHT: {unit.eht ? 'verified' : 'alert'}
-							</span>
-							{#if unit.evCharger}
-								<span class="rounded-md px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700">EV Charger</span>
-							{/if}
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-	</div>
-</section>
+        <aside class="right-stack">
+          <section class="panel"><div class="panel-heading"><div><h2>{copy.activity}</h2><p>Across your workspace</p></div><button class="icon-button" aria-label="Activity filters" onclick={() => openAction('Activity filters opened')}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}>{activity.icon}</span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction('Activity history opened')}>View activity history <span>→</span></button></section>
+          <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{copy.upcoming}</h2><p>Keep your communities moving.</p></div><button class="icon-button" aria-label="Calendar options" onclick={() => openAction('Calendar options opened')}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction('Calendar opened')}>{copy.seeCalendar} <span>→</span></button></section>
+        </aside>
+      </section>
+    </main>
 
-<!-- Core Modules -->
-<section class="border-b border-border bg-white">
-	<div class="mx-auto max-w-7xl px-6 py-16">
-		<div class="text-center mb-12">
-			<h2 class="text-2xl font-bold text-slate-900 sm:text-3xl">Core Modules</h2>
-			<p class="mt-3 text-slate-500 max-w-2xl mx-auto">BC MVP modules — config-driven expansion to provinces, states, and EU markets</p>
-		</div>
-		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-			{#each modules as mod}
-				<div class="glass-card rounded-2xl p-6 group hover:border-brand-200 transition-all">
-					<div class="flex items-start gap-4">
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 text-2xl group-hover:scale-105 transition-transform">
-							{mod.icon}
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 flex-wrap">
-								<h3 class="text-lg font-bold text-slate-800">{mod.title}</h3>
-								<span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{mod.law}</span>
-							</div>
-							<p class="mt-2 text-sm text-slate-500 leading-relaxed">{mod.desc}</p>
-							<div class="mt-3">
-								<span class="inline-flex rounded-full px-3 py-1 text-xs font-bold
-									{mod.statusColor === 'warning' ? 'bg-warning/10 text-warning' :
-									 mod.statusColor === 'danger' ? 'bg-danger/10 text-danger' :
-									 mod.statusColor === 'bitcoin' ? 'bg-bitcoin/10 text-bitcoin' :
-									 mod.statusColor === 'success' ? 'bg-success/10 text-success' :
-									 'bg-brand-50 text-brand-700'}">
-									{mod.status}
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			{/each}
-		</div>
-	</div>
-</section>
+    <footer class="site-footer">
+      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{copy.footerTag}</p><span class="footer-note">Built for BC. Designed for everywhere.</span></div><div class="footer-links"><div><h3>Product</h3><a href="/">Overview</a><a href="/">Buildings</a><a href="/">Governance</a><a href="/">Roadmap</a></div><div><h3>Trust & legal</h3><a href="/">Legal library</a><a href="/">Privacy</a><a href="/">Security</a><a href="/">Accessibility</a></div><div><h3>Resources</h3><a href="/">Help centre</a><a href="/">BC sources</a><a href="/">Templates</a><a href="/">Contact us</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>Information is general and not legal advice.</span><span><a href="/">Status</a> <a href="/">GitHub ↗</a></span></div>
+    </footer>
+  </div>
 
-<!-- Kimi Agents -->
-<section class="border-b border-border">
-	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h2 class="text-2xl font-bold text-slate-900 text-center mb-10">Kimi Agents</h2>
-		<div class="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-			{#each agents as agent}
-				<div class="glass-card rounded-2xl p-8 text-center">
-					<div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-bold text-white mb-4
-						{agent.color === 'bitcoin' ? 'bg-gradient-to-br from-bitcoin to-amber-600' : 'bg-gradient-to-br from-brand-500 to-brand-700'}">
-						{agent.name[0]}
-					</div>
-					<h3 class="text-xl font-bold text-slate-800">{agent.name}</h3>
-					<p class="text-sm font-semibold text-brand-600 mt-1">{agent.role}</p>
-					<p class="mt-3 text-sm text-slate-500 leading-relaxed">{agent.desc}</p>
-				</div>
-			{/each}
-		</div>
-	</div>
-</section>
+  <nav class="mobile-nav" aria-label="Mobile navigation"><button class:active={active === 'overview'} onclick={() => selectNav('overview')}><span>⌂</span>{copy.overview}</button><button class:active={active === 'buildings'} onclick={() => selectNav('buildings')}><span>▦</span>{copy.buildings}</button><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={copy.newStrata}><span>＋</span></button><button class:active={active === 'operations'} onclick={() => selectNav('operations')}><span>⌁</span>{copy.operations}</button><button onclick={() => (showMobileMenu = true)}><span>☰</span>Menu</button></nav>
+</div>
 
-<!-- RSS preview + FAQ -->
-<section class="border-b border-border bg-white">
-	<div class="mx-auto max-w-7xl px-6 py-16">
-		<div class="grid lg:grid-cols-2 gap-12">
-			<div>
-				<div class="flex items-center justify-between mb-6">
-					<h2 class="text-xl font-bold text-slate-800">Latest Feeds</h2>
-					<a href="/rss" class="text-sm font-semibold text-brand-600 no-underline">All feeds →</a>
-				</div>
-				<div class="space-y-4">
-					{#each rssItems.slice(0, 4) as item}
-						<article class="glass-card rounded-xl p-4 hover:border-brand-200 transition-all">
-							<div class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
-								<Icon name="rss" class="h-3 w-3" />
-								{item.date}
-							</div>
-							<h3 class="font-semibold text-slate-800 text-sm leading-snug">{item.title}</h3>
-							<p class="mt-1.5 text-xs text-slate-500 line-clamp-2">{item.excerpt}</p>
-						</article>
-					{/each}
-				</div>
-			</div>
+{#if showNewStrata}
+  <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (showNewStrata = false)}>
+    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label="Close dialog" onclick={() => (showNewStrata = false)}>×</button><div class="modal-icon">＋</div><div class="eyebrow">FORMATION WORKSPACE</div><h2 id="new-strata-title">Start a new strata</h2><p>We’ll guide you through the documents, professionals, approvals, and operating setup required for your jurisdiction.</p><label>Community name<input placeholder="e.g. Seaside Gardens" /></label><label>Jurisdiction<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => (showNewStrata = false)}>Cancel</button><button class="primary-button" onclick={() => { showNewStrata = false; openAction('Formation workspace created'); }}>Create workspace <span>→</span></button></div><small>OpenStrata provides workflow support and general information. Legal and professional review is required.</small></dialog>
+  </div>
+{/if}
 
-			<div>
-				<h2 class="text-xl font-bold text-slate-800 mb-6">Strata FAQ</h2>
-				<div class="space-y-3">
-					{#each faqItems as item}
-						<details class="glass-card rounded-xl group">
-							<summary class="cursor-pointer px-5 py-4 text-sm font-semibold text-slate-700 list-none flex items-center justify-between">
-								<span>{item.q}</span>
-								<span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
-							</summary>
-							<div class="px-5 pb-4 text-sm text-slate-500 leading-relaxed border-t border-border pt-3">
-								<span class="inline-block rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-700 mb-2">{item.category}</span>
-								<p>{item.a}</p>
-							</div>
-						</details>
-					{/each}
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- CTA -->
-<section>
-	<div class="mx-auto max-w-7xl px-6 py-20 text-center">
-		<h2 class="text-2xl font-bold text-slate-900 sm:text-3xl">
-			Built on Bitcoin. Powered by Open Standards.
-		</h2>
-		<p class="mx-auto mt-4 max-w-xl text-slate-500">
-			Hermes Strata is a Give A Bit project. Local-first sovereignty. No platform fees. No KYC.
-			Progressive disclosure — 3 taps max to any task.
-		</p>
-		<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-			<a href="https://github.com/kitsboy/openstrata" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all" target="_blank" rel="noopener noreferrer">
-				<Icon name="github" class="h-5 w-5" />
-				GitHub
-			</a>
-			<a href="https://x.com/giveabit" class="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-6 py-3 text-sm font-semibold text-slate-700 no-underline hover:border-brand-300 transition-all" target="_blank" rel="noopener noreferrer">
-				<Icon name="x" class="h-5 w-5" />
-				Follow on X
-			</a>
-			<a href="mailto:hello@giveabit.io" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-all">
-				<Icon name="mail" class="h-4 w-4" />
-				hello@giveabit.io
-			</a>
-		</div>
-	</div>
-</section>
+{#if toast}<div class="toast" role="status"><span>✓</span>{toast}</div>{/if}
