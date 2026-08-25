@@ -4,8 +4,15 @@
 - Scaffolded the **Phase 3 core-product backend** in a new `backend/` workspace (in-repo, per user decision). Docker Compose stack (`pgvector/pgvector:pg17` + Fastify API, Tailscale-only exposure) + `.env.example` + Dockerfile + `.dockerignore`.
 - **Trust ledger data model + migrations:** append-only journal (`ledger_entry`) with fund isolation (Operating / CRF / Special Levy / sub-accounts), integer basis-point math, a sha256 `prev_tally`/`tally_root` hash chain, and a `verifyChain` tamper-evidence helper. Two numbered migrations (`0001_trust_ledger.sql`, `0002_rosa_vector.sql` + pgvector) run by `backend/scripts/migrate.mjs`; `schema.sql` seeded into fresh volumes via initdb.
 - **Services (TypeScript/Node):** Rosa compliance RAG (`src/rosa/` — strict retrieval + BC SPA/RTA corpus, keyword fallback retriever, pgvector/Ollama seam), Ziggy treasury state machine (`src/ziggy/` — CRF hard cap, PO-expense verification, no-guess reconciliation), Fastify API (`src/api/server.ts` — `/health` + `/api/v1/*`), and `src/trf/recon.ts` mirroring the Phase 2 no-guess reconciliation rule so both layers agree.
-- **Tests + CI:** 29 backend Vitest tests (ledger invariants + tamper evidence + diff, Rosa, Ziggy) — pass; backend typecheck clean. CI gets a dedicated `backend` job; frontend suite stays green (check 0/0, audit 509, tests 25/25, build clean).
+- **Tests + CI:** 35 backend Vitest tests (ledger invariants + tamper evidence + diff, Rosa, Ziggy, **Fastify route tests**) — pass; backend typecheck clean. CI gets a dedicated `backend` job; frontend suite stays green (check 0/0, audit 509, tests 25/25, build clean).
+- **End-to-end finishing (`e844449`):** idempotent `npm run seed` demo community (mirrors initdb seed for migrated DBs); PG `listAll` now filters by account at query time so `diff()` honors community scope; `buildServer` logger is quiet-testable. SOURCE-OF-TRUTH + `docs/DEPLOYMENT.md` aligned (no longer claim “No backend yet”).
 - **Docs:** WORKPLAN/ROADMAP/roadmap page mark Phase 3 in progress; DIRECTORY-MAP + `.ai_docs/context-map.md` list `backend/`.
+
+**Remaining (external/not yet built — flag for Kimi):**
+- Rosa pgvector embedding + Ollama chat/embed model choice is NOT selected; `0002` migration + `keywordRetriever` seam are ready.
+- The Docker stack has NOT been run on a real host (Umbrel/Tailscale); needs a Postgres migration + `/api/v1/ledger` smoke test.
+- Fee billing + late-notice API, Form B/F generator, bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`) are not yet built.
+- The `/docs` install SOP mentions future `rosa ingest` / `ziggy simulate` CLIs — those are not built; add when the vector adapter lands.
 
 **Decisions (confirmed with Cam):**
 - In-repo `backend/` (single source of truth), TypeScript/Node + Fastify, PostgreSQL + pgvector for the immutable ledger + Rosa embeddings.
@@ -19,7 +26,7 @@
 3. Fee billing API, Form B/F generator, bylaw enforcement state machine, PWA hardening.
 
 **Git State:**
-- SHA: `9ab1908`
+- SHA: `e844449` (Phase 3 backend scaffold `9ab1908` + end-to-end finish `e844449`)
 - Unpushed: `git log --oneline origin/main..HEAD`
 
 ---

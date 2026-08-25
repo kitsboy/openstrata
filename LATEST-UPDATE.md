@@ -2,4 +2,4 @@
 
 Brief: Scaffolded the Phase 3 core-product backend in a new `backend/` workspace — Docker Compose stack (Postgres/pgvector + Fastify API), an immutable append-only trust ledger (Operating/CRF/Special Levy isolation, hash-chain diffable), Rosa compliance RAG (keyword retriever + BC corpus, pgvector/Ollama seam), and Ziggy treasury state machine (CRF hard cap + no-guess reconciliation) with 29 passing backend tests and an isolated CI job.
 
-Commit: 9ab1908
+Commit: e844449
