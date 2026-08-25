@@ -70,6 +70,19 @@
 	<div class="grid lg:grid-cols-3 gap-8">
 		<!-- Feed sources -->
 		<div class="lg:col-span-1">
+			<div class="mb-6 glass-card rounded-xl p-5">
+				<h3 class="font-semibold text-slate-800 text-sm">{$copy.subscribeRss}</h3>
+				<p class="mt-1 text-xs text-slate-500">{$copy.subscribeRssHint}</p>
+				<div class="mt-3 flex flex-wrap gap-2">
+					<a href="/rss.xml" class="rounded-full bg-brand-600 px-3 py-1.5 text-[11px] font-bold text-white no-underline hover:bg-brand-700">{$copy.allLabel} — {$copy.rssFeedLabel}</a>
+					{#each categories as category}
+						{#if category !== $copy.allLabel}
+							<a href="/rss/{category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.xml" class="rounded-full bg-brand-50 px-3 py-1.5 text-[11px] font-bold text-brand-700 no-underline hover:bg-brand-100">{category}</a>
+						{/if}
+					{/each}
+				</div>
+			</div>
+
 			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.feedSources}</h2>
 			<div class="space-y-3">
 				{#each filteredFeeds as feed}

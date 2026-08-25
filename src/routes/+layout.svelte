@@ -7,7 +7,9 @@
   import JobsDropdown from '$lib/components/JobsDropdown.svelte';
   import DonateModal from '$lib/components/DonateModal.svelte';
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
+  import SearchModal from '$lib/components/SearchModal.svelte';
   import { copy } from '$lib/i18n';
+  import { theme, toggleTheme } from '$lib/theme';
   import packageJson from '../../package.json';
 
   let { children } = $props();
@@ -23,6 +25,20 @@
   let donateOpen = $state(false);
   let mobileNavOpen = $state(false);
   let selectedJurisdiction = $state('BC');
+  let searchOpen = $state(false);
+
+  // Cmd/Ctrl+K opens the site search from anywhere.
+  $effect(() => {
+    function onKeydown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchOpen = true;
+      }
+      if (event.key === 'Escape') searchOpen = false;
+    }
+    window.addEventListener('keydown', onKeydown);
+    return () => window.removeEventListener('keydown', onKeydown);
+  });
 </script>
 
 <svelte:head>
@@ -51,6 +67,12 @@
       </div>
 
       <div class="flex items-center gap-3">
+        <button class="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick={() => (searchOpen = true)} aria-label={$copy.search} title={$copy.search}>
+          <span aria-hidden="true">⌕</span> <kbd class="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘K</kbd>
+        </button>
+        <button class="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>
+          {#if $theme === 'dark'}<span aria-hidden="true">☀️</span>{:else}<span aria-hidden="true">🌙</span>{/if}
+        </button>
         <select bind:value={selectedJurisdiction} class="hidden sm:block rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-300" aria-label={$copy.jurisdiction}>
           {#each jurisdictions as j}
             <option value={j.code} disabled={!j.active}>{j.flag} {j.code}{!j.active ? ' (soon)' : ''}</option>
@@ -97,6 +119,7 @@
 </div>
 
 <DonateModal bind:open={donateOpen} />
+<SearchModal bind:open={searchOpen} />
 
 <style>
   .layout-brand-mark { flex: 0 0 auto; }

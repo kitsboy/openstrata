@@ -1,21 +1,6 @@
 <script lang="ts">
   import { copy } from '$lib/i18n';
-  import type { Translation } from '$lib/i18n';
-
-  const templates = [
-    { title: 'formBTemplate', descriptionKey: 'formBDescription', sourceKey: 'formBSource', category: 'templateCategoryLegal', icon: '📄' },
-    { title: 'formFTemplate', descriptionKey: 'formFDescription', sourceKey: 'formFSource', category: 'templateCategoryLegal', icon: '🟢' },
-    { title: 'complaintNoticeTemplate', descriptionKey: 'complaintNoticeDescription', sourceKey: 'complaintNoticeSource', category: 'templateCategoryGovernance', icon: '⚖️' },
-    { title: 'meetingAgendaTemplate', descriptionKey: 'meetingAgendaDescription', sourceKey: 'meetingAgendaSource', category: 'templateCategoryGovernance', icon: '🗳️' },
-    { title: 'meetingMinutesTemplate', descriptionKey: 'meetingMinutesDescription', sourceKey: 'meetingMinutesSource', category: 'templateCategoryGovernance', icon: '📝' },
-    { title: 'budgetTemplate', descriptionKey: 'budgetDescription', sourceKey: 'budgetSource', category: 'templateCategoryFinance', icon: '💰' }
-  ] as const satisfies ReadonlyArray<{
-    title: keyof Translation;
-    descriptionKey: keyof Translation;
-    sourceKey: keyof Translation;
-    category: keyof Translation;
-    icon: string;
-  }>;
+  import { templates } from '$lib/templates';
 </script>
 
 <svelte:head>

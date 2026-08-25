@@ -6,9 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="OpenStrata — modern operations for strata and condominium communities." />
     <meta name="theme-color" content="#102d3b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OpenStrata" />
+    <meta property="og:title" content="OpenStrata — Community operations, beautifully organized" />
+    <meta property="og:description" content="The modern operating system for strata and condominium communities. Fiat rails today, Bitcoin sovereignty when you’re ready." />
+    <meta property="og:url" content="https://openstrata.giveabit.io/" />
+    <meta property="og:image" content="https://openstrata.giveabit.io/logo.png" />
+    <meta property="og:image:width" content="237" />
+    <meta property="og:image:height" content="377" />
+    <meta property="og:locale" content="en_CA" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="OpenStrata — Community operations, beautifully organized" />
+    <meta name="twitter:description" content="The modern operating system for strata and condominium communities." />
+    <meta name="twitter:image" content="https://openstrata.giveabit.io/logo.png" />
     <link rel="canonical" href="https://openstrata.giveabit.io/" />
     <link rel="alternate" hreflang="en" href="https://openstrata.giveabit.io/" />
     <link rel="alternate" hreflang="x-default" href="https://openstrata.giveabit.io/" />
+    <script>
+      // Apply the saved/system theme before first paint to avoid a flash.
+      try {
+        var t = localStorage.getItem('openstrata-theme');
+        var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebSite","name":"OpenStrata","url":"https://openstrata.giveabit.io","description":"Modern operations for strata and condominium communities.","publisher":{"@type":"Organization","name":"Give A Bit","url":"https://giveabit.io"}}
     </script>

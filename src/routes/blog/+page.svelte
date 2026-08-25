@@ -1,28 +1,9 @@
 <script lang="ts">
-	import { rssItems } from '$lib/data';
+	import { blogPosts } from '$lib/blog';
 	import Icon from '$lib/components/Icon.svelte';
 	import { copy, locale, formatDate } from '$lib/i18n';
 
-	const posts = [
-		...rssItems.map((item) => ({
-			title: item.title,
-			date: item.date,
-			excerpt: item.excerpt,
-			tag: 'Hermes'
-		})),
-		{
-			title: 'OpenStrata v0.1: Sovereign Data Portability Standard',
-			date: '2026-05-01',
-			excerpt: 'Introducing the open standard for carrying identity, social graph, and strata records across Bitcoin, Lightning, and Nostr.',
-			tag: 'OpenStrata'
-		},
-		{
-			title: 'Why Strata Corporations Need Bitcoin Treasury Rails',
-			date: '2026-04-15',
-			excerpt: 'CRF reserves, invoice verification, and 3-of-5 multisig eliminate single points of failure in strata financial operations.',
-			tag: 'Bitcoin'
-		}
-	];
+	const posts = blogPosts;
 </script>
 
 <svelte:head>
