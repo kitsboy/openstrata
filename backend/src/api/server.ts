@@ -21,8 +21,11 @@ export interface ApiDeps {
   };
 }
 
-export async function buildServer(deps: ApiDeps): Promise<FastifyInstance> {
-  const app = Fastify({ logger: true });
+export async function buildServer(
+  deps: ApiDeps,
+  opts: { logger?: boolean } = { logger: true }
+): Promise<FastifyInstance> {
+  const app = Fastify({ logger: opts.logger ?? true });
 
   const defaultBudget = {
     fiscalYear: '2026',

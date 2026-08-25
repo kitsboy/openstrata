@@ -24,4 +24,30 @@ Deploys are triggered by pushes to `main`. The live site version marker
 3. `npm run audit:i18n` passes (0 missing keys, 0 hard-coded-copy warnings)
 4. Live site serves the expected version marker after deploy
 
-See `SOURCE-OF-TRUTH.md` and `docs/KIMI-HANDOFF.md` for project context.
+## Phase 3 backend (`backend/`)
+
+The self-hosted backend stack is separate from the static Cloudflare site. It
+runs on a Linux box behind Tailscale (per `hermes-strata-app-framework-v2.md`)
+and is NOT deployed to Cloudflare Pages.
+
+```bash
+cd backend
+cp .env.example .env      # set a real password when they exist
+npm install
+npm run migrate           # apply ledger + pgvector migrations
+npm run seed              # idempotent demo community (Cedar Point)
+npm run dev               # Fastify API on 8080
+```
+
+Bring the stack up with Docker Compose (Postgres + pgvector + API):
+
+```bash
+cd backend
+docker compose up -d
+```
+
+Backend verification: `npm run typecheck` and `npm test` (run from `backend/`),
+plus the isolated `backend` job in CI.
+
+See `SOURCE-OF-TRUTH.md`, `backend/README.md`, and `docs/KIMI-HANDOFF.md` for
+full context.

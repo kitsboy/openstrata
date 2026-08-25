@@ -147,9 +147,34 @@ export class PostgresLedgerStore implements LedgerStore {
     return res.rows.map((r) => this.rowToEntry(r));
   }
 
-  async listAll(): Promise<LedgerEntryRow[]> {
+  /**
+   * List all entries, optionally limited to matched accounts (used by `diff`).
+   * Filtering happens at query time via the account/account_group join.
+   */
+  async listAll(accountFilter?: (a: AccountId) => boolean): Promise<LedgerEntryRow[]> {
+    // Compute a whitelist of account ids that pass the filter (small in practice).
+    let allowed: number[] | null = null;
+    if (accountFilter) {
+      const res = await this.pool.query(
+        `SELECT a.id, g.community_id AS group_id, a.fund_code, g.currency
+           FROM account a JOIN account_group g ON g.id = a.group_id`
+      );
+      allowed = res.rows
+        .map((r: any) => this.rowToAccount(r))
+        .filter(accountFilter)
+        .map((a) => a.id);
+    }
+
+    const params: unknown[] = [];
+    let where = '';
+    if (allowed !== null) {
+      where = ` WHERE account_id = ANY($1::bigint[])`;
+      // Vitest/Node: pass a JS array; pg serializes to bigint[].
+      params.push(allowed.length ? allowed : [-1]);
+    }
     const res = await this.pool.query<Record<string, any>>(
-      `SELECT * FROM ledger_entry ORDER BY seq`
+      `SELECT * FROM ledger_entry${where} ORDER BY seq`,
+      params
     );
     return res.rows.map((r) => this.rowToEntry(r));
   }

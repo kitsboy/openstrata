@@ -30,13 +30,21 @@
 ## Tech Stack
 
 - **Frontend:** SvelteKit 2 + Svelte 5 + Tailwind CSS 4
-- **Build:** Vite 6, adapter-static -> Cloudflare
-- **No backend yet** — mock data in src/lib/. Phase 3 adds Docker API.
+- **Frontend build:** Vite 6, adapter-static -> Cloudflare (static site; mock data in `src/lib/`)
+- **Backend (Phase 3, scaffolded in `backend/`):** Node 22 + TypeScript (ESM), Fastify 5, PostgreSQL 17 + pgvector, Docker Compose
+- **Backend services:** immutable append-only trust ledger, Rosa compliance RAG, Ziggy treasury state machine
 
 ```bash
-npm install && npm run dev    # localhost:5173
-npm run build                 # output: build/
+npm install && npm run dev    # frontend localhost:5173
+npm run build                 # frontend output: build/
+
+cd backend                    # Phase 3 backend workspace
+npm install
+npm run migrate && npm run seed
+npm run dev                   # API on 8080
 ```
+
+See `backend/README.md` for the backend quick start.
 
 ---
 
@@ -109,7 +117,7 @@ See docs/BCFSA-STRATEGY.md.
 3. Do NOT rebuild from scratch — extend existing SvelteKit site
 4. [x] Building Template Wizard live at /tools/wizard
 5. Coordinate with Satohash handoff when Cam ready
-6. Phase 3 next: Docker stack, trust ledger, fee billing
+6. Phase 3 in progress: backend scaffolded in `backend/` (Docker stack, trust ledger, Rosa/Ziggy API); next fee billing, Form B/F generator, bylaw enforcement state machine
 
 ---
 
