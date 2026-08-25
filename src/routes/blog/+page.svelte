@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { rssItems } from '$lib/data';
 	import Icon from '$lib/components/Icon.svelte';
-	import { copy } from '$lib/i18n';
+	import { copy, locale, formatDate } from '$lib/i18n';
 
 	const posts = [
 		...rssItems.map((item) => ({
@@ -42,7 +42,7 @@
 			<article class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all group">
 				<div class="flex items-center gap-3 mb-3">
 					<span class="rounded-full bg-brand-50 px-3 py-0.5 text-xs font-bold text-brand-700">{post.tag}</span>
-					<time class="text-xs text-slate-400">{post.date}</time>
+					<time class="text-xs text-slate-400" datetime={post.date}>{formatDate(post.date, $locale, { year: 'numeric', month: 'short', day: 'numeric' })}</time>
 				</div>
 				<h2 class="text-xl font-bold text-slate-800 group-hover:text-brand-700 transition-colors">{post.title}</h2>
 				<p class="mt-3 text-slate-500 leading-relaxed">{post.excerpt}</p>

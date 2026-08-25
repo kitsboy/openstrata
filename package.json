@@ -1,13 +1,14 @@
 {
   "name": "openstrata",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "audit:i18n": "node scripts/audit-i18n.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^7.0.0",

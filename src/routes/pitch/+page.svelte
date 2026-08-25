@@ -15,13 +15,9 @@
 	import BarChart from '$lib/components/BarChart.svelte';
 	import LineChart from '$lib/components/LineChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import { copy } from '$lib/i18n';
+	import { copy, locale, formatCurrency, formatDate } from '$lib/i18n';
 
-	const updatedAt = new Date().toLocaleDateString('en-CA', {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	});
+	const updatedAt = new Date().toISOString().slice(0, 10);
 
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
@@ -114,10 +110,10 @@
 					<div class="mt-8 flex flex-wrap gap-3">
 						<span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-700">
 							<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
-							{liveLabel} data · synced {updatedAt}
+							{liveLabel} data · synced {formatDate(updatedAt, $locale, { year: 'numeric', month: 'long', day: 'numeric' })}
 						</span>
 						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold text-slate-600">
-							₿ ${btcCad.toLocaleString('en-CA', { maximumFractionDigits: 0 })} CAD
+							₿ {formatCurrency(btcCad, $locale, { maximumFractionDigits: 0 })}
 						</span>
 					</div>
 				</div>
@@ -156,7 +152,7 @@
 						{costSavings.scenario.units} units × ${costSavings.scenario.monthlyFee}/mo
 					</p>
 					<p class="text-4xl font-bold text-slate-900">
-						${costSavings.annualFeeFlow.toLocaleString()}
+						{formatCurrency(costSavings.annualFeeFlow, $locale)}
 						<span class="text-lg font-medium text-slate-400">/year</span>
 					</p>
 					<p class="mt-4 text-sm text-slate-500">
@@ -196,7 +192,7 @@
 					<p class="text-xs text-slate-400 mb-4">Source: marketing.ts · {costSavings.scenario.units}-unit building</p>
 					<BarChart data={paymentChart} height={200} barColor="#14b8a6" />
 					<p class="mt-4 rounded-xl bg-success/10 px-4 py-3 text-sm text-success font-semibold">
-						OpenStrata saves ${annualSavings.toLocaleString()}/yr vs credit cards alone
+						OpenStrata saves {formatCurrency(annualSavings, $locale)}/yr vs credit cards alone
 					</p>
 				</div>
 				<div class="glass-card rounded-2xl p-6">
@@ -242,7 +238,7 @@
 					<div class="glass-card rounded-2xl p-6">
 						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">CRF Balance</p>
 						<p class="mt-2 text-3xl font-bold text-brand-700 stat-flash">
-							${crfBalance.toLocaleString()}
+							{formatCurrency(crfBalance, $locale, { maximumFractionDigits: 0 })}
 						</p>
 						<p class="mt-1 text-xs text-slate-400">{$copy.simulatedLedger}</p>
 					</div>

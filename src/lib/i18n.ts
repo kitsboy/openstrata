@@ -40,4 +40,31 @@ const initialLocale = browser ? (localStorage.getItem('openstrata-locale') as Lo
 export const locale = writable<LocaleCode>(locales.some((item) => item.code === initialLocale) ? initialLocale : 'en');
 export const copy = derived(locale, ($locale) => translations[$locale]);
 
+const intlLocales: Record<LocaleCode, string> = {
+  en: 'en-CA',
+  fr: 'fr-CA',
+  es: 'es-419',
+  zh: 'zh-CN',
+  hi: 'hi-IN',
+  fil: 'fil-PH',
+  pl: 'pl-PL',
+  uk: 'uk-UA',
+  sw: 'sw-KE'
+};
+
+export function formatNumber(value: number, localeCode: LocaleCode = 'en', options: Intl.NumberFormatOptions = {}) {
+  return new Intl.NumberFormat(intlLocales[localeCode], options).format(value);
+}
+
+export function formatCurrency(value: number, localeCode: LocaleCode = 'en', options: Intl.NumberFormatOptions = {}) {
+  return formatNumber(value, localeCode, { style: 'currency', currency: 'CAD', ...options });
+}
+
+export function formatDate(value: string | Date, localeCode: LocaleCode = 'en', options: Intl.DateTimeFormatOptions = {}) {
+  const date = typeof value === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00Z`)
+    : new Date(value);
+  return new Intl.DateTimeFormat(intlLocales[localeCode], options).format(date);
+}
+
 if (browser) locale.subscribe((value) => localStorage.setItem('openstrata-locale', value));

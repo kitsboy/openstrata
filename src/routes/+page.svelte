@@ -1,6 +1,6 @@
 <script>
   import packageJson from '../../package.json';
-  import { copy, locale, locales } from '$lib/i18n';
+  import { copy, locale, locales, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
 
   const appVersion = packageJson.version;
 
@@ -138,14 +138,14 @@
 
     <main class="content">
       <section class="welcome-row">
-        <div><div class="date-kicker">TUESDAY, JUNE 18, 2026 <span class="live-pill"><span class="status-dot"></span> LIVE</span></div><h1>{$copy.goodMorning}</h1><p>{$copy.subtitle}</p></div>
+        <div><div class="date-kicker">{formatDate('2026-06-18', $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class="live-pill"><span class="status-dot"></span> {$copy.live}</span></div><h1>{$copy.goodMorning}</h1><p>{$copy.subtitle}</p></div>
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>
       </section>
 
       <section class="metric-grid" aria-label="Community overview">
-        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon">⌂</span></div><strong>03</strong><div class="metric-foot"><span class="trend up">↗ 1 this month</span><span>{$copy.activeWorkspaces}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon">!</span></div><strong>07</strong><div class="metric-foot"><span class="trend warning">2 urgent</span><span>{$copy.acrossBuildings}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon">$</span></div><strong>$248.5k</strong><div class="metric-foot"><span class="trend up">↗ 4.8%</span><span>{$copy.yearToDate}</span></div></article>
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon">⌂</span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot"><span class="trend up">↗ 1 this month</span><span>{$copy.activeWorkspaces}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon">!</span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot"><span class="trend warning">2 urgent</span><span>{$copy.acrossBuildings}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon">$</span></div><strong>{formatCurrency(248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot"><span class="trend up">↗ 4.8%</span><span>{$copy.yearToDate}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon">◈</span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 

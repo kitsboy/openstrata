@@ -9,7 +9,7 @@
 	} from '$lib/marketing';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import { copy } from '$lib/i18n';
+	import { copy, locale, formatCurrency } from '$lib/i18n';
 
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
@@ -43,7 +43,7 @@
 	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.costOfStrata}</h2>
 	<p class="text-slate-500 mb-8">
 		{costSavings.scenario.units} units × ${costSavings.scenario.monthlyFee}/mo =
-		<strong class="text-slate-800">${costSavings.annualFeeFlow.toLocaleString()}/year</strong> {$copy.feeFlow}
+		<strong class="text-slate-800">{formatCurrency(costSavings.annualFeeFlow, $locale)}/year</strong> {$copy.feeFlow}
 	</p>
 
 	<div class="grid lg:grid-cols-2 gap-10">
@@ -62,7 +62,7 @@
 						<p class="text-xs text-slate-400">{pm.label}</p>
 					</div>
 					<span class="text-lg font-bold {pm.annualCost > 5000 ? 'text-danger' : pm.annualCost < 2000 ? 'text-success' : 'text-slate-600'}">
-						${pm.annualCost.toLocaleString()}/yr
+						{formatCurrency(pm.annualCost, $locale)}/yr
 					</span>
 				</div>
 			{/each}

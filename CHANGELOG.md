@@ -2,6 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.2.3
+    date: 2026-08-25
+    summary: Locale-aware formatting and translation audit
   - version: 0.2.2
     date: 2026-08-25
     summary: Templates and remaining wizard/compliance localization
@@ -20,6 +23,15 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.2.3] — 2026-08-25
+
+### Added
+- Locale-aware date, number, and CAD currency formatting for supported languages
+- `npm run audit:i18n` translation completeness audit for route catalog usage
+
+### Changed
+- Dashboard, About, Pitch, Blog, and shared footer now respond to the active locale for visible formatted values
 
 ## [0.2.2] — 2026-08-25
 
