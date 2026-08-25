@@ -1,3 +1,23 @@
+## Session — 2026-08-25 (completeness sweep, 4 batches)
+
+**Done:**
+- Batch 1 — `npm run check` now passes **0 errors / 0 warnings**: fixed 11 type errors + 7 a11y warnings (satohash `Uint8Array`/`BufferSource`, BarChart `secondaryKey` prop + `<rect>` ARIA roles, LineChart `<circle>` role, JobsDropdown const-array narrowing, implicit-any params on home page handlers, typed `$copy[<string>]` indexing via exported `Translation` type, tools module-card `role="button"` + keyboard handler). Committed `cf2bdf3`
+- Batch 2 — site completeness: new `/faq` page (i18n'd), real `/rss.xml` feed endpoint (generated from blog posts via `+server.ts`), sitemap covering all 15 routes, RSS subscribe buttons, wizard mobile layout fix. Committed `99d07a2`. All routes responsive on mobile + desktop
+- Batch 3 — docs sweep: rewrote `docs/DEPLOYMENT.md` + `docs/I18N.md`; refreshed WORKPLAN/ROADMAP/SOURCE-OF-TRUTH/DIRECTORY-MAP/EXECUTIVE-SUMMARY/MISSION + `.ai_docs` manifests; created SECURITY.md, PRIVACY-POLICY.md, TERMS-OF-SERVICE.md, ACCESSIBILITY-STATEMENT.md, KNOWN-LIMITATIONS.md. Committed `66c7565`
+- Batch 4 — locale overrides: Spanish + Chinese extended to full catalog parity (185 keys each). Verified identical key sets across fr/es/zh with a parity script. Committed `c94a022`
+- Final verify: `npm run check` 0/0, build clean, audit 461 keys / 15 routes; live site confirmed serving v0.2.6 with FAQ (200) and RSS feed live; es/zh strings confirmed in the built bundle
+
+**Decisions:**
+- No version bump for the sweep (still v0.2.6) — markers derive from `package.json` and the release was already live
+- Statutory/domain data records stay canonical English until professionally reviewed translations exist (unchanged guardrail)
+- No agents spawned — this environment has no spawn capability; all batches executed sequentially
+
+**Git State:**
+- Latest SHA: `c94a022` (pushed `66c7565..c94a022 main -> main`)
+- Unpushed: none
+
+---
+
 ## Session — 2026-08-25
 
 **Done:**
