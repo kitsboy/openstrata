@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Check, audit, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (svelte-check)
+        run: npm run check
+
+      - name: i18n audit (keys + hard-coded copy scan)
+        run: npm run audit:i18n
+
+      - name: Unit and component tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify static assets exist
+        run: |
+          test -f build/index.html
+          test -f build/manifest.webmanifest
+          test -f build/sw.js
+          test -f build/404.html
+          test -f build/rss.xml
+          test -f build/sitemap.xml

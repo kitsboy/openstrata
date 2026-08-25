@@ -11,6 +11,13 @@
   import packageJson from '../../package.json';
 
   let { children } = $props();
+
+  // Register the PWA service worker (production only; never in dev or SSR).
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* offline caching is progressive enhancement */
+    });
+  }
   const currentYear = new Date().getFullYear();
   const appVersion = packageJson.version;
   let donateOpen = $state(false);
@@ -19,8 +26,11 @@
 </script>
 
 <svelte:head>
-  <meta name="openstrata-version" content={appVersion} />
-  <meta name="description" content={`OpenStrata v${appVersion} — modern operations for strata and condominium communities.`} />
+  <meta name="openstrata-version" content={appVersion} />    <meta name="description" content={`OpenStrata v${appVersion} — modern operations for strata and condominium communities.`} />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="OpenStrata" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </svelte:head>
 
 <div class="flex min-h-screen flex-col mesh-bg">
