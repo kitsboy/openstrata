@@ -20,7 +20,8 @@
 - Post-v0.2.6 engineering sweep: `npm run check` now passes with **0 errors / 0 warnings** (fixed 11 type errors + 7 a11y warnings: satohash `BufferSource`, chart props + ARIA roles, JobsDropdown narrowing, implicit-any params, typed `$copy` indexing, tools module-card keyboard access)
 - Site completeness: new `/faq` page, real `/rss.xml` feed endpoint, complete sitemap (all 15 routes), RSS subscribe links, wizard mobile polish; **all routes verified mobile- and desktop-ready**
 - Docs sweep: DEPLOYMENT.md and I18N.md rewritten to match reality; all version/status docs refreshed; new policy docs: SECURITY.md, PRIVACY-POLICY.md, TERMS-OF-SERVICE.md, ACCESSIBILITY-STATEMENT.md, KNOWN-LIMITATIONS.md
-- Locale overrides now complete for **fr, es, and zh** (185 keys each — full interface catalog parity); hi/fil/pl/uk/sw fall back to English
+- **All 9 locales now translate the full interface catalog (217 keys each, exact parity with the French benchmark)** — hi/fil/pl/uk/sw completed; `audit:i18n` enforces parity as a hard error
+- Upgrade batch: test suite (16 Vitest unit/component tests), GitHub Actions CI, localized 404/error page, PWA (manifest + service worker + iOS meta), dark mode (persisted, system-aware, FOUC-free), Cmd/Ctrl+K site search, OG/twitter meta, per-category RSS feeds, auto-generated sitemap, Satohash health + stamp/verify UI, wizard save/load/download/validate/prefill, templates filter + wizard prefill, compliance/legal/FAQ search + FAQ anchors, pitch print-to-PDF, dashboard building detail modal + persistent notification center
 
 ## Known Issues
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English/data-driven until reviewed translations are available
@@ -28,7 +29,7 @@
 - Backend phases (Rosa/Ziggy Docker stack, real payment rails, DB/auth) are not implemented — the site is a fully functional front-end product demo; legal/statutory content awaits professional review
 
 ## Next Steps
-- Extend locale overrides to the remaining languages (hi, fil, pl, uk, sw) following the fr/es/zh pattern (185 keys each)
 - Review legal and statutory translations with qualified professionals and preserve source links/effective dates
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English until reviewed translations exist
-- Phase 3+ backend build (Docker stack, treasury, billing, Form B/F, enforcement state machine, PWA)
+- Phase 3+ backend build (Docker stack, treasury, billing, Form B/F, enforcement state machine)
+- Professional human review of the machine-drafted hi/fil/pl/uk/sw overrides before they are marked as reviewed

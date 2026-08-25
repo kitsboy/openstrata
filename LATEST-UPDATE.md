@@ -1,14 +1,15 @@
 # OpenStrata — Last Updated 2026-08-25 by Buffy
 
-Brief: engineering gates green (`npm run check` 0/0), site completeness (FAQ, real RSS feed, full sitemap), docs sweep (policy docs created), and locale overrides extended to Spanish and Chinese. All batches pushed and the live deployment confirmed.
+Brief: the full upgrade list was executed in five committed/pushed batches: test suite + CI + PWA + error page, dark mode + site search + OG meta + category RSS + auto-sitemap, Satohash UI + wizard save/load + filters/search + print deck + dashboard detail, all-locale translation parity + content refresh, and handoff docs.
 
-Release: v0.2.6 (deployed live; no version bump needed for this sweep)
-Verification: `npm run check` (0 errors / 0 warnings), `npm run build`, and `npm run audit:i18n` (461 keys / 15 routes) all pass.
+Release: v0.2.6 (deployed live; no version bump — markers derive from package.json)
+Verification: `npm run check` 0 errors / 0 warnings, `npm test` 16/16, `npm run build` clean, `npm run audit:i18n` 493 keys / 16 routes with the locale-parity guard enforced.
 
-What changed (4 batches, each committed and pushed separately):
-1. **Check gate green** — fixed 11 type errors + 7 a11y warnings (satohash `BufferSource`, BarChart/LineChart props + ARIA roles, JobsDropdown narrowing, implicit-any params, typed `$copy` indexing, tools module-card keyboard access). `npm run check` went from failing to 0/0.
-2. **Site completeness + mobile polish** — new `/faq` page (i18n'd), real `/rss.xml` feed endpoint generated from blog posts, sitemap now covers all 15 routes, RSS subscribe buttons, wizard mobile layout fix. All routes verified responsive on mobile and desktop.
-3. **Docs sweep** — rewrote DEPLOYMENT.md and I18N.md to match reality; refreshed version/status references across WORKPLAN, ROADMAP, SOURCE-OF-TRUTH, DIRECTORY-MAP, EXECUTIVE-SUMMARY, MISSION, `.ai_docs` manifests; created SECURITY.md, PRIVACY-POLICY.md, TERMS-OF-SERVICE.md, ACCESSIBILITY-STATEMENT.md, KNOWN-LIMITATIONS.md.
-4. **Locales** — Spanish (es) and Chinese (zh) override blocks extended to full catalog parity (185 keys each, matching French). Verified identical key sets across fr/es/zh.
+What changed (5 batches, each committed and pushed):
+1. **Engineering foundations** — Vitest + @testing-library/svelte (16 tests: i18n parity/formatters, Satohash client, BarChart); GitHub Actions CI (check → audit → test → build → asset verification); localized `+error.svelte` (404 + error states); PWA manifest + service worker + iOS meta + CSP worker-src/manifest-src.
+2. **Site-wide upgrades** — dark mode (persisted, system-aware, FOUC-free, full token flips); Cmd/Ctrl+K search modal across pages/posts/FAQ/templates/legal/feeds; og:/twitter meta; per-category RSS feeds prerendered to static XML; sitemap auto-generated before every build; the dead `.mesh-bg` class defined.
+3. **Feature completions** — Satohash health + stamp/verify form (graceful offline) on dashboard and spec; wizard save/load/download/validate/template-prefill; templates category filter + Use-template → wizard; compliance section search; legal source search; FAQ search + deep-link anchors; pitch print-to-PDF; dashboard building-detail modal + persistent notification center.
+4. **Locales + content** — hi/fil/pl/uk/sw extended to full 217-key parity with fr/es/zh (all 9 locales translate the whole interface); audit now hard-fails on locale key drift; llms.txt expanded; metrics.json refreshed; three new substantive blog posts.
+5. **Handoff** — current-status, LATEST-UPDATE, and KIMI handoff updated.
 
-Next work: locale overrides for hi, fil, pl, uk, sw; professional review of legal translations; Phase 3+ backend build.
+Next work: professional human review of machine-drafted overrides; reviewed legal/statutory record translations; Phase 3+ backend build.
