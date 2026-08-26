@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
-**Last updated:** 2026-08-26 (v0.3.6)  
-**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); per-council DB-backed units live (migration 0005); frontend wired to the live API; landing secured + tightened; all 20 GUI/user-flow improvements shipped (v0.3.6); all 20 user-flow/GUI/Bitcoin improvements shipped (v0.3.7).
+**Last updated:** 2026-08-26 (v0.3.9)  
+**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); per-council DB-backed units live (migration 0005); frontend wired to the live API; landing secured + tightened; all 20 GUI/user-flow improvements shipped (v0.3.6); all 20 user-flow/GUI/Bitcoin improvements shipped (v0.3.7); next-20 shipped (v0.3.8); **design-system release v0.3.9** — reusable `Card` component (47 cards/9 pages migrated), marketing typography ramp, sidebar shell pinned to viewport, one card language across dashboard + marketing, and the Tailwind v4 unlayered-reset cascade bug fixed (`@layer base`; dark mode text + `text-bc-blue` contrast).
 
 ---
 

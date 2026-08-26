@@ -1,7 +1,7 @@
 ---
 title: Mission
 project: Hermes Strata / OpenStrata
-version: 0.3.8
+version: 0.3.9
 audience: internal
 tags: [hermes-strata, openstrata, mission, bc-strata, bitcoin]
 last_updated: 2026-08-25

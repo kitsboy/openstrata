@@ -1,6 +1,6 @@
 {
   "name": "openstrata-backend",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "private": true,
   "type": "module",
   "description": "Phase 3 core product backend — Rosa (compliance RAG), Ziggy (treasury state machine), immutable trust ledger API.",

@@ -1,7 +1,9 @@
 ---
 title: Changelog
 project: openstrata
-version_history:-  version: 0.3.8
+version_history:-  version: 0.3.9
+-  summary: "Design-system release: reusable Card component (47 cards/9 pages migrated), marketing typography ramp, sidebar shell pinned to viewport, dashboard + marketing cards unified on one token set, and a site-wide Tailwind v4 fix — unlayered element resets moved to @layer base so text/border utilities win (brand links were rendering plain ink/dark-on-dark), :root wired to ink/canvas tokens for true dark mode, text-bc-blue lightened dark-only (contrast 2.35->9.0); zero overflow 13 pages x 3 sizes light+dark, 85 frontend tests, svelte-check 0/0"
+-  version: 0.3.8
 -  summary: "Next 20 shipped — live flows, governance, Bitcoin & trust: RosaChat citation-only compliance Q&A, register wizard, QR scan-to-pay + wallet deep links, Forms B/F 7-day tracker, MyUnit panel, BallotEngine + minutes export, CRT-ready bylaw case file, statutory meeting notices, compliance health score, mempool.space balances, war-chest DCA planner with Form B disclosure, live CAD/BTC sparkline, rails readiness checklist, ledger chain visualizer, PWA offline + install, a11y 0-warning, tour/empty-state illustrations, host-connect strip; browser-verified zero overflow 390→1280, 78 frontend tests, i18n 893 keys x 9 locales"
 -  version: 0.3.7
 -  summary: "All 20 user-flow/GUI/Bitcoin improvements shipped: backend member registry (migration 0006) + /members, verified /ledger/entries, /deadlines; frontend CheckoutFlow pay-fees + receipts, MonthlyClose, BylawCase, MemberWorkspace, DeadlinesPanel, brand-accent theming + /design page, RailsStatus, SigningRoom, WalletPanel, LedgerExplorer, ExportCenter, MemberManager, NotificationsFeed, RateBadge, glossary + illustrations + print styles; mobile-verified zero overflow 390→1698"
@@ -61,6 +63,25 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.9] — 2026-08-26
+
+### Added
+- Reusable `Card` component (`src/lib/components/Card.svelte`) with content/compact/hero variants; migrated **47 content cards across 9 route pages** (about, blog, docs, legal, templates, compliance, pitch, roadmap, spec, tools, rss). Structural cards (tables, accordion wrappers, the design page's raw-class demo) intentionally remain `glass-card`
+- Marketing typography ramp: h1 36px / section h2 24px / sub-section h2 20px, card titles weight-800 (scoped `.mesh-bg .glass-card`) across all 13 marketing pages
+
+### Changed
+- Dashboard rail + marketing cards unified on one token set: `.panel` padding 17px→24px, weight-800 headings, shared `--shadow-card`; SatohashStatus third visual language eliminated
+- Sidebar shell pinned to the viewport (`top:0` + `max-height:100dvh`); HostConnect strip moved into the dashboard's main column so the nav footer button stays visible at every size
+- `:root { color; background }` now wired to `var(--ink)`/`var(--canvas)` so dark-mode body text actually flips
+
+### Fixed
+- **Site-wide Tailwind v4 cascade bug:** unlayered element resets (`a{color:inherit}`, `button{border:0;font:inherit}`) were beating the layered `.text-*`/`.border-*` utilities, so every brand link rendered plain ink (invisible in dark mode) and buttons lost size/border. Moved the resets into `@layer base` so utilities win
+- `text-bc-blue` on dark cards was ~2:1 (dark navy tuned for light surfaces); lightened dark-mode text usages only (solid `bg-bc-blue` badges keep the navy behind white text) to 6.9–9.0:1
+- Pre-existing RSS mobile overflow: long `<code>` endpoint paths forced the page ~79px wide; added `min-w-0` to grid columns + `break-all` to paths
+
+### Verified
+- Real browser (Chrome + CDP): brand links teal `#0891b2` in both modes, dark body `#e2e8f0`, bc-blue chips 6.9–9.0:1, zero horizontal overflow on all 13 pages × 3 sizes (light + dark). svelte-check 0/0, **85 tests**, build clean
 
 ## [0.3.5] — 2026-08-26
 

@@ -2,7 +2,7 @@
 
 **Project:** OpenStrata / Hermes Strata  
 **Parent:** [Give A Bit](https://giveabit.io)  
-**Version:** 0.3.8 | August 2026  
+**Version:** 0.3.9 | August 2026  
 **Contact:** hello@giveabit.io
 
 ---

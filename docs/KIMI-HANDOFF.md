@@ -1,3 +1,26 @@
+## Session — 2026-08-26 · Design-system release v0.3.9 — one card language, dark-mode cascade fix (4 commits, pushed `137c991`)
+
+**Task:** "Do all 3 suggestions in batches and push" extending the earlier landing/dashboard polish. Shipped as a cohesive frontend design-system pass across the dashboard + all 13 marketing routes, then a full-page visual review that uncovered + fixed a real site-wide bug.
+
+**Batch 1 — reusable Card component (`31a1c8a`):** new `src/lib/components/Card.svelte` (Svelte 5, `variant` = content/compact/hero, `$derived` class, `$$restProps` forwarding so event handlers/dynamic classes like the tools-page module card keep working). Migrated **47 content cards across 9 route pages** (about, blog, docs, legal, templates, compliance, pitch, roadmap, spec, tools, rss) from hand-rolled `div/article/section` + `glass-card` to `<Card>`. Structural uses intentionally kept as `glass-card` (tables, accordion wrappers that carry their own cell padding, and the design page's raw-class demo). Design page /design updated. Also fixed the design page's stale "Radius 16" doc note (the shared rule forces 13px).
+
+**Batch 2 — typography ramp (`2a5ccf2`):** audited h1–h3 across all 13 marketing pages in a real browser. Standardized the rhythm: h1 36px (text-4xl), section h2 24px (text-2xl), sub-section h2 20px, card titles weight-800 (scoped `.mesh-bg .glass-card h2,h3` so the dashboard's weight carries to marketing but page-level section h2s keep their own scale). Fixed stragglers — rss sub-section h2s at text-lg, blog/legal/templates in-card h2s at default 16px, spec hero-card h2 at text-xl, legal h3 at 16px.
+
+**Batch 3 — full-page review + the big find (`137c991`):** zero-overflow across all 13 pages × 3 sizes in light + dark, then a WCAG-computed-contrast audit surfaced something real: **marketing pages were rendering dark text on dark surfaces in dark mode, and every brand link was losing its color.**
+
+**Root cause (two site-wide bugs in `src/app.css`):**
+1. **Tailwind v4 layering gotcha** — the bare-element resets (`a { color: inherit }`, `button { border: 0; font: inherit }`) were **unlayered**, so they beat Tailwind's *layered* `.text-*`/`border-*` utilities. Every brand-colored link rendered plain ink (`#18232b`, invisible dark-on-dark), and a `border-2 text-sm` button got 0px border + 16px. **Fix: moved the resets into `@layer base`** so utilities win.
+2. **`:root { color:#18232b; background:#f6f8f9 }` hardcoded** instead of wired to `--ink`/`--canvas`, so body text never flipped with the theme. **Fix: `color: var(--ink); background: var(--canvas)`** → dark mode body flips to `#e2e8f0`.
+3. Also lightened `text-bc-blue` in dark mode only (solid `bg-bc-blue` badges keep the navy behind white text) — the dark navy tuned for light cards dropped to ~2:1 on dark surfaces; now 6.9–9.0:1 across compliance/design/docs/legal.
+
+**Verified in a real browser (Chrome + CDP) before commit:** brand links now teal `#0891b2` in both modes, button probe 14px + 2px border (was 16px/0), dark body `#e2e8f0`, bc-blue chips 6.9–9.0:1. svelte-check 0/0, **85 tests green** (+nothing new this round), zero overflow on all 13 pages × 3 sizes light + dark. Remaining intentional non-issues: white-on-brand buttons (brand language, same in light) and the two gradient `bg-clip-text` hero headlines (transparent fill by design).
+
+**Earlier in this continuous landing-polish thread (already pushed before this batch):** sidebar shell hardening `fdcadc3` (sidebar was `position:fixed` with no `top`, so on `/` it anchored 100px down under a HostConnect strip and its bottom buttons fell below the fold at every size — now pinned to viewport, HostConnect moved into the main column), dashboard rail polish `2e16733` (`.panel` padding 17px→24px + 800-weight headings + shared shadow to match its five `glass-card` siblings; SatohashStatus third visual language eliminated; mobile two-column width fix), and marketing cards aligned to the dashboard language `2cf70e0` (heading weight 600/700→800, orphan p-5 padding tier folded into 24px/16px, plus a pre-existing RSS mobile overflow fix via `min-w-0` + `break-all`).
+
+**Git State:** `137c991` on `origin/main` (ahead of v0.3.8 docs commit `4a1183a`). Docs + version bumped to **v0.3.9** in this session.
+
+---
+
 ## Session — 2026-08-26 · CI FIX — Postgres e2e smoke green (Grok THOR / Kimi lane)
 
 **Cam flagged the red CI run (push `0969190`). Root-caused + fixed + CI green.** Commit `f371aed`, all 3 CI jobs success (frontend verify · backend typecheck+tests · backend Postgres e2e smoke 6/6).
