@@ -152,6 +152,43 @@ export class LedgerEngine {
     };
   }
 
+  /**
+   * Monthly rollup for a fund — income (credits) vs expenses (debits) per
+   * calendar month, for the dashboard charts. Returns `months` points ending
+   * with the current month, zero-filled when a month has no activity. The
+   * series is verified against the hash chain like `balance`.
+   */
+  async series(
+    groupId: string,
+    fundCode: string,
+    months = 6
+  ): Promise<Array<{ month: string; incomeBasis: number; expenseBasis: number; netBasis: number }>> {
+    const account = await this.store.getAccountByFund(groupId, fundCode);
+    const entries = account ? await this.store.listEntries(account.id) : [];
+    if (entries.length) verifyChain(entries);
+
+    const byMonth = new Map<string, { income: number; expense: number }>();
+    for (const e of entries) {
+      const month = e.postedAt.slice(0, 7); // 'YYYY-MM'
+      const bucket = byMonth.get(month) ?? { income: 0, expense: 0 };
+      if (e.kind === 'credit') bucket.income += e.amountBasis;
+      else bucket.expense += -e.amountBasis;
+      byMonth.set(month, bucket);
+    }
+
+    const now = new Date();
+    const points: Array<{ month: string; incomeBasis: number; expenseBasis: number; netBasis: number }> = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const bucket = byMonth.get(month) ?? { income: 0, expense: 0 };
+      const incomeBasis = bucket.income;
+      const expenseBasis = bucket.expense;
+      points.push({ month, incomeBasis, expenseBasis, netBasis: incomeBasis - expenseBasis });
+    }
+    return points;
+  }
+
   /** Tamper-proof diff between two copies of the same ledger. */
   async diff(otherEngine: LedgerEngine, groupId: string): Promise<{
     accounts: Set<string>;

@@ -47,10 +47,27 @@ export async function fetchLedgerSummary(): Promise<LedgerSummary> {
   return { operating, crf, specialLevy };
 }
 
+export interface SeriesPoint {
+  month: string; // 'YYYY-MM'
+  incomeBasis: number;
+  expenseBasis: number;
+  netBasis: number;
+}
+
+/** Monthly income/expense rollup for a fund (dashboard + pitch charts). */
+export async function fetchLedgerSeries(fund = 'operating', months = 6): Promise<SeriesPoint[]> {
+  const token = getToken();
+  const res = await apiFetch<{ fund: string; points: SeriesPoint[] }>(
+    `/api/v1/ledger/series?fund=${encodeURIComponent(fund)}&months=${months}`,
+    { token }
+  );
+  return res.points;
+}
+
 export interface PostedEntry {
   posted: true;
   seq: number;
-  tallyRoot: string;
+  tallyRoot: number;
 }
 
 /** POST a credit/debit. Requires a treasurer/admin token. */

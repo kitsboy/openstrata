@@ -102,6 +102,17 @@ describe('fastify API', () => {
     });
     expect(bal.statusCode).toBe(200);
     expect(bal.json().balanceBasis).toBe(4200);
+
+    const series = await app.inject({
+      method: 'GET',
+      url: '/api/v1/ledger/series?fund=operating&months=3',
+      headers: auth(adminToken)
+    });
+    expect(series.statusCode).toBe(200);
+    const points = series.json().points as Array<{ month: string; incomeBasis: number }>;
+    expect(points).toHaveLength(3);
+    // The credit just posted lands in the current month.
+    expect(points[points.length - 1].incomeBasis).toBe(4200);
   });
 
   it('POST /api/v1/treasury/authorize hard-blocks a CRF breach', async () => {

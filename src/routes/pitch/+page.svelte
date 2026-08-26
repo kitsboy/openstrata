@@ -17,7 +17,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { copy, locale, formatCurrency, formatDate } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
-	import { fetchLedgerBalance } from '$lib/api/ledger';
+	import { fetchLedgerBalance, fetchLedgerSeries } from '$lib/api/ledger';
 	import { fetchRailsStatus } from '$lib/api/rails';
 	import { onMount } from 'svelte';
 
@@ -45,6 +45,14 @@
 		value: m.income,
 		value2: m.expenses
 	}));
+
+	// Live ledger series (item #4): when a session is live, the treasury chart
+	// shows the real monthly income/expenses from /api/v1/ledger/series.
+	const monthLabel = (month: string) => {
+		const d = new Date(`${month}-01T00:00:00Z`);
+		return d.toLocaleString('en', { month: 'short' });
+	};
+	let liveSeries = $state<Array<{ label: string; value: number; value2: number }> | null>(null);
 
 	const rentalChart = rentalTrend.map((m) => m.avg);
 
@@ -75,9 +83,19 @@
 				fetchRailsStatus()
 					.then((s) => (liveCadPerBtc = s.cadPerBtc > 0 ? s.cadPerBtc : null))
 					.catch(() => {});
+				fetchLedgerSeries('operating', 6)
+					.then((points) =>
+						(liveSeries = points.map((p) => ({
+							label: monthLabel(p.month),
+							value: Math.round(p.incomeBasis / 100),
+							value2: Math.round(p.expenseBasis / 100)
+						})))
+					)
+					.catch(() => {});
 			} else {
 				liveCrf = null;
 				liveCadPerBtc = null;
+				liveSeries = null;
 			}
 		});
 		return unsubscribe;
@@ -253,7 +271,7 @@
 						<span class="text-xs font-semibold text-slate-400">{$copy.incomeExpensesLegend}</span>
 					</div>
 					<BarChart
-						data={treasuryChart}
+						data={liveSeries ?? treasuryChart}
 						height={180}
 						barColor="#14b8a6"
 						secondaryColor="#f7931a"

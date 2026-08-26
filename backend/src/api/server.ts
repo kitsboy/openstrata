@@ -306,6 +306,20 @@ export async function buildServer(
     }
   );
 
+  // Monthly treasury series (income vs expenses per month) for the dashboard
+  // charts — verified against the hash chain like balance.
+  app.get<{ Querystring: { fund?: string; months?: string } }>(
+    '/api/v1/ledger/series',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const months = Math.min(24, Math.max(1, Number(req.query.months) || 6));
+      return {
+        fund: req.query.fund ?? 'operating',
+        points: await deps.ledger.series(req.user!.councilId, req.query.fund ?? 'operating', months)
+      };
+    }
+  );
+
   // Post a single credit/debit (idempotent via Idempotency-Key header).
   // Treasurer + admin only; the community is the caller's council.
   app.post<{

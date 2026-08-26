@@ -13,6 +13,7 @@ import { keywordRetriever, type SourceRecord } from './rosa/rosa.js';
 import { reconcile } from './trf/recon.js';
 import { PostgresPaymentRequestStore } from './rails/payment-store.js';
 import { PostgresAuthStore } from './auth/pg-store.js';
+import { LiveRateProvider } from './rails/rate-provider.js';
 import { buildServer } from './api/server.js';
 import { DEFAULT_UNITS } from './units/seed.js';
 
@@ -36,6 +37,11 @@ async function main(): Promise<void> {
     reconcile,
     payments,
     auth,
+    resolver: new LiveRateProvider({
+      fallbackRate: Number.isFinite(Number(process.env.CAD_PER_BTC))
+        ? Number(process.env.CAD_PER_BTC)
+        : undefined
+    }),
     units: DEFAULT_UNITS,
     config: {
       crfMandatoryPct: config.crfMandatoryPct,
