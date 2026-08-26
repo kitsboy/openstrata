@@ -4,6 +4,7 @@
 	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';  import Icon from '$lib/components/Icon.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
+  import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
@@ -19,6 +20,7 @@
 	let sovereignMode = $state(false);
 	let formKFilter = $state<'all' | 'signed' | 'missing'>('all');
 	let selectedUnit = $state<string | null>(null);
+	let confirmRemove = $state(false);
 
 	const stats = getToolStats();
 
@@ -345,7 +347,7 @@
 				<div class="flex items-center justify-between gap-2">
 					<h4 class="text-sm font-bold text-slate-800">{$copy.unitDetail} — {$copy.unitLabel} {selectedUnit}</h4>
 					{#if $auth.user?.role === 'admin'}
-						<button class="text-xs font-bold text-danger" onclick={() => { if (selectedUnit) removeUnit(selectedUnit); }}>{$copy.removeUnit}</button>
+						<button class="text-xs font-bold text-danger" onclick={() => (confirmRemove = true)}>{$copy.removeUnit}</button>
 					{/if}
 				</div>
 				{#if unitDetailLoading}
@@ -422,6 +424,16 @@
 		</div>
 	{/if}
 </div>
+
+{#if confirmRemove && selectedUnit}
+	<ConfirmDialog
+		title={$copy.confirmRemoveUnit}
+		message="{$copy.confirmRemoveUnitMessage} ({$copy.unitLabel} {selectedUnit})"
+		confirmLabel={$copy.removeUnit}
+		bind:open={confirmRemove}
+		onConfirm={() => { const ref = selectedUnit; if (ref) removeUnit(ref); }}
+	/>
+{/if}
 
 {#if tip}
 	<div

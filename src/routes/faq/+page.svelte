@@ -38,9 +38,12 @@
 
 <section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
-		<span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700">{$copy.faqTitle}</span>
+		<span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700">{$copy.helpCentre}</span>
 		<h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.faqTitle}</h1>
 		<p class="mt-4 max-w-3xl text-lg leading-relaxed text-slate-600">{$copy.faqIntro}</p>
+		<div class="mt-6">
+			<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">{$copy.openStrataToolsCta} →</a>
+		</div>
 	</div>
 </section>
 

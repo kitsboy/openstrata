@@ -26,6 +26,9 @@
     <span class="inline-flex rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue">{$copy.sourceLibrary}</span>
     <h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.legalLibrary}</h1>
     <p class="mt-4 max-w-3xl text-lg leading-relaxed text-slate-600">{$copy.legalLibraryIntro}</p>
+    <div class="mt-6">
+      <a href="/templates" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">{$copy.templatesTitle} →</a>
+    </div>
   </div>
 </section>
 

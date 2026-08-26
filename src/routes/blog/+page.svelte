@@ -8,14 +8,15 @@
 
 <svelte:head>
 	<title>{$copy.blogPageTitle}</title>
-</svelte:head>
-
-<section class="border-b border-border bg-gradient-to-b from-amber-50/50 to-transparent">
-	<div class="mx-auto max-w-7xl px-6 py-16">
-		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.blogTitle}</h1>
-		<p class="mt-3 text-lg text-slate-600">{$copy.blogIntro}</p>
-	</div>
-</section>
+</svelte:head>	<section class="border-b border-border bg-gradient-to-b from-amber-50/50 to-transparent">
+		<div class="mx-auto max-w-7xl px-6 py-16">
+			<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.blogIntro}</p>
+			<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.blogTitle}</h1>
+			<div class="mt-6 flex flex-wrap items-center gap-3">
+				<a href="/rss" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">{$copy.viewRssApi} →</a>
+			</div>
+		</div>
+	</section>
 
 <div class="mx-auto max-w-4xl px-6 py-12">
 	<div class="space-y-6">

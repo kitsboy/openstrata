@@ -38,6 +38,7 @@
 			<span class="rounded-full bg-success/10 px-4 py-1.5 text-sm font-bold text-success">{stats.live} {$copy.modulesLive}</span>
 			<span class="rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700">{stats.beta} {$copy.inBeta}</span>
 			<span class="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600">{stats.planned} {$copy.plannedLabel}</span>
+			<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">{$copy.openStrataToolsCta} →</a>
 			<span class="rounded-full bg-bc-blue/10 px-4 py-1.5 text-sm font-bold text-bc-blue">{stats.bcfsaModules} {$copy.bcfsaRelevant}</span>
 		</div>
 	</div>

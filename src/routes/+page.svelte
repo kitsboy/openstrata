@@ -6,6 +6,7 @@
   import { theme, toggleTheme } from '$lib/theme';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { get } from 'svelte/store';
 
   const appVersion = packageJson.version;
 
@@ -66,6 +67,8 @@
   import EmptyState from '$lib/components/EmptyState.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import Sparkline from '$lib/components/Sparkline.svelte';
+  import Tour from '$lib/components/Tour.svelte';
+  import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import { onMount } from 'svelte';
 
   let showLanguageMenu = $state(false);
@@ -73,6 +76,11 @@
   let showNewStrata = $state(false);
   let search = $state('');
   let toast = $state('');
+  let toastType = $state<'ok' | 'error'>('ok');
+  let showTour = $state(false);
+  let showSignOutConfirm = $state(false);
+  let newStrataName = $state('');
+  let newStrataError = $state('');
   let selectedBuilding = $state<typeof buildings[number] | null>(null);
   let notifications = $state<string[]>([]);
   let showNotifications = $state(false);
@@ -95,6 +103,13 @@
       if (Array.isArray(saved)) notifications = saved.map(String).slice(0, 12);
     } catch {
       /* corrupt storage — start fresh */
+    }
+    // First-run tour: show the 4-step overlay to signed-out visitors who have
+    // never dismissed it. A live session skips it entirely.
+    try {
+      showTour = localStorage.getItem('openstrata-tour-seen') !== '1' && get(auth).status !== 'signed-in';
+    } catch {
+      /* storage unavailable — no tour */
     }
     // Watch the auth session: when a live session lands, pull the trust-fund
     // balances + series from the backend and close the sign-in modal. Every
@@ -165,8 +180,33 @@
 
   function openAction(message: string) {
     toast = message;
+    toastType = 'ok';
     rememberNotification(message);
     setTimeout(() => (toast = ''), 2600);
+  }
+
+  function openError(message: string) {
+    toast = message;
+    toastType = 'error';
+    setTimeout(() => (toast = ''), 3600);
+  }
+
+  function submitNewStrata() {
+    const name = newStrataName.trim();
+    if (!name) {
+      newStrataError = $copy.nameRequired;
+      openError($copy.nameRequired);
+      return;
+    }
+    newStrataError = '';
+    showNewStrata = false;
+    newStrataName = '';
+    openAction($copy.formationCreatedToast);
+  }
+
+  function requestSignOut() {
+    showAuthMenu = false;
+    showSignOutConfirm = true;
   }
 </script>
 
@@ -254,7 +294,7 @@
             {#if showAuthMenu}
               <div class="auth-menu" role="menu" aria-label={$copy.profile}>
                 <div class="auth-menu-user"><strong>{$auth.user.displayName}</strong><span>{$auth.user.email}</span></div>
-                <button role="menuitem" onclick={() => { signOut(); showAuthMenu = false; }}>{$copy.signOut}</button>
+                <button role="menuitem" onclick={requestSignOut}>{$copy.signOut}</button>
               </div>
             {/if}
           </div>
@@ -337,8 +377,20 @@
 
 {#if showNewStrata}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (showNewStrata = false)}>
-    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}><Icon name="close" class="h-3.5 w-3.5" /></button><div class="modal-icon"><Icon name="plus" class="h-5 w-5" /></div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label>{$copy.communityName}<input placeholder={$copy.communityNamePlaceholder} /></label><label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => (showNewStrata = false)}>{$copy.cancel}</button>	<button class="primary-button" onclick={() => { showNewStrata = false; openAction($copy.formationCreatedToast); }}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
+    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}><Icon name="close" class="h-3.5 w-3.5" /></button><div class="modal-icon"><Icon name="plus" class="h-5 w-5" /></div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label for="new-strata-name">{$copy.communityName}<input id="new-strata-name" bind:value={newStrataName} class:input-invalid={!!newStrataError} aria-invalid={!!newStrataError} placeholder={$copy.communityNamePlaceholder} /></label>{#if newStrataError}<p class="inline-error" role="alert"><Icon name="alert" class="h-3 w-3" /> {newStrataError}</p>{/if}<label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => { showNewStrata = false; newStrataError = ''; }}>{$copy.cancel}</button>	<button class="primary-button" onclick={submitNewStrata}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
   </div>
 {/if}
 
-{#if toast}<div class="toast" role="status"><span><Icon name="check" class="h-2.5 w-2.5" /></span>{toast}</div>{/if}
+{#if toast}<div class="toast {toastType === 'error' ? 'toast-error' : ''}" role="status" aria-live="polite"><span><Icon name={toastType === 'error' ? 'alert' : 'check'} class="h-2.5 w-2.5" /></span>{toast}</div>{/if}
+
+{#if showTour}<Tour onFinish={() => (showTour = false)} />{/if}
+
+{#if showSignOutConfirm}
+  <ConfirmDialog
+    title={$copy.confirmSignOut}
+    message={$copy.confirmSignOutMessage}
+    confirmLabel={$copy.signOut}
+    bind:open={showSignOutConfirm}
+    onConfirm={() => signOut()}
+  />
+{/if}
