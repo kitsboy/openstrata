@@ -320,6 +320,42 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .dark .satohash-pill.offline { color: #e3b04e; background: #2a2110; }
 .dark .brand-mark { box-shadow: 0 6px 18px rgba(249, 115, 72, .3); }
 
+/* Marketing mobile bottom dock — mirrors the dashboard's floating nav so every
+   page has the same navigation on phones. Hidden on desktop. */
+.marketing-mobile-nav {
+  position: fixed;
+  right: 16px;
+  bottom: 14px;
+  left: 16px;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  justify-content: space-around;
+  height: 63px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: 0 14px 36px rgba(24, 35, 43, .13);
+  backdrop-filter: blur(18px);
+}
+.marketing-mobile-nav a, .marketing-mobile-nav button {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-width: 53px;
+  color: var(--faint);
+  background: transparent;
+  font-size: 8px;
+  font-weight: 800;
+}
+.marketing-mobile-nav a.active { color: var(--orange); }
+.marketing-mobile-nav svg { color: currentColor; }
+@media (max-width: 900px) {
+  .marketing-mobile-nav { display: flex; }
+  .marketing-mobile-nav + footer { padding-bottom: 90px; }
+}
+
 /* Marketing header nav strip: scrolls internally instead of pushing the page wide. */
 .nav-scroll { scrollbar-width: none; -ms-overflow-style: none; }
 .nav-scroll::-webkit-scrollbar { display: none; }

@@ -240,6 +240,13 @@
 					{domain.label} ({count})
 				</button>
 			{/each}
+			<a
+				href="#live-demos"
+				class="flex items-center gap-1.5 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-semibold whitespace-nowrap text-brand-700 no-underline hover:bg-brand-100 transition-all"
+			>
+				<Icon name="spark" class="h-3.5 w-3.5" />
+				{$copy.liveInteractiveDemos}
+			</a>
 		</div>
 	</div>
 </div>
@@ -294,7 +301,7 @@
 	</div>
 
 	<!-- Live interactive demos -->
-	<h2 class="text-xl font-bold text-slate-800 mb-6">{$copy.liveInteractiveDemos}</h2>
+	<h2 id="live-demos" class="text-xl font-bold text-slate-800 mb-6 scroll-mt-28">{$copy.liveInteractiveDemos}</h2>
 
 	<!-- Form K -->
 	<section class="glass-card rounded-2xl p-8 mb-8">

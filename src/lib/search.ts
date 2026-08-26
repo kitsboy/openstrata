@@ -3,9 +3,10 @@ import { blogPosts } from '$lib/blog';
 import { faqItems, rssFeeds } from '$lib/data';
 import { legalSources } from '$lib/legal';
 import { templates } from '$lib/templates';
+import { strataToolModules } from '$lib/strata-tool';
 import type { Translation } from '$lib/i18n';
 
-export type SearchGroup = 'pages' | 'posts' | 'faq' | 'templates' | 'legal' | 'feeds';
+export type SearchGroup = 'pages' | 'posts' | 'faq' | 'templates' | 'legal' | 'feeds' | 'tools';
 
 export type SearchEntry = {
 	group: SearchGroup;
@@ -60,7 +61,14 @@ export function buildSearchIndex(t: Translation): SearchEntry[] {
 		href: feed.url
 	}));
 
-	return [...pages, ...posts, ...faq, ...tpls, ...legal, ...feeds];
+	const tools: SearchEntry[] = strataToolModules.map((mod) => ({
+		group: 'tools',
+		title: mod.title,
+		description: `${mod.domain} · ${mod.desc}`,
+		href: mod.href ?? '/tools'
+	}));
+
+	return [...pages, ...posts, ...faq, ...tpls, ...legal, ...feeds, ...tools];
 }
 
 /** Rank entries by title/exact-prefix matches first, then description matches. */

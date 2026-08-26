@@ -4,6 +4,7 @@
   import { page } from '$app/stores';
   import { jurisdictions } from '$lib/data';
   import Icon from '$lib/components/Icon.svelte';
+  import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
   import JobsDropdown from '$lib/components/JobsDropdown.svelte';
   import DonateModal from '$lib/components/DonateModal.svelte';
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
@@ -121,7 +122,19 @@
     {/if}
   </header>
 
-  <main class="flex-1">{@render children()}</main>
+  <main class="flex-1">
+    <Breadcrumbs />
+    {@render children()}
+  </main>
+
+  <!-- Mobile bottom nav — the dashboard's floating dock, reused on every page
+       so the marketing site never dead-ends on phones. -->
+  <nav class="marketing-mobile-nav" aria-label={$copy.mobileNavigation}>
+    <a href="/" class:active={String($page.url.pathname) === '/'} class="no-underline"><Icon name="home" class="h-4 w-4" /><span>{$copy.overview}</span></a>
+    <a href="/tools" class:active={$page.url.pathname === '/tools'} class="no-underline"><Icon name="building" class="h-4 w-4" /><span>{$copy.buildings}</span></a>
+    <a href="/legal" class:active={$page.url.pathname === '/legal'} class="no-underline"><Icon name="scale" class="h-4 w-4" /><span>{$copy.legal}</span></a>
+    <button onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}><Icon name="menu" class="h-4 w-4" /><span>{$copy.menu}</span></button>
+  </nav>
 
   <footer class="border-t border-border bg-surface-2">
     <div class="mx-auto max-w-7xl px-6 py-14">

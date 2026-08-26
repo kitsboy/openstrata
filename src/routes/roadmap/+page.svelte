@@ -3,6 +3,7 @@
 	import { hermesPositioning } from '$lib/marketing';
 	import { getToolStats } from '$lib/strata-tool';
 	import { copy } from '$lib/i18n';
+	import PageToc from '$lib/components/PageToc.svelte';
 
 	const stats = getToolStats();
 
@@ -61,6 +62,7 @@
 <!-- Timeline -->
 <section class="border-y border-border bg-surface-2/60">
 	<div class="mx-auto max-w-7xl px-6 py-14">
+		<PageToc />
 		<h2 class="text-2xl font-bold text-slate-900 mb-10">{$copy.developmentTimeline}</h2>
 		<div class="space-y-6">
 			{#each phases as phase}

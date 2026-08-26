@@ -2,6 +2,7 @@
 	import { jurisdictions, currencies } from '$lib/data';
 	import { getToolStats } from '$lib/strata-tool';
 	import { copy } from '$lib/i18n';
+	import PageToc from '$lib/components/PageToc.svelte';
 
 	const stats = getToolStats();
 
@@ -41,6 +42,7 @@
 </section>
 
 <div class="mx-auto max-w-7xl px-6 py-12">
+	<PageToc />
 	<!-- Doc index -->
 	<section class="mb-16">
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.documentIndex}</h2>

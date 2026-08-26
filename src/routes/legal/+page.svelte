@@ -1,5 +1,6 @@
 <script lang="ts">
   import { copy } from '$lib/i18n';
+  import PageToc from '$lib/components/PageToc.svelte';
   import { jurisdictions } from '$lib/data';
   import { legalSources } from '$lib/legal';
 
@@ -29,6 +30,7 @@
 </section>
 
 <div class="mx-auto max-w-7xl px-6 py-12">
+  <PageToc />
   <div class="mb-10 rounded-2xl border-l-4 border-l-warning bg-warning/5 p-6">
     <h2 class="font-bold text-slate-800">{$copy.legalLibraryNoticeTitle}</h2>
     <p class="mt-2 text-sm leading-relaxed text-slate-600">{$copy.legalLibraryNotice}</p>

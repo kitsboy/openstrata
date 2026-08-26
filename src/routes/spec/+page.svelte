@@ -1,6 +1,7 @@
 <script lang="ts">
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
 	import { copy } from '$lib/i18n';
+	import PageToc from '$lib/components/PageToc.svelte';
 
 	const layers = [
 		{ name: 'Identity Layer', protocol: 'NIP-05 + OpenStrata Key', desc: 'Single sovereign keypair bridges Bitcoin, Lightning, and Nostr identity.' },
@@ -34,6 +35,7 @@
 </section>
 
 <div class="mx-auto max-w-7xl px-6 py-12">
+	<PageToc />
 	<section class="mb-16">
 		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.protocolLayers}</h2>
 		<div class="space-y-4">

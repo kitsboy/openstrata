@@ -20,7 +20,8 @@
       faq: $copy.searchFaq,
       templates: $copy.searchTemplates,
       legal: $copy.searchLegal,
-      feeds: $copy.primarySources
+      feeds: $copy.primarySources,
+      tools: $copy.strataTool
     };
     return labels;
   });
