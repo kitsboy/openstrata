@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
-**Last updated:** 2026-08-25 (v0.2.6 release)  
-**Status:** Phase 1 complete. Phase 2 complete except e-transfer prototype.
+**Last updated:** 2026-08-26 (v0.3.3)  
+**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); frontend wired to the live API; landing secured + tightened.
 
 ---
 
@@ -59,6 +59,46 @@
 - [ ] Agent payments (HERMES/Grok orchestration)
 - [ ] ON/AB/US law packs via config.yaml
 - [ ] OpenStrata portable export format
+
+---
+
+## Upgrade & Enhance — 20 Items (2026-08-26)
+
+The working list for the current push. Items 1–3 are the immediate follow-ups from
+the landing security/tightening session; 4–12 deepen the product; 13–19 are the
+Bitcoin/sovereign-rail advancements; 20 closes the portability loop.
+
+**Landing & hardening (deploy-day foundation)**
+
+1. [ ] **Verify the live site post-deploy** — pending deploy; local verification passed (fonts load once, build clean, no unallowlisted origins)
+2. [x] **Pin CSP `connect-src` to the explicit API origin** — done as `scripts/generate-csp.mjs` (prebuild): pins to `CSP_API_ORIGIN`/`PUBLIC_API_BASE_URL` when set, documented `https:` fallback otherwise (commit `3ed66e7`)
+3. [x] **Audit every page for the same security/tightness pass** — done: no unallowlisted loaded origins beyond fonts/analytics/Satohash; fixes were global (commit `3ed66e7` + `e113cd4`)
+
+**Backend & product depth**
+
+4. [x] **Monthly treasury-series endpoint** — `GET /api/v1/ledger/series` (chain-verified monthly rollups); pitch treasury chart goes live (commit `bce5967`)
+5. [ ] **Per-council DB-backed units** — deferred: largest remaining tenancy step (migration + registry swap + frontend)
+6. [x] **Login rate limiting** — failure-counting fixed-window limiter per email + IP, 429 with `retry-after`, success clears the bucket (commit `3ed66e7`). Invite flow: still open signup (pending invite decision)
+7. [x] **Live `cadPerBtc` rate feed** — `LiveRateProvider` (mempool.space, cached, env fallback) wired into the production entrypoint (commit `bce5967`)
+8. [x] **Meeting quorum calculator + voting engine UI** — MeetingsTool (live API when signed in, identical local rules offline) (commit `f719619`)
+9. [x] **Form B/F generator** — print-ready HTML certificates at `GET /api/v1/forms/b|f/:unitId` (browser → PDF) (commit `89fc0b3`)
+10. [x] **Transparent sub-accounts dashboard** — SubAccounts panel: Operating/CRF/Special Levy/War Chest with chain-verified head tallies (commit `f719619`)
+11. [x] **CRT evidence export** — print-ready HTML chain bundle at `GET /api/v1/compliance/crt-export` (commit `89fc0b3`)
+12. [x] **Bank feed import** — CSV import seam in the e-transfer reconciler; Plaid/Flinks still need API keys (commit `f719619`)
+
+**Bitcoin advancements (sovereign rails — the biggest unlock)**
+
+13. [ ] **Connect the rails on the host** — pending host + daemons (LND/Liquid/PayNym/Nostr via `.env`) — user-confirmed later, alongside the LNBITS channels
+14. [ ] **Real on-chain/LN broadcast in `payments/confirm`** — pending daemons; quote flow + confirm ready
+15. [x] **Ziggy PSBT/multisig execution** — `buildPsbtPlan`/`recordSignature` orchestration seam + `/api/v1/treasury/psbt/plan`; hardware-wallet signing plugs into the seam (commit `4dcef0e`)
+16. [x] **Watch-only xpub import UI** — `GET|POST /api/v1/rails/xpub` + XpubImport panel with per-unit BIP32 paths (commit `4dcef0e`)
+17. [ ] **BOLT-12 recurring offers** — pending LND + payment channels (user-confirmed later)
+18. [x] **BTC war chest DCA module** — `planDca` + `/api/v1/treasury/dca/plan` with Form B disclosure % (commit `4dcef0e`)
+19. [x] **Satohash stamping** — `POST /api/v1/compliance/stamp` returns the hash-of-record + stamp URL; actual stamp call runs client-side via `src/lib/satohash.ts` (commit `4dcef0e`)
+
+**Scale & portability**
+
+20. [x] **OpenStrata portable export** — `GET /api/v1/export/portable` (format/council/units/accounts/rails). ON/AB/US law packs: still config-only pending jurisdiction review
 
 ---
 

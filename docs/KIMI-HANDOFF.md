@@ -1,3 +1,19 @@
+## Session — 2026-08-26 (20-item upgrade push, v0.3.4)
+
+**Done (15 of 20 items, 5 commits `3ed66e7`→`89fc0b3`, all pushed):**
+- **Batch 1 (foundation):** auth rate limiting (#6 — failure-counting per email + IP, 429 with retry-after, success clears; `backend/src/auth/rate-limit.ts`, config `AUTH_RATE_LIMIT_*`); build-time CSP pinning (#2 — `scripts/generate-csp.mjs` in prebuild pins connect-src to `CSP_API_ORIGIN`/`PUBLIC_API_BASE_URL`); cross-page audit (#3 — verified no unallowlisted loaded origins)
+- **Batch 2 (data):** monthly treasury series (#4 — `GET /api/v1/ledger/series`, chain-verified rollups; pitch chart now live) + live CAD/BTC provider (#7 — `LiveRateProvider` from mempool.space, cached, env fallback, wired in `index.ts`)
+- **Batch 3 (product):** MeetingsTool (#8 — quorum + voting, live API when signed in, identical local rules offline), SubAccounts (#10 — Operating/CRF/Special Levy/War Chest with chain-verified head tallies), CSV bank-feed import (#12 — reconciler CSV seam; Plaid/Flinks need keys)
+- **Batch 4 (Bitcoin):** DCA planner (#18 — `planDca` + `/treasury/dca/plan`, Form B disclosure %), PSBT orchestration seam (#15 — `buildPsbtPlan`/`recordSignature`, 3-of-5 threshold-gated, hardware wallets plug in), Satohash stamp (#19 — `POST /api/v1/compliance/stamp` hash-of-record + stamp URL), xpub import (#16 — `GET|POST /api/v1/rails/xpub` + XpubImport panel with per-unit BIP32 paths)
+- **Batch 5 (export):** portable export (#20 — `GET /api/v1/export/portable`), CRT evidence bundle (#11 — print-ready HTML chain evidence), print-ready Form B/F (#9 — `GET /api/v1/forms/b|f/:unitId`, Form F withheld while balance > 0) + EvidenceExport panel
+- **Tests:** backend now **155 passed / 14 files** (+28 new: rate-limit, rate-provider, bitcoin-modules, export); frontend 42 tests, `svelte-check` 0/0, i18n 561 keys × 9 locales parity green
+
+**Deferred (infra-gated, per Cam):** #1 live-site verify (needs deploy), #5 per-council DB-backed units (large migration), #13 rails on host (LND/Liquid/PayNym/Nostr), #14 on-chain/LN broadcast (daemons), #17 BOLT-12 (LND + channels — LNBITS node exists, channels not yet established). All remain prepared seams with docs.
+
+**Git State:** commits `3ed66e7`, `bce5967`, `f719619`, `4dcef0e`, `89fc0b3` pushed to `origin/main`; WORKPLAN.md updated with per-item status.
+
+---
+
 ## Session — 2026-08-26 (landing security + shell tightening, v0.3.3)
 
 **Done:**

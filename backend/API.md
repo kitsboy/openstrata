@@ -125,6 +125,32 @@ auto, multi-match → ambiguous, no match → unmatched.
 { "reference": "eTransfer 1120", "units": [{ "unitId": "U-1120", "refs": ["1120", "et-1120"] }] }
 ```
 
+### `POST /api/v1/treasury/dca/plan` (treasurer+)
+War-chest DCA schedule at the current CAD/BTC rate, with the Form B disclosure
+percent of the annual operating budget.
+```json
+{
+  "annualOperatingBudgetBasis": 4200000,
+  "allocationPerPeriodBasis": 50000,
+  "frequency": "monthly",
+  "periods": 12
+}
+```
+
+### `POST /api/v1/treasury/psbt/plan` (treasurer+)
+Deterministic PSBT/multisig orchestration skeleton (3-of-5 threshold-gated;
+hardware-wallet signatures plug into the seam). Accepts an allowed `verdict`
+from `/treasury/authorize`, the spend in sats, UTXOs, and signer counts.
+
+## Ledger series
+
+### `GET /api/v1/ledger/series?fund=&months=`
+Chain-verified monthly income/expense rollup (default 6 months, max 24) for the
+dashboard charts.
+```json
+{ "fund": "operating", "points": [{ "month": "2026-08", "incomeBasis": 420000, "expenseBasis": 120000, "netBasis": 300000 }] }
+```
+
 ## Rosa — compliance RAG
 
 ### `POST /api/v1/rosa/query`
@@ -225,6 +251,41 @@ out. Rolls back on an unattainable threshold.
 ```json
 { "threshold": "three_quarter", "eligible": 40, "present": 30, "yes": 24, "no": 3, "abstain": 3 }
 ```
+
+## Evidence, export & compliance
+
+### `GET /api/v1/compliance/crt-export?fund=&months=`
+Print-ready HTML evidence bundle of the ledger hash chain (browser → PDF):
+fund balance, head tally, chain-verified badge, monthly rollup table.
+
+### `GET /api/v1/export/portable`
+Portable OpenStrata export (`openstrata-portable/v1`): council, units, accounts
+(chain-verified balances + head tallies), rails config — one JSON document for
+moving a council between hosts.
+
+### `POST /api/v1/compliance/stamp`
+Satohash hash-of-record for payments/votes/bylaw actions. Returns the sha256
+digest + the `https://satohash.io/stamp?hash=` URL; the stamp call itself runs
+client-side against api.satohash.io.
+```json
+{ "scope": "fee_receipt", "payload": { "refId": "unit-101", "amountBasis": 4200 } }
+```
+
+### `GET /api/v1/forms/b/:unitId` · `GET /api/v1/forms/f/:unitId`
+Print-ready HTML Form B (7-day statutory deadline) / Form F (WITHHELD while the
+unit's AR ledger balance > 0 — sale blocked).
+
+### `GET|POST /api/v1/rails/xpub`
+Register (treasurer+) the council's watch-only xpub (`POST`) and read the
+registered xpub + deterministic per-unit BIP32 receive paths (`GET`). Keys never
+leave council hardware wallets.
+
+## Auth rate limiting
+
+Failed logins are throttled per email + per IP (`AUTH_RATE_LIMIT_MAX` attempts
+per `AUTH_RATE_LIMIT_WINDOW_MS`); registrations per IP. Exceeding the ceiling
+returns `429` with a `retry-after` header; a successful login clears the email's
+window.
 
 ## Error shape
 
