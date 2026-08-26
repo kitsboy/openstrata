@@ -3,6 +3,7 @@
 	import { units } from '$lib/data';
 	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';  import Icon from '$lib/components/Icon.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import Skeleton from '$lib/components/Skeleton.svelte';
   import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
@@ -348,7 +349,7 @@
 					{/if}
 				</div>
 				{#if unitDetailLoading}
-					<p class="mt-3 text-xs text-slate-400">…</p>
+					<div class="mt-3 space-y-2"><Skeleton height="10px" width="80%" /><Skeleton height="24px" width="45%" /><Skeleton height="10px" width="60%" /></div>
 				{:else if unitDetail}
 					<div class="mt-3 grid sm:grid-cols-2 gap-4">
 						<div>

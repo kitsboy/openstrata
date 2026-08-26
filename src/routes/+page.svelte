@@ -2,7 +2,7 @@
   import packageJson from '../../package.json';
   import { copy, locale, locales, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
   import { auth, signOut } from '$lib/api/auth';
-  import { fetchLedgerBalance } from '$lib/api/ledger';
+  import { fetchLedgerBalance, fetchLedgerSeries } from '$lib/api/ledger';
   import { theme, toggleTheme } from '$lib/theme';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
@@ -64,6 +64,8 @@
   import AuthModal from '$lib/components/AuthModal.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import Skeleton from '$lib/components/Skeleton.svelte';
+  import Sparkline from '$lib/components/Sparkline.svelte';
   import { onMount } from 'svelte';
 
   let showLanguageMenu = $state(false);
@@ -78,6 +80,12 @@
   let showAuthMenu = $state(false);
   let crfBalance = $state<number | null>(null);
   let operatingBalance = $state<number | null>(null);
+  let balancesLoading = $state(false);
+  // Sparkline feeds: demo walk for signed-out visitors, live series when a
+  // session resolves (skeleton + no demo flash in between).
+  const demoSpark = [34, 36, 35, 39, 41, 40];
+  let reserveSpark = $state<number[]>(demoSpark);
+  let incomeSpark = $state<number[]>([12, 14, 13, 15, 16, 15]);
 
   const NOTIFICATIONS_KEY = 'openstrata-notifications';
 
@@ -89,12 +97,29 @@
       /* corrupt storage — start fresh */
     }
     // Watch the auth session: when a live session lands, pull the trust-fund
-    // balances from the backend and close the sign-in modal. Every fetch is
-    // best-effort — a failure just leaves the demo fallbacks in place.
+    // balances + series from the backend and close the sign-in modal. Every
+    // fetch is best-effort — a failure just leaves the demo fallbacks. A
+    // short safety timer guarantees the skeleton never hangs forever when the
+    // host is unreachable.
     const unsubscribe = auth.subscribe((session) => {
       if (session.status === 'signed-in') {
+        balancesLoading = true;
         fetchLedgerBalance('crf').then((b) => (crfBalance = b.balanceBasis)).catch(() => {});
         fetchLedgerBalance('operating').then((b) => (operatingBalance = b.balanceBasis)).catch(() => {});
+        fetchLedgerSeries('crf', 6)
+          .then((points) => {
+            if (points.length >= 2) reserveSpark = points.map((p) => p.netBasis / 100);
+          })
+          .catch(() => {});
+        fetchLedgerSeries('operating', 6)
+          .then((points) => {
+            if (points.length >= 2) incomeSpark = points.map((p) => p.incomeBasis / 100);
+          })
+          .catch(() => {});
+        setTimeout(() => (balancesLoading = false), 2500);
+        Promise.allSettled([fetchLedgerBalance('crf'), fetchLedgerBalance('operating')]).then(() => {
+          balancesLoading = false;
+        });
         if (showAuth) showAuth = false;
       }
     });
@@ -109,6 +134,17 @@
       /* storage full or unavailable */
     }
   }
+
+  // Dynamic dashboard header: time-of-day greeting + real date + signed-in name.
+  const greetingKey = $derived.by((): 'goodMorning' | 'goodAfternoon' | 'goodEvening' => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'goodMorning';
+    if (hour < 18) return 'goodAfternoon';
+    return 'goodEvening';
+  });
+  const greeting = $derived(
+    $auth.user ? `${$copy[greetingKey]}, ${$auth.user.displayName.split(/\s+/)[0]}` : $copy[greetingKey]
+  );
 
   const selectedLanguage = $derived($locale);
   const selectedLanguageName = $derived(
@@ -230,14 +266,14 @@
 
     <main class="content">
       <section class="welcome-row">
-        <div><div class="date-kicker">{formatDate('2026-06-18', $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{$copy.goodMorning}</h1><p>{$copy.subtitle}</p></div>
+        <div><div class="date-kicker">{formatDate(new Date(), $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{greeting}</h1><p>{$copy.subtitle}</p></div>
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>
       </section>
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
-        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon"><Icon name="alert" class="h-4 w-4" /></span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div><strong>{formatCurrency(crfBalance ?? 248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span class="trend up">↗ 4.8%</span>{/if}<span>{$copy.yearToDate}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div>{#if balancesLoading && crfBalance === null}<div class="metric-skeleton"><Skeleton height="26px" width="120px" /></div>{:else}<strong>{formatCurrency(crfBalance ?? 248500, $locale, { maximumFractionDigits: 0 })}</strong>{/if}<Sparkline values={reserveSpark} tone="blue" /><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span class="trend up">↗ 4.8%</span>{/if}<span>{$copy.yearToDate}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 

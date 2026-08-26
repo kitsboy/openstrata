@@ -14,6 +14,7 @@
   import { browser } from '$app/environment';
   import { bootstrap } from '$lib/api/auth';
   import { onMount } from 'svelte';
+  import { onNavigate } from '$app/navigation';
   import packageJson from '../../package.json';
 
   let { children } = $props();
@@ -31,6 +32,19 @@
   // mode and every widget keeps showing curated sample data.
   onMount(() => {
     bootstrap();
+  });
+
+  // Route view transitions: fade + 4px slide between pages when the browser
+  // supports the View Transitions API and the user hasn't opted out of motion.
+  onNavigate((navigation) => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduced || navigation.type === 'popstate') return;
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await navigation.complete;
+      });
+    });
   });
 
   const currentYear = new Date().getFullYear();

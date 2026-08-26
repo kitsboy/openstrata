@@ -166,6 +166,9 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .metric-icon.blue-icon { color: var(--blue); background: #eff6ff; }
 .metric-icon.purple-icon { color: var(--purple); background: #f3f0ff; }
 .metric-card > strong { display: block; margin: 17px 0 12px; color: var(--ink); font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+.metric-skeleton { margin: 17px 0 12px; }
+.metric-card .spark-wrap { margin-top: 10px; }
+.metric-card .spark-svg { width: 56px; }
 .metric-unit { color: #abb7bb; font-size: 15px; font-weight: 600; letter-spacing: 0; }
 .metric-foot { color: #a1acb0; font-size: 9px; }
 .trend { font-weight: 800; }
@@ -385,6 +388,16 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .glass-card:hover { border-color: color-mix(in srgb, var(--orange) 30%, var(--line)); }
 .dark .glass-card { background: var(--paper); border-color: var(--line); }
 
+/* Micro-interactions audit: every clickable gets hover lift + active press +
+   a visible focus ring. Transitions already exist on most surfaces. */
+.primary-button:active, .secondary-button:active, .empty-action:active { transform: translateY(1px); box-shadow: 0 4px 10px rgba(249, 115, 72, .18); }
+.action-card:active, .building-card:active, .metric-card:active, .activity-item:active, .upcoming-item:active { transform: translateY(0) scale(.99); }
+.building-card, .action-card, .activity-item, .upcoming-item { transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease, background .15s ease; }
+.metric-card { transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease; }
+.glass-card { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.glass-card:active { transform: scale(.995); }
+button:active, a:active { -webkit-tap-highlight-color: transparent; }
+
 /* Dashboard surfaces already hand-rolled — point them at the same tokens. */
 .metric-card, .panel, .building-card, .action-card, .glass-card {
   border-radius: var(--radius-card);
@@ -419,6 +432,15 @@ main h1, main h2, main h3, main h4 {
   letter-spacing: -.02em;
 }
 main h1 { letter-spacing: -.028em; }
+
+/* Route view transitions — fade + 4px slide (progressive enhancement; the
+   layout wires `document.startViewTransition` via onNavigate). */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) { animation: os-vt-out .16s ease both; }
+  ::view-transition-new(root) { animation: os-vt-in .24s ease both; }
+  @keyframes os-vt-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @keyframes os-vt-out { from { opacity: 1; } to { opacity: 0; } }
+}
 
 /* Subtle mesh backdrop used by the shared layout (was referenced but never defined). */
 .mesh-bg {
