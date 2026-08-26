@@ -1,3 +1,21 @@
+## Session — 2026-08-25 (canonical unit/lot master-data model)
+
+**Done:**
+- Added a **single source of truth for units** shared by frontend + backend (commit `baf6989`, pushed):
+  - Backend: new `backend/src/units/` module — canonical `UnitRecord` + `UnitRegistry`, unit-ref normalization, deterministic `ar:unit-<n>` AR ledger fund codes, and reconciliation keys. Exposed as `GET /api/v1/units`; documented in `backend/API.md`
+  - Frontend: mirrored in `src/lib/units.ts`; the tools unit matrix and the e-transfer reconciliation widget now derive from the same model (`unitsToUnitRefs`), so the site and API can never disagree on what a unit is
+  - This closes the "tighten organizational mapping / unit→payment→form traceability" item from the Phase 3 session
+- Verified after the commit: backend typecheck clean, backend suite **108 tests / 10 files all passing** (up from 99 — 8 new unit-model tests + 1 `/api/v1/units` route test), frontend untouched and green
+
+**Remaining:**
+- Same external items as the Phase 3 session below (rails not connected to live daemons, Rosa pgvector/Ollama model choice, Docker deploy + Postgres smoke test on a Tailscale host, Postgres payment-store semantics check at first deploy)
+
+**Git State:**
+- HEAD: `baf6989` (`baf6989a47ff6156432c0d62e0c86da3c75e59e4`)
+- Unpushed: none
+
+---
+
 ## Session — 2026-08-25 (Phase 3 completion: rails hardening, CLI, API doc, tests)
 
 **Done:**
