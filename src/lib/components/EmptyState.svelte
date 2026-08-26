@@ -2,16 +2,19 @@
   // Designed empty state — a small mark, a clear message, and a next step.
   // No bare placeholder text anywhere in the product.
   import Icon from '$lib/components/Icon.svelte';
+  import Illustrations from '$lib/components/Illustrations.svelte';
   import { icons } from '$lib/icons';
 
   let {
     icon = 'search',
+    scene,
     title,
     message,
     actionLabel,
     onAction
   }: {
     icon?: keyof typeof icons;
+    scene?: 'empty' | 'ledger' | 'bitcoin' | 'building';
     title: string;
     message?: string;
     actionLabel?: string;
@@ -20,6 +23,9 @@
 </script>
 
 <div class="empty-state" role="status">
+  {#if scene}
+    <span class="empty-scene" aria-hidden="true"><Illustrations scene={scene} class="h-16 w-16" /></span>
+  {/if}
   <span class="empty-mark" aria-hidden="true"><Icon name={icon} class="h-4 w-4" /></span>
   <strong>{title}</strong>
   {#if message}<p>{message}</p>{/if}
@@ -41,6 +47,7 @@
     background: var(--paper);
     text-align: center;
   }
+  .empty-scene { margin-bottom: 8px; opacity: .85; }
   .empty-mark {
     display: grid;
     place-items: center;

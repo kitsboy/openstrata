@@ -28,7 +28,7 @@
     onclick={(e) => { e.stopPropagation(); open = !open; }}
   >?</button>
   {#if open}
-    <span class="glossary-popover" role="tooltip" onclick={(e) => e.stopPropagation()}>
+    <span class="glossary-popover" role="tooltip">
       <span class="glossary-title"><Icon name="help" class="h-3 w-3" /> {entry.title}</span>
       <span class="glossary-text">{entry.text}</span>
     </span>

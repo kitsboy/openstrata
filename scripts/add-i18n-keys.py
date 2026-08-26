@@ -99,7 +99,80 @@ KEYS = {
   'designIntro': ('Tokens, type, and components — the OpenStrata design language.', 'Jetons, typographie et composants — le langage OpenStrata.', 'Tokens, tipografía y componentes — el lenguaje OpenStrata.', '令牌、字体和组件 — OpenStrata 设计语言。', 'टोकन, टाइप और घटक — OpenStrata डिज़ाइन भाषा।', 'Tokens, type, at components — ang wika ng disenyo ng OpenStrata.', 'Tokeny, typografia i komponenty — język OpenStrata.', 'Токени, типографіка та компоненти — мова OpenStrata.', 'Tokeni, fonti na vipengele — lugha ya muundo ya OpenStrata.'),
   'themeBrokerage': ('Brokerage theme', 'Thème courtier', 'Tema de corretaje', '经纪主题', 'ब्रोकरेज थीम', 'Tema ng brokerage', 'Motyw brokerski', 'Брокерська тема', 'Mandhari ya wakala'),
   'themeBrand': ('Brand accent', 'Accent de marque', 'Acento de marca', '品牌强调色', 'ब्रांड एक्सेंट', 'Brand accent', 'Akcent marki', 'Акцент бренду', 'Rangi ya chapa'),
+
+  # ---- Batch 2 (next 20) ----
+  'rosaTitle': ('Rosa — compliance assistant', 'Rosa — assistant de conformité', 'Rosa — asistente de cumplimiento', 'Rosa — 合规助手', 'रोसा — अनुपालन सहायक', 'Rosa — katulong sa pagsunod', 'Rosa — asystent zgodności', 'Rosa — асистент із відповідності', 'Rosa — msaidizi wa uzingatiaji'),
+  'rosaIntro': ('Ask BC strata law questions; Rosa answers with citations only.', 'Posez vos questions sur le droit des copropriétés en BC ; Rosa ne répond qu’avec des citations.', 'Haz preguntas sobre la ley de estratos de BC; Rosa responde solo con citas.', '提出卑诗省共管法律问题；Rosa 仅引用来源作答。', 'BC स्ट्राटा कानून के प्रश्न पूछें; रोसा केवल उद्धरण के साथ उत्तर देता है।', 'Magtanong tungkol sa batas ng strata sa BC; sumasagot lang ang Rosa nang may siping.', 'Zadawaj pytania o prawo BC; Rosa odpowiada wyłącznie z cytatami.', 'Ставте запитання про право BC; Rosa відповідає лише з цитатами.', 'Uliza maswali ya sheria ya strata ya BC; Rosa hujibu kwa nukuu tu.'),
+  'rosaPlaceholder': ('Ask Rosa… e.g. “What are the rules for short-term rentals?”', 'Demandez à Rosa… p. ex. « Quelles sont les règles pour la location à court terme ? »', 'Pregunta a Rosa… p. ej. “¿Cuáles son las reglas para alquileres a corto plazo?”', '向 Rosa 提问… 例如“短租的规定是什么？”', 'रोसा से पूछें… जैसे “अल्पकालिक किराये के नियम क्या हैं?”', 'Magtanong kay Rosa… hal. “Ano ang mga patakaran para sa panandaliang paupahan?”', 'Zapytaj Rosę… np. „Jakie są zasady wynajmu krótkoterminowego?”', 'Запитайте Rosa… напр. «Які правила короткострокової оренди?»', 'Uliza Rosa… mf. “Ni kanuni gani za kukodisha kwa muda mfupi?”'),
+  'rosaSend': ('Ask', 'Demander', 'Preguntar', '提问', 'पूछें', 'Magtanong', 'Zapytaj', 'Запитати', 'Uliza'),
+  'rosaUncertain': ('Rosa flagged this as date/fact-dependent — verify before acting.', 'Rosa signale que cela dépend de dates/faits — vérifiez avant d’agir.', 'Rosa marcó esto como dependiente de fechas/hechos — verifica antes de actuar.', 'Rosa 标记此回答依赖日期/事实 — 行动前请核实。', 'रोसा ने इसे तिथि/तथ्य-निर्भर बताया — कार्रवाई से पहले सत्यापित करें।', 'Minarkahan ni Rosa ito bilang nakadepende sa petsa/katotohanan — i-verify muna.', 'Rosa oznaczyła to jako zależne od dat/faktów — zweryfikuj przed działaniem.', 'Rosa позначила це як залежне від дат/фактів — перевірте перед діями.', 'Rosa imebainisha hili kuwa linategemea tarehe/ukweli — thibitisha kabla ya kutenda.'),
+  'rosaNoMatch': ('No controlling source found — Rosa will not guess. Rephrase or ask a licensed professional.', 'Aucune source déterminante trouvée — Rosa ne devine pas. Reformulez ou consultez un professionnel.', 'No se encontró fuente determinante — Rosa no adivina. Reformula o consulta a un profesional.', '未找到权威来源 — Rosa 不会猜测。请改写问题或咨询专业人士。', 'कोई निर्णायक स्रोत नहीं मिला — रोसा अनुमान नहीं लगाता। पुनः पूछें।', 'Walang nakitang source — hindi huhula si Rosa. Mag-iba ng tanong o kumonsulta sa propesyonal.', 'Nie znaleziono źródła — Rosa nie zgaduje. Przeformułuj lub skonsultuj się.', 'Джерело не знайдено — Rosa не вгадує. Переформулюйте або зверніться до фахівця.', 'Hakuna chanzo kilichopatikana — Rosa hatabuni. Badilisha swali au wasiliana na mtaalamu.'),
+  'rosaDemo': ('Demo answers draw on the built-in BC compliance knowledge base. Sign in for the live corpus.', 'Les réponses de démo s’appuient sur la base de connaissances BC intégrée. Connectez-vous pour le corpus en direct.', 'Las respuestas demo usan la base de conocimiento BC integrada. Inicia sesión para el corpus en vivo.', '演示答案基于内置的 BC 合规知识库。登录后可访问实时语料。', 'डेमो उत्तर अंतर्निहित BC अनुपालन ज्ञानकोष से हैं। लाइव कॉर्पस के लिए साइन इन करें।', 'Ang demo answers ay mula sa built-in na BC knowledge base. Mag-sign in para sa live corpus.', 'Odpowiedzi demo korzystają z wbudowanej bazy BC. Zaloguj się, aby uzyskać żywy korpus.', 'Демо-відповіді з вбудованої бази BC. Увійдіть для живого корпусу.', 'Majibu ya demo yanatokana na msingi wa maarifa wa BC. Ingia kwa data halisi.'),
+  'demoLabel': ('Demo', 'Démo', 'Demo', '演示', 'डेमो', 'Demo', 'Demo', 'Демо', 'Demo'),
+  'wizardRegister': ('Register this building', 'Enregistrer cet immeuble', 'Registrar este edificio', '注册此楼宇', 'इस भवन को पंजीकृत करें', 'Irehistro ang gusaling ito', 'Zarejestruj ten budynek', 'Зареєструвати цю будівлю', 'Sajili jengo hili'),
+  'wizardRegistered': ('Building registered to your workspace', 'Immeuble enregistré dans votre espace', 'Edificio registrado en tu espacio', '楼宇已注册到您的工作区', 'भवन आपके कार्यक्षेत्र में पंजीकृत हुआ', 'Nakarehistro ang gusali sa iyong workspace', 'Budynek zarejestrowany w Twoim obszarze', 'Будівлю зареєстровано у вашому просторі', 'Jengo limesajiliwa kwenye nafasi yako'),
+  'scanToPay': ('Scan to pay', 'Scanner pour payer', 'Escanea para pagar', '扫码支付', 'भुगतान के लिए स्कैन करें', 'I-scan para magbayad', 'Zeskanuj, aby zapłacić', 'Скануйте, щоб оплатити', 'Changanua kulipa'),
+  'openInWallet': ('Open in wallet', 'Ouvrir dans le portefeuille', 'Abrir en cartera', '在钱包中打开', 'वॉलेट में खोलें', 'Buksan sa wallet', 'Otwórz w portfelu', 'Відкрити в гаманці', 'Fungua kwenye pochi'),
+  'formsTrackerTitle': ('Forms & 7-day tracker', 'Formulaires et suivi 7 jours', 'Formularios y seguimiento de 7 días', '表格和 7 天跟踪', 'फॉर्म और 7-दिन ट्रैकर', 'Mga form at 7-araw na tracker', 'Formularze i 7-dniowy tracker', 'Форми та 7-денний трекер', 'Fomu na kifuatiliaji cha siku 7'),
+  'formsTrackerHint': ('Issue Form B/F certificates with the statutory delivery countdown.', 'Émettez les certificats B/F avec le compte à rebours légal.', 'Emite certificados B/F con la cuenta regresiva legal.', '签发 B/F 证书并跟踪法定交付倒计时。', 'B/F प्रमाणपत्र जारी करें और वैधानिक डिलीवरी काउंटडाउन दिखाएँ।', 'Mag-issue ng Form B/F na may statutory countdown.', 'Wystawiaj certyfikaty B/F z ustawowym odliczaniem.', 'Видавайте сертифікати B/F із статутним відліком.', 'Toa hati za Form B/F na hesabu ya kisheria.'),
+  'formsRequestDate': ('Request date', 'Date de demande', 'Fecha de solicitud', '请求日期', 'अनुरोध तिथि', 'Petsa ng kahilingan', 'Data żądania', 'Дата запиту', 'Tarehe ya ombi'),
+  'formsDeliverBy': ('Deliver by', 'À livrer avant', 'Entregar antes del', '交付期限', 'डिलीवरी तिथि', 'Ihatid bago ang', 'Dostarczyć do', 'Доставити до', 'Wasilisha ifikapo'),
+  'formsDaysLeft': ('days left', 'jours restants', 'días restantes', '剩余天数', 'दिन शेष', 'araw na natitira', 'pozostało dni', 'днів залишилось', 'siku zimesalia'),
+  'formsIssueB': ('Issue Form B', 'Émettre le formulaire B', 'Emitir Formulario B', '签发 B 表', 'फॉर्म B जारी करें', 'Mag-issue ng Form B', 'Wystaw Formularz B', 'Видати форму B', 'Toa Form B'),
+  'formsIssueF': ('Issue Form F', 'Émettre le formulaire F', 'Emitir Formulario F', '签发 F 表', 'फॉर्म F जारी करें', 'Mag-issue ng Form F', 'Wystaw Formularz F', 'Видати форму F', 'Toa Form F'),
+  'myUnitTitle': ('My unit', 'Mon unité', 'Mi unidad', '我的单元', 'मेरी इकाई', 'Ang aking unit', 'Moja jednostka', 'Мій блок', 'Unit yangu'),
+  'myUnitHint': ('Your lot, its ledger, and your payments — at a glance.', 'Votre lot, son grand livre et vos paiements — d’un coup d’œil.', 'Tu lote, su libro mayor y tus pagos — de un vistazo.', '您的单元、账本和付款 — 一目了然。', 'आपका लॉट, उसका लेजर और भुगतान — एक नज़र में।', 'Ang iyong lot, ledger, at bayad — sa isang sulyap.', 'Twój lokal, rejestr i płatności — na pierwszy rzut oka.', 'Ваш лот, реєстр і платежі — одним поглядом.', 'Loti yako, leja na malipo — kwa mtazamo mmoja.'),
+  'myUnitNoMatch': ('No member record for your account yet.', 'Aucun dossier de membre pour votre compte.', 'Aún no hay registro de miembro para tu cuenta.', '您的账户暂无成员记录。', 'आपके खाते के लिए अभी कोई सदस्य रिकॉर्ड नहीं।', 'Wala pang member record para sa iyong account.', 'Brak rekordu członka dla Twojego konta.', 'Немає запису члена для вашого акаунта.', 'Hakuna rekodi ya mwanachama kwa akaunti yako bado.'),
+  'ballotTitle': ('Ballot voting engine', 'Moteur de vote par scrutin', 'Motor de votación por boleta', '投票引擎', 'मतदान इंजन', 'Ballot voting engine', 'Silnik głosowania', 'Двигун голосування', 'Injini ya upigaji kura'),
+  'ballotHint': ('Roll-call resolution with per-unit entitlements.', 'Résolution par appel nominal avec droits par unité.', 'Resolución por lista con derechos por unidad.', '按单元表决权的点名决议。', 'प्रति-इकाई अधिकारों के साथ रोल-कॉल प्रस्ताव।', 'Roll-call resolution na mga karapatan bawat unit.', 'Rezolucja imienna z prawami jednostek.', 'Поіменна резолюція з правами одиниць.', 'Azimio la kuwaita kila unit na haki zake.'),
+  'ballotResolution': ('Resolution text', 'Texte de la résolution', 'Texto de la resolución', '决议文本', 'प्रस्ताव पाठ', 'Teksto ng resolusyon', 'Tekst rezolucji', 'Текст резолюції', 'Maandishi ya azimio'),
+  'ballotCast': ('Cast ballot', 'Voter', 'Emitir voto', '投票', 'मत डालें', 'Maghain ng balota', 'Oddaj głos', 'Проголосувати', 'Piga kura'),
+  'ballotTie': ('Tie — the chair casts the deciding vote', 'Égalité — le président vote de manière décisive', 'Empate — el presidente vota de forma decisiva', '平局 — 主席投出决定性一票', 'बराबरी — अध्यक्ष निर्णायक मत देते हैं', 'Tie — ang chair ang magpapasya', 'Remis — przewodniczący decyduje', 'Нічия — голова вирішує', 'Sare — mwenyekiti huamua'),
+  'ballotExport': ('Export minutes', 'Exporter le procès-verbal', 'Exportar acta', '导出纪要', 'कार्यवृत्त निर्यात करें', 'I-export ang minuto', 'Eksportuj protokół', 'Експортувати протокол', 'Hamisha kumbukumbu'),
+  'noticeTitle': ('Meeting notice', 'Avis de réunion', 'Aviso de reunión', '会议通知', 'बैठक सूचना', 'Abiso ng pulong', 'Zawiadomienie o spotkaniu', 'Повідомлення про збори', 'Notisi ya mkutano'),
+  'noticeHint': ('Statutory notice windows — AGM 14 days, council 7 days.', 'Délais légaux — AGM 14 jours, conseil 7 jours.', 'Plazos legales — AGM 14 días, consejo 7 días.', '法定通知期 — 年度大会 14 天，理事会 7 天。', 'वैधानिक अधिसूचना — AGM 14 दिन, परिषद 7 दिन।', 'Statutory windows — AGM 14 araw, council 7 araw.', 'Terminy ustawowe — AGM 14 dni, rada 7 dni.', 'Статутні терміни — AGM 14 днів, рада 7 днів.', 'Madirisha ya kisheria — AGM siku 14, baraza siku 7.'),
+  'noticeType': ('Meeting type', 'Type de réunion', 'Tipo de reunión', '会议类型', 'बैठक प्रकार', 'Uri ng pulong', 'Typ spotkania', 'Тип зборів', 'Aina ya mkutano'),
+  'noticeWhen': ('Date & time', 'Date et heure', 'Fecha y hora', '日期和时间', 'तिथि और समय', 'Petsa at oras', 'Data i godzina', 'Дата й час', 'Tarehe na saa'),
+  'noticeWhere': ('Place', 'Lieu', 'Lugar', '地点', 'स्थान', 'Lugar', 'Miejsce', 'Місце', 'Mahali'),
+  'noticePrint': ('Print notice', 'Imprimer l’avis', 'Imprimir aviso', '打印通知', 'सूचना प्रिंट करें', 'I-print ang abiso', 'Drukuj zawiadomienie', 'Роздрукувати повідомлення', 'Chapisha notisi'),
+  'caseFileTitle': ('Bylaw case file', 'Dossier du cas', 'Expediente del caso', '附例案件档案', 'मामला फ़ाइल', 'Case file ng bylaw', 'Akta sprawy', 'Файл справи', 'Faili la kesi'),
+  'caseFileHint': ('CRT-ready evidence bundle for this case.', 'Dossier de preuves prêt pour la CRT.', 'Paquete de evidencia listo para CRT.', '为本案件生成 CRT 就绪的证据包。', 'इस मामले के लिए CRT-तैयार साक्ष्य बंडल।', 'CRT-ready evidence bundle para sa kasong ito.', 'Pakiet dowodowy gotowy dla CRT.', 'Пакет доказів, готовий для CRT.', 'Kifurushi cha ushahidi tayari kwa CRT.'),
+  'caseFilePrint': ('Print case file', 'Imprimer le dossier', 'Imprimir expediente', '打印案件档案', 'मामला फ़ाइल प्रिंट करें', 'I-print ang case file', 'Drukuj akta sprawy', 'Роздрукувати файл справи', 'Chapisha faili la kesi'),
+  'minutesTitle': ('Meeting minutes', 'Procès-verbal', 'Acta de la reunión', '会议纪要', 'बैठक कार्यवृत्त', 'Minuto ng pulong', 'Protokół ze spotkania', 'Протокол зборів', 'Kumbukumbu za mkutano'),
+  'healthBasedOn': ('Based on deadlines, Form K gaps, and AR', 'Basé sur les échéances, les lacunes du formulaire K et les AR', 'Basado en plazos, brechas del Formulario K y AR', '基于截止日期、K 表缺口和应收账款', 'समय-सीमा, फॉर्म K अंतराल और AR पर आधारित', 'Batay sa mga deadline, gaps ng Form K, at AR', 'Na podstawie terminów, luk formularza K i AR', 'На основі термінів, прогалин форми K та AR', 'Kulingana na muda, mapungufu ya Form K na AR'),
+  'balancesTitle': ('On-chain balances', 'Soldes on-chain', 'Saldos en cadena', '链上余额', 'ऑन-चेन शेष', 'Mga balanse sa on-chain', 'Salda on-chain', 'Баланси on-chain', 'Mizani ya on-chain'),
+  'balancesHint': ('Per-address sats from the public mempool.space API.', 'Sats par adresse via l’API publique mempool.space.', 'Sats por dirección desde la API pública de mempool.space.', '通过公共 mempool.space API 获取每地址聪。', 'सार्वजनिक mempool.space API से प्रति-पता सैट्स।', 'Sats bawat address mula sa public mempool.space API.', 'Satsy na adres z publicznego API mempool.space.', 'Сати на адресу з публічного API mempool.space.', 'Sats kwa kila anwani kutoka API ya umma ya mempool.space.'),
+  'balancesReceived': ('received', 'reçu', 'recibido', '已收', 'प्राप्त', 'natanggap', 'otrzymano', 'отримано', 'imepokelewa'),
+  'balancesConfirmed': ('confirmed', 'confirmé', 'confirmado', '已确认', 'पुष्ट', 'nakumpirma', 'potwierdzone', 'підтверджено', 'imethibitishwa'),
+  'dcaTitle': ('War chest DCA planner', 'Planificateur DCA du coffre', 'Planificador DCA del cofre', '金库 DCA 规划器', 'युद्ध कोष DCA योजनाकार', 'DCA planner ng war chest', 'Planer DCA skarbca', 'Планувальник DCA скарбниці', 'Kipangaji cha DCA cha hazina'),
+  'dcaHint': ('Allocate a % of the reserve fund into the BTC war chest.', 'Allouez un % du fonds de réserve au coffre BTC.', 'Asigna un % del fondo de reserva al cofre BTC.', '将储备金的一定比例配置到 BTC 金库。', 'आरक्षित कोष का % BTC युद्ध कोष में आवंटित करें।', 'Maglaan ng % ng reserve fund sa BTC war chest.', 'Przydziel % funduszu rezerwowego do skarbca BTC.', 'Виділіть % резервного фонду в BTC-скарбницю.', 'Tenga % ya mfuko wa akiba kwa hazina ya BTC.'),
+  'dcaAllocation': ('Allocation', 'Allocation', 'Asignación', '配置比例', 'आवंटन', 'Alokasyon', 'Alokacja', 'Розподіл', 'Mgawanyo'),
+  'dcaFrequency': ('Frequency', 'Fréquence', 'Frecuencia', '频率', 'आवृत्ति', 'Dalas', 'Częstotliwość', 'Частота', 'Mara kwa mara'),
+  'dcaProjected': ('Projected per period', 'Projeté par période', 'Proyectado por período', '每期预计', 'प्रति अवधि अनुमानित', 'Inaasahang bawat panahon', 'Prognoza na okres', 'Прогноз на період', 'Inakadiriwa kwa kipindi'),
+  'dcaDisclosure': ('Form B disclosure', 'Divulgation formulaire B', 'Divulgación Formulario B', 'B 表披露', 'फॉर्म B प्रकटीकरण', 'Pagsisiwalat sa Form B', 'Ujawnienie formularza B', 'Розкриття форми B', 'Ufichuzi wa Form B'),
+  'readinessTitle': ('Rails readiness', 'Préparation des rails', 'Preparación de rails', '通道就绪', 'रेल तैयारी', 'Kahandaan ng rails', 'Gotowość torów', 'Готовність рейлів', 'Utayari wa reli'),
+  'readinessHint': ('What it takes to connect each sovereign daemon.', 'Ce qu’il faut pour connecter chaque démon souverain.', 'Qué se necesita para conectar cada demonio soberano.', '连接每个自主守护进程所需的条件。', 'प्रत्येक सॉवरेन डेमॉन को जोड़ने के लिए क्या चाहिए।', 'Ano ang kailangan para ikonekta ang bawat daemon.', 'Co potrzeba, aby podłączyć każdy demon.', 'Що потрібно для підключення кожного демона.', 'Kinachohitajika kuunganisha kila daemon.'),
+  'readinessEnv': ('Env', 'Environnement', 'Env', '环境变量', 'एनवी', 'Env', 'Env', 'Env', 'Env'),
+  'readinessGuide': ('Deploy guide', 'Guide de déploiement', 'Guía de despliegue', '部署指南', 'डिप्लॉय गाइड', 'Gabay sa pag-deploy', 'Przewodnik wdrożenia', 'Посібник із розгортання', 'Mwongozo wa kupeleka'),
+  'readinessConnected': ('connected', 'connecté', 'conectado', '已连接', 'जुड़ा', 'konektado', 'połączono', 'підключено', 'imeunganishwa'),
+  'readinessConfigured': ('configured', 'configuré', 'configurado', '已配置', 'कॉन्फ़िगर', 'naka-configure', 'skonfigurowano', 'налаштовано', 'imesanidiwa'),
+  'readinessPending': ('pending host', 'hôte en attente', 'host pendiente', '待定主机', 'लंबित होस्ट', 'nakabinbing host', 'oczekujący host', 'очікує хост', 'host inasubiri'),
+  'chainViz': ('Chain', 'Chaîne', 'Cadena', '链', 'चेन', 'Chain', 'Łańcuch', 'Ланцюг', 'Mnyororo'),
+  'offlineTitle': ('You’re offline', 'Vous êtes hors ligne', 'Estás sin conexión', '您已离线', 'आप ऑफ़लाइन हैं', 'Offline ka', 'Jesteś offline', 'Ви offline', 'Uko nje ya mtandao'),
+  'offlineText': ('The cached app is still here — reconnect to sync.', 'L’application en cache reste disponible — reconnectez-vous pour synchroniser.', 'La app en caché sigue aquí — reconéctate para sincronizar.', '缓存的应用程序仍在 — 重新连接以同步。', 'कैश किया ऐप अभी भी यहाँ है — सिंक के लिए पुनः कनेक्ट करें।', 'Nandito pa ang naka-cache na app — kumonekta muli para mag-sync.', 'Aplikacja w pamięci podręcznej jest — połącz się, aby zsynchronizować.', 'Кешований застосунок тут — підключіться для синхронізації.', 'App iliyohifadhiwa iko hapa — unganisha tena kusawazisha.'),
+  'installApp': ('Install app', 'Installer l’application', 'Instalar aplicación', '安装应用', 'ऐप इंस्टॉल करें', 'I-install ang app', 'Zainstaluj aplikację', 'Встановити застосунок', 'Sakinisha programu'),
+  'connectTitle': ('Connect your host', 'Connectez votre hôte', 'Conecta tu host', '连接您的主机', 'अपना होस्ट कनेक्ट करें', 'Ikonekta ang iyong host', 'Podłącz swój host', 'Підключіть свій хост', 'Unganisha hosti yako'),
+  'connectHint': ('Point the site at your OpenStrata backend to flip from demo to live.', 'Pointez le site vers votre backend OpenStrata pour passer de démo à direct.', 'Apunta el sitio a tu backend OpenStrata para pasar de demo a vivo.', '将站点指向您的 OpenStrata 后端，从演示切换为实时。', 'डेमो से लाइव में जाने के लिए साइट को अपने OpenStrata बैकएंड पर इंगित करें।', 'Ituro ang site sa iyong OpenStrata backend para lumipat mula demo patungong live.', 'Wskaż witrynie swój backend OpenStrata, aby przejść z demo na żywo.', 'Спрямуйте сайт на ваш backend OpenStrata, щоб перейти з демо на живе.', 'Elekeza tovuti kwenye backend yako ya OpenStrata kubadili kutoka demo hadi moja kwa moja.'),
+  'connectSteps': ('Set PUBLIC_API_BASE_URL at build time, or openstrata-api-base in this browser, then sign in.', 'Définissez PUBLIC_API_BASE_URL au build, ou openstrata-api-base dans ce navigateur, puis connectez-vous.', 'Define PUBLIC_API_BASE_URL al compilar, u openstrata-api-base en este navegador, y luego inicia sesión.', '在构建时设置 PUBLIC_API_BASE_URL，或在此浏览器中设置 openstrata-api-base，然后登录。', 'बिल्ड पर PUBLIC_API_BASE_URL सेट करें, या इस ब्राउज़र में openstrata-api-base, फिर साइन इन करें।', 'Itakda ang PUBLIC_API_BASE_URL sa build, o openstrata-api-base sa browser na ito, pagkatapos mag-sign in.', 'Ustaw PUBLIC_API_BASE_URL przy budowie lub openstrata-api-base w tej przeglądarce, potem zaloguj się.', 'Встановіть PUBLIC_API_BASE_URL при збірці або openstrata-api-base у цьому браузері, потім увійдіть.', 'Weka PUBLIC_API_BASE_URL wakati wa kuunda, au openstrata-api-base kwenye kivinjari hiki, kisha ingia.'),
+  'connectDemo': ('Demo mode — curated sample data shown.', 'Mode démo — données d’exemple affichées.', 'Modo demo — se muestran datos de muestra.', '演示模式 — 显示精选示例数据。', 'डेमो मोड — चुनिंदा नमूना डेटा दिखाया गया।', 'Demo mode — ipinapakita ang sample data.', 'Tryb demo — pokazywane przykładowe dane.', 'Демо-режим — показано зразкові дані.', 'Hali ya demo — data ya sampuli inaonyeshwa.'),
 }
+
+# Idempotency: drop keys that already exist in the English block (so re-runs
+# after editing KEYS never duplicate earlier insertions).
+EN_HEAD = src.index('export const english: Translation = {')
+EN_TAIL = src.index('\n};', EN_HEAD)
+en_existing = set(re.findall(r"([A-Za-z]+): '", src[EN_HEAD:EN_TAIL]))
+KEYS = {k: v for k, v in KEYS.items() if k not in en_existing}
 
 # Build insertion strings.
 type_keys = ' '.join(f'{k}: string;' for k in KEYS)
@@ -110,10 +183,14 @@ type_idx = src.find('};\n\nexport const english')
 assert type_idx > 0
 src = src[:type_idx] + ' ' + type_keys + src[type_idx:]
 
-# 2. English — insert before "\n};\n\nexport const overrides".
-en_marker = "confirmSignOutMessage: 'You’ll need your credentials to get back in.'\n};"
-assert en_marker in src
-src = src.replace(en_marker, f"confirmSignOutMessage: 'You’ll need your credentials to get back in.', {en_keys}\n}};")
+# 2. English — append before the closing of the english object (idempotent
+#    across runs: each run appends after the previous run's last key).
+en_start = src.index('export const english: Translation = {')
+en_body_end = src.index('\n};', en_start)
+en_body = src[en_start:en_body_end].rstrip()
+if not en_body.endswith(','):
+    en_body += ','
+src = src[:en_start] + en_body + ' ' + en_keys + '\n};' + src[en_body_end + 3:]
 
 # 3. Locale blocks — insert per-locale translations before each block's final ' }'.
 locale_codes = ['fr', 'es', 'zh', 'hi', 'fil', 'pl', 'uk', 'sw']
@@ -124,7 +201,10 @@ for idx, code in enumerate(locale_codes):
     trans = ' '.join(f"{k}: '{v[idx+1]}'," for k, v in KEYS.items())
     closing = m.group(2).strip()  # '}' or '},'
     indent = m.group(0)[:2]  # '  ' leading indent
-    new_block = indent + code + ': { ...english,' + m.group(1) + ', ' + trans + ' ' + closing
+    content = m.group(1).rstrip()
+    if not content.endswith(','):
+        content += ','
+    new_block = indent + code + ': { ...english,' + content + ' ' + trans + ' ' + closing
     src = src[:m.start()] + new_block + src[m.end():]
 
 open(path, 'w').write(src)

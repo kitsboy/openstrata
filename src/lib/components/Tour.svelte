@@ -3,6 +3,7 @@
   // Shown only to signed-out / fresh visitors; one dismissal remembers forever.
   import { copy } from '$lib/i18n';
   import Icon from '$lib/components/Icon.svelte';
+  import Illustrations from '$lib/components/Illustrations.svelte';
   import { icons } from '$lib/icons';
 
   let { onFinish }: { onFinish: () => void } = $props();
@@ -11,11 +12,16 @@
   let step = $state(0);
   let shown = $state(true);
 
-  const steps = $derived<Array<{ icon: keyof typeof icons; title: string; text: string }>>([
-    { icon: 'spark', title: $copy.tourIntro, text: $copy.tourIntroText },
-    { icon: 'shield', title: $copy.tourSignIn, text: $copy.tourSignInText },
-    { icon: 'plus', title: $copy.tourCreate, text: $copy.tourCreateText },
-    { icon: 'chart', title: $copy.tourLive, text: $copy.tourLiveText }
+  const steps = $derived<Array<{
+    icon: keyof typeof icons;
+    scene: 'building' | 'ledger' | 'bitcoin' | 'empty';
+    title: string;
+    text: string;
+  }>>([
+    { icon: 'spark', scene: 'building', title: $copy.tourIntro, text: $copy.tourIntroText },
+    { icon: 'shield', scene: 'ledger', title: $copy.tourSignIn, text: $copy.tourSignInText },
+    { icon: 'plus', scene: 'empty', title: $copy.tourCreate, text: $copy.tourCreateText },
+    { icon: 'chart', scene: 'bitcoin', title: $copy.tourLive, text: $copy.tourLiveText }
   ]);
 
   function close(remember = true) {
@@ -36,6 +42,7 @@
     <button class="tour-scrim" type="button" aria-label={$copy.closeDialog} onclick={() => close(true)}></button>
     <div class="tour-card" role="dialog" aria-modal="true" tabindex="0" aria-label={$copy.tourIntro} onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.key === 'Escape' && close(true)}>
       <button class="tour-close" aria-label={$copy.closeDialog} onclick={() => close(true)}><Icon name="close" class="h-3.5 w-3.5" /></button>
+      <div class="tour-art"><Illustrations scene={steps[step].scene} class="h-20 w-20 text-brand-600" /></div>
       <div class="tour-mark"><Icon name={steps[step].icon} class="h-5 w-5" /></div>
       <p class="tour-eyebrow">{$copy.tourIntro} · {step + 1}/4</p>
       <h2>{steps[step].title}</h2>
@@ -78,6 +85,7 @@
     box-shadow: 0 30px 90px rgba(10, 27, 36, .3);
     text-align: center;
   }
+  .tour-art { margin: 0 auto 10px; opacity: .9; }
   .tour-close { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--muted); background: var(--surface-3); }
   .tour-mark { display: grid; place-items: center; width: 46px; height: 46px; margin: 0 auto 14px; border-radius: 13px; color: var(--orange); background: color-mix(in srgb, var(--orange) 10%, transparent); }
   .tour-eyebrow { margin: 0 0 6px; color: var(--faint); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .09em; text-transform: uppercase; }

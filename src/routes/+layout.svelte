@@ -9,6 +9,8 @@
   import DonateModal from '$lib/components/DonateModal.svelte';
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
   import SearchModal from '$lib/components/SearchModal.svelte';
+  import PwaChrome from '$lib/components/PwaChrome.svelte';
+  import HostConnect from '$lib/components/HostConnect.svelte';
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
   import { browser } from '$app/environment';
@@ -76,12 +78,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </svelte:head>
 
+<PwaChrome />
+
 {#if $page.url.pathname === '/'}
-  <!-- The home page is the product dashboard — a self-contained app shell with
-       its own fixed sidebar + topbar. Rendering it inside the marketing chrome
-       below caused the layout to break: the fixed sidebar overshot the viewport
-       (bottom buttons clipped) and the marketing header overflowed horizontally
-       (page slides sideways under the sidebar). So the dashboard renders bare. -->
+  <!-- Host connect strip: on the dashboard, tell demo-mode visitors how to
+       point the site at their own OpenStrata backend. -->
+  <div class="mx-auto max-w-7xl px-6 pt-4">
+    <HostConnect />
+  </div>
   {@render children()}
 {:else}
 <div class="flex min-h-screen flex-col mesh-bg">

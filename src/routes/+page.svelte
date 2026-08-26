@@ -71,6 +71,9 @@
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import DeadlinesPanel from '$lib/components/DeadlinesPanel.svelte';
   import RailsStatus from '$lib/components/RailsStatus.svelte';
+  import HealthScore from '$lib/components/HealthScore.svelte';
+  import RateSparkline from '$lib/components/RateSparkline.svelte';
+  import ChainViz from '$lib/components/ChainViz.svelte';
   import NotificationsFeed from '$lib/components/NotificationsFeed.svelte';
   import { accent, cycleAccent } from '$lib/theme';
   import { onMount } from 'svelte';
@@ -325,7 +328,7 @@
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-2.5 w-2.5" /></span>{building.issue}<span class="status-arrow">→</span></div>
               </div>
-            {:else}			  <EmptyState icon="search" title="{$copy.noBuildings} “{search}”" message={$copy.emptySearchHint} actionLabel={$copy.newStrata} onAction={() => (showNewStrata = true)} />
+            {:else}			  <EmptyState scene="empty" icon="search" title="{$copy.noBuildings} “{search}”" message={$copy.emptySearchHint} actionLabel={$copy.newStrata} onAction={() => (showNewStrata = true)} />
             {/each}
           </div>
 
@@ -337,6 +340,9 @@
 
         <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <RailsStatus />
 		  <DeadlinesPanel />
+		  <HealthScore />
+		  <RateSparkline />
+		  <ChainViz />
 		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
 		  <section><SatohashStatus /></section>
         </aside>

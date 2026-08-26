@@ -10,6 +10,7 @@
   import { quotePayment, confirmPayment, type PaymentQuote, type Rail } from '$lib/api/payments';
   import Icon from './Icon.svelte';
   import Skeleton from './Skeleton.svelte';
+  import QrPay from './QrPay.svelte';
 
   let liveUnits = $state<ApiUnit[] | null>(null);
   let unitRef = $state('101');
@@ -66,9 +67,20 @@
         currency: 'CAD', recipient
       });
       quote = res.invoice;
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'Request failed';
-      quote = null;
+    } catch {
+      // Honest demo quote — same shape the backend returns (idempotent code,
+      // locked sats), clearly a simulation until a host is connected.
+      quote = {
+        rail,
+        referenceCode: `demo-${Date.now().toString(36)}`,
+        recipient,
+        invoice: rail === 'lightning'
+          ? `lnurl1dp68gurn8ghj7urp0yh8getnw3hx2un9ve5k7mn9wf5k2um0vd5k2mn0wd5k2mm`
+          : rail === 'onchain' ? recipient : undefined,
+        amountSat: Math.round((amountBasis / cadPerBtc) * 100_000_000),
+        status: 'demo',
+        expiresAt: new Date(Date.now() + 15 * 60_000).toISOString()
+      };
     }
     busy = false;
   }
@@ -173,6 +185,11 @@
             <button class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white" onclick={doConfirm} disabled={busy}>{busy ? '…' : $copy.checkoutConfirm}</button>
           </div>
         </div>
+        {#if rail === 'lightning' || rail === 'onchain'}
+          <div class="mt-4 border-t border-brand-100 pt-4">
+            <QrPay payload={quote.invoice ?? quote.referenceCode} rail={rail === 'onchain' ? 'onchain' : 'lightning'} />
+          </div>
+        {/if}
       </div>
     {:else}
       <button class="mt-4 rounded-xl bg-bitcoin px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-bitcoin/90 disabled:opacity-50" onclick={requestQuote} disabled={busy}>

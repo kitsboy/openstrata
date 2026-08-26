@@ -22,6 +22,19 @@
   import MemberManager from '$lib/components/MemberManager.svelte';
   import RateBadge from '$lib/components/RateBadge.svelte';
   import Glossary from '$lib/components/Glossary.svelte';
+  import RosaChat from '$lib/components/RosaChat.svelte';
+  import WizardRegister from '$lib/components/WizardRegister.svelte';
+  import FormsPanel from '$lib/components/FormsPanel.svelte';
+  import MyUnitPanel from '$lib/components/MyUnitPanel.svelte';
+  import BallotEngine from '$lib/components/BallotEngine.svelte';
+  import BylawCaseFile from '$lib/components/BylawCaseFile.svelte';
+  import MeetingNotice from '$lib/components/MeetingNotice.svelte';
+  import HealthScore from '$lib/components/HealthScore.svelte';
+  import MempoolBalances from '$lib/components/MempoolBalances.svelte';
+  import DcaPlanner from '$lib/components/DcaPlanner.svelte';
+  import RateSparkline from '$lib/components/RateSparkline.svelte';
+  import RailsReadiness from '$lib/components/RailsReadiness.svelte';
+  import ChainViz from '$lib/components/ChainViz.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
@@ -375,7 +388,7 @@
 						<div>
 							<p class="text-[10px] font-bold text-slate-400 uppercase">{$copy.unitPayments}</p>
 							{#if unitDetail.payments.length === 0}
-								<div class="mt-3"><EmptyState icon="coins" title={$copy.unitPaymentsEmpty} /></div>
+								<div class="mt-3"><EmptyState scene="ledger" icon="coins" title={$copy.unitPaymentsEmpty} /></div>
 							{:else}
 								<ul class="mt-2 space-y-1">
 									{#each unitDetail.payments.slice(0, 5) as p}
@@ -391,16 +404,33 @@
 				{/if}
 			</div>
 		{/if}
-	</section>
-
-	<!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->
+	</section>  <!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->
 	<div class="mb-8 space-y-8">
+		<div class="grid gap-8 lg:grid-cols-2">
+			<RosaChat />
+			<WizardRegister />
+		</div>
 		<DeadlinesPanel />
 		<div class="grid gap-8 lg:grid-cols-2">
 			<CheckoutFlow />
 			<MonthlyClose />
 			<BylawCase />
 			<MemberWorkspace />
+		</div>
+		<div class="grid gap-8 lg:grid-cols-2">
+			<FormsPanel />
+			<MyUnitPanel />
+			<BallotEngine />
+			<MeetingNotice />
+		</div>
+		<div class="grid gap-8 lg:grid-cols-2">
+			<HealthScore />
+			<BylawCaseFile />
+			<MempoolBalances />
+			<DcaPlanner />
+			<RateSparkline />
+			<RailsReadiness />
+			<ChainViz />
 		</div>
 		<div class="grid gap-8 lg:grid-cols-2">
 			<RailsStatus />
