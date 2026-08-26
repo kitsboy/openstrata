@@ -7,6 +7,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
+  import HostConnect from '$lib/components/HostConnect.svelte';
 
   const appVersion = packageJson.version;
 
@@ -264,6 +265,7 @@
   {#if showMobileMenu}<button class="scrim" aria-label={$copy.closeNavigation} onclick={() => (showMobileMenu = false)}></button>{/if}
 
   <div class="main-column">
+    <div class="host-connect-row"><HostConnect /></div>
     <header class="topbar">
       <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>

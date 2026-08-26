@@ -126,7 +126,7 @@ a { color: inherit; text-decoration: none; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(63, 142, 252, .45); outline-offset: 3px; }
 
 .app-shell { display: flex; min-height: 100vh; background: var(--canvas); }
-.sidebar { position: fixed; z-index: 30; display: flex; flex-direction: column; width: 252px; height: 100vh; height: 100dvh; padding: 26px 16px 18px; color: #b7c6cc; background: var(--navy); }
+.sidebar { position: fixed; top: 0; left: 0; z-index: 30; display: flex; flex-direction: column; width: 252px; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; padding: 26px 16px 18px; color: #b7c6cc; background: var(--navy); }
 .brand-lockup { display: flex; align-items: center; gap: 10px; padding: 0 10px; }
 .brand-mark { display: flex; align-items: flex-end; gap: 3px; width: 26px; height: 26px; padding: 4px; border-radius: 8px; background: var(--orange); box-shadow: 0 6px 18px rgba(249, 115, 72, .22); }
 .brand-mark span { display: block; width: 4px; border-radius: 3px; background: #fff5ed; }
@@ -171,6 +171,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(54,185,137,.12); }
 .mini-settings { margin-left: auto; color: #71858e; background: transparent; font-size: 14px; }
 .main-column { display: flex; flex: 1; flex-direction: column; min-width: 0; margin-left: 252px; }
+.host-connect-row { padding: 18px 36px 0; }
+@media (max-width: 900px) {
+  .host-connect-row { padding: 14px 15px 0; }
+}
 .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; min-height: 72px; padding: 0 36px; border-bottom: 1px solid rgba(228,233,235,.8); background: rgba(246,248,249,.86); backdrop-filter: blur(18px); }
 .breadcrumbs { display: flex; align-items: center; gap: 12px; color: #9aa6ab; font-size: 11px; }
 .breadcrumbs b { color: #c1cace; font-weight: 400; }

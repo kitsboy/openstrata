@@ -10,7 +10,6 @@
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
   import SearchModal from '$lib/components/SearchModal.svelte';
   import PwaChrome from '$lib/components/PwaChrome.svelte';
-  import HostConnect from '$lib/components/HostConnect.svelte';
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
   import { browser } from '$app/environment';
@@ -81,11 +80,6 @@
 <PwaChrome />
 
 {#if $page.url.pathname === '/'}
-  <!-- Host connect strip: on the dashboard, tell demo-mode visitors how to
-       point the site at their own OpenStrata backend. -->
-  <div class="mx-auto max-w-7xl px-6 pt-4">
-    <HostConnect />
-  </div>
   {@render children()}
 {:else}
 <div class="flex min-h-screen flex-col mesh-bg">
