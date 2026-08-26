@@ -6,7 +6,8 @@
 - **Shell tightened** (user: “solid, tight” — scope confirmed as tighten-the-existing-shell, no content restructuring): content max-width 1410→1280px, main grid gap 38→28, metric grid gap/margins down, card min-heights + padding down, panel padding 19→17, right-stack gap 17→14, welcome-row/section-heading margins down, footer max-width synced to 1280, and the card shadow changed from a soft 12px glow to a crisp 2-layer shadow (`0 1px 2px … , 0 4px 14px …`, dark-mode equivalent) so cards sit anchored instead of floating
 - **Checks:** `svelte-check` 0/0, 42 frontend tests green, i18n 523 keys parity green, build clean
 
-**Git State:** uncommitted (working tree; follows `a6bd8ad`/`0969190` on main)
+**Git State:**
+- Committed as **`e113cd4`** — "Secure and tighten the landing page shell" (6 files, +45/−22) and **pushed to `origin/main`** (branch in sync, working tree clean)
 
 ---
 
