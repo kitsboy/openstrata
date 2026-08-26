@@ -1,3 +1,23 @@
+## Session — 2026-08-26 (next 20 shipped — live flows, governance, Bitcoin & trust, v0.3.8)
+
+**Task:** "Next 20, end to end. Commit and push in batches."
+
+**Shipped in 2 code commits + docs (`7a3d443` components · `0329de8` wiring), pushed to `origin/main`.**
+
+**Live flows (Batch 1):** `RosaChat` — citation-only BC compliance Q&A via `POST /rosa/query` when signed in, honest demo corpus locally (SPA s.141/s.133/s.92/s.94 patterns + fail-closed refusal); `WizardRegister` — guided 3-step onboarding ending in real `POST /auth/register`; `QrPay` — QR scan-to-pay (`qrcode`) with `lightning://` / `bitcoin:` wallet deep links, wired into CheckoutFlow with an honest demo-quote fallback; `FormsPanel` — Form B/F issuance with the statutory 7-day delivery countdown (`/forms` API + new `forms.ts` helpers); `MyUnitPanel` — member view of lot/AR/payments via `GET /units/:ref`.
+
+**Governance (Batch 2):** `BallotEngine` — resolution + roll-call tally (majority / 3/4 / 80% / unanimous), live `POST /meetings/vote`, minutes export; `BylawCaseFile` — CRT-ready evidence bundle export (complaint → notice → 14-day lock → fine decision → minutes ref); `MeetingNotice` — statutory advance-window check (AGM 14d, council 7d) + print; `HealthScore` — auditable compliance score from deadline pressure + AR (formula shown under the gauge); minutes export lives in BallotEngine.
+
+**Bitcoin (Batch 3):** `MempoolBalances` — watch-only per-address sats from mempool.space (no backend); `DcaPlanner` — allocation/frequency/horizon + sats per period + Form B disclosure % (`POST /treasury/dca/plan` live, mirrored math locally); `RateSparkline` — live CAD/BTC + history trace + "as of HH:MM"; `RailsReadiness` — per-daemon status (LND/LNBits/Liquid/PayNym/Nostr) with env vars, honest "host pending".
+
+**Trust & polish (Batch 4):** `ChainViz` — vertical tamper-evident hash-chain rail per fund with re-verify (`/ledger/entries`); `PwaChrome` — offline banner + `beforeinstallprompt` install chip; a11y — Glossary popover click handler removed (0 svelte-check warnings); illustrations — the 4-step tour now leads with scene art + EmptyState gained a `scene` prop (ledger/bitcoin/building); `HostConnect` — demo→live strip on the dashboard (set API base / sign in, dismissible). New API modules: `rosa.ts`, `forms.ts`.
+
+**Mounted:** tools desk leads with RosaChat + wizard; FormsPanel/MyUnit/BallotEngine/MeetingNotice/HealthScore/case-file/MempoolBalances/DcaPlanner/RateSparkline/RailsReadiness/ChainViz join the grids; dashboard right stack gains HealthScore + RateSparkline + ChainViz; PwaChrome + HostConnect in the app shell.
+
+**Verified in a real browser (Chrome + CDP):** zero horizontal overflow at 390/800/1280px on home + tools; Rosa answers "short-term rental rules" with SPA s.141 citation (InputEvent-triggered); ballot tallies; QR renders; 4-step tour completes and dismisses forever (localStorage, survives reload). Checks: backend 173, frontend **78 tests** (+8, incl. forms deadline math + deep-link derivation), i18n **893 keys × 9 locales** (+156, idempotent key-adder), svelte-check 0/0, build clean, marker v0.3.8.
+
+---
+
 ## Session — 2026-08-26 (all 20 user-flow/GUI/Bitcoin improvements shipped, v0.3.7)
 
 **All 20 items executed end to end, batched, pushed (`02dfd07` backend + `0d1f1e1` frontend).**

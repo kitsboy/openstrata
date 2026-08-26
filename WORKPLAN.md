@@ -148,35 +148,75 @@ the standing prerequisite for the live-rendered items (rate chrome, receipts, si
 
 **A — User flow (5)**
 
-1. [ ] **Pay-fees checkout flow** — per-unit "Pay" with quote → rail picker (fiat / Bitcoin on-chain / Lightning) → confirm → receipt. `payments/quote` + `payments/confirm` exist as API only; today a unit's fees are visible but not payable
-2. [ ] **"Run the month" close flow** — one guided screen: billing run → late notices → e-transfer reconciliation → Form K trail. `billing/run` + the reconciler exist; no task flow ties them together
-3. [ ] **Bylaw enforcement case UI** — complaint → auto-notice → 14-day BLOCK_FINE_ACTIONS lock timeline → vote → fine, with CRT-ready evidence attached at each step. The state-machine API exists; today it's a compliance KB page
-4. [ ] **Member & lot workspace** — one screen per owner: unit, payments, forms issued (B/F), fines, next due — the unit→payment→form traceability spine end to end. Unit detail exists; the owner/contact layer doesn't
-5. [ ] **"What's due" task center** — per-council deadlines: Form B 7-day clock, notice windows, AGM/CRT dates, EPR 2026. Backend has no deadline model yet — a `deadlines` endpoint first, then the UI
+1. [x] **Pay-fees checkout flow** — per-unit "Pay" with quote → rail picker (fiat / Bitcoin on-chain / Lightning) → confirm → receipt. `payments/quote` + `payments/confirm` exist as API only; today a unit's fees are visible but not payable
+2. [x] **"Run the month" close flow** — one guided screen: billing run → late notices → e-transfer reconciliation → Form K trail. `billing/run` + the reconciler exist; no task flow ties them together
+3. [x] **Bylaw enforcement case UI** — complaint → auto-notice → 14-day BLOCK_FINE_ACTIONS lock timeline → vote → fine, with CRT-ready evidence attached at each step. The state-machine API exists; today it's a compliance KB page
+4. [x] **Member & lot workspace** — one screen per owner: unit, payments, forms issued (B/F), fines, next due — the unit→payment→form traceability spine end to end. Unit detail exists; the owner/contact layer doesn't
+5. [x] **"What's due" task center** — per-council deadlines: Form B 7-day clock, notice windows, AGM/CRT dates, EPR 2026. Backend has no deadline model yet — a `deadlines` endpoint first, then the UI
 
 **B — GUI & design (5)**
 
-6. [ ] **Design-token theming** — document the token set as a theme map with an alternate BC-green "brokerage" theme (framework doc's alt), brand-orange stays default; per-page dark-mode screenshot audit
-7. [ ] **Real image assets** — replace placeholder/mesh visuals with product screenshots + an illustration set for empty states, the tour, and og-meta cards
-8. [ ] **Print & PDF polish** — tuned print stylesheets for Form B/F certificates, the CRT bundle, and ledger exports (server-side PDF stays out of scope)
-9. [ ] **Living design system page** — `/design` style guide rendering the tokens/components (buttons, cards, forms, toasts) so every future change stays on-language
-10. [ ] **Micro-copy & guidance pass** — inline "What is a CRF?" / "What is LNURL?" tooltips, command-palette category icons, and every empty state ending in a working next action
+6. [x] **Design-token theming** — document the token set as a theme map with an alternate BC-green "brokerage" theme (framework doc's alt), brand-orange stays default; per-page dark-mode screenshot audit
+7. [x] **Real image assets** — replace placeholder/mesh visuals with product screenshots + an illustration set for empty states, the tour, and og-meta cards
+8. [x] **Print & PDF polish** — tuned print stylesheets for Form B/F certificates, the CRT bundle, and ledger exports (server-side PDF stays out of scope)
+9. [x] **Living design system page** — `/design` style guide rendering the tokens/components (buttons, cards, forms, toasts) so every future change stays on-language
+10. [x] **Micro-copy & guidance pass** — inline "What is a CRF?" / "What is LNURL?" tooltips, command-palette category icons, and every empty state ending in a working next action
 
 **C — Bitcoin & sovereignty UX (5)**
 
-11. [ ] **Rails status panel** — dashboard panel: enabled rails, LND/Liquid node status, live cadPerBtc + "as of HH:MM". `/rails/status` exists; today it only drives the pitch hero + Live/Demo pill
-12. [ ] **Multisig signing room** — pending PSBTs, 2-of-5 signature progress per transaction, QR-to-hardware-wallet, broadcast when ready. `buildPsbtPlan`/`recordSignature` seam exists; no UI
-13. [ ] **BTC payment receipts** — after a Bitcoin/Lightning payment: txid, sats locked, cadPerBtc at lock, Satohash stamp link on the receipt. Quote/confirm + stamp seam exist; the receipt surface doesn't
-14. [ ] **Wallet & address book** — registered xpub(s), per-unit receive addresses with QR + copy, per-address balance via block explorer. XpubImport exists; the usable wallet layer doesn't
-15. [ ] **Bitcoin education layer** — "What is a multisig / LNURL / OTS?" explainers beside every sovereign control, and the DCA module's Form B disclosure visualized (X% of CRF at risk). `dca/plan` exists
+11. [x] **Rails status panel** — dashboard panel: enabled rails, LND/Liquid node status, live cadPerBtc + "as of HH:MM". `/rails/status` exists; today it only drives the pitch hero + Live/Demo pill
+12. [x] **Multisig signing room** — pending PSBTs, 2-of-5 signature progress per transaction, QR-to-hardware-wallet, broadcast when ready. `buildPsbtPlan`/`recordSignature` seam exists; no UI
+13. [x] **BTC payment receipts** — after a Bitcoin/Lightning payment: txid, sats locked, cadPerBtc at lock, Satohash stamp link on the receipt. Quote/confirm + stamp seam exist; the receipt surface doesn't
+14. [x] **Wallet & address book** — registered xpub(s), per-unit receive addresses with QR + copy, per-address balance via block explorer. XpubImport exists; the usable wallet layer doesn't
+15. [x] **Bitcoin education layer** — "What is a multisig / LNURL / OTS?" explainers beside every sovereign control, and the DCA module's Form B disclosure visualized (X% of CRF at risk). `dca/plan` exists
 
 **D — Trust & data (5)**
 
-16. [ ] **Ledger explorer** — browse the hash chain per fund/unit, re-verify hashes, export a fund's trail as CSV. Balance + series APIs exist; the chain itself is invisible
-17. [ ] **Export center** — one place for portable JSON, CRT bundle, Form B/F PDFs, ledger CSV — extending the existing EvidenceExport panel, not a new page
-18. [ ] **Member & role management UI** — admin invites, role assignment (admin/treasurer/member), temp-password handoff, revoke. Backend admin-user APIs exist; no frontend
-19. [ ] **In-app notifications** — bell feed driven by real events (payment confirmed, Form B requested, deadline approaching, fine issued); PWA push follows
-20. [ ] **Honest live-rate chrome** — cadPerBtc + "as of" on every BTC-denominated quote, DCA plan, and sparkline so demo↔live is always legible
+16. [x] **Ledger explorer** — browse the hash chain per fund/unit, re-verify hashes, export a fund's trail as CSV. Balance + series APIs exist; the chain itself is invisible
+17. [x] **Export center** — one place for portable JSON, CRT bundle, Form B/F PDFs, ledger CSV — extending the existing EvidenceExport panel, not a new page
+18. [x] **Member & role management UI** — admin invites, role assignment (admin/treasurer/member), temp-password handoff, revoke. Backend admin-user APIs exist; no frontend
+19. [x] **In-app notifications** — bell feed driven by real events (payment confirmed, Form B requested, deadline approaching, fine issued); PWA push follows
+20. [x] **Honest live-rate chrome** — cadPerBtc + "as of" on every BTC-denominated quote, DCA plan, and sparkline so demo↔live is always legible
+
+## Next 20 — Live Flows, Governance, Bitcoin & Trust (shipped, v0.3.8)
+
+A fourth batch on the same lenses, pushing every live seam one step further:
+the operations desk now answers questions, issues documents, runs votes, and
+shows the chain — with the demo↔live line always legible.
+
+**A — Live flows (5)**
+
+1. [x] **RosaChat — compliance assistant** — ask BC strata law questions; Rosa answers with citations only and refuses to guess. Live `POST /rosa/query` when signed in; honest demo corpus locally
+2. [x] **Register-your-building wizard** — guided 3-step onboarding ending in real `POST /auth/register` (creates council + admin); demo walks the same steps
+3. [x] **QR scan-to-pay** — Lightning/on-chain quotes render a scannable QR + wallet deep links (lightning://, bitcoin:) via `qrcode`; honest demo quote when no host
+4. [x] **Forms B/F tracker** — issue certificates with the statutory 7-day delivery countdown (per unit, overdue/urgent/ok); printable document links
+5. [x] **My unit panel** — member view of their lot: AR balance, payments, occupancy; live `GET /units/:ref`
+
+**B — Governance (5)**
+
+6. [x] **Ballot voting engine** — resolution + roll-call tally with per-unit entitlements, all four thresholds, minutes export; live `POST /meetings/vote`
+7. [x] **Bylaw case file** — CRT-ready evidence bundle (complaint → notice → 14-day lock → fine decision → minutes ref) exported as a printable file
+8. [x] **Meeting notice generator** — statutory advance-window check (AGM 14d, council 7d) with print-ready notice
+9. [x] **Meeting minutes export** — resolution record export from the ballot engine
+10. [x] **Compliance health score** — one auditable number from deadline pressure + AR signal; formula shown under the gauge
+
+**C — Bitcoin & sovereignty (5)**
+
+11. [x] **On-chain balances** — per-address sats straight from mempool.space (watch-only, no backend); mempool links
+12. [x] **War-chest DCA planner** — allocation % / frequency / horizon with sats per period and the Form B disclosure %; live `POST /treasury/dca/plan`
+13. [x] **Live CAD/BTC rate sparkline** — rate + history trace + honest "as of HH:MM"; fed by `/rails/status` when live
+14. [x] **Scan-to-pay deep links** — wallet-open URIs beside every QR (bitcoin:, lightning:)
+15. [x] **Rails readiness checklist** — per-daemon status (LND / LNBits / Liquid / PayNym / Nostr) + env var to flip each one; "host pending" honesty
+
+**D — Trust & polish (5)**
+
+16. [x] **Ledger chain visualization** — vertical tamper-evident rail of tally roots per fund; re-verify shows chain health; live `/ledger/entries`
+17. [x] **PWA offline + install** — offline banner (cached app still works) + home-screen install chip via beforeinstallprompt
+18. [x] **A11y pass** — glossary popover no longer an interactive `<span>`; 0 svelte-check warnings
+19. [x] **Illustrations in the tour + empty states** — the 4-step tour now leads with scene art; empty states carry ledger/bitcoin/building illustrations
+20. [x] **Host-connect strip** — demo→live line on the dashboard: set the API base or sign in; dismissible
+
+---
 
 ---
 
