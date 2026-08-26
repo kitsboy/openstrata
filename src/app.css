@@ -64,7 +64,7 @@ a { color: inherit; text-decoration: none; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(63, 142, 252, .45); outline-offset: 3px; }
 
 .app-shell { display: flex; min-height: 100vh; background: var(--canvas); }
-.sidebar { position: fixed; z-index: 30; display: flex; flex-direction: column; width: 252px; height: 100vh; padding: 26px 16px 18px; color: #b7c6cc; background: var(--navy); }
+.sidebar { position: fixed; z-index: 30; display: flex; flex-direction: column; width: 252px; height: 100vh; height: 100dvh; padding: 26px 16px 18px; color: #b7c6cc; background: var(--navy); }
 .brand-lockup { display: flex; align-items: center; gap: 10px; padding: 0 10px; }
 .brand-mark { display: flex; align-items: flex-end; gap: 3px; width: 26px; height: 26px; padding: 4px; border-radius: 8px; background: var(--orange); box-shadow: 0 6px 18px rgba(249, 115, 72, .22); }
 .brand-mark span { display: block; width: 4px; border-radius: 3px; background: #fff5ed; }
@@ -89,7 +89,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .workspace-switcher .eyebrow { color: #728892; }
 .workspace-switcher strong { display: block; margin-top: 3px; overflow: hidden; color: #e8eff1; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .chevron { color: currentColor; font-size: 14px; line-height: 1; }
-.nav-groups { display: flex; flex-direction: column; gap: 26px; }
+.nav-groups { display: flex; flex-direction: column; gap: 26px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.nav-groups::-webkit-scrollbar { display: none; }
 .nav-label { margin: 0 12px 9px; color: #617680; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
 .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; margin: 2px 0; padding: 10px 12px; border-radius: 9px; color: #9eb0b7; background: transparent; font-size: 12px; font-weight: 700; text-align: left; transition: .2s ease; }
 .nav-item:hover { color: #e9f1f3; background: rgba(255,255,255,.07); }
@@ -97,7 +98,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .nav-icon { display: grid; place-items: center; width: 19px; color: #80969f; font-size: 17px; font-weight: 500; }
 .nav-item.active .nav-icon { color: var(--orange); }
 .nav-count { margin-left: auto; padding: 2px 6px; border-radius: 10px; color: #f9b89d; background: rgba(249,115,72,.14); font-family: 'DM Mono', monospace; font-size: 9px; }
-.sidebar-spacer { flex: 1; }
+.sidebar-spacer { flex: 0 0 0; }
 .sidebar-help { display: flex; align-items: center; gap: 9px; margin: 0 2px 16px; padding: 11px 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(255,255,255,.045); }
 .help-orbit { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid rgba(249,115,72,.4); border-radius: 50%; color: var(--orange); font-size: 13px; font-weight: 800; }
 .sidebar-help strong, .sidebar-help span { display: block; }
@@ -318,6 +319,11 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .dark .satohash-pill.online { color: #4fd1a0; background: #12301f; }
 .dark .satohash-pill.offline { color: #e3b04e; background: #2a2110; }
 .dark .brand-mark { box-shadow: 0 6px 18px rgba(249, 115, 72, .3); }
+
+/* Marketing header nav strip: scrolls internally instead of pushing the page wide. */
+.nav-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.nav-scroll::-webkit-scrollbar { display: none; }
+.nav-scroll > a { flex: 0 0 auto; white-space: nowrap; }
 
 /* Subtle mesh backdrop used by the shared layout (was referenced but never defined). */
 .mesh-bg {

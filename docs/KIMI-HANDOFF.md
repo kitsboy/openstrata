@@ -1,3 +1,23 @@
+## Session — 2026-08-26 (landing page fixed: standalone app shell + working links)
+
+**User report:** on https://openstrata.giveabit.io/ none of the links worked, the page slid sideways under the sidebar, and the sidebar's bottom buttons (help + status footer) were below the fold. "We MUST finish the landing page."
+
+**Root cause (measured in a real browser at 1698×1012):** the dashboard home page was nested inside the marketing layout — that double-shell broke everything:
+- The marketing header (brand + 11-item nav + actions) needed ~1570px min content, so any viewport below ~1780px overflowed horizontally → the page "slides sideways" and content passes under the fixed sidebar
+- The sidebar is `position: fixed; height: 100vh` but sat 105px down (below the marketing header) → its bottom landed at 1117 in a 1012px viewport → help + status-footer buttons unreachable
+- Links: the dashboard footer was 14 × `href="/"`; sidebar nav was toast-buttons; nothing navigated
+
+**Fixed:**
+- **`+layout.svelte`**: the home page now renders bare — a standalone full-height app shell (its own sidebar + topbar + footer); the marketing header/footer only wrap non-home pages. Marketing header's 11-item center nav is now an internally-scrollable strip (`flex-1 min-w-0 overflow-x-auto`, scrollbar hidden) so it never pushes the page wide
+- **`app.css`**: sidebar `height: 100dvh` (fits the viewport exactly since there's nothing above it anymore), `nav-groups` becomes the scroll region (`flex: 1; min-height: 0; overflow-y: auto`) so short viewports scroll the nav instead of clipping the footer
+- **`+page.svelte` (all links wired to real pages):** sidebar nav (Overview → `/`, Buildings → `/tools`, Governance → `/compliance`, Operations/Finances → `/tools`, Legal → `/legal`, Insights → `/roadmap`), the "Need a hand" box → `/faq`, "View all" → `/tools`, mobile bottom nav → links, and the dashboard footer's 14 dead `href="/"` links → real routes (`/tools`, `/compliance`, `/legal`, `/templates`, `/faq`, `/blog`, `/rss`, `/spec`, `/docs`, mailto, GitHub). Added a theme toggle to the dashboard topbar (it lost the marketing header's one); removed the dead `selectNav`/`active` toast-nav
+
+**Verified in a real browser (system Chrome + CDP) at 1698, 1440, 1280, 1024 and 390px widths:** `scrollWidth == clientWidth` everywhere (zero horizontal overflow), sidebar `top: 0` and `bottom == viewport height` with **help + footer buttons visible at every size**, click-through confirmed (sidebar Legal → `/legal` loads), `/tools` header scrolls internally with no page overflow. Build + svelte-check 0/0 + 45 tests + i18n audit all green.
+
+**Git State:** commits pending — main work commit + handoff-SHA follow-up; push after Cam's go.
+
+---
+
 ## Session — 2026-08-26 (per-council DB-backed units, v0.3.5)
 
 **Done (#5 — per-council DB-backed units, the largest remaining tenancy step):**

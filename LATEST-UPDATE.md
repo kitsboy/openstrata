@@ -1,28 +1,25 @@
 # Latest Update — 2026-08-26
 
-**Per-council DB-backed units (v0.3.5) — #5 of the 20-item list, the largest remaining tenancy step.**
+**Landing page fixed and finished (v0.3.5).** You reported: no working links, the page slides sideways under the sidebar, and the sidebar's bottom buttons are below the page. All three, root-caused and fixed.
 
-## What shipped
-- **Migration `0005_council_units.sql`** — `unit` table keyed on `(community_id, unit_ref)`: every council owns its own building, tenant-isolated.
-- **`UnitStore`** interface + **`PostgresUnitStore`** (production) + **`MemUnitStore`** (tests): `list / get / upsert / remove / seedDefault`.
-- **Server rewired to store-backed `/units`** (registry stays as the demo fallback):
-  - `GET /api/v1/units` — tenant-scoped list
-  - `GET /api/v1/units/:unitRef` — **unit detail**: AR ledger balance (hash-chain verified) + payment requests = unit→payment→ledger traceability end to end
-  - `POST /api/v1/units` (treasurer+) — upsert; unitRefs canonicalized (`U-501` → `501`)
-  - `DELETE /api/v1/units/:unitRef` (admin)
-  - **Register seeds the demo building into each new council** — fresh signups get a working building
-- **Consistency fixes found while wiring this:**
-  - Payment-quote `unitRef`s are now canonicalized at the boundary (`unit-302` → `302`), so stored rows, referenceCodes, and unit detail agree
-  - Billing AR fund now posts to the documented canonical `ar:unit-<n>` account (unit detail balances read real charges)
-  - **Fixed a latent `PostgresPaymentRequestStore.markStatus` bug**: it wrote `status = $2` (the referenceCode!) instead of `$3` — the e2e re-quote-after-confirm assertion would have failed on a real Postgres. Exactly the kind of thing the smoke suite is for.
-- **Frontend:** Form K hub gains a live **unit detail panel** (AR balance + fund code + recent payments) and **manage-units controls** (add: treasurer+, remove: admin) when signed in. `src/lib/api/units.ts` grew `fetchUnitDetail` / `createUnit` / `deleteUnit`. 4 new i18n keys × 9 locales.
+## What was broken (measured in a real browser)
+The home dashboard was nested inside the marketing layout — a double shell:
+1. **Sideways slide** — the marketing header (brand + 11-item nav + actions) needed ~1570px of space, so at every common laptop width it overflowed horizontally and the page panned sideways, content sliding under the fixed sidebar
+2. **Clipped sidebar buttons** — the sidebar is `height: 100vh` but sat 105px down the page (below the marketing header), so its bottom (Need a hand? + All systems operational) landed below the viewport and was unreachable
+3. **Dead links** — the dashboard footer was 14 links all pointing at `/`; the sidebar nav were toast-buttons that navigated nowhere
 
-## Verification
-- Backend: **167 tests / 16 files** (+12 new in `unit-store.test.ts` — store semantics, role gates, tenancy isolation, AR traceability from billing + confirmed payments, 501 fallback), typecheck clean, build clean
-- Frontend: **45 tests** (+3 api client), `svelte-check` 0/0, i18n **565 keys × 9 locales** parity green, production build + prerender clean
-- Docs updated: `backend/API.md` (units section), WORKPLAN #5 done, handoff + status
+## What's fixed
+- **Home = standalone app shell.** The dashboard now renders by itself — no marketing header/footer above it. The sidebar now spans the exact viewport (`100dvh`), with the nav area scrolling internally on short screens so the bottom buttons are always visible
+- **Every link works.** Sidebar nav → real pages (Overview `/`, Buildings `/tools`, Governance `/compliance`, Operations/Finances `/tools`, Legal `/legal`, Insights `/roadmap`); footer columns → `/tools`, `/compliance`, `/legal`, `/templates`, `/faq`, `/blog`, `/rss`, `/spec`, `/docs`, mailto + GitHub; "Need a hand" → `/faq`; "View all" → `/tools`; mobile bottom nav → links
+- **Theme toggle** added to the dashboard topbar (it had lost the marketing header's)
+- **Marketing pages fixed too** — the 11-item header nav now scrolls internally instead of pushing the page wide, so `/about`, `/tools`, etc. no longer slide either
 
-## Still deferred (infra-gated, per Cam)
-#1 live-site verify (needs deploy) · #13 rails on host · #14 on-chain/LN broadcast · #17 BOLT-12 (LND + LNBITS channels later)
+## Verified in a real browser (Chrome, 5 viewports: 1698 / 1440 / 1280 / 1024 / 390)
+- Zero horizontal overflow at every width
+- Sidebar help + status-footer buttons visible at every width
+- Click-through works: sidebar "Legal library" navigates to `/legal`
+- `/tools` header scrolls internally, page doesn't slide
 
-All changes **uncommitted** — main work commit + handoff-SHA follow-up ready to commit and push on your word.
+Checks: svelte-check 0/0, 45 tests, i18n 565 keys × 9 locales, build clean.
+
+**Uncommitted** — ready to commit and push on your word.

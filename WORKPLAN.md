@@ -70,7 +70,7 @@ Bitcoin/sovereign-rail advancements; 20 closes the portability loop.
 
 **Landing & hardening (deploy-day foundation)**
 
-1. [ ] **Verify the live site post-deploy** — pending deploy; local verification passed (fonts load once, build clean, no unallowlisted origins)
+1. [ ] **Verify the live site post-deploy** — pending deploy; local verification passed (fonts load once, build clean, no unallowlisted origins). Landing fixed this session: home renders as a standalone app shell (no marketing header/footer), all links wired to real pages, sidebar fits the viewport with scrollable nav, marketing header nav scrolls internally — verified in a real browser at 5 viewports
 2. [x] **Pin CSP `connect-src` to the explicit API origin** — done as `scripts/generate-csp.mjs` (prebuild): pins to `CSP_API_ORIGIN`/`PUBLIC_API_BASE_URL` when set, documented `https:` fallback otherwise (commit `3ed66e7`)
 3. [x] **Audit every page for the same security/tightness pass** — done: no unallowlisted loaded origins beyond fonts/analytics/Satohash; fixes were global (commit `3ed66e7` + `e113cd4`)
 

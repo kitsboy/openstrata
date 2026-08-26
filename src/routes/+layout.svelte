@@ -61,10 +61,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </svelte:head>
 
+{#if $page.url.pathname === '/'}
+  <!-- The home page is the product dashboard — a self-contained app shell with
+       its own fixed sidebar + topbar. Rendering it inside the marketing chrome
+       below caused the layout to break: the fixed sidebar overshot the viewport
+       (bottom buttons clipped) and the marketing header overflowed horizontally
+       (page slides sideways under the sidebar). So the dashboard renders bare. -->
+  {@render children()}
+{:else}
 <div class="flex min-h-screen flex-col mesh-bg">
   <header class="sticky top-0 z-50 border-b border-border bg-surface-2/80 backdrop-blur-md">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-      <a href="/" class="flex items-center gap-3 no-underline group">
+      <a href="/" class="flex items-center gap-3 no-underline group shrink-0">
         <div class="brand-mark layout-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
         <div>
           <span class="block text-lg font-bold tracking-tight text-slate-800 group-hover:text-brand-700 transition-colors">OpenStrata</span>
@@ -72,13 +80,15 @@
         </div>
       </a>
 
-      <div class="hidden lg:flex items-center gap-1">
+      <!-- 11 nav items + the actions cluster need more than 1280px; scroll the
+           nav strip internally instead of pushing the page wider. -->
+      <div class="hidden lg:flex flex-1 min-w-0 items-center justify-center gap-1 overflow-x-auto nav-scroll">
         {#each navItems as item}
           <a href={item.href} class="rounded-lg px-3.5 py-2 text-sm font-medium no-underline transition-colors {$page.url.pathname === item.href ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600'}">{item.label}</a>
         {/each}
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 shrink-0">
         <button class="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick={() => (searchOpen = true)} aria-label={$copy.search} title={$copy.search}>
           <span aria-hidden="true">⌕</span> <kbd class="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘K</kbd>
         </button>
@@ -129,6 +139,7 @@
     </div>
   </footer>
 </div>
+{/if}
 
 <DonateModal bind:open={donateOpen} />
 <SearchModal bind:open={searchOpen} />

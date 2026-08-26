@@ -3,6 +3,9 @@
   import { copy, locale, locales, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
   import { auth, signOut } from '$lib/api/auth';
   import { fetchLedgerBalance } from '$lib/api/ledger';
+  import { theme, toggleTheme } from '$lib/theme';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   const appVersion = packageJson.version;
 
@@ -24,6 +27,18 @@
     { label: 'Workspace', items: [['overview', 'Overview', '⌂'], ['buildings', 'Buildings', '▦'], ['governance', 'Governance', '◈']] },
     { label: 'Run the building', items: [['operations', 'Operations', '⌁'], ['finances', 'Finances', '$'], ['legal', 'Legal library', '§'], ['insights', 'Insights', '◒']] }
   ] as const;
+
+  // Every sidebar / footer nav item maps to a real page so links work end to end.
+  const navTargets: Record<string, string> = {
+    overview: '/',
+    buildings: '/tools',
+    governance: '/compliance',
+    operations: '/tools',
+    finances: '/tools',
+    legal: '/legal',
+    insights: '/roadmap'
+  };
+  const isActive = (href: string) => $page.url.pathname === href;
 
   const buildings = [
     { name: 'Harbour House', location: 'Vancouver, BC', units: '72 units', health: 96, tone: 'green', issue: 'All systems clear', glyph: 'HH' },
@@ -48,7 +63,6 @@
   import AuthModal from '$lib/components/AuthModal.svelte';
   import { onMount } from 'svelte';
 
-  let active = $state('overview');
   let showLanguageMenu = $state(false);
   let showMobileMenu = $state(false);
   let showNewStrata = $state(false);
@@ -110,13 +124,6 @@
     )
   );
 
-  function selectNav(id: string) {
-    active = id;
-    showMobileMenu = false;
-    toast = `${id.charAt(0).toUpperCase() + id.slice(1)} ${$copy.workspaceSelected}`;
-    setTimeout(() => (toast = ''), 2400);
-  }
-
   function openAction(message: string) {
     toast = message;
     rememberNotification(message);
@@ -151,21 +158,21 @@
         <div class="nav-group">
           <div class="nav-label">{group.label === 'Workspace' ? $copy.workspace : $copy.runBuilding}</div>
           {#each group.items as item}
-            <button class:active={active === item[0]} class="nav-item" onclick={() => selectNav(item[0])}>
+            <a href={navTargets[item[0]]} class:active={isActive(navTargets[item[0]])} class="nav-item no-underline">
               <span class="nav-icon">{item[2]}</span><span>{$copy[item[0]]}</span>
               {#if item[0] === 'legal'}<span class="nav-count">12</span>{/if}
-            </button>
+            </a>
           {/each}
         </div>
       {/each}
     </nav>
 
     <div class="sidebar-spacer"></div>
-    <div class="sidebar-help">
+    <a href="/faq" class="sidebar-help no-underline">
       <div class="help-orbit">?</div>
       <div><strong>{$copy.needAHand}</strong><span>{$copy.visitResourceCentre}</span></div>
       <span class="arrow">↗</span>
-    </div>
+    </a>
     <div class="sidebar-footer"><span class="status-dot"></span><span>{$copy.allSystemsOperational}</span><button class="mini-settings" aria-label={$copy.openSettings}>⚙</button></div>
   </aside>
 
@@ -177,6 +184,7 @@
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
         <label class="search-box"><span aria-hidden="true">⌕</span><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
+        <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<span aria-hidden="true">☀️</span>{:else}<span aria-hidden="true">🌙</span>{/if}</button>
         <div class="language-wrap">
           <button class="language-button" aria-expanded={showLanguageMenu} onclick={() => (showLanguageMenu = !showLanguageMenu)}><span class="globe">◎</span><span class="language-current">{selectedLanguageName}</span><span class="chevron">⌄</span></button>
           {#if showLanguageMenu}
@@ -232,7 +240,7 @@
 
       <section class="main-grid">
         <div class="left-stack">
-          <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => selectNav('buildings')}>{$copy.viewAll}<span>→</span></button></div>
+          <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => goto('/tools')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
             {#each filteredBuildings as building}
               <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>				<div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
@@ -257,9 +265,9 @@
     </main>
 
     <footer class="site-footer">
-      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/">{$copy.buildings}</a><a href="/">{$copy.governance}</a><a href="/">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/">{$copy.legal}</a><a href="/">{$copy.privacy}</a><a href="/">{$copy.security}</a><a href="/">{$copy.accessibility}</a></div><div><h3>{$copy.resources}</h3><a href="/">{$copy.helpCentre}</a><a href="/">{$copy.bcSources}</a><a href="/">{$copy.templates}</a><a href="/">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/">{$copy.status}</a> <a href="/">{$copy.githubLabel} ↗</a></span></div>
+      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span></div>
     </footer>
-  </div>	  <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><button class:active={active === 'overview'} onclick={() => selectNav('overview')}><span>⌂</span>{$copy.overview}</button><button class:active={active === 'buildings'} onclick={() => selectNav('buildings')}><span>▦</span>{$copy.buildings}</button><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><span>＋</span></button><button class:active={active === 'operations'} onclick={() => selectNav('operations')}><span>⌁</span>{$copy.operations}</button><button onclick={() => (showMobileMenu = true)}><span>☰</span>{$copy.menu}</button></nav>
+  </div>	  <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><span>⌂</span>{$copy.overview}</a><a href="/tools" class:active={isActive('/tools')}><span>▦</span>{$copy.buildings}</a><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><span>＋</span></button><a href="/tools" class:active={isActive('/tools')}><span>⌁</span>{$copy.operations}</a><button onclick={() => (showMobileMenu = true)}><span>☰</span>{$copy.menu}</button></nav>
 </div>
 
 {#if selectedBuilding}
