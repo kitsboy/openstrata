@@ -71,14 +71,14 @@
 </div>
 
 <style>
-  .satohash-card { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
-  .satohash-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
-  .satohash-title { color: var(--ink); font-size: 12px; font-weight: 800; }
+  .satohash-card { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); box-shadow: var(--shadow-card); overflow: hidden; }
+  .satohash-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  .satohash-title { color: var(--ink); font-size: 16px; font-weight: 800; letter-spacing: -.4px; }
   .satohash-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 700; }
   .satohash-pill.online { color: #2da379; background: #edf9f4; }
   .satohash-pill.offline { color: #b48332; background: #fff8e9; }
   .satohash-pill.checking { color: var(--faint); background: var(--surface-3); }
-  .satohash-body { padding: 16px; }
+  .satohash-body { padding: 20px 24px 24px; }
   .satohash-label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
   .satohash-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .satohash-row input { min-width: 0; flex: 1 1 240px; height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; outline: 0; color: var(--ink); background: var(--canvas); font-family: 'DM Mono', monospace; font-size: 11px; }

@@ -289,15 +289,20 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .action-card.orange .action-glyph { color: var(--orange); background: #fff0eb; }.action-card.purple .action-glyph { color: var(--purple); background: #f3f0ff; }.action-card.blue .action-glyph { color: var(--blue); background: #eff6ff; }.action-card.green .action-glyph { color: var(--green); background: #eaf8f2; }
 .action-card span:nth-child(2) { min-width: 0; flex: 1; }.action-card strong, .action-card small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.action-card strong { color: var(--ink); font-size: 10px; font-weight: 800; }.action-card small { margin-top: 3px; color: #9ca8ad; font-size: 8px; }.action-card > b { color: #a9b3b7; font-size: 17px; font-weight: 400; }
 .right-stack { display: flex; flex-direction: column; gap: 14px; }
-.panel { padding: 17px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: var(--shadow); }
-.panel-heading { margin-bottom: 18px; }
+/* Right-rail consistency: widget cards (glass-card) read as siblings of the
+   hand-written .panel sections, so align their headings to the same weight
+   and tracking used by panel/section headings across the dashboard. */
+.right-stack .glass-card h3 { font-weight: 800; letter-spacing: -.4px; }
+.right-stack > .panel { width: 100%; }
+.panel { padding: 24px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: var(--shadow-card); }
+.panel-heading { margin-bottom: 16px; }
 .activity-list, .upcoming-list { border-top: 1px solid #f0f2f3; }
 .activity-item, .upcoming-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 0; border-bottom: 1px solid #f0f2f3; background: transparent; text-align: left; }
 .activity-item:hover, .upcoming-item:hover { background: #fafbfb; }
 .activity-icon { display: grid; place-items: center; flex: 0 0 auto; width: 27px; height: 27px; border-radius: 8px; font-size: 12px; font-weight: 800; }.activity-icon.green { color: #2fa477; background: #eaf8f2; }.activity-icon.blue { color: var(--blue); background: #eff6ff; }.activity-icon.amber { color: #c58c2d; background: #fff6e4; }.activity-icon.purple { color: var(--purple); background: #f3f0ff; }
 .activity-copy, .event-copy { min-width: 0; flex: 1; }.activity-copy strong, .activity-copy small, .event-copy strong, .event-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.activity-copy strong, .event-copy strong { color: var(--ink); font-size: 10px; font-weight: 800; }.activity-copy small, .event-copy small { margin-top: 4px; color: #9ba7ac; font-size: 8px; }.activity-chevron { color: #c1c9cc; font-size: 19px; }
 .panel-link { margin-top: 15px; padding: 0; }
-.upcoming-panel { background: #fbfcfc; }.event-date { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 38px; border-radius: 8px; }.event-date b { font-size: 14px; line-height: 1; }.event-date small { font-family: 'DM Mono', monospace; font-size: 7px; font-weight: 500; letter-spacing: .06em; }.event-date.orange { color: var(--orange); background: #fff0eb; }.event-date.purple { color: var(--purple); background: #f3f0ff; }.event-date.blue { color: var(--blue); background: #eff6ff; }
+.upcoming-panel { background: var(--paper); }.event-date { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 38px; border-radius: 8px; }.event-date b { font-size: 14px; line-height: 1; }.event-date small { font-family: 'DM Mono', monospace; font-size: 7px; font-weight: 500; letter-spacing: .06em; }.event-date.orange { color: var(--orange); background: #fff0eb; }.event-date.purple { color: var(--purple); background: #f3f0ff; }.event-date.blue { color: var(--blue); background: #eff6ff; }
 .site-footer { margin-top: auto; padding: 48px 36px 22px; color: #a7bcc4; background: #102d3b; }
 .footer-top { display: flex; justify-content: space-between; gap: 60px; max-width: 1280px; margin: 0 auto; padding-bottom: 38px; }
 .footer-brand { max-width: 330px; }.footer-lockup { padding: 0; }.footer-lockup .brand-name { color: #f5fbfc; }.footer-brand p { margin: 20px 0 10px; color: #d4e0e3; font-size: 14px; font-weight: 600; line-height: 1.55; }.footer-note { color: #708b95; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .03em; }
@@ -370,7 +375,7 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .dark .search-box { background: rgba(21, 35, 46, .74); }
 .dark .building-card { background: var(--paper); }
 .dark .panel { background: var(--paper); }
-.dark .upcoming-panel { background: #121f29; }
+.dark .upcoming-panel { background: var(--paper); }
 .dark .action-card { background: var(--paper); }
 .dark .empty-state { background: var(--paper); }
 .dark .language-menu { background: var(--paper); }
