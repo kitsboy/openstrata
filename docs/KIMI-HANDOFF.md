@@ -20,7 +20,7 @@
 - Login rate limiting + invite flow before public exposure; per-council DB-backed units
 
 **Git State:**
-- Working tree: auth + tenancy changes **uncommitted** (no push performed this session — awaiting Cam's go)
+- Committed as **`af9ab77`** — "Add JWT auth + multi-tenant council scoping to the backend" (26 files, +1790/−252). Not pushed yet; awaiting Cam's go to push to `origin/main`
 
 ---
 
