@@ -4,6 +4,8 @@
 	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';
 	import Icon from '$lib/components/Icon.svelte';
 	import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
+	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
+	import SubAccounts from '$lib/components/SubAccounts.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
@@ -266,8 +268,10 @@
 		</div>
 	</section>
 
-	<!-- E-Transfer Reconciliation (live demo) -->
-	<div class="mb-8">
+	<!-- Live demos: trust funds, meetings, e-transfer reconciliation -->
+	<div class="mb-8 space-y-8">
+		<SubAccounts />
+		<MeetingsTool />
 		<ETransferReconciler />
 	</div>
 

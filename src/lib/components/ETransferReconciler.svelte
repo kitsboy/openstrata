@@ -44,6 +44,43 @@
   // Manual override: transferId -> chosen unitId (resolves unmatched/ambiguous).
   let manual = $state<Record<string, string>>({});
   let mode = $state<'brief' | 'full'>('brief');
+  let importError = $state('');
+
+  // Item #12 — bank-feed import seam: parse a CSV export (date, from, message,
+  // amount, optional header row) into the inbound queue. Plaid/Flinks wiring
+  // will feed the same shape; until then this makes the reconciler work with a
+  // real bank's CSV.
+  function importCsv(file: File) {
+    importError = '';
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result ?? '');
+      const lines = text.split(/\r?\n/).filter((line) => line.trim());
+      if (lines.length === 0) return;
+      const hasHeader = /date|from|message|amount/i.test(lines[0]) && !/^\d{4}-\d{2}-\d{2}/.test(lines[0]);
+      const body = hasHeader ? lines.slice(1) : lines;
+      const next: ETransfer[] = [];
+      for (const line of body) {
+        const cols = line.split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+        const [date, from = '', message = '', amountRaw = ''] = cols;
+        const amount = Number(amountRaw);
+        if (!date || !Number.isFinite(amount) || amount <= 0) {
+          importError = `Skipped row: ${line}`;
+          continue;
+        }
+        next.push({
+          id: `ET-${Date.now()}-${next.length}`,
+          from,
+          message,
+          amount,
+          date: date.slice(0, 10)
+        });
+      }
+      if (next.length === 0) return;
+      transfers = [...transfers, ...next];
+    };
+    reader.readAsText(file);
+  }
 
   const unitIds = $derived(UNITS.map((u) => u.id));
   // Last automatic pass, before manual overrides.
@@ -108,7 +145,12 @@
         class="rounded-lg px-3 py-1.5 text-xs font-semibold {mode === 'full' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}"
         onclick={() => (mode = 'full')}
       >{$copy.etransferMatchFull}</button>
+      <label class="cursor-pointer rounded-lg bg-surface-3 px-3 py-1.5 text-xs font-semibold text-slate-600">
+        {$copy.reconImportCsv}
+        <input type="file" accept=".csv,text/csv" class="sr-only" onchange={(e) => e.currentTarget.files?.[0] && importCsv(e.currentTarget.files[0])} />
+      </label>
     </div>
+    {#if importError}<p class="mt-2 text-xs text-danger">{importError}</p>{/if}
   </div>
 
   <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
