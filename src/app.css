@@ -95,8 +95,8 @@
 
 :root {
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #18232b;
-  background: #f6f8f9;
+  color: var(--ink);
+  background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --ink: #18232b;
@@ -119,11 +119,18 @@
 * { box-sizing: border-box; }
 html { min-width: 320px; background: var(--canvas); }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
-button, input, select { font: inherit; }
-button, a { -webkit-tap-highlight-color: transparent; }
-button { border: 0; cursor: pointer; }
-a { color: inherit; text-decoration: none; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(63, 142, 252, .45); outline-offset: 3px; }
+
+/* Element resets live in @layer base so Tailwind utilities (which sit in the
+   later utilities layer) can override them. Without this, the unlayered
+   `a { color: inherit }` silently beat every text-* color utility, so brand
+   links rendered plain ink (and dark-on-dark in dark mode). */
+@layer base {
+  button, input, select { font: inherit; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  button { border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(63, 142, 252, .45); outline-offset: 3px; }
+}
 
 .app-shell { display: flex; min-height: 100vh; background: var(--canvas); }
 .sidebar { position: fixed; top: 0; left: 0; z-index: 30; display: flex; flex-direction: column; width: 252px; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; padding: 26px 16px 18px; color: #b7c6cc; background: var(--navy); }
@@ -397,6 +404,11 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .dark .satohash-pill.online { color: #4fd1a0; background: #12301f; }
 .dark .satohash-pill.offline { color: #e3b04e; background: #2a2110; }
 .dark .brand-mark { box-shadow: 0 6px 18px rgba(249, 115, 72, .3); }
+
+/* bc-blue is a dark navy tuned for light surfaces — on dark cards it drops to
+   ~2:1. Lighten text usages only (solid bg-bc-blue badges keep the navy so
+   their white text stays legible). Unlayered, so it beats the utility. */
+.dark .text-bc-blue { color: #5fb4d9; }
 
 /* Marketing mobile bottom dock — mirrors the dashboard's floating nav so every
    page has the same navigation on phones. Hidden on desktop. */
