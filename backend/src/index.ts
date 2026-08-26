@@ -43,7 +43,9 @@ async function main(): Promise<void> {
       rails: config.rails,
       cadPerBtc: Number(process.env.CAD_PER_BTC ?? 0) || 0,
       authSecret: config.authSecret,
-      authTokenTtl: config.authTokenTtl
+      authTokenTtl: config.authTokenTtl,
+      authRateLimitMax: config.authRateLimitMax,
+      authRateLimitWindowMs: config.authRateLimitWindowMs
     }
   });
 

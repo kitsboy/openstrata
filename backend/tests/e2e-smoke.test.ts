@@ -71,7 +71,9 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
           },
           cadPerBtc: 50_000,
           authSecret: AUTH_SECRET,
-          authTokenTtl: 3600
+          authTokenTtl: 3600,
+          authRateLimitMax: 1000,
+          authRateLimitWindowMs: 60_000
         }
       },
       { logger: false }

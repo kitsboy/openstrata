@@ -36,6 +36,7 @@ import type { AuthStore } from '../auth/store.js';
 import { DuplicateEmailError } from '../auth/store.js';
 import type { AuthUser, UserRole } from '../auth/model.js';
 import { ROLE_RANK, toPublicUser } from '../auth/model.js';
+import { RateLimiter, type RateLimitConfig } from '../auth/rate-limit.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -58,6 +59,8 @@ export interface ApiDeps {
     rails?: RailRegistry;
     cadPerBtc?: number; // fallback static rate for convertible rails
     authSecret: string;
+    authRateLimitMax: number;
+    authRateLimitWindowMs: number;
     authTokenTtl: number; // seconds
   };
 }
@@ -132,6 +135,14 @@ export async function buildServer(
     async (req, reply) => {
       const email = req.body.email.trim().toLowerCase();
       if (!EMAIL_RE.test(email)) return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      const registerThrottle = throttled(`register:ip:${req.ip}`);
+      if (registerThrottle) {
+        return reply
+          .code(429)
+          .header('retry-after', String(registerThrottle.retryAfter))
+          .send({ ok: false, reason: 'too many registrations — try again shortly', retryAfter: registerThrottle.retryAfter });
+      }
+      rateLimiter.record(`register:ip:${req.ip}`);
       if (await deps.auth.getUserByEmail(email)) {
         return reply.code(409).send({ ok: false, reason: 'email already registered' });
       }
@@ -158,6 +169,17 @@ export async function buildServer(
     }
   );
 
+  // Brute-force throttle for the open auth surface (per email + per IP). Only
+  // failed attempts consume the window — success clears the email bucket.
+  const rateLimiter = new RateLimiter({
+    max: deps.config.authRateLimitMax,
+    windowMs: deps.config.authRateLimitWindowMs
+  } satisfies RateLimitConfig);
+  const throttled = (key: string): { retryAfter: number } | null =>
+    rateLimiter.isLimited(key)
+      ? { retryAfter: rateLimiter.retryAfterSeconds(key) }
+      : null;
+
   app.post<{ Body: { email: string; password: string } }>(
     '/api/v1/auth/login',
     {
@@ -172,10 +194,20 @@ export async function buildServer(
     },
     async (req, reply) => {
       const email = req.body.email.trim().toLowerCase();
+      const limited = throttled(`login:email:${email}`) ?? throttled(`login:ip:${req.ip}`);
+      if (limited) {
+        return reply
+          .code(429)
+          .header('retry-after', String(limited.retryAfter))
+          .send({ ok: false, reason: 'too many login attempts — try again shortly', retryAfter: limited.retryAfter });
+      }
       const user = await deps.auth.getUserByEmail(email);
       if (!user || !(await verifyPassword(req.body.password, user.passwordHash))) {
+        rateLimiter.record(`login:email:${email}`);
+        rateLimiter.record(`login:ip:${req.ip}`);
         return reply.code(401).send({ ok: false, reason: 'invalid email or password' });
       }
+      rateLimiter.clear(`login:email:${email}`);
       const token = signJwt(
         { sub: user.id, cid: user.councilId, role: user.role },
         deps.config.authSecret,

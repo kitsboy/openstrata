@@ -20,6 +20,10 @@ export interface BackendConfig {
   authSecret: string;
   /** Bearer token lifetime in seconds (default 12h). */
   authTokenTtl: number;
+  /** Auth brute-force throttling: attempts per window (per email + per IP). */
+  authRateLimitMax: number;
+  /** Auth throttle window in milliseconds (default 15 min). */
+  authRateLimitWindowMs: number;
   /** Sovereign payment rails — which are enabled and where their daemons live. */
   rails: RailRegistry;
 }
@@ -44,6 +48,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     reconScanDays: int(env.RECON_SCAN_DAYS, 90),
     authSecret: env.AUTH_SECRET ?? 'dev-only-insecure-secret-change-me',
     authTokenTtl: int(env.AUTH_TOKEN_TTL, 12 * 60 * 60),
+    authRateLimitMax: int(env.AUTH_RATE_LIMIT_MAX, 10),
+    authRateLimitWindowMs: int(env.AUTH_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
     rails: {
       fiat: { enabled: true },
       onchain: { enabled: env.BITCOIN_RAIL_ENABLED === 'true', endpoint: env.LND_URL || env.BITCOIN_NODE_URL },
