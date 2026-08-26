@@ -1,3 +1,24 @@
+## Session — 2026-08-26 (all 20 GUI & user-flow improvements shipped, v0.3.6)
+
+**Task:** "Execute all 20 GUI improvements end to end with tests, batching and pushing like the last list."
+
+**Shipped in 4 batched commits + docs, all pushed to `origin/main`:**
+- **Batch 1 — Foundation (`eac768f`):** **one SVG icon system** (#11 — 30+ stroke icons in `src/lib/icons.ts` replacing ⌂▦◈⌁§⌕♢⚙☀️🌙☰… glyphs across the dashboard shell, marketing header, search modal, modals, mobile nav, metric icons, activity list); **real `glass-card` tokens** (#12 — `.glass-card` was referenced on 60+ marketing cards but NEVER defined, so those cards rendered as bare text on the mesh background; it now resolves to the same soft 2-layer card language as the dashboard, with shared `--radius-card/--shadow-card/--border-card` tokens applied to metric/panel/building/action cards); **dark-mode audit** (#13 — slate tokens were already remapped; the invisible glass-cards were the real gap, now themed + `tooltip-bubble` defined for the tools-page tooltips); **typography ramp** (#14 — one heading voice, tight tracking, DM Mono reserved for labels); **designed empty states** (#15 — new `EmptyState` component: mark + message + next-step CTA, used in dashboard search, notifications, unit payments)
+- **Batch 2 — Navigation (`b40dc69`):** **breadcrumbs on every page** (#1 — `Breadcrumbs` component in the marketing layout, DM Mono trail matching the dashboard's); **tools sub-nav** (#2 — per-domain counts + "Jump to live demos" anchor); **scroll-spy TOC** (#3 — `PageToc` on legal/docs/spec/roadmap, assigns h2 ids, IntersectionObserver highlight, sticky card, hidden <1024px); **⌘K palette indexes tool modules** (#4 — new `tools` search group so the global palette searches the strata-tool catalog; dashboard ⌘K already global via layout); **mobile bottom nav on ALL pages** (#5 — the dashboard's floating dock reused on every marketing route)
+- **Batch 3 — Alive (`01609f3`):** **view transitions** (#6 — `onNavigate` + `document.startViewTransition`, fade + 4px slide, honors reduced-motion); **shimmer skeletons** (#7 — `Skeleton` component in dashboard metric cards with a 2.5s safety timer, unit-detail panel); **dynamic dashboard header** (#8 — time-of-day greeting (3 new i18n keys), real today's date, signed-in user's first name); **metric sparklines + deltas** (#9 — `Sparkline` fed by the live `/ledger/series` when signed in, demo walk otherwise); **micro-interactions** (#10 — hover lift + active press + focus rings on every clickable)
+- **Batch 4 — Trust (`584dbb4`):** **first-run tour** (#16 — 4-step dismissible overlay for fresh signed-out visitors, localStorage-remembered, Escape/scrim/Skip/Next); **validation & messaging** (#17 — error-variant toast + inline form error on New Strata with `nameRequired`); **destructive confirmation** (#18 — `ConfirmDialog` for remove-unit and sign-out); **live-data trust chrome** (#19 — `LiveSync` "Last synced HH:MM" + per-widget refresh on SubAccounts); **hero pattern** (#20 — every page now answers "what do I do here": eyebrow + title + intro + ONE primary action added to FAQ (→ Strata Tool), Blog (→ RSS & API), Roadmap (→ Strata Tool), Legal (→ Templates))
+- **Bonus fix found in verification:** the marketing header's actions cluster overflowed ~20–52px at tablet widths (768–800px) — the jurisdiction picker now shows at `lg+` only; **re-verified zero horizontal overflow at 390/640/768/800/900/1024/1280/1440/1698px** in a real browser
+
+**Verified in a real browser (system Chrome + CDP):** fresh-visitor home shows the tour overlay (dismisses permanently), dashboard renders sidebar + 2 metric sparklines with zero overflow, `/tools` at 390px has zero overflow + the mobile dock, click-through sidebar Legal → `/legal` loads with the TOC visible.
+
+**Checks:** svelte-check **0/0**, frontend **56 tests** (+11: search index, Sparkline, Tour, ConfirmDialog), build + prerender clean, i18n **588 keys × 9 locales** parity green. Version bumped to **v0.3.6** everywhere (package.json, both lockfiles, CHANGELOG, README, MISSION, EXECUTIVE-SUMMARY).
+
+**Git State:** commits `eac768f`, `b40dc69`, `01609f3`, `584dbb4` + docs commit pushed to `origin/main`.
+
+**Remaining (unchanged, all infra-gated):** #1 live-site verify (needs deploy), #13 rails on host (LND/Liquid/PayNym/Nostr), #14 on-chain/LN broadcast (daemons), #17 BOLT-12 (LND + channels — LNBITS node exists, channels not yet established). The 20 GUI items are all marked done in WORKPLAN.md.
+
+---
+
 ## Session — 2026-08-26 (landing page fixed: standalone app shell + working links)
 
 **User report:** on https://openstrata.giveabit.io/ none of the links worked, the page slid sideways under the sidebar, and the sidebar's bottom buttons (help + status footer) were below the fold. "We MUST finish the landing page."

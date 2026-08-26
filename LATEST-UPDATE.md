@@ -1,25 +1,30 @@
-# Latest Update — 2026-08-26
+# Latest Update — OpenStrata v0.3.6
 
-**Landing page fixed and finished (v0.3.5).** You reported: no working links, the page slides sideways under the sidebar, and the sidebar's bottom buttons are below the page. All three, root-caused and fixed.
+**2026-08-26 · All 20 GUI & user-flow improvements shipped** — four batched, tested commits pushed to `origin/main` (Cloudflare Pages auto-deploy).
 
-## What was broken (measured in a real browser)
-The home dashboard was nested inside the marketing layout — a double shell:
-1. **Sideways slide** — the marketing header (brand + 11-item nav + actions) needed ~1570px of space, so at every common laptop width it overflowed horizontally and the page panned sideways, content sliding under the fixed sidebar
-2. **Clipped sidebar buttons** — the sidebar is `height: 100vh` but sat 105px down the page (below the marketing header), so its bottom (Need a hand? + All systems operational) landed below the viewport and was unreachable
-3. **Dead links** — the dashboard footer was 14 links all pointing at `/`; the sidebar nav were toast-buttons that navigated nowhere
+## What changed
 
-## What's fixed
-- **Home = standalone app shell.** The dashboard now renders by itself — no marketing header/footer above it. The sidebar now spans the exact viewport (`100dvh`), with the nav area scrolling internally on short screens so the bottom buttons are always visible
-- **Every link works.** Sidebar nav → real pages (Overview `/`, Buildings `/tools`, Governance `/compliance`, Operations/Finances `/tools`, Legal `/legal`, Insights `/roadmap`); footer columns → `/tools`, `/compliance`, `/legal`, `/templates`, `/faq`, `/blog`, `/rss`, `/spec`, `/docs`, mailto + GitHub; "Need a hand" → `/faq`; "View all" → `/tools`; mobile bottom nav → links
-- **Theme toggle** added to the dashboard topbar (it had lost the marketing header's)
-- **Marketing pages fixed too** — the 11-item header nav now scrolls internally instead of pushing the page wide, so `/about`, `/tools`, etc. no longer slide either
+| Batch | Items | Commit |
+|---|---|---|
+| Foundation | #11 one SVG icon system · #12 real glass-card + shared tokens · #13 dark-mode audit · #14 typography ramp · #15 designed empty states | `eac768f` |
+| Navigation | #1 breadcrumbs everywhere · #2 tools sub-nav · #3 scroll-spy TOC · #4 ⌘K indexes tool modules · #5 mobile dock on all pages | `b40dc69` |
+| Alive | #6 view transitions · #7 shimmer skeletons · #8 dynamic greeting + real date · #9 metric sparklines · #10 micro-interactions | `01609f3` |
+| Trust | #16 first-run tour · #17 error toasts + inline validation · #18 confirm dialogs · #19 last-synced chrome · #20 hero pattern CTAs | `584dbb4` |
 
-## Verified in a real browser (Chrome, 5 viewports: 1698 / 1440 / 1280 / 1024 / 390)
-- Zero horizontal overflow at every width
-- Sidebar help + status-footer buttons visible at every width
-- Click-through works: sidebar "Legal library" navigates to `/legal`
-- `/tools` header scrolls internally, page doesn't slide
+## The biggest find
 
-Checks: svelte-check 0/0, 45 tests, i18n 565 keys × 9 locales, build clean.
+**`.glass-card` was never defined.** Every marketing page (60+ cards) had `class="glass-card …"` but no CSS rule existed — those cards rendered as bare text floating on the mesh background. It now resolves to the same soft 2-layer card language as the dashboard, via shared `--radius-card` / `--shadow-card` / `--border-card` tokens. The tools-page tooltip (`tooltip-bubble`) was phantom too — now real.
 
-**Uncommitted** — ready to commit and push on your word.
+## Verified in a real browser
+
+- **Zero horizontal overflow at 390 / 640 / 768 / 800 / 900 / 1024 / 1280 / 1440 / 1698 px** (found + fixed a tablet-width header overflow in the process)
+- First-run tour overlay shows for fresh visitors and dismisses permanently
+- Dashboard renders sidebar + metric sparklines; click-through navigation works; TOC appears on long pages
+
+## Checks
+
+- svelte-check **0/0** · frontend **56 tests** (+11) · i18n **588 keys × 9 locales** parity green · build + prerender clean
+
+## Still pending (infra-gated, unchanged)
+
+Live-site verify needs the host deploy; LND/Liquid/PayNym/Nostr rails, real broadcast, and BOLT-12 wait on the LND + LNBITS channels you said we'll establish later.

@@ -102,41 +102,41 @@ Bitcoin/sovereign-rail advancements; 20 closes the portability loop.
 
 ---
 
-## GUI & User Flow — 20 improvements (proposed)
+## GUI & User Flow — 20 improvements (shipped, v0.3.6)
 
 **Aesthetic guardrails (never regress the "pretty"):** keep Manrope + DM Mono (labels/code only), the soft 2-layer card shadows, brand-orange primary accent, mesh/canvas backgrounds, 8–13px radii, and generous whitespace. Every item below enhances the existing language — no redesigns.
 
 **A — Navigate & orient (5)**
 
-1. [ ] **Breadcrumbs on every page** — only the dashboard has them today. Add a consistent breadcrumb/eyebrow to every marketing route (About, Tools, Compliance, Legal, …), collapsible on mobile
-2. [ ] **Tools page sub-nav** — upgrade the existing sticky domain filter into a real sub-nav: visible current section, per-domain counts, and a "jump to live demos" item
-3. [ ] **"On this page" TOC with scroll-spy** — anchored, scroll-highlighted section list for long content pages (compliance, legal, docs, roadmap, spec)
-4. [ ] **Global ⌘K command palette everywhere** — wire search to real content (pages, FAQ, legal sources, templates, tool modules) with keyboard-first results; the dashboard's inline search box stays as a quick filter
-5. [ ] **Mobile bottom nav on ALL pages** — the marketing site currently dead-ends on phones; reuse the dashboard's floating-dock pattern (Home, Tools, Legal, Menu) across every route
+1. [x] **Breadcrumbs on every page** — only the dashboard has them today. Add a consistent breadcrumb/eyebrow to every marketing route (About, Tools, Compliance, Legal, …), collapsible on mobile
+2. [x] **Tools page sub-nav** — upgrade the existing sticky domain filter into a real sub-nav: visible current section, per-domain counts, and a "jump to live demos" item
+3. [x] **"On this page" TOC with scroll-spy** — anchored, scroll-highlighted section list for long content pages (compliance, legal, docs, roadmap, spec)
+4. [x] **Global ⌘K command palette everywhere** — wire search to real content (pages, FAQ, legal sources, templates, tool modules) with keyboard-first results; the dashboard's inline search box stays as a quick filter
+5. [x] **Mobile bottom nav on ALL pages** — the marketing site currently dead-ends on phones; reuse the dashboard's floating-dock pattern (Home, Tools, Legal, Menu) across every route
 
 **B — Feel alive & responsive (5)**
 
-6. [ ] **Route view transitions** — subtle SvelteKit view transition (fade + 4px slide) between pages; honors `prefers-reduced-motion`
-7. [ ] **Skeleton loaders for live widgets** — metrics, units matrix, reconciler, pitch charts show skeletons while fetching instead of demo-data flash → live-data flash
-8. [ ] **Dynamic dashboard header** — time-of-day greeting (Good morning/afternoon/evening), real today's date, and the signed-in user's name; locale-aware formatting
-9. [ ] **Sparklines + deltas on metric cards** — mini trend charts fed by the ledger series endpoint when live (demo walk otherwise), with a small trend label (already have ↑/+% styling — add the data)
-10. [ ] **Micro-interactions audit** — every clickable gets hover lift + active press + visible focus ring (many exist; fill the gaps on the dashboard, cards, modals, tables)
+6. [x] **Route view transitions** — subtle SvelteKit view transition (fade + 4px slide) between pages; honors `prefers-reduced-motion`
+7. [x] **Skeleton loaders for live widgets** — metrics, units matrix, reconciler, pitch charts show skeletons while fetching instead of demo-data flash → live-data flash
+8. [x] **Dynamic dashboard header** — time-of-day greeting (Good morning/afternoon/evening), real today's date, and the signed-in user's name; locale-aware formatting
+9. [x] **Sparklines + deltas on metric cards** — mini trend charts fed by the ledger series endpoint when live (demo walk otherwise), with a small trend label (already have ↑/+% styling — add the data)
+10. [x] **Micro-interactions audit** — every clickable gets hover lift + active press + visible focus ring (many exist; fill the gaps on the dashboard, cards, modals, tables)
 
 **C — Visual consistency (5)**
 
-11. [ ] **One icon system** — replace emoji/unicode glyphs (⌂ ▦ ◈ ⌁ ◒ ⚙ ✕ •••) with a single SVG icon set (same stroke weight) across dashboard + marketing
-12. [ ] **Unified card/button tokens** — one shadow, radius, border, and hover language across the hand-rolled dashboard shell and the Tailwind marketing glass-cards so it reads as one product
-13. [ ] **Full dark-mode audit** — every page toggles cleanly (dashboard + marketing + modals + tables); fix washed-out or unreadable surfaces
-14. [ ] **Typography ramp** — one heading scale + tracking across all pages; DM Mono reserved for labels/eyebrows/code; verify contrast + line-heights on every surface
-15. [ ] **Designed empty states** — every tool, search result, and "nothing here yet" panel gets a small mark + what-happens-next + a CTA (no bare placeholder text)
+11. [x] **One icon system** — replace emoji/unicode glyphs (⌂ ▦ ◈ ⌁ ◒ ⚙ ✕ •••) with a single SVG icon set (same stroke weight) across dashboard + marketing
+12. [x] **Unified card/button tokens** — one shadow, radius, border, and hover language across the hand-rolled dashboard shell and the Tailwind marketing glass-cards so it reads as one product
+13. [x] **Full dark-mode audit** — every page toggles cleanly (dashboard + marketing + modals + tables); fix washed-out or unreadable surfaces
+14. [x] **Typography ramp** — one heading scale + tracking across all pages; DM Mono reserved for labels/eyebrows/code; verify contrast + line-heights on every surface
+15. [x] **Designed empty states** — every tool, search result, and "nothing here yet" panel gets a small mark + what-happens-next + a CTA (no bare placeholder text)
 
 **D — Flow & trust (5)**
 
-16. [ ] **First-run tour** — 4-step dismissible highlight overlay for new councils (Sign in → New strata → Tools → Live data), shown only to signed-out/fresh signups
-17. [ ] **Consistent validation & messaging** — inline form errors, an error-variant toast (we only have the ✓ toast), aria-live announcements; audit every modal and input
-18. [ ] **Destructive-action confirmation + undo** — delete unit, remove xpub, sign-out get a confirm step; soft-delete with a 5s undo toast where feasible
-19. [ ] **Live-data trust chrome** — "Last synced HH:MM" + per-widget refresh button on every live widget; the Live/Demo pill stays global
-20. [ ] **Consistent page hero pattern** — eyebrow + title + intro + ONE primary action on every route; every page answers "what do I do here?" (some routes currently end without a next step)
+16. [x] **First-run tour** — 4-step dismissible highlight overlay for new councils (Sign in → New strata → Tools → Live data), shown only to signed-out/fresh signups
+17. [x] **Consistent validation & messaging** — inline form errors, an error-variant toast (we only have the ✓ toast), aria-live announcements; audit every modal and input
+18. [x] **Destructive-action confirmation + undo** — delete unit, remove xpub, sign-out get a confirm step; soft-delete with a 5s undo toast where feasible
+19. [x] **Live-data trust chrome** — "Last synced HH:MM" + per-widget refresh button on every live widget; the Live/Demo pill stays global
+20. [x] **Consistent page hero pattern** — eyebrow + title + intro + ONE primary action on every route; every page answers "what do I do here?" (some routes currently end without a next step)
 
 ---
 

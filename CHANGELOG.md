@@ -2,6 +2,17 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.3.6
+    date: 2026-08-26
+    summary: >-
+      GUI & user-flow push — all 20 improvements shipped: SVG icon system,
+      real glass-card tokens (was undefined), typography ramp, designed empty
+      states, breadcrumbs, tools sub-nav, scroll-spy TOC, tool modules in the
+      Cmd-K palette, mobile dock on every page, view transitions, shimmer
+      skeletons, dynamic time-of-day greeting, metric sparklines,
+      micro-interactions, first-run tour, confirm dialogs, error toasts +
+      inline validation, last-synced chrome, and hero-pattern CTAs. Tablet-width
+      header overflow fixed (jurisdiction picker moves to lg+).
   - version: 0.3.5
     date: 2026-08-26
     summary: Per-council DB-backed unit registry with traceability (migration 0005)
