@@ -4,6 +4,7 @@
   import { demoUnits, unitsToUnitRefs } from '$lib/units';
   import { auth } from '$lib/api/auth';
   import { fetchUnits, apiUnitsToUnitRefs, type ApiUnit } from '$lib/api/units';
+  import LiveSync from '$lib/components/LiveSync.svelte';
   import { onMount } from 'svelte';
 
   // ---- Simulated inbound e-transfer notifications (bank format) ----
@@ -22,16 +23,23 @@
   // bank-feed ingestion is a Phase 5 item — so the widget demonstrates matching
   // against the council's real unit numbers.
   let liveUnits = $state<ApiUnit[] | null>(null);
+  let live = $state(false);
+  let syncedAt = $state<Date | null>(null);
+
+  async function refreshUnits() {
+    try {
+      liveUnits = await fetchUnits();
+      syncedAt = new Date();
+    } catch {
+      /* host unreachable — keep current registry */
+    }
+  }
 
   onMount(() => {
     const unsubscribe = auth.subscribe((session) => {
-      if (session.status === 'signed-in') {
-        fetchUnits()
-          .then((units) => (liveUnits = units))
-          .catch(() => {});
-      } else if (session.status === 'signed-out') {
-        liveUnits = null;
-      }
+      live = session.status === 'signed-in';
+      if (live) refreshUnits();
+      else liveUnits = null;
     });
     return unsubscribe;
   });
@@ -137,6 +145,7 @@
       <p class="mt-1 text-sm text-slate-500">{$copy.etransferIntro}</p>
     </div>
     <div class="flex items-center gap-2">
+      <LiveSync live={live} bind:syncedAt onRefresh={() => refreshUnits()} />
       <button
         class="rounded-lg px-3 py-1.5 text-xs font-semibold {mode === 'brief' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}"
         onclick={() => (mode = 'brief')}

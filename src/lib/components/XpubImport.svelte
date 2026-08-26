@@ -9,6 +9,7 @@
   import { auth } from '$lib/api/auth';
   import { apiFetch } from '$lib/api/client';
   import { getToken } from '$lib/api/token';
+  import LiveSync from '$lib/components/LiveSync.svelte';
   import { onMount } from 'svelte';
 
   interface Derived {
@@ -23,6 +24,7 @@
   let addresses = $state<Derived[] | null>(null);
   let error = $state('');
   let busy = $state(false);
+  let syncedAt = $state<Date | null>(null);
 
   onMount(() => {
     const unsubscribe = auth.subscribe((session) => {
@@ -39,6 +41,7 @@
       });
       registered = res.registered;
       addresses = res.addresses ?? null;
+      syncedAt = new Date();
     } catch {
       /* not reachable — stay in demo state */
     }
@@ -66,9 +69,12 @@
 <section class="glass-card rounded-2xl p-6">
   <div class="flex items-center justify-between mb-4">
     <h3 class="text-lg font-bold text-slate-800">🔐 {$copy.xpubTitle}</h3>
-    {#if live && registered}
-      <span class="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.xpubRegistered}</span>
-    {/if}
+    <div class="flex items-center gap-3">
+      <LiveSync live={live} bind:syncedAt onRefresh={() => refresh()} />
+      {#if live && registered}
+        <span class="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.xpubRegistered}</span>
+      {/if}
+    </div>
   </div>
   <p class="text-sm text-slate-500">{$copy.xpubIntro}</p>
 

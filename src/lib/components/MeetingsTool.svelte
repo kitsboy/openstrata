@@ -15,6 +15,7 @@
   import { auth } from '$lib/api/auth';
   import { apiFetch, ApiUnavailableError } from '$lib/api/client';
   import { getToken } from '$lib/api/token';
+  import LiveSync from '$lib/components/LiveSync.svelte';
   import { onMount } from 'svelte';
 
   type MeetingType = 'AGM' | 'SGM' | 'council' | 'rescheduled';
@@ -42,6 +43,13 @@
 
   let error = $state('');
   let live = $state(false);
+  let syncedAt = $state<Date | null>(null);
+
+  // Trust chrome: re-run whichever check is on screen with the current inputs.
+  function refreshAll() {
+    if (tab === 'vote') runVote();
+    else runQuorum();
+  }
 
   onMount(() => {
     const unsubscribe = auth.subscribe((session) => {
@@ -95,6 +103,7 @@
         });
         qResult = res;
         qLive = true;
+        syncedAt = new Date();
         return;
       } catch (err) {
         if (err instanceof ApiUnavailableError) {
@@ -120,6 +129,7 @@
         });
         vResult = res;
         vLive = true;
+        syncedAt = new Date();
         return;
       } catch (err) {
         if (err instanceof ApiUnavailableError) {
@@ -148,9 +158,12 @@
       <h3 class="text-lg font-bold text-slate-800">🗳️ {$copy.meetingsIntro}</h3>
       <p class="mt-1 text-sm text-slate-500">{($copy.meetingsQuorumTool)}</p>
     </div>
-    {#if live}
-      <span class="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.liveLabel}</span>
-    {/if}
+    <div class="flex items-center gap-3">
+      <LiveSync live={live} bind:syncedAt onRefresh={refreshAll} />
+      {#if live}
+        <span class="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.liveLabel}</span>
+      {/if}
+    </div>
   </div>
 
   <div class="mt-4 flex gap-2">
