@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
-**Last updated:** 2026-08-26 (v0.3.5)  
-**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); per-council DB-backed units live (migration 0005); frontend wired to the live API; landing secured + tightened; GUI/user-flow improvement list (20 items) proposed below.
+**Last updated:** 2026-08-26 (v0.3.6)  
+**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); per-council DB-backed units live (migration 0005); frontend wired to the live API; landing secured + tightened; all 20 GUI/user-flow improvements shipped (v0.3.6); next 20 user-flow/GUI/Bitcoin improvements proposed below.
 
 ---
 
@@ -137,6 +137,46 @@ Bitcoin/sovereign-rail advancements; 20 closes the portability loop.
 18. [x] **Destructive-action confirmation + undo** — delete unit, remove xpub, sign-out get a confirm step; soft-delete with a 5s undo toast where feasible
 19. [x] **Live-data trust chrome** — "Last synced HH:MM" + per-widget refresh button on every live widget; the Live/Demo pill stays global
 20. [x] **Consistent page hero pattern** — eyebrow + title + intro + ONE primary action on every route; every page answers "what do I do here?" (some routes currently end without a next step)
+
+---
+
+## User Flow, GUI & Bitcoin — Next 20 (proposed, 2026-08-26)
+
+The follow-on list, focused on the four lenses Cam set: **user flow, GUI, design, Bitcoin.**
+Each item is grounded in what exists today — the gap, not a wish. The host deploy stays
+the standing prerequisite for the live-rendered items (rate chrome, receipts, signing room).
+
+**A — User flow (5)**
+
+1. [ ] **Pay-fees checkout flow** — per-unit "Pay" with quote → rail picker (fiat / Bitcoin on-chain / Lightning) → confirm → receipt. `payments/quote` + `payments/confirm` exist as API only; today a unit's fees are visible but not payable
+2. [ ] **"Run the month" close flow** — one guided screen: billing run → late notices → e-transfer reconciliation → Form K trail. `billing/run` + the reconciler exist; no task flow ties them together
+3. [ ] **Bylaw enforcement case UI** — complaint → auto-notice → 14-day BLOCK_FINE_ACTIONS lock timeline → vote → fine, with CRT-ready evidence attached at each step. The state-machine API exists; today it's a compliance KB page
+4. [ ] **Member & lot workspace** — one screen per owner: unit, payments, forms issued (B/F), fines, next due — the unit→payment→form traceability spine end to end. Unit detail exists; the owner/contact layer doesn't
+5. [ ] **"What's due" task center** — per-council deadlines: Form B 7-day clock, notice windows, AGM/CRT dates, EPR 2026. Backend has no deadline model yet — a `deadlines` endpoint first, then the UI
+
+**B — GUI & design (5)**
+
+6. [ ] **Design-token theming** — document the token set as a theme map with an alternate BC-green "brokerage" theme (framework doc's alt), brand-orange stays default; per-page dark-mode screenshot audit
+7. [ ] **Real image assets** — replace placeholder/mesh visuals with product screenshots + an illustration set for empty states, the tour, and og-meta cards
+8. [ ] **Print & PDF polish** — tuned print stylesheets for Form B/F certificates, the CRT bundle, and ledger exports (server-side PDF stays out of scope)
+9. [ ] **Living design system page** — `/design` style guide rendering the tokens/components (buttons, cards, forms, toasts) so every future change stays on-language
+10. [ ] **Micro-copy & guidance pass** — inline "What is a CRF?" / "What is LNURL?" tooltips, command-palette category icons, and every empty state ending in a working next action
+
+**C — Bitcoin & sovereignty UX (5)**
+
+11. [ ] **Rails status panel** — dashboard panel: enabled rails, LND/Liquid node status, live cadPerBtc + "as of HH:MM". `/rails/status` exists; today it only drives the pitch hero + Live/Demo pill
+12. [ ] **Multisig signing room** — pending PSBTs, 2-of-5 signature progress per transaction, QR-to-hardware-wallet, broadcast when ready. `buildPsbtPlan`/`recordSignature` seam exists; no UI
+13. [ ] **BTC payment receipts** — after a Bitcoin/Lightning payment: txid, sats locked, cadPerBtc at lock, Satohash stamp link on the receipt. Quote/confirm + stamp seam exist; the receipt surface doesn't
+14. [ ] **Wallet & address book** — registered xpub(s), per-unit receive addresses with QR + copy, per-address balance via block explorer. XpubImport exists; the usable wallet layer doesn't
+15. [ ] **Bitcoin education layer** — "What is a multisig / LNURL / OTS?" explainers beside every sovereign control, and the DCA module's Form B disclosure visualized (X% of CRF at risk). `dca/plan` exists
+
+**D — Trust & data (5)**
+
+16. [ ] **Ledger explorer** — browse the hash chain per fund/unit, re-verify hashes, export a fund's trail as CSV. Balance + series APIs exist; the chain itself is invisible
+17. [ ] **Export center** — one place for portable JSON, CRT bundle, Form B/F PDFs, ledger CSV — extending the existing EvidenceExport panel, not a new page
+18. [ ] **Member & role management UI** — admin invites, role assignment (admin/treasurer/member), temp-password handoff, revoke. Backend admin-user APIs exist; no frontend
+19. [ ] **In-app notifications** — bell feed driven by real events (payment confirmed, Form B requested, deadline approaching, fine issued); PWA push follows
+20. [ ] **Honest live-rate chrome** — cadPerBtc + "as of" on every BTC-denominated quote, DCA plan, and sparkline so demo↔live is always legible
 
 ---
 
