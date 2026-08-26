@@ -116,6 +116,26 @@ export async function signUp(input: {
   applySession(res, apiBaseUrl() ? 'configured' : 'demo');
 }
 
+/** Admin: list the council's accounts (`GET /auth/users`). */
+export async function listUsers(): Promise<PublicUser[]> {
+  const res = await apiFetch<{ ok: boolean; users: PublicUser[] }>('/api/v1/auth/users', {
+    token: getToken()
+  });
+  return res.users;
+}
+
+/** Admin: invite a treasurer/member; returns the one-time temporary password. */
+export async function inviteUser(input: {
+  email: string;
+  displayName?: string;
+  role: 'treasurer' | 'member';
+}): Promise<{ user: PublicUser; temporaryPassword: string }> {
+  return apiFetch<{ ok: boolean; user: PublicUser; temporaryPassword: string }>(
+    '/api/v1/auth/users',
+    { method: 'POST', body: input, token: getToken() }
+  );
+}
+
 /** Clear the token + session locally (the JWT simply expires server-side). */
 export function signOut(): void {
   setToken(null);

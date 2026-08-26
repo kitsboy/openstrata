@@ -9,7 +9,9 @@
   import { copy, formatCurrency } from '$lib/i18n';
   import { auth } from '$lib/api/auth';
   import { fetchLedgerBalance } from '$lib/api/ledger';
+  import Icon from '$lib/components/Icon.svelte';
   import LiveSync from '$lib/components/LiveSync.svelte';
+  import Glossary from '$lib/components/Glossary.svelte';
   import { onMount } from 'svelte';
 
   interface FundView {
@@ -89,13 +91,27 @@
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
     {#each funds as fund}
       <div class="rounded-xl border border-border bg-surface-2 p-4">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{copy[fund.label as keyof typeof copy] ?? fund.label}</p>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{copy[fund.label as keyof typeof copy] ?? fund.label}
+          {#if fund.code === 'crf'}<Glossary term="crf" />{/if}
+          {#if fund.code === 'war_chest'}<Glossary term="multisig" />{/if}
+        </p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{formatCurrency(displayBalance(fund), 'en', { maximumFractionDigits: 0 })}</p>
         <p class="mt-1 font-mono text-[10px] text-slate-400">
           {fund.tally ? `tally ${fund.tally}…` : fund.code}
         </p>
       </div>
     {/each}
+  </div>
+
+  <div class="mt-4 rounded-xl border border-bitcoin/20 bg-bitcoin/5 p-4">
+    <div class="flex items-center justify-between gap-2 text-xs font-bold text-bitcoin">
+      <span class="flex items-center gap-1.5"><Icon name="bitcoin" class="h-3.5 w-3.5" /> {$copy.eduDca} <Glossary term="dca" /></span>
+      <span>{formatCurrency(total * 0.12, 'en', { maximumFractionDigits: 0 })} · 12%</span>
+    </div>
+    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+      <span class="block h-full rounded-full bg-bitcoin" style="width: 12%"></span>
+    </div>
+    <p class="mt-1.5 text-[11px] text-slate-400">{$copy.eduDcaText}</p>
   </div>
 
   <div class="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">

@@ -320,6 +320,194 @@ describe('auth session', () => {
 });
 
 // ---------------------------------------------------------------------------
+// New 20-item push endpoints: members, deadlines, ledger entries, payments,
+// billing, bylaw, admin users
+// ---------------------------------------------------------------------------
+describe('new 20-item endpoint helpers', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    delete import.meta.env.PUBLIC_API_BASE_URL;
+    vi.unstubAllGlobals();
+  });
+
+  function stubFetch(handler: (url: string, init: RequestInit) => unknown) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: RequestInit) => {
+        const body = handler(url, init);
+        return new Response(JSON.stringify(body), {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        });
+      })
+    );
+  }
+
+  it('fetchMembers reads the tenant-scoped roster', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-m');
+    stubFetch((url) => {
+      if (url.endsWith('/api/v1/members')) {
+        return { ok: true, members: [{ id: 1, email: 'm.chen@example.com', displayName: 'M. Chen', phone: null, unitRef: '101', roleLabel: 'owner', createdAt: '2026-06-01' }] };
+      }
+      return { ok: true };
+    });
+    const members = await import('./members').then((m) => m.fetchMembers());
+    expect(members).toHaveLength(1);
+    expect(members[0].unitRef).toBe('101');
+    expect(members[0].roleLabel).toBe('owner');
+  });
+
+  it('createMember POSTs to /members and returns the row', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-m');
+    let seen: RequestInit | undefined;
+    stubFetch((url, init) => {
+      if (url.endsWith('/api/v1/members')) {
+        seen = init;
+        return { ok: true, member: { id: 2, email: 'x@example.com', displayName: 'X', phone: null, unitRef: '302', roleLabel: 'tenant', createdAt: '2026-09-01' } };
+      }
+      return { ok: true };
+    });
+    const member = await import('./members').then((m) => m.createMember({ email: 'x@example.com', unitRef: '302', roleLabel: 'tenant' }));
+    expect(seen?.method).toBe('POST');
+    expect(member.unitRef).toBe('302');
+  });
+
+  it('deleteMember issues a DELETE with the row id', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-m');
+    let seenUrl = '';
+    stubFetch((url, init) => {
+      seenUrl = url;
+      expect(init.method).toBe('DELETE');
+      return { ok: true };
+    });
+    await import('./members').then((m) => m.deleteMember(7));
+    expect(seenUrl).toBe('http://hermes:8787/api/v1/members/7');
+  });
+
+  it('fetchDeadlines returns sorted items with days left', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-d');
+    stubFetch((url) => {
+      if (url.endsWith('/api/v1/deadlines')) {
+        return { ok: true, asOf: '2026-08-26T00:00:00Z', items: [{ id: 'epr', kind: 'epr', title: 'EPR', dueAt: '2026-12-31', daysLeft: 127, severity: 'soon', jurisdiction: 'BC' }] };
+      }
+      return { ok: true };
+    });
+    const items = await import('./deadlines').then((m) => m.fetchDeadlines());
+    expect(items[0].kind).toBe('epr');
+    expect(items[0].severity).toBe('soon');
+  });
+
+  it('fetchLedgerEntries returns the verified chain for a fund', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-l');
+    stubFetch((url) => {
+      if (url.includes('/api/v1/ledger/entries')) {
+        return { ok: true, fund: 'operating', entries: [{ seq: 1, amountBasis: 12_500, kind: 'credit', type: 'strata_fee', description: '', referenceCode: 'r1', prevTally: '', tallyRoot: 'a'.repeat(64), postedAt: '2026-09-01T00:00:00Z' }] };
+      }
+      return { ok: true };
+    });
+    const entries = await import('./ledger').then((m) => m.fetchLedgerEntries('operating'));
+    expect(entries).toHaveLength(1);
+    expect(entries[0].seq).toBe(1);
+    expect(entries[0].tallyRoot).toHaveLength(64);
+  });
+
+  it('quotePayment posts rail/unit/amount and returns the invoice', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-p');
+    let seen: RequestInit | undefined;
+    stubFetch((url, init) => {
+      if (url.endsWith('/api/v1/payments/quote')) {
+        seen = init;
+        return { ok: true, created: true, invoice: { rail: 'lightning', referenceCode: 'REF-1', recipient: 'lnurl…', invoice: 'lnbc…', fiatLockedBasis: 35_000, amountSat: 36_269, expiresAt: '2026-08-26T12:15:00Z', status: 'quoted' } };
+      }
+      return { ok: true };
+    });
+    const res = await import('./payments').then((m) => m.quotePayment({ rail: 'lightning', refId: 'fees-1', unitRef: '302', amountBasis: 35_000, currency: 'CAD', recipient: 'lnurl…' }));
+    expect(seen?.method).toBe('POST');
+    expect(res.created).toBe(true);
+    expect(res.invoice.referenceCode).toBe('REF-1');
+    expect(res.invoice.amountSat).toBeGreaterThan(0);
+  });
+
+  it('confirmPayment marks a reference code paid', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-p');
+    let seen: RequestInit | undefined;
+    stubFetch((url, init) => {
+      if (url.endsWith('/api/v1/payments/confirm')) {
+        seen = init;
+        return { ok: true, seq: 4, referenceCode: 'REF-1', status: 'paid' };
+      }
+      return { ok: true };
+    });
+    const res = await import('./payments').then((m) => m.confirmPayment('REF-1'));
+    expect(seen?.method).toBe('POST');
+    expect(seen?.body).toBe(JSON.stringify({ referenceCode: 'REF-1' }));
+    expect(res.status).toBe('paid');
+  });
+
+  it('runBillingCycle posts fees + config and returns charges + late notices', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-b');
+    stubFetch((url) => {
+      if (url.endsWith('/api/v1/billing/run')) {
+        return {
+          ok: true,
+          run: {
+            period: '2026-09',
+            charges: [{ unitId: '101', amountBasis: 35_000, referenceCode: 'ar:unit-101', kind: 'strata_fee' }],
+            lateNotices: [],
+            totalChargedBasis: 35_000
+          },
+          postedCount: 1,
+          posted: [{ unitId: '101', seq: 9 }]
+        };
+      }
+      return { ok: true };
+    });
+    const res = await import('./billing').then((m) => m.runBillingCycle({ period: '2026-09', fees: [{ unitId: '101', monthlyBasis: 35_000 }], dueDay: 1, graceDays: 7, lateFeeBasis: 2000, arrears: {} }));
+    expect(res.run.totalChargedBasis).toBe(35_000);
+    expect(res.postedCount).toBe(1);
+  });
+
+  it('bylawComplaint files a case and bylawStatus reports the lock', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-b');
+    const complaintWire = { id: 'case-1', unitId: '302', bylawRef: 'B5', breachKind: 'standard' as const, receivedAt: '2026-08-26T00:00:00Z', state: 'notice_issued', noticeIssuedAt: '2026-08-26', noticeDeadline: '2026-09-09' };
+    stubFetch((url) => {
+      if (url.endsWith('/api/v1/bylaw/complaint')) return { ok: true, complaint: { ...complaintWire, state: 'received' } };
+      if (url.endsWith('/api/v1/bylaw/status')) return { ok: true, allowed: false, blocked: 'BLOCK_FINE_ACTIONS', inReviewWindow: true };
+      return { ok: true };
+    });
+    const bylaw = await import('./bylaw');
+    const c = await bylaw.bylawComplaint({ id: 'case-1', unitId: '302', bylawRef: 'B5', breachKind: 'standard', receivedAt: '2026-08-26T00:00:00Z', evidence: true });
+    expect(c.state).toBe('received');
+    const gate = await bylaw.bylawStatus(complaintWire, '2026-08-28T00:00:00Z');
+    expect(gate.blocked).toBe('BLOCK_FINE_ACTIONS');
+    expect(gate.inReviewWindow).toBe(true);
+  });
+
+  it('listUsers + inviteUser manage council accounts (admin)', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-a');
+    stubFetch((url) => {
+      if (url.endsWith('/api/v1/auth/users')) {
+        return { ok: true, users: [{ id: 'u1', email: 'cam@example.com', displayName: 'Cam', role: 'admin' }] };
+      }
+      return { ok: true };
+    });
+    const users = await import('./auth').then((m) => m.listUsers());
+    expect(users).toHaveLength(1);
+    expect(users[0].role).toBe('admin');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Unit management (per-council registry, migration 0005)
 // ---------------------------------------------------------------------------
 describe('unit management endpoints', () => {

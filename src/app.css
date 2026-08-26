@@ -1,6 +1,47 @@
 @import "tailwindcss";
 
 /* Fonts load once, via the <link> in app.html (preconnect-optimized). */
+/* Glossary popover (#10/#15) — small "?" explainer beside domain terms. */
+.glossary-trigger {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 9999px; cursor: pointer;
+  background: color-mix(in srgb, var(--color-brand-600, #0891b2) 12%, transparent);
+  color: var(--color-brand-600, #0891b2);
+  font-size: 11px; font-weight: 800; line-height: 1;
+  border: 1px solid transparent; transition: filter .15s ease;
+}
+.glossary-trigger:hover { filter: brightness(.95); }
+.glossary-popover {
+  position: absolute; z-index: 60; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 6px; width: 260px; padding: 10px 12px; border-radius: 12px;
+  background: var(--paper, #fff); color: var(--ink, #18232b);
+  box-shadow: 0 4px 18px rgba(24, 35, 43, .14); border: 1px solid var(--line, #e4e9eb);
+  text-align: left;
+}
+.glossary-title {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 800; color: var(--color-brand-600, #0891b2);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.glossary-text { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--muted, #6d7a82); }
+
+/* Print polish (#8): when a page is printed from the browser, drop the app
+   chrome (topbar/sidebar/footers/modals/nav) and ink the content on white.
+   Certificates + CRT bundles open in their own print-ready windows. */
+@media print {
+  .topbar, .sidebar, .site-footer, .mobile-nav, .modal-backdrop,
+  .notifications-panel, .language-menu, .auth-menu, .tooltip-bubble,
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #111; }
+  .app-shell, .main-column, .content { display: block !important; }
+  .glass-card, .panel, .metric-card {
+    box-shadow: none !important;
+    border-color: #ddd !important;
+    break-inside: avoid;
+  }
+  a { color: #111 !important; text-decoration: underline; }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -29,6 +70,27 @@
   --color-bc-green: #2d6a4f;
   --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
   --font-display: 'Manrope', system-ui, sans-serif;
+}
+
+/* Grid children must be allowed to shrink (min-width:0) or long unbreakable
+   content (invoices, LNURL strings, table cells) blows out the row on mobile. */
+.glass-card, .panel, .building-card, .metric-card, .action-card { min-width: 0; }
+
+/* Brand-accent theming: brand-orange (default) vs BC-green "brokerage" theme.
+   Tailwind emits the brand palette as --color-brand-* vars; overriding them on
+   a root data attribute swaps every brand-* utility site-wide. */
+[data-accent='green'] {
+  --color-brand-50: #effaf4;
+  --color-brand-100: #d8f1e4;
+  --color-brand-200: #b4e3cb;
+  --color-brand-300: #85cdaa;
+  --color-brand-400: #52b085;
+  --color-brand-500: #2d9469;
+  --color-brand-600: #2d6a4f;
+  --color-brand-700: #245640;
+  --color-brand-800: #1e4534;
+  --color-brand-900: #18382b;
+  --color-brand-950: #0c2018;
 }
 
 :root {
@@ -266,7 +328,7 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
   .sidebar { transform: translateX(-100%); transition: transform .25s ease; box-shadow: 18px 0 40px rgba(10,27,36,.2); }.sidebar.mobile-open { transform: translateX(0); }.sidebar-close { display: inline-flex !important; margin-left: auto; color: #a5b7bd; font-size: 22px; }.main-column { margin-left: 0; }.mobile-brand { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; }.mobile-brand strong { font-weight: 800; letter-spacing: -.5px; }.menu-button { display: inline-flex; margin-right: 2px; color: var(--ink); font-size: 17px; }.breadcrumbs { display: none; }.topbar { padding: 0 21px; }.search-box { width: 170px; }.main-grid { grid-template-columns: 1fr; }.right-stack { display: grid; grid-template-columns: repeat(2, 1fr); align-items: start; }.footer-top { flex-direction: column; }.footer-links { grid-template-columns: repeat(3, 1fr); max-width: 500px; }.mobile-nav { position: fixed; right: 16px; bottom: 14px; left: 16px; z-index: 20; display: flex; align-items: center; justify-content: space-around; height: 63px; padding: 6px; border: 1px solid rgba(228,233,235,.9); border-radius: 18px; background: rgba(255,255,255,.91); box-shadow: 0 14px 36px rgba(24,35,43,.13); backdrop-filter: blur(18px); }.mobile-nav button { display: grid; place-items: center; gap: 2px; min-width: 53px; color: #9aa7ac; background: transparent; font-size: 8px; font-weight: 800; }.mobile-nav button span { font-size: 18px; font-weight: 400; }.mobile-nav button.active { color: var(--orange); }.mobile-nav .mobile-add { width: 43px; min-width: 43px; height: 43px; border-radius: 14px; color: #fff; background: var(--orange); box-shadow: 0 6px 15px rgba(249,115,72,.25); }.mobile-nav .mobile-add span { font-size: 25px; }
 }
 @media (max-width: 620px) {
-  .topbar { min-height: 64px; padding: 0 15px; }.topbar-actions { gap: 4px; }.search-box { width: 32px; padding: 0 7px; border-color: transparent; background: transparent; }.search-box input, .search-box kbd, .language-current, .language-button .chevron, .profile-name, .profile-button .chevron { display: none; }.search-box span { font-size: 22px; }.language-button { padding: 0 6px; }.notification-button { width: 31px; }.profile-button { padding-left: 4px; }.content { padding: 31px 15px 110px; }.welcome-row { align-items: flex-start; flex-direction: column; gap: 17px; margin-bottom: 24px; }.welcome-row h1 { font-size: 29px; }.primary-button { width: 100%; justify-content: center; }.metric-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 28px; }.metric-card { min-height: 132px; padding: 13px; }.metric-label { font-size: 8px; }.metric-card > strong { margin: 14px 0 10px; font-size: 22px; }.metric-icon { width: 23px; height: 23px; font-size: 13px; }.metric-foot { flex-direction: column; align-items: flex-start; gap: 3px; font-size: 8px; }.main-grid { gap: 34px; }.section-heading h2, .panel-heading h2 { font-size: 15px; }.building-grid { grid-template-columns: 1fr; }.building-card { display: block; }.building-top { align-items: center; }.building-info { margin: 15px 0; }.building-progress, .building-status { display: flex; }.building-progress { flex-direction: column; }.building-status { margin-top: 13px; }.action-grid { grid-template-columns: 1fr; }.right-stack { display: flex; }.site-footer { padding: 40px 20px 90px; }.footer-top { gap: 33px; }.footer-links { gap: 12px; }.footer-links h3 { font-size: 9px; }.footer-links a { font-size: 9px; }.footer-bottom { align-items: flex-start; flex-direction: column; gap: 10px; line-height: 1.5; }.toast { right: 15px; bottom: 91px; left: 15px; justify-content: center; }.modal { padding: 25px 20px; }.modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; justify-content: center; }
+  .topbar { min-height: 64px; padding: 0 15px; }.topbar-actions { gap: 4px; }.accent-toggle { display: none; }.search-box { width: 32px; padding: 0 7px; border-color: transparent; background: transparent; }.search-box input, .search-box kbd, .language-current, .language-button .chevron, .profile-name, .profile-button .chevron { display: none; }.search-box span { font-size: 22px; }.language-button { padding: 0 6px; }.notification-button { width: 31px; }.profile-button { padding-left: 4px; }.content { padding: 31px 15px 110px; }.welcome-row { align-items: flex-start; flex-direction: column; gap: 17px; margin-bottom: 24px; }.welcome-row h1 { font-size: 29px; }.primary-button { width: 100%; justify-content: center; }.metric-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 28px; }.metric-card { min-height: 132px; padding: 13px; }.metric-label { font-size: 8px; }.metric-card > strong { margin: 14px 0 10px; font-size: 22px; }.metric-icon { width: 23px; height: 23px; font-size: 13px; }.metric-foot { flex-direction: column; align-items: flex-start; gap: 3px; font-size: 8px; }.main-grid { gap: 34px; }.section-heading h2, .panel-heading h2 { font-size: 15px; }.building-grid { grid-template-columns: 1fr; }.building-card { display: block; }.building-top { align-items: center; }.building-info { margin: 15px 0; }.building-progress, .building-status { display: flex; }.building-progress { flex-direction: column; }.building-status { margin-top: 13px; }.action-grid { grid-template-columns: 1fr; }.right-stack { display: flex; }.site-footer { padding: 40px 20px 90px; }.footer-top { gap: 33px; }.footer-links { gap: 12px; }.footer-links h3 { font-size: 9px; }.footer-links a { font-size: 9px; }.footer-bottom { align-items: flex-start; flex-direction: column; gap: 10px; line-height: 1.5; }.toast { right: 15px; bottom: 91px; left: 15px; justify-content: center; }.modal { padding: 25px 20px; }.modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 

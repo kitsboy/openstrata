@@ -69,6 +69,10 @@
   import Sparkline from '$lib/components/Sparkline.svelte';
   import Tour from '$lib/components/Tour.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+  import DeadlinesPanel from '$lib/components/DeadlinesPanel.svelte';
+  import RailsStatus from '$lib/components/RailsStatus.svelte';
+  import NotificationsFeed from '$lib/components/NotificationsFeed.svelte';
+  import { accent, cycleAccent } from '$lib/theme';
   import { onMount } from 'svelte';
 
   let showLanguageMenu = $state(false);
@@ -264,6 +268,7 @@
       <div class="topbar-actions">
         <label class="search-box"><Icon name="search" class="h-4 w-4" /><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
         <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}</button>
+        <button class="icon-button accent-toggle" onclick={cycleAccent} aria-label={$copy.themeBrokerage} title="{$copy.themeBrand}: {$accent === 'orange' ? 'orange' : 'green'}">{#if $accent === 'orange'}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#f97348"></span>{:else}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#2d6a4f"></span>{/if}</button>
         <div class="language-wrap">
           <button class="language-button" aria-expanded={showLanguageMenu} onclick={() => (showLanguageMenu = !showLanguageMenu)}><Icon name="globe" class="h-4 w-4" /><span class="language-current">{selectedLanguageName}</span><Icon name="chevron-down" class="h-3 w-3" /></button>
           {#if showLanguageMenu}
@@ -278,14 +283,7 @@
         <button class="icon-button notification-button" aria-expanded={showNotifications} aria-label={$copy.notifications} onclick={() => (showNotifications = !showNotifications)}><Icon name="bell" class="h-4 w-4" /><i></i></button>
         {#if showNotifications}
           <div class="notifications-panel" role="menu" aria-label={$copy.notifications}>
-            <div class="menu-heading">{$copy.notifications}</div>
-            {#if notifications.length === 0}
-              <EmptyState icon="bell" title={$copy.notificationsEmpty} />
-            {:else}
-              {#each notifications as notification}
-                <button class="notification-item" onclick={() => { toast = notification; setTimeout(() => (toast = ''), 2600); }}>{notification}</button>
-              {/each}
-            {/if}
+            <NotificationsFeed />
           </div>
         {/if}
         {#if liveMode && $auth.user}
@@ -337,7 +335,9 @@
           </div>
         </div>
 
-        <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
+        <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <RailsStatus />
+		  <DeadlinesPanel />
+		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
 		  <section><SatohashStatus /></section>
         </aside>
       </section>

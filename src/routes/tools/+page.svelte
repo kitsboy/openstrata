@@ -8,8 +8,20 @@
   import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
-	import XpubImport from '$lib/components/XpubImport.svelte';
-	import EvidenceExport from '$lib/components/EvidenceExport.svelte';
+	import XpubImport from '$lib/components/XpubImport.svelte';  import EvidenceExport from '$lib/components/EvidenceExport.svelte';
+  import CheckoutFlow from '$lib/components/CheckoutFlow.svelte';
+  import MonthlyClose from '$lib/components/MonthlyClose.svelte';
+  import BylawCase from '$lib/components/BylawCase.svelte';
+  import MemberWorkspace from '$lib/components/MemberWorkspace.svelte';
+  import DeadlinesPanel from '$lib/components/DeadlinesPanel.svelte';
+  import RailsStatus from '$lib/components/RailsStatus.svelte';
+  import SigningRoom from '$lib/components/SigningRoom.svelte';
+  import WalletPanel from '$lib/components/WalletPanel.svelte';
+  import LedgerExplorer from '$lib/components/LedgerExplorer.svelte';
+  import ExportCenter from '$lib/components/ExportCenter.svelte';
+  import MemberManager from '$lib/components/MemberManager.svelte';
+  import RateBadge from '$lib/components/RateBadge.svelte';
+  import Glossary from '$lib/components/Glossary.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
@@ -193,6 +205,7 @@
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-3">
+				<div class="flex items-center"><RateBadge /></div>
 				<div class="rounded-xl bg-surface-2 border border-border px-4 py-3 text-center shadow-sm">
 					<div class="text-2xl font-bold text-success">{stats.live}</div>
 					<div class="text-[10px] font-bold text-slate-400 uppercase">{$copy.liveLabel}</div>
@@ -382,6 +395,21 @@
 
 	<!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->
 	<div class="mb-8 space-y-8">
+		<DeadlinesPanel />
+		<div class="grid gap-8 lg:grid-cols-2">
+			<CheckoutFlow />
+			<MonthlyClose />
+			<BylawCase />
+			<MemberWorkspace />
+		</div>
+		<div class="grid gap-8 lg:grid-cols-2">
+			<RailsStatus />
+			<SigningRoom />
+			<WalletPanel />
+			<LedgerExplorer />
+		</div>
+		<ExportCenter />
+		<MemberManager />
 		<SubAccounts />
 		<MeetingsTool />
 		<XpubImport />

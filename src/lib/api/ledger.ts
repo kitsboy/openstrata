@@ -64,6 +64,28 @@ export async function fetchLedgerSeries(fund = 'operating', months = 6): Promise
   return res.points;
 }
 
+export interface LedgerEntry {
+  seq: number;
+  amountBasis: number;
+  kind: 'credit' | 'debit';
+  type: string;
+  description: string;
+  referenceCode: string;
+  prevTally: string;
+  tallyRoot: string;
+  postedAt: string;
+}
+
+/** The verified hash chain for a fund (ledger explorer + CSV export). */
+export async function fetchLedgerEntries(fund: string): Promise<LedgerEntry[]> {
+  const token = getToken();
+  const res = await apiFetch<{ ok: boolean; fund: string; entries: LedgerEntry[] }>(
+    `/api/v1/ledger/entries?fund=${encodeURIComponent(fund)}`,
+    { token }
+  );
+  return res.entries;
+}
+
 export interface PostedEntry {
   posted: true;
   seq: number;
