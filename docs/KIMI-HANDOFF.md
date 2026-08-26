@@ -1,3 +1,20 @@
+## Session — 2026-08-26 · CI FIX — Postgres e2e smoke green (Grok THOR / Kimi lane)
+
+**Cam flagged the red CI run (push `0969190`). Root-caused + fixed + CI green.** Commit `f371aed`, all 3 CI jobs success (frontend verify · backend typecheck+tests · backend Postgres e2e smoke 6/6).
+
+**Four backend root causes (all only appeared against REAL Postgres — unit tests and the in-memory adapters were green, which is why this sat red):**
+1. `backend/src/ledger/store.ts` `createAccount` — `VALUES ($1, $1, $3)` leaves an untyped parameter slot `$2` → Postgres `42P18 could not determine data type of parameter $2`. Fixed → `VALUES ($1, $2, $3)`.
+2. `nextSeq` — `LOCK TABLE` outside a transaction → `25P01`. Wrapped the lock+read in `BEGIN/COMMIT` (with ROLLBACK on error).
+3. `backend/src/rails/payment-store.ts` `save()` — transposed args: params `(communityId, refId, unitRef)` against columns `(ref_id, unit_ref, community_id)` → rows stored with community_id="302" and ref_id="<councilId>", so `findByReference`/`confirm` never matched (`unknown referenceCode`). Reordered params to match columns.
+4. node-postgres returns BIGINT as **strings** — `seq`, `amount_basis`, balances came back as strings and broke the strict `e.seq !== expected` chain check (`tampering: gap in chain`) + numeric assertions. Added `backend/src/db/int8.ts` (global int8/int4→number parser), imported by all five pg stores (ledger, payment, auth, units, members).
+
+**Also:** bumped `actions/checkout@v4→@v5`, `actions/setup-node@v4→@v5` (clears the Node-20 deprecation annotations); relabelled the migrate step (it applies ALL migrations, not just 0001..0004).
+
+**Verified locally first:** fresh pgvector/pg17, migrate 6/6, e2e smoke 6/6 pass, unit 173 pass / 6 skipped (DB unset), `tsc --noEmit` clean. Then pushed and confirmed the real GitHub Actions run `33016663408` → `completed/success` on all three jobs.
+
+**For whoever codes next:** if the backend grows more BIGINT-carrying queries, keep them numeric via the shared int8 parser — never mix string/number comparisons on pg numeric columns. The e2e smoke (`DATABASE_URL` set) is the only gate that catches these adapter bugs; run it before any backend PR.
+
+---
 ## Session — 2026-08-26 (next 20 shipped — live flows, governance, Bitcoin & trust, v0.3.8)
 
 **Task:** "Next 20, end to end. Commit and push in batches."
