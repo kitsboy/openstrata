@@ -7,6 +7,7 @@
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
 	import XpubImport from '$lib/components/XpubImport.svelte';
+	import EvidenceExport from '$lib/components/EvidenceExport.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
@@ -274,6 +275,7 @@
 		<SubAccounts />
 		<MeetingsTool />
 		<XpubImport />
+		<EvidenceExport />
 		<ETransferReconciler />
 	</div>
 

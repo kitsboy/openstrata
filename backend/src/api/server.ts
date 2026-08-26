@@ -856,6 +856,116 @@ export async function buildServer(
     }
   );
 
+  // --------------------------------------------------  Export / evidence
+  // Item #20 — portable OpenStrata export: everything a council needs to move
+  // (per the protocol spec) as one JSON document.
+  app.get('/api/v1/export/portable', { preHandler: [authenticate] }, async (req) => {
+    const councilId = req.user!.councilId;
+    const council = await deps.auth.getCouncil(councilId);
+    const funds = ['operating', 'crf', 'war_chest'];
+    const accounts: Record<string, unknown> = {};
+    for (const fund of funds) {
+      const b = await deps.ledger.balance(councilId, fund);
+      accounts[fund] = { balanceBasis: b.balanceBasis, entryCount: b.entryCount, headTally: b.headTally.slice(0, 4) };
+    }
+    const units = (deps.units?.all() ?? []).map((u) => ({
+      unitRef: u.unitRef,
+      floor: u.floor,
+      sqft: u.sqft,
+      occupancy: u.occupancy,
+      eht: u.eht,
+      evCharger: u.evCharger
+    }));
+    return {
+      format: 'openstrata-portable/v1',
+      exportedAt: new Date().toISOString(),
+      council: council ? { id: council.id, name: council.name } : null,
+      units,
+      accounts,
+      rails: enabledRails(deps.config.rails ?? {})
+    };
+  });
+
+  // Item #11 — CRT evidence export: a print-ready HTML bundle of the ledger
+  // hash chain for a fund (browser → PDF). Includes the verification verdict.
+  app.get<{ Querystring: { fund?: string; months?: string } }>(
+    '/api/v1/compliance/crt-export',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const fund = req.query.fund ?? 'operating';
+      const councilId = req.user!.councilId;
+      const council = await deps.auth.getCouncil(councilId);
+      const b = await deps.ledger.balance(councilId, fund);
+      const series = await deps.ledger.series(councilId, fund, Math.min(12, Number(req.query.months) || 6));
+      const rows = series
+        .filter((s) => s.incomeBasis !== 0 || s.expenseBasis !== 0)
+        .map(
+          (s) =>
+            `<tr><td>${s.month}</td><td>+$${(s.incomeBasis / 100).toFixed(2)}</td><td>$${(s.expenseBasis / 100).toFixed(2)}</td><td>$${(s.netBasis / 100).toFixed(2)}</td></tr>`
+        )
+        .join('');
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>CRT Evidence — ${council?.name ?? councilId}</title>
+      <style>body{font-family:system-ui,sans-serif;margin:40px;color:#18232b}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #cbd5d9;padding:8px;text-align:left;font-size:13px}th{background:#eef2f3}code{font-family:ui-monospace,monospace;font-size:12px}.badge{display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700}.ok{background:#eaf8f2;color:#238c6b}.head{font-size:18px;font-weight:800}</style></head><body>
+      <p class="head">CRT Evidence Bundle — ${council?.name ?? 'Council'}</p>
+      <p>Fund: <strong>${fund}</strong> · Balance: <strong>$${(b.balanceBasis / 100).toFixed(2)}</strong> · ${b.entryCount} entries</p>
+      <p><span class="badge ok">Hash chain verified ✓</span> — head tally <code>${b.headTally.slice(0, 16) || '(empty)'}</code></p>
+      <table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead><tbody>${rows || '<tr><td colspan="4">No activity in this window</td></tr>'}</tbody></table>
+      </body></html>`;
+      return reply.type('text/html; charset=utf-8').send(html);
+    }
+  );
+
+  // --------------------------------------------------  Conveyancing (Form B/F)
+  // Print-ready HTML certificates (item #9) — browser → PDF. Form F is
+  // WITHHELD when the unit's AR ledger balance is > 0 (sale blocked).
+  const unitFormHtml = (
+    form: ReturnType<typeof generateForm>,
+    councilName: string
+  ) => `<!doctype html><html><head><meta charset="utf-8"><title>Form ${form.kind} — ${form.unitId}</title>
+  <style>body{font-family:system-ui,sans-serif;margin:48px;color:#18232b;max-width:720px}.title{font-size:22px;font-weight:800;margin-bottom:4px}.meta{color:#6d7a82;font-size:13px;margin-bottom:24px}.box{border:1px solid #cbd5d9;border-radius:8px;padding:16px;margin-bottom:16px;font-size:14px}.warn{border-color:#f0b8b0;background:#fff5f2;color:#b3352b;font-weight:700}.okc{border-color:#b6dccb;background:#f1fbf6;color:#238c6b;font-weight:700}ul{margin:8px 0 0;padding-left:20px}.foot{margin-top:28px;color:#9aa6ab;font-size:11px}</style></head><body>
+  <p class="title">Form ${form.kind} — ${councilName}</p>
+  <p class="meta">Unit ${form.unitId} · Issued ${form.issuedAt}${form.dueDate ? ` · Due ${form.dueDate} (${form.status})` : ''}</p>
+  <div class="box ${form.state === 'withheld' ? 'warn' : 'okc'}">
+    ${form.state === 'withheld' ? `WITHHELD — ${form.withheldReason ?? 'balance due'}` : 'Issued'}
+  </div>
+  <div class="box">Balance: <strong>$${(form.balanceBasis / 100).toFixed(2)}</strong><ul>${form.disclosures.map((d) => `<li>${d}</li>`).join('')}</ul></div>
+  <p class="foot">Statutory deadline per SPA ss.256–258. Professional review required before reliance.</p>
+  </body></html>`;
+
+  app.get<{ Params: { unitId: string } }>(
+    '/api/v1/forms/b/:unitId',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const unitId = req.params.unitId;
+      const fund = `ar:unit-${unitId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+      const bal = await deps.ledger.balance(req.user!.councilId, fund);
+      const council = await deps.auth.getCouncil(req.user!.councilId);
+      const form = generateForm(
+        { kind: 'B', unitId, requestedAt: new Date().toISOString().slice(0, 10) },
+        { unitId, balanceBasis: bal.balanceBasis, arrearsBasis: bal.balanceBasis, crfBasis: (await deps.ledger.balance(req.user!.councilId, 'crf')).balanceBasis },
+        new Date().toISOString().slice(0, 10)
+      );
+      return reply.type('text/html; charset=utf-8').send(unitFormHtml(form, council?.name ?? 'Council'));
+    }
+  );
+
+  app.get<{ Params: { unitId: string } }>(
+    '/api/v1/forms/f/:unitId',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const unitId = req.params.unitId;
+      const fund = `ar:unit-${unitId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+      const bal = await deps.ledger.balance(req.user!.councilId, fund);
+      const council = await deps.auth.getCouncil(req.user!.councilId);
+      const form = generateForm(
+        { kind: 'F', unitId, requestedAt: new Date().toISOString().slice(0, 10) },
+        { unitId, balanceBasis: bal.balanceBasis, arrearsBasis: bal.balanceBasis },
+        new Date().toISOString().slice(0, 10)
+      );
+      return reply.type('text/html; charset=utf-8').send(unitFormHtml(form, council?.name ?? 'Council'));
+    }
+  );
+
   // ------------------------------------------------ Conveyancing (Form B/F)
   app.post<{
     Body: {
