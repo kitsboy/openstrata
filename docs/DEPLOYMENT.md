@@ -64,7 +64,7 @@ cp .env.example .env
 
 docker compose up -d              # postgres (pgvector) + api on the Tailscale interface
 
-# Apply migrations 0001..0004 (council/app_user tables + tenant-scoped payment key)
+# Apply migrations 0001..0005 (council/app_user + tenant-scoped payment key + per-council units)
 docker compose run --rm api npm run migrate
 
 # Deploy-day gate — the full Postgres smoke suite (skipped without DATABASE_URL):

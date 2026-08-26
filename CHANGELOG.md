@@ -2,6 +2,21 @@
 title: Changelog
 project: openstrata
 version_history:
+  - version: 0.3.5
+    date: 2026-08-26
+    summary: Per-council DB-backed unit registry with traceability (migration 0005)
+  - version: 0.3.4
+    date: 2026-08-26
+    summary: 20-item upgrade push — rate limiting, treasury series, meetings/sub-accounts/CSV, Bitcoin modules, exports
+  - version: 0.3.3
+    date: 2026-08-26
+    summary: Landing security (CSP) + shell tightening
+  - version: 0.3.2
+    date: 2026-08-26
+    summary: Frontend wired to the live /api/v1 backend (api client, auth modal, live widgets)
+  - version: 0.3.1
+    date: 2026-08-26
+    summary: JWT auth + multi-tenant council scoping on the backend
   - version: 0.2.6
     date: 2026-08-25
     summary: Full interface localization, hardened audit, and French locale overrides
@@ -27,11 +42,51 @@ version_history:
     date: 2026-06-22
     summary: Initial project scaffold
 audience: devs
-last_updated: 2026-06-22
+last_updated: 2026-08-26
 owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.5] — 2026-08-26
+
+### Added
+- Per-council DB-backed unit registry (migration `0005_council_units.sql`, `unit` table keyed on `(community_id, unit_ref)`)
+- `UnitStore` interface + `PostgresUnitStore` + `MemUnitStore` (list/get/upsert/remove/seedDefault); register seeds each new council's building
+- `GET /api/v1/units/:unitRef` unit detail — AR ledger balance (hash-chain verified) + payment requests (unit → payment → ledger traceability)
+- `POST /api/v1/units` (treasurer+, canonicalized unitRefs) and `DELETE /api/v1/units/:unitRef` (admin)
+- Frontend Form K hub: live unit-detail panel + add/remove unit controls when signed in
+
+### Fixed
+- `PostgresPaymentRequestStore.markStatus` wrote the referenceCode into `status` (`status = $2` instead of `$3`) — the e2e re-quote assertion would have failed on a real Postgres
+- Payment-quote unitRefs now canonicalize at the boundary (`unit-302` → `302`) so stored rows, referenceCodes, and unit detail agree
+- Billing AR funds aligned to the canonical `ar:unit-<n>` account so unit-detail balances read real charges
+
+### Changed
+- Version markers synced to **v0.3.5** (root + backend `package.json`); backend now 167 tests / 16 files, frontend 45 tests, i18n 565 keys × 9 locales
+
+## [0.3.4] — 2026-08-26
+
+### Added
+- 20-item upgrade push: auth rate limiting (#6), build-time CSP pinning (#2), monthly treasury series endpoint (#4), live CAD/BTC rate provider (#7), meetings quorum/voting UI (#8), transparent sub-accounts dashboard (#10), CSV bank-feed import (#12), war-chest DCA planner (#18), PSBT 3-of-5 orchestration seam (#15), Satohash stamp endpoint (#19), watch-only xpub import (#16), portable export (#20), CRT evidence bundle (#11), print-ready Form B/F (#9)
+
+## [0.3.3] — 2026-08-26
+
+### Fixed
+- CSP in `static/_headers` was blocking the page's own assets (Google Fonts, Umami analytics, live-API `connect-src`); fonts now load once, unused `Inter` dropped
+
+### Changed
+- Landing shell tightened (1280px content, crisp 2-layer card shadows) per "solid, tight" pass
+
+## [0.3.2] — 2026-08-26
+
+### Added
+- `src/lib/api/` client (config/token/client/auth + typed ledger/units/rails helpers), AuthModal, Live/Demo pill, dashboard + tools + reconciler + pitch wired to `/api/v1/*` with demo fallback
+
+## [0.3.1] — 2026-08-26
+
+### Added
+- Zero-dependency JWT auth + multi-tenant council scoping (migration 0004), roles admin/treasurer/member, tenant-isolated payment store, Postgres e2e smoke suite + CI job
 
 ## [0.2.6] — 2026-08-25
 
