@@ -6,6 +6,7 @@
 	import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
+	import XpubImport from '$lib/components/XpubImport.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
@@ -268,10 +269,11 @@
 		</div>
 	</section>
 
-	<!-- Live demos: trust funds, meetings, e-transfer reconciliation -->
+	<!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->
 	<div class="mb-8 space-y-8">
 		<SubAccounts />
 		<MeetingsTool />
+		<XpubImport />
 		<ETransferReconciler />
 	</div>
 

@@ -10,11 +10,14 @@
  * request body, and role gates enforce admin / treasurer / member privileges.
  */
 
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import type { LedgerEngine } from '../ledger/ledger.js';
 import { type Retriever, composeAnswer } from '../rosa/rosa.js';
 import { authorizeSpend } from '../ziggy/ziggy.js';
+import { planDca, type DcaFrequency } from '../ziggy/dca.js';
+import { buildPsbtPlan, type PsbtInputRef } from '../ziggy/psbt.js';
+import { deriveUnitAddress } from '../rails/rails.js';
 import type { Reconciler, UnitRefs } from '../trf/recon.js';
 import { runBilling, type UnitFee } from '../billing/billing.js';
 import {
@@ -407,6 +410,122 @@ export async function buildServer(
       return verdict;
     }
   );
+
+  // ------------------------------------------------------------------  Ziggy
+  // War-chest DCA plan (item #18) — pure schedule at the current CAD/BTC rate.
+  app.post<{
+    Body: {
+      annualOperatingBudgetBasis: number;
+      allocationPerPeriodBasis: number;
+      frequency: DcaFrequency;
+      periods: number;
+      cadPerBtc?: number;
+    };
+  }>(
+    '/api/v1/treasury/dca/plan',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const b = req.body;
+      const rate = b.cadPerBtc ?? (await cadPerBtc());
+      const plan = planDca({
+        annualOperatingBudgetBasis: b.annualOperatingBudgetBasis,
+        allocationPerPeriodBasis: b.allocationPerPeriodBasis,
+        frequency: b.frequency,
+        periods: b.periods,
+        cadPerBtc: rate
+      });
+      return { ok: true, plan, cadPerBtc: rate };
+    }
+  );
+
+  // PSBT/multisig execution plan (item #15) — skeleton + signature tracking.
+  app.post<{
+    Body: {
+      verdict: { allow: true; reason: string; pulledFrom: string; basis: number };
+      amountSats: number;
+      feeSats: number;
+      recipient: string;
+      inputs: PsbtInputRef[];
+      totalSigners: number;
+      requiredSignatures: number;
+    };
+  }>(
+    '/api/v1/treasury/psbt/plan',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const b = req.body;
+      try {
+        const plan = buildPsbtPlan({
+          verdict: b.verdict,
+          amountSats: b.amountSats,
+          feeSats: b.feeSats,
+          recipient: b.recipient,
+          inputs: b.inputs,
+          totalSigners: b.totalSigners,
+          requiredSignatures: b.requiredSignatures
+        });
+        return { ok: true, plan };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  // --------------------------------------------------  Satohash stamping
+  // Item #19 — hash-of-record for payments/votes/bylaw actions. Returns the
+  // SHA-256 digest + the satohash.io stamp URL; the stamp call itself runs
+  // client-side (src/lib/satohash.ts) against api.satohash.io.
+  app.post<{ Body: { scope: string; payload: unknown } }>(
+    '/api/v1/compliance/stamp',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      const canonical = JSON.stringify({
+        scope: b.scope,
+        council: req.user!.councilId,
+        payload: b.payload
+      });
+      const hash = createHash('sha256').update(canonical).digest('hex');
+      return {
+        ok: true,
+        hash,
+        scope: b.scope,
+        stampUrl: `https://satohash.io/stamp?hash=${hash}`
+      };
+    }
+  );
+
+  // --------------------------------------------------  Watch-only xpub
+  // Item #16 — register the council's watch-only xpub (keys never leave the
+  // hardware wallets); per-unit BIP32 receive paths derive deterministically.
+  const councilXpubs = new Map<string, string>();
+  app.post<{ Body: { xpub: string } }>(
+    '/api/v1/rails/xpub',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req, reply) => {
+      try {
+        const xpub = req.body.xpub.trim();
+        // Validate the prefix via the derivation seam (throws on bad input).
+        deriveUnitAddress(xpub, '1');
+        councilXpubs.set(req.user!.councilId, xpub);
+        return { ok: true, registered: true };
+      } catch (err) {
+        return reply.code(400).send({ ok: false, reason: (err as Error).message });
+      }
+    }
+  );
+
+  app.get('/api/v1/rails/xpub', { preHandler: [authenticate] }, async (req) => {
+    const xpub = councilXpubs.get(req.user!.councilId);
+    if (!xpub) return { ok: true, registered: false };
+    const units = (deps.units?.all() ?? []).slice(0, 20);
+    return {
+      ok: true,
+      registered: true,
+      xpub,
+      addresses: units.map((u) => deriveUnitAddress(xpub, u.unitRef))
+    };
+  });
 
   // Rosa: strict RAG query (citations only). Public — BC law is the knowledge
   // base behind the product and the site already publishes it.
