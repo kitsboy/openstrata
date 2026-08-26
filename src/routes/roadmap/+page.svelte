@@ -76,7 +76,7 @@
 							{phase.id}
 						</div>
 					</div>
-					<div class="glass-card rounded-xl p-5 flex-1">
+					<div class="glass-card rounded-xl p-6 flex-1">
 						<div class="flex flex-wrap items-center gap-3 mb-2">
 							<h3 class="font-bold text-slate-800">{phase.name}</h3>
 							<span class="text-sm text-slate-400">{phase.when}</span>
@@ -102,7 +102,7 @@
 	<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.jurisdictionExpansion}</h2>
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 		{#each jurisdictions as j, i}
-			<div class="glass-card rounded-xl p-5 flex items-center justify-between {j.active ? 'border-brand-200' : 'opacity-70'}">
+			<div class="glass-card rounded-xl p-4 flex items-center justify-between {j.active ? 'border-brand-200' : 'opacity-70'}">
 				<div class="flex items-center gap-3">
 					<span class="text-2xl">{j.flag}</span>
 					<div>
@@ -125,7 +125,7 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.ecosystemIntegrations}</h2>
 		<div class="grid sm:grid-cols-2 gap-4">
 			{#each integrations as int}
-				<div class="glass-card rounded-xl p-5 flex items-center justify-between">
+				<div class="glass-card rounded-xl p-4 flex items-center justify-between">
 					<div>
 						<span class="font-bold text-slate-800">{int.name}</span>
 						<p class="text-sm text-slate-500">{int.role}</p>

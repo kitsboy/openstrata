@@ -517,6 +517,12 @@ main h1 { letter-spacing: -.028em; }
   @keyframes os-vt-out { from { opacity: 1; } to { opacity: 0; } }
 }
 
+/* Marketing card language — the same bold voice as dashboard card headings.
+   Card titles inside glass-cards read at weight 800 (matching .panel and
+   right-rail headings); page-level section h2s live outside the cards and
+   keep their own scale. */
+.mesh-bg .glass-card h2, .mesh-bg .glass-card h3 { font-weight: 800; }
+
 /* Subtle mesh backdrop used by the shared layout (was referenced but never defined). */
 .mesh-bg {
   background-color: var(--canvas);

@@ -40,7 +40,7 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.protocolLayers}</h2>
 		<div class="space-y-4">
 			{#each layers as layer, i}
-				<div class="glass-card rounded-xl p-5 flex gap-5 items-start">
+				<div class="glass-card rounded-xl p-6 flex gap-5 items-start">
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 font-bold text-sm">
 						{i + 1}
 					</div>

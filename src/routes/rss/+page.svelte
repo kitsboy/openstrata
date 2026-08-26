@@ -69,8 +69,8 @@
 
 	<div class="grid lg:grid-cols-3 gap-8">
 		<!-- Feed sources -->
-		<div class="lg:col-span-1">
-			<div class="mb-6 glass-card rounded-xl p-5">
+		<div class="lg:col-span-1 min-w-0">
+			<div class="mb-6 glass-card rounded-xl p-6">
 				<h3 class="font-semibold text-slate-800 text-sm">{$copy.subscribeRss}</h3>
 				<p class="mt-1 text-xs text-slate-500">{$copy.subscribeRssHint}</p>
 				<div class="mt-3 flex flex-wrap gap-2">
@@ -99,7 +99,7 @@
 				{/each}
 			</div>
 
-			<div class="mt-6 glass-card rounded-xl p-5 border-dashed">
+			<div class="mt-6 glass-card rounded-xl p-6 border-dashed">
 				<h3 class="font-semibold text-slate-800 text-sm">{$copy.addCustomFeed}</h3>
 				<p class="mt-1 text-xs text-slate-500">{$copy.customFeedHint}</p>
 				<code class="mt-3 block rounded-lg bg-slate-100 p-3 text-[10px] font-mono text-slate-600 overflow-x-auto">
@@ -112,12 +112,12 @@
 		</div>
 
 		<!-- Feed items -->
-		<div class="lg:col-span-2">
+		<div class="lg:col-span-2 min-w-0">
 			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.latestItems}</h2>
 			<div class="space-y-4">
 				{#each filteredItems as item}
 					{@const feed = rssFeeds.find((f) => f.id === item.feed)}
-					<article class="glass-card rounded-xl p-5 hover:border-brand-200 transition-all">
+					<article class="glass-card rounded-xl p-6 hover:border-brand-200 transition-all">
 						<div class="flex items-center gap-3 mb-2">
 							<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">{feed?.source}</span>
 							<span class="text-xs text-slate-400">{item.date}</span>
@@ -156,13 +156,13 @@
 
 		<div class="max-w-4xl mx-auto space-y-3">
 			{#each apiTab === 'rest' ? restEndpoints : apiTab === 'webhooks' ? webhookEndpoints : feedEndpoints as endpoint}
-				<div class="glass-card rounded-xl p-5 flex items-start gap-4">
+				<div class="glass-card rounded-xl p-4 flex items-start gap-4">
 					<span class="shrink-0 rounded-lg px-3 py-1 text-xs font-bold font-mono
 						{endpoint.method === 'GET' ? 'bg-success/10 text-success' : 'bg-brand-50 text-brand-700'}">
 						{endpoint.method}
 					</span>
 					<div class="flex-1 min-w-0">
-						<code class="text-sm font-mono font-semibold text-slate-800">{endpoint.path}</code>
+						<code class="block text-sm font-mono font-semibold text-slate-800 break-all">{endpoint.path}</code>
 						<p class="mt-1 text-sm text-slate-500">{endpoint.desc}</p>
 					</div>
 				</div>

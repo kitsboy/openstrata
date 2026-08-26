@@ -124,7 +124,7 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">{$copy.layersTrust}</h2>
 		<div class="grid md:grid-cols-3 gap-6">
 			{#each productStack as product, i}
-				<div class="glass-card rounded-2xl p-8 text-center relative">
+				<div class="glass-card rounded-2xl p-6 text-center relative">
 					<div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-white mb-4
 						{i === 0 ? 'bg-brand-600' : i === 1 ? 'bg-bitcoin' : 'bg-bc-blue'}">
 						{i + 1}

@@ -48,7 +48,7 @@
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.documentIndex}</h2>
 		<div class="grid sm:grid-cols-2 gap-4">
 			{#each docIndex as doc}
-				<div class="glass-card rounded-xl p-5">
+				<div class="glass-card rounded-xl p-6">
 					<code class="text-[10px] font-mono text-slate-400">docs/{doc.file}</code>
 					<h3 class="font-bold text-slate-800 mt-1">{doc.title}</h3>
 					<p class="text-sm text-slate-500 mt-1">{doc.desc}</p>
@@ -81,7 +81,7 @@
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.installSop}</h2>
 		<div class="space-y-4">
 			{#each installSteps as s}
-				<div class="glass-card rounded-xl p-5 flex gap-4">
+				<div class="glass-card rounded-xl p-6 flex gap-4">
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white font-bold text-sm">{s.step}</div>
 					<div>
 						<h3 class="font-bold text-slate-800">{s.title}</h3>

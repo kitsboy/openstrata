@@ -86,9 +86,9 @@
       </div>
       <div class="rounded-2xl border border-border bg-surface-2 p-6">
         <p class="text-[10px] font-bold text-slate-400 uppercase mb-4">Cards</p>
-        <div class="glass-card rounded-2xl p-5">
+        <div class="glass-card rounded-2xl p-6">
           <p class="font-bold text-slate-800">glass-card</p>
-          <p class="mt-1 text-sm text-slate-500">Radius 16 · 2-layer shadow · hairline border.</p>
+          <p class="mt-1 text-sm text-slate-500">Radius 13 · 2-layer shadow · hairline border.</p>
         </div>
       </div>
       <div class="rounded-2xl border border-border bg-surface-2 p-6">

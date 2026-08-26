@@ -284,7 +284,7 @@
 	<!-- Module grid -->
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
 		{#each filteredModules as mod}
-			<div class="glass-card rounded-2xl p-5 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} role="button" tabindex="0" data-href={mod.href ?? undefined} onclick={() => { if (mod.href) goto(mod.href); }} onkeydown={handleCardKey}>
+			<div class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} role="button" tabindex="0" data-href={mod.href ?? undefined} onclick={() => { if (mod.href) goto(mod.href); }} onkeydown={handleCardKey}>
 				<div class="flex items-start justify-between gap-2 mb-3">
 					<span class="text-2xl">{mod.icon}</span>
 					<div class="flex items-center gap-1.5">

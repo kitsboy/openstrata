@@ -212,7 +212,7 @@
 							<div class="w-0.5 flex-1 bg-brand-200 my-2 min-h-[2rem]"></div>
 						{/if}
 					</div>
-					<div class="glass-card rounded-xl p-5 flex-1 mb-2">
+					<div class="glass-card rounded-xl p-6 flex-1 mb-2">
 						<div class="flex flex-wrap items-center gap-2 mb-2">
 							<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{step.day}</span>
 							{#if step.systemLock}
@@ -281,7 +281,7 @@
 		<h3 class="text-lg font-bold text-slate-800 mb-4">{$copy.quorumRulesTitle}</h3>
 		<div class="grid gap-4 mb-10">
 			{#each quorumRules as rule}
-				<div class="glass-card rounded-xl p-5">
+				<div class="glass-card rounded-xl p-6">
 					<div class="flex flex-wrap items-center gap-2 mb-3">
 						<h4 class="font-bold text-slate-800">{rule.meetingType}</h4>
 						<code class="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-brand-700">{rule.spaRef}</code>
@@ -324,7 +324,7 @@
 			</table>
 		</div>
 
-		<div class="glass-card rounded-xl p-5 border-l-4 border-l-brand-500">
+		<div class="glass-card rounded-xl p-6 border-l-4 border-l-brand-500">
 			<h4 class="font-bold text-slate-800">{$copy.tieBreakerTitle}</h4>
 			<p class="text-sm text-slate-600 mt-1">{tieBreakerRule.description}</p>
 			<p class="text-xs text-slate-400 mt-2">{$copy.exceptionLabel}: {tieBreakerRule.exception} · {$copy.sourceLabel}: {tieBreakerRule.source}</p>

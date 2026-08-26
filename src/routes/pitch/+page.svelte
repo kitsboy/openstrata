@@ -163,7 +163,7 @@
 				</div>
 				<div class="grid grid-cols-2 gap-4 max-w-md lg:max-w-none">
 					{#each competitiveAdvantages.slice(0, 4) as adv}
-						<div class="glass-card rounded-2xl p-5 text-center">
+						<div class="glass-card rounded-2xl p-4 text-center">
 							<p class="text-3xl font-bold text-brand-700">{adv.metric}</p>
 							<p class="mt-1 text-xs font-semibold text-slate-700">{adv.label}</p>
 							<p class="mt-1 text-[10px] text-slate-400">{$copy.vsLabel} {adv.vs}</p>
