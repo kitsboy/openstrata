@@ -35,6 +35,61 @@ export async function fetchUnits(): Promise<ApiUnit[]> {
   return res.units;
 }
 
+/** One confirmed payment request on a unit's AR account (traceability). */
+export interface UnitPayment {
+  refId: string;
+  referenceCode: string;
+  rail: string;
+  amountBasis: number;
+  status: 'quoted' | 'paid' | 'expired' | 'cancelled';
+  createdAt: string;
+}
+
+/** `GET /api/v1/units/:unitRef` — unit + its AR account + payments. */
+export interface UnitDetail {
+  unit: ApiUnit;
+  ar: {
+    fundCode: string;
+    balanceBasis: number;
+    entryCount: number;
+    headTally: string[];
+  };
+  payments: UnitPayment[];
+}
+
+export async function fetchUnitDetail(unitRef: string): Promise<UnitDetail> {
+  const res = await apiFetch<{ ok: boolean } & UnitDetail>(
+    `/api/v1/units/${encodeURIComponent(unitRef)}`,
+    { token: getToken() }
+  );
+  return { unit: res.unit, ar: res.ar, payments: res.payments };
+}
+
+/** Upsert a unit (`POST /api/v1/units`, treasurer+). */
+export async function createUnit(input: {
+  unitRef: string;
+  floor: number;
+  occupancy?: ApiUnit['occupancy'];
+  sqft?: number;
+  tenant?: string | null;
+  rent?: number | null;
+}): Promise<ApiUnit> {
+  const res = await apiFetch<{ ok: boolean; unit: ApiUnit }>('/api/v1/units', {
+    method: 'POST',
+    token: getToken(),
+    body: input
+  });
+  return res.unit;
+}
+
+/** Remove a unit (`DELETE /api/v1/units/:unitRef`, admin only). */
+export async function deleteUnit(unitRef: string): Promise<void> {
+  await apiFetch<{ ok: boolean }>(`/api/v1/units/${encodeURIComponent(unitRef)}`, {
+    method: 'DELETE',
+    token: getToken()
+  });
+}
+
 /**
  * Adapter from the backend wire shape to the reconciliation engine's `UnitRef`
  * (same alias strategy as `$lib/units.ts` → `unitsToUnitRefs`: '302', 'unit 302',

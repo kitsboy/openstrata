@@ -112,9 +112,18 @@ export class PostgresPaymentRequestStore implements PaymentRequestStore {
     status: PaymentRequestStatus
   ): Promise<void> {
     await this.pool.query(
-      `UPDATE payment_request SET status = $2, updated_at = now()
+      `UPDATE payment_request SET status = $3, updated_at = now()
         WHERE community_id = $1 AND reference_code = $2`,
       [communityId, referenceCode, status]
     );
+  }
+
+  async listByUnit(communityId: string, unitRef: string): Promise<PaymentRequest[]> {
+    const res = await this.pool.query<Row>(
+      `SELECT * FROM payment_request
+        WHERE community_id = $1 AND unit_ref = $2 ORDER BY created_at DESC`,
+      [communityId, unitRef]
+    );
+    return res.rows.map((r) => this.toRow(r));
   }
 }

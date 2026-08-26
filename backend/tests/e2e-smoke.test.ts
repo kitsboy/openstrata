@@ -24,6 +24,7 @@ import { PostgresAuthStore } from '../src/auth/pg-store.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
+import { PostgresUnitStore } from '../src/units/pg-store.js';
 import { bech32Encode } from '../src/rails/rails.js';
 
 const URL = process.env.DATABASE_URL;
@@ -44,6 +45,7 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
   let ledgerStore: PostgresLedgerStore;
   let paymentsStore: PostgresPaymentRequestStore;
   let authStore: PostgresAuthStore;
+  let unitStore: PostgresUnitStore;
   let token: string;
   let councilId: string;
 
@@ -53,6 +55,7 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     ledgerStore = new PostgresLedgerStore(URL!);
     paymentsStore = new PostgresPaymentRequestStore(URL!);
     authStore = new PostgresAuthStore(URL!);
+    unitStore = new PostgresUnitStore(URL!);
 
     app = await buildServer(
       {
@@ -62,6 +65,7 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
         payments: paymentsStore,
         auth: authStore,
         units: DEFAULT_UNITS,
+        unitStore,
         config: {
           crfMandatoryPct: 10,
           vectorCollection: 'bc_spa_rta_crt',
@@ -97,6 +101,7 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     await ledgerStore.close();
     await paymentsStore.close();
     await authStore.close();
+    await unitStore.close();
   });
 
   it('persists a ledger post and reads a verified balance back', async () => {
@@ -178,6 +183,47 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
       headers: auth(token)
     });
     expect(bal.json().balanceBasis).toBe(50_000);
+  });
+
+  it('seeds per-council units on register and keeps them isolated', async () => {
+    // Registration seeded the demo building into THIS council's unit table.
+    const list = await app.inject({
+      method: 'GET', url: '/api/v1/units', headers: auth(token)
+    });
+    expect(list.statusCode).toBe(200);
+    expect(list.json().units).toHaveLength(6);
+    expect(list.json().units[0].unitRef).toBe('101');
+
+    // A second council registers its own building (same unitRefs, separate rows).
+    const otherReg = await app.inject({
+      method: 'POST', url: '/api/v1/auth/register',
+      payload: { councilName: 'E2E Units B', email: `e2e-units-b-${Date.now()}@smoke.test`, password: 'password123' }
+    });
+    const otherToken = otherReg.json().token as string;
+    const otherList = await app.inject({
+      method: 'GET', url: '/api/v1/units', headers: auth(otherToken)
+    });
+    expect(otherList.json().units).toHaveLength(6);
+
+    // Editing one council's unit never leaks to the other.
+    const added = await app.inject({
+      method: 'POST', url: '/api/v1/units', headers: auth(token),
+      payload: { unitRef: '501', floor: 5, occupancy: 'vacant' }
+    });
+    expect(added.statusCode).toBe(200);
+    const otherAfter = await app.inject({
+      method: 'GET', url: '/api/v1/units', headers: auth(otherToken)
+    });
+    expect(otherAfter.json().units).toHaveLength(6);
+    expect(otherAfter.json().units.map((u: { unitRef: string }) => u.unitRef)).not.toContain('501');
+
+    // Unit detail resolves the AR ledger + payment traceability.
+    const detail = await app.inject({
+      method: 'GET', url: '/api/v1/units/101', headers: auth(token)
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json().unit.unitRef).toBe('101');
+    expect(detail.json().ar.fundCode).toBe('ar:unit-101');
   });
 
   it('keeps councils isolated on the real adapters', async () => {

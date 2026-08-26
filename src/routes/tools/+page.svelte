@@ -11,7 +11,7 @@
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
-	import { fetchUnits, type ApiUnit } from '$lib/api/units';
+	import { fetchUnits, fetchUnitDetail, createUnit, deleteUnit, type ApiUnit, type UnitDetail } from '$lib/api/units';
 	import { onMount } from 'svelte';
 
 	let activeDomain = $state('all');
@@ -65,6 +65,52 @@
 	const filteredUnits = $derived(
 		formKFilter === 'all' ? displayUnits : displayUnits.filter((u) => u.formK === formKFilter)
 	);
+
+	// ---- Live unit detail + manage (migration 0005) --------------------------
+	let unitDetail = $state<UnitDetail | null>(null);
+	let unitDetailLoading = $state(false);
+	let showAddUnit = $state(false);
+	let newUnitRef = $state('');
+	let newUnitFloor = $state<number | null>(null);
+	let unitError = $state<string | null>(null);
+
+	async function loadUnitDetail(ref: string) {
+		unitDetailLoading = true;
+		unitDetail = null;
+		try {
+			unitDetail = await fetchUnitDetail(ref);
+		} catch {
+			unitDetail = null;
+		}
+		unitDetailLoading = false;
+	}
+
+	async function addUnit() {
+		unitError = null;
+		try {
+			await createUnit({ unitRef: newUnitRef.trim(), floor: newUnitFloor ?? 1 });
+			newUnitRef = '';
+			newUnitFloor = null;
+			showAddUnit = false;
+			liveUnits = await fetchUnits();
+		} catch (err) {
+			unitError = err instanceof Error ? err.message : 'Request failed';
+		}
+	}
+
+	async function removeUnit(ref: string) {
+		unitError = null;
+		try {
+			await deleteUnit(ref);
+			if (selectedUnit === ref) {
+				selectedUnit = null;
+				unitDetail = null;
+			}
+			liveUnits = await fetchUnits();
+		} catch (err) {
+			unitError = err instanceof Error ? err.message : 'Request failed';
+		}
+	}
 
 	const statusColor = (s: string) =>
 		s === 'live' ? 'bg-success/10 text-success' :
@@ -262,12 +308,66 @@
 		<div class="grid sm:grid-cols-3 gap-3">
 			{#each filteredUnits as unit}
 				<button class="rounded-xl border p-3 text-left {selectedUnit === unit.id ? 'border-brand-500 bg-brand-50' : 'border-border'}"
-					onclick={() => (selectedUnit = selectedUnit === unit.id ? null : unit.id)}>
+					onclick={() => {
+						selectedUnit = selectedUnit === unit.id ? null : unit.id;
+						if (selectedUnit === unit.id && liveUnits) loadUnitDetail(unit.id);
+					}}>
 					<span class="font-bold">{$copy.unitLabel} {unit.id}</span>
 					<span class="ml-2 text-[10px] font-bold rounded-full px-2 py-0.5 {unit.formK === 'signed' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}">{unit.formK}</span>
 				</button>
 			{/each}
 		</div>
+
+		{#if liveUnits && ($auth.user?.role === 'admin' || $auth.user?.role === 'treasurer')}
+			<div class="mt-4 flex flex-wrap items-center gap-2">
+				{#if showAddUnit}
+					<input bind:value={newUnitRef} placeholder="101" class="w-24 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm" />
+					<input type="number" bind:value={newUnitFloor} placeholder="1" class="w-16 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm" />
+					<button class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white" onclick={addUnit}>{$copy.addUnit}</button>
+					<button class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600" onclick={() => (showAddUnit = false)}>{$copy.cancel}</button>
+				{:else}
+					<button class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white" onclick={() => (showAddUnit = true)}>+ {$copy.addUnit}</button>
+				{/if}
+				{#if unitError}<span class="text-xs text-danger">{unitError}</span>{/if}
+			</div>
+		{/if}
+
+		{#if liveUnits && selectedUnit}
+			<div class="mt-4 rounded-xl border border-border bg-surface-2 p-4">
+				<div class="flex items-center justify-between gap-2">
+					<h4 class="text-sm font-bold text-slate-800">{$copy.unitDetail} — {$copy.unitLabel} {selectedUnit}</h4>
+					{#if $auth.user?.role === 'admin'}
+						<button class="text-xs font-bold text-danger" onclick={() => { if (selectedUnit) removeUnit(selectedUnit); }}>{$copy.removeUnit}</button>
+					{/if}
+				</div>
+				{#if unitDetailLoading}
+					<p class="mt-3 text-xs text-slate-400">…</p>
+				{:else if unitDetail}
+					<div class="mt-3 grid sm:grid-cols-2 gap-4">
+						<div>
+							<p class="text-[10px] font-bold text-slate-400 uppercase">{$copy.arBalance} · <code class="text-bc-blue">{unitDetail.ar.fundCode}</code></p>
+							<p class="mt-1 text-2xl font-bold text-slate-900">${(unitDetail.ar.balanceBasis / 100).toFixed(2)}</p>
+							<p class="mt-1 text-xs text-slate-500">{$copy.chainVerified}</p>
+						</div>
+						<div>
+							<p class="text-[10px] font-bold text-slate-400 uppercase">{$copy.unitPayments}</p>
+							{#if unitDetail.payments.length === 0}
+								<p class="mt-2 text-xs text-slate-400">—</p>
+							{:else}
+								<ul class="mt-2 space-y-1">
+									{#each unitDetail.payments.slice(0, 5) as p}
+										<li class="flex items-center justify-between gap-2 text-xs">
+											<code class="text-bc-blue">{p.referenceCode}</code>
+											<span class="font-semibold {p.status === 'paid' ? 'text-success' : 'text-slate-400'}">{p.status}</span>
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</section>
 
 	<!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->

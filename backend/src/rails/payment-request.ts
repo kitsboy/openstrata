@@ -46,6 +46,8 @@ export interface PaymentRequestStore {
     referenceCode: string,
     status: PaymentRequestStatus
   ): Promise<void>;
+  /** All payment requests for one unit of a council (traceability: unit→payments). */
+  listByUnit(communityId: string, unitRef: string): Promise<PaymentRequest[]>;
 }
 
 export interface QuoteSeed {

@@ -32,7 +32,9 @@ import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-req
 import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
-import type { UnitRegistry } from '../units/model.js';
+import type { UnitRecord, UnitRegistry } from '../units/model.js';
+import { createRegistry, normalizeUnitRef, unitArFundCode } from '../units/model.js';
+import type { UnitStore } from '../units/store.js';
 import { hashPassword, verifyPassword } from '../auth/passwords.js';
 import { signJwt, verifyJwt } from '../auth/jwt.js';
 import type { AuthStore } from '../auth/store.js';
@@ -56,6 +58,9 @@ export interface ApiDeps {
   resolver?: RateProvider;
   /** Canonical unit/lot master data. Resolves every unitRef in the product. */
   units?: UnitRegistry;
+  /** Tenant-scoped unit store (migration 0005). When present, `/units` is
+   * store-backed and seeded per council; the registry stays the fallback. */
+  unitStore?: UnitStore;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
@@ -74,6 +79,29 @@ const lastResults = new Map<string, unknown>();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type PreHandler = (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
+
+/** Serialize a unit to the wire shape (AR fund code + reconciliation keys). */
+function toUnitWire(u: UnitRecord) {
+  return {
+    unitRef: u.unitRef,
+    floor: u.floor,
+    sqft: u.sqft ?? null,
+    occupancy: u.occupancy,
+    tenant: u.tenant ?? null,
+    rent: u.rent ?? null,
+    eht: u.eht ?? false,
+    evCharger: u.evCharger ?? false,
+    formK: u.formK ?? 'missing',
+    arFundCode: unitArFundCode(u.unitRef),
+    reconciliationRefs: createRegistry([u]).refs(u.unitRef)
+  };
+}
+
+/** Unit list for a council: store-backed when configured, else the registry. */
+async function councilUnits(deps: ApiDeps, councilId: string): Promise<UnitRecord[]> {
+  if (deps.unitStore) return deps.unitStore.list(councilId);
+  return deps.units?.all() ?? [];
+}
 
 export async function buildServer(
   deps: ApiDeps,
@@ -150,6 +178,9 @@ export async function buildServer(
         return reply.code(409).send({ ok: false, reason: 'email already registered' });
       }
       const council = await deps.auth.createCouncil(req.body.councilName.trim());
+      // Fresh council gets its own building: seed the default unit set into
+      // its tenant-scoped unit table (no-op when running registry-only).
+      if (deps.unitStore) await deps.unitStore.seedDefault(council.id);
       const passwordHash = await hashPassword(req.body.password);
       const user = await deps.auth.createUser({
         councilId: council.id,
@@ -272,28 +303,107 @@ export async function buildServer(
   );
 
   // Canonical unit/lot master data — the single source of unit identity.
-  // Every unit carries its reconciliation keys + AR ledger fund code so clients
-  // never re-derive them on their own. If a registry isn't injected, degrade.
-  app.get('/api/v1/units', { preHandler: [authenticate] }, async () => {
-    const reg = deps.units;
-    if (!reg) return { ok: false, reason: 'unit registry not configured' };
-    return {
-      ok: true,
-      units: reg.all().map((u) => ({
-        unitRef: u.unitRef,
-        floor: u.floor,
-        sqft: u.sqft,
-        occupancy: u.occupancy,
-        tenant: u.tenant ?? null,
-        rent: u.rent ?? null,
-        eht: u.eht ?? false,
-        evCharger: u.evCharger ?? false,
-        formK: u.formK ?? 'missing',
-        arFundCode: ('ar:unit-' + u.unitRef.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()) as string,
-        reconciliationRefs: reg.refs(u.unitRef)
-      }))
-    };
+  // Tenant-scoped: with a unit store (migration 0005) each council sees only
+  // its own building; the injected registry is the fallback for the scaffold.
+  app.get('/api/v1/units', { preHandler: [authenticate] }, async (req) => {
+    const units = await councilUnits(deps, req.user!.councilId);
+    return { ok: true, units: units.map(toUnitWire) };
   });
+
+  // Unit detail: the record + its AR ledger account (hash-chain verified) +
+  // payment requests — the unit→payment→ledger traceability spine end to end.
+  app.get<{ Params: { unitRef: string } }>(
+    '/api/v1/units/:unitRef',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const councilId = req.user!.councilId;
+      const unit = deps.unitStore
+        ? await deps.unitStore.get(councilId, req.params.unitRef)
+        : deps.units?.get(req.params.unitRef) ?? null;
+      if (!unit) return reply.code(404).send({ ok: false, reason: 'unknown unit' });
+      const fund = unitArFundCode(unit.unitRef);
+      const ar = await deps.ledger.balance(councilId, fund);
+      const payments = await deps.payments.listByUnit(councilId, unit.unitRef);
+      return {
+        ok: true,
+        unit: toUnitWire(unit),
+        ar: {
+          fundCode: fund,
+          balanceBasis: ar.balanceBasis,
+          entryCount: ar.entryCount,
+          headTally: ar.headTally.slice(0, 8)
+        },
+        payments: payments.map((p) => ({
+          refId: p.refId,
+          referenceCode: p.referenceCode,
+          rail: p.rail,
+          amountBasis: p.amountBasis,
+          status: p.status,
+          createdAt: p.createdAt
+        }))
+      };
+    }
+  );
+
+  // Upsert a unit (treasurer+ — onboarding/edits are financial ops).
+  app.post<{
+    Body: {
+      unitRef: string;
+      floor: number;
+      sqft?: number;
+      occupancy?: 'occupied' | 'vacant' | 'short-term';
+      tenant?: string | null;
+      rent?: number | null;
+      eht?: boolean;
+      evCharger?: boolean;
+      formK?: 'signed' | 'missing';
+      owner?: string;
+      occupants?: string[];
+    };
+  }>(
+    '/api/v1/units',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req, reply) => {
+      if (!deps.unitStore) {
+        return reply.code(501).send({ ok: false, reason: 'unit store not configured' });
+      }
+      // Canonical identity: store the normalized form ('U-501' -> '501') so
+      // the row key, AR fund code, and every lookup agree.
+      const unitRef = normalizeUnitRef(req.body.unitRef);
+      if (!unitRef || !Number.isInteger(req.body.floor)) {
+        return reply.code(400).send({ ok: false, reason: 'unitRef and integer floor are required' });
+      }
+      const saved = await deps.unitStore.upsert(req.user!.councilId, {
+        unitRef,
+        floor: req.body.floor,
+        sqft: req.body.sqft,
+        occupancy: req.body.occupancy ?? 'occupied',
+        tenant: req.body.tenant ?? null,
+        rent: req.body.rent ?? null,
+        eht: req.body.eht ?? false,
+        evCharger: req.body.evCharger ?? false,
+        formK: req.body.formK ?? 'missing',
+        member: req.body.owner || (req.body.occupants?.length ?? 0)
+          ? { owner: req.body.owner, occupants: req.body.occupants ?? [] }
+          : undefined
+      });
+      return { ok: true, unit: toUnitWire(saved) };
+    }
+  );
+
+  // Remove a unit (admin only).
+  app.delete<{ Params: { unitRef: string } }>(
+    '/api/v1/units/:unitRef',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req, reply) => {
+      if (!deps.unitStore) {
+        return reply.code(501).send({ ok: false, reason: 'unit store not configured' });
+      }
+      const removed = await deps.unitStore.remove(req.user!.councilId, req.params.unitRef);
+      if (!removed) return reply.code(404).send({ ok: false, reason: 'unknown unit' });
+      return { ok: true, removed: req.params.unitRef };
+    }
+  );
 
   // Ledger balance (verified against the hash chain). Community comes from the
   // token — a council can only read its own accounts.
@@ -518,7 +628,7 @@ export async function buildServer(
   app.get('/api/v1/rails/xpub', { preHandler: [authenticate] }, async (req) => {
     const xpub = councilXpubs.get(req.user!.councilId);
     if (!xpub) return { ok: true, registered: false };
-    const units = (deps.units?.all() ?? []).slice(0, 20);
+    const units = (await councilUnits(deps, req.user!.councilId)).slice(0, 20);
     return {
       ok: true,
       registered: true,
@@ -604,6 +714,11 @@ export async function buildServer(
       if (!registry[b.rail]?.enabled) {
         return { ok: false, reason: `rail '${b.rail}' is not enabled` };
       }
+      // Unit master-data rule: resolve every unit key through the canonical
+      // normalization ('unit-302' / 'U-302' / '302' -> '302') so the stored
+      // payment_request rows and unit-detail traceability agree.
+      const unitRef = normalizeUnitRef(b.unitRef);
+      if (!unitRef) return { ok: false, reason: 'invalid unitRef' };
       try {
         const rate = await cadPerBtc(); // resolve outside the sync buildInvoice()
         const communityId = req.user!.councilId;
@@ -611,7 +726,7 @@ export async function buildServer(
           deps.payments,
           {
             refId: b.refId,
-            unitRef: b.unitRef,
+            unitRef,
             communityId,
             rail: b.rail,
             amountBasis: b.amountBasis,
@@ -623,7 +738,7 @@ export async function buildServer(
               {
                 refId: b.refId,
                 communityId,
-                unitRef: b.unitRef,
+                unitRef,
                 amountBasis: b.amountBasis,
                 currency: b.currency,
                 rail: b.rail,
@@ -868,7 +983,7 @@ export async function buildServer(
       const b = await deps.ledger.balance(councilId, fund);
       accounts[fund] = { balanceBasis: b.balanceBasis, entryCount: b.entryCount, headTally: b.headTally.slice(0, 4) };
     }
-    const units = (deps.units?.all() ?? []).map((u) => ({
+    const units = (await councilUnits(deps, councilId)).map((u) => ({
       unitRef: u.unitRef,
       floor: u.floor,
       sqft: u.sqft,

@@ -3,7 +3,7 @@ import { API_BASE_KEY, apiBaseUrl, isApiConfigured } from './config';
 import { TOKEN_KEY, getToken, setToken } from './token';
 import { ApiError, ApiUnavailableError, apiFetch } from './client';
 import { auth, bootstrap, signIn, signOut, signUp, type AuthSession } from './auth';
-import { apiUnitsToUnitRefs, type ApiUnit } from './units';
+import { apiUnitsToUnitRefs, createUnit, deleteUnit, fetchUnitDetail, type ApiUnit } from './units';
 
 // ---------------------------------------------------------------------------
 // Live units → reconciliation adapter
@@ -316,5 +316,91 @@ describe('auth session', () => {
     let session!: AuthSession;
     auth.subscribe((s) => (session = s))();
     expect(session.status).toBe('signed-out');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Unit management (per-council registry, migration 0005)
+// ---------------------------------------------------------------------------
+describe('unit management endpoints', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    delete import.meta.env.PUBLIC_API_BASE_URL;
+    vi.unstubAllGlobals();
+  });
+
+  function stubFetch(handler: (url: string, init: RequestInit) => unknown) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: RequestInit) => {
+        const body = handler(url, init);
+        const status = body && typeof body === 'object' && 'status' in body ? (body as { status: number }).status : 200;
+        return new Response(JSON.stringify(body), {
+          status,
+          headers: { 'content-type': 'application/json' }
+        });
+      })
+    );
+  }
+
+  it('createUnit POSTs the payload and returns the canonical unit', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-u');
+    let seen: RequestInit | undefined;
+    stubFetch((url, init) => {
+      if (url.endsWith('/api/v1/units')) {
+        seen = init;
+        return {
+          ok: true,
+          unit: {
+            unitRef: '501', floor: 5, sqft: null, occupancy: 'vacant', tenant: null, rent: null,
+            eht: false, evCharger: false, formK: 'missing', arFundCode: 'ar:unit-501', reconciliationRefs: ['501']
+          }
+        };
+      }
+      return { ok: true };
+    });
+    const unit = await createUnit({ unitRef: 'U-501', floor: 5, occupancy: 'vacant' });
+    expect(seen?.method).toBe('POST');
+    expect(seen?.body).toBe(JSON.stringify({ unitRef: 'U-501', floor: 5, occupancy: 'vacant' }));
+    expect((seen?.headers as Record<string, string>).authorization).toBe('Bearer jwt-u');
+    expect(unit.unitRef).toBe('501');
+  });
+
+  it('deleteUnit issues a DELETE for the unit ref', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-u');
+    let seenUrl = '';
+    stubFetch((url, init) => {
+      seenUrl = url;
+      expect(init.method).toBe('DELETE');
+      return { ok: true };
+    });
+    await deleteUnit('501');
+    expect(seenUrl).toBe('http://hermes:8787/api/v1/units/501');
+  });
+
+  it('fetchUnitDetail returns the unit with AR balance and payments', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    localStorage.setItem(TOKEN_KEY, 'jwt-u');
+    stubFetch((url) => {
+      if (url.endsWith('/api/v1/units/101')) {
+        return {
+          ok: true,
+          unit: {
+            unitRef: '101', floor: 1, sqft: 780, occupancy: 'occupied', tenant: null, rent: null,
+            eht: true, evCharger: false, formK: 'signed', arFundCode: 'ar:unit-101', reconciliationRefs: ['101']
+          },
+          ar: { fundCode: 'ar:unit-101', balanceBasis: 35_000, entryCount: 1, headTally: ['abc'] },
+          payments: [{ refId: 'P1', referenceCode: 'pay-p1-101', rail: 'lightning', amountBasis: 12_000, status: 'paid', createdAt: '2026-09-01' }]
+        };
+      }
+      return { ok: true };
+    });
+    const detail = await fetchUnitDetail('101');
+    expect(detail.unit.unitRef).toBe('101');
+    expect(detail.ar.balanceBasis).toBe(35_000);
+    expect(detail.payments[0].referenceCode).toBe('pay-p1-101');
+    expect(detail.payments[0].status).toBe('paid');
   });
 });

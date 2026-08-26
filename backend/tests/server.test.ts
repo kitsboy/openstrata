@@ -271,7 +271,7 @@ describe('fastify API', () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.ok).toBe(true);
-    expect(body.invoice.referenceCode).toBe('pay-a9f-unit302');
+    expect(body.invoice.referenceCode).toBe('pay-a9f-302'); // unitRef normalized at the boundary
     expect(body.invoice.amountSat).toBe(1_000_000); // $500 @ $50k/BTC
     expect(body.invoice.fiatLockedBasis).toBe(50_000);
     expect(body.invoice.expiresAt).toBeTruthy();

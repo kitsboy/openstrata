@@ -115,6 +115,62 @@ export class MemPaymentRequestStore implements PaymentRequestStore {
     this.byRef.set(key, updated);
     this.byKey.set(this.key(updated.communityId, updated.refId, updated.unitRef, updated.rail), updated);
   }
+
+  async listByUnit(communityId: string, unitRef: string): Promise<PaymentRequest[]> {
+    const out: PaymentRequest[] = [];
+    for (const req of this.byKey.values()) {
+      if (req.communityId === communityId && req.unitRef === unitRef) out.push(req);
+    }
+    return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+}
+
+import type { UnitRecord } from '../src/units/model.js';
+import { demoUnits } from '../src/units/model.js';
+import type { UnitStore } from '../src/units/store.js';
+
+/**
+ * In-memory UnitStore for unit + API route tests. Mirrors the Postgres
+ * adapter: every read/write is tenant-scoped by communityId and a unit is a
+ * single row keyed on (communityId, unitRef).
+ */
+export class MemUnitStore implements UnitStore {
+  private byCouncil = new Map<string, Map<string, UnitRecord>>();
+
+  private table(communityId: string): Map<string, UnitRecord> {
+    let t = this.byCouncil.get(communityId);
+    if (!t) {
+      t = new Map();
+      this.byCouncil.set(communityId, t);
+    }
+    return t;
+  }
+
+  async list(communityId: string): Promise<UnitRecord[]> {
+    return [...this.table(communityId).values()].sort(
+      (a, b) => a.floor - b.floor || a.unitRef.localeCompare(b.unitRef)
+    );
+  }
+
+  async get(communityId: string, unitRef: string): Promise<UnitRecord | null> {
+    return this.table(communityId).get(unitRef) ?? null;
+  }
+
+  async upsert(communityId: string, unit: UnitRecord): Promise<UnitRecord> {
+    this.table(communityId).set(unit.unitRef, { ...unit });
+    return { ...unit };
+  }
+
+  async remove(communityId: string, unitRef: string): Promise<boolean> {
+    return this.table(communityId).delete(unitRef);
+  }
+
+  async seedDefault(communityId: string): Promise<UnitRecord[]> {
+    for (const unit of demoUnits()) {
+      this.table(communityId).set(unit.unitRef, { ...unit });
+    }
+    return this.list(communityId);
+  }
 }
 
 export { MemAuthStore } from '../src/auth/mem-store.js';

@@ -80,10 +80,16 @@ type; `amountBasis` must be a non-zero integer; `kind` is `credit|debit`.
 
 ## Units — canonical master data
 
+Per-council unit registry (migration `0005`). Every council owns its own building:
+all reads/writes are scoped to the token's council, and a fresh council is seeded
+with the demo building on `register`. `unitRef` is canonicalized at write time
+(`U-501` → `501`) so the row key, AR fund code, and every lookup agree.
+
 ### `GET /api/v1/units`
 The single source of unit identity (building → unit → AR ledger fund code). Every
 unit carries its reconciliation keys + deterministic `arFundCode` so clients
-never re-derive them on their own. Requires a unit registry dependency.
+never re-derive them on their own. Without a unit store, falls back to the
+injected demo registry.
 ```json
 {
   "ok": true,
@@ -102,7 +108,27 @@ never re-derive them on their own. Requires a unit registry dependency.
   ]
 }
 ```
-Without a registered source: `{ "ok": false, "reason": "unit registry not configured" }`.
+
+### `GET /api/v1/units/:unitRef`
+Unit detail — the record plus its AR ledger account (hash-chain verified) and
+payment requests: the unit → payment → ledger traceability spine end to end.
+```json
+{
+  "ok": true,
+  "unit": { "unitRef": "101", "floor": 1, "arFundCode": "ar:unit-101", "reconciliationRefs": ["101"] },
+  "ar": { "fundCode": "ar:unit-101", "balanceBasis": 35000, "entryCount": 1, "headTally": ["…"] },
+  "payments": [{ "refId": "P1", "referenceCode": "pay-p1-101", "rail": "lightning", "amountBasis": 12000, "status": "paid", "createdAt": "2026-09-01T00:00:00Z" }]
+}
+```
+`404` for an unknown unit; the AR balance is chain-verified (tamper evidence).
+
+### `POST /api/v1/units` (treasurer+)
+Upsert a unit — onboarding/edits are financial ops. Body: `unitRef` (canonicalized),
+`floor` (integer, required), plus optional `sqft`, `occupancy`, `tenant`, `rent`,
+`eht`, `evCharger`, `formK`, `owner`, `occupants[]`. `501` without a unit store.
+
+### `DELETE /api/v1/units/:unitRef` (admin only)
+Remove a unit. `404` when unknown; `501` without a unit store.
 
 ## Ziggy — treasury
 

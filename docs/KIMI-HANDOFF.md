@@ -1,3 +1,20 @@
+## Session — 2026-08-26 (per-council DB-backed units, v0.3.5)
+
+**Done (#5 — per-council DB-backed units, the largest remaining tenancy step):**
+- **Migration `0005_council_units.sql`:** `unit` table keyed on `(community_id, unit_ref)` — each council owns its own building; tenant scoping for unit master data
+- **`UnitStore` interface** (`backend/src/units/store.ts`) + **`PostgresUnitStore`** (`pg-store.ts`, migration 0005) + **`MemUnitStore`** (test harness) — `list/get/upsert/remove/seedDefault`
+- **Server rewired to store-backed `/units`** with registry fallback (demo scaffold keeps working): `GET /units` (tenant-scoped), `GET /units/:unitRef` — unit detail with **AR balance (hash-chain verified) + payment requests** (unit→payment→ledger traceability end to end), `POST /units` (treasurer+, `U-501`→`501` canonicalized, 501 without a store), `DELETE /units/:unitRef` (admin); **register seeds the demo building into each new council**
+- **Consistency fixes:** `PaymentRequestStore.listByUnit` added to both adapters; payment-quote unitRefs now canonicalized at the boundary (`unit-302`→`302` — stored rows + referenceCodes agree with unit detail); **billing AR fund aligned to the documented canonical `ar:unit-<n>`** (`referenceFor` → `unitArFundCode`) so unit-detail AR balances read the actual charges; **fixed a latent `PostgresPaymentRequestStore.markStatus` bug** — it was writing `status = $2` (the referenceCode!) instead of `$3` — the e2e re-quote-after-confirm assertion would have failed on a real Postgres
+- **Frontend:** Form K hub gains a live **unit detail panel** (AR balance + fund code + recent payments + chain-verified note) and **manage-units** controls (add unit for treasurer+, remove for admin) when signed in; `src/lib/api/units.ts` grew `fetchUnitDetail`/`createUnit`/`deleteUnit`; 4 new i18n keys × 9 locales (565 total, parity audit green)
+- **Tests:** new `backend/tests/unit-store.test.ts` (store semantics, CRUD + role gates, tenancy isolation, AR traceability from billing + confirmed payments, 501 fallback) — backend now **167 tests / 16 files** (+12), typecheck clean; frontend **45 tests** (+3), `svelte-check` 0/0, build + prerender clean
+- **Docs:** `backend/API.md` units section rewritten (detail/upsert/delete), WORKPLAN #5 marked done
+
+**Git State:** commits pending — main work commit + a follow-up recording the SHA in this file / WORKPLAN (per the established pattern). Not pushed until Cam says go.
+
+**Remaining (unchanged, all infra-gated):** #1 live-site verify (needs deploy), #13 rails on host (LND/Liquid/PayNym/Nostr), #14 on-chain/LN broadcast (daemons), #17 BOLT-12 (LND + channels — LNBITS node exists, channels not yet established)
+
+---
+
 ## Session — 2026-08-26 (20-item upgrade push, v0.3.4)
 
 **Done (15 of 20 items, 5 commits `3ed66e7`→`89fc0b3`, all pushed):**

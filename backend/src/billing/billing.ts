@@ -1,3 +1,5 @@
+import { unitArFundCode } from '../units/model.js';
+
 /**
  * Billing — automated strata-fee billing + late notices.
  *
@@ -54,8 +56,14 @@ export interface BillRun {
 
 export type ArrearsResolver = (unitId: string) => number;
 
+/**
+ * Default AR ledger fund for a unit's charges. Delegates to the canonical
+ * per-unit AR account (`ar:unit-<n>`) so billing AR, unit detail, and the
+ * ledger all address the same account — the model's "one place to change a
+ * unit" guarantee.
+ */
 export function referenceFor(unitId: string): string {
-  return `unit-${unitId.replace(/[^a-zA-Z0-9]/g, '')}`;
+  return unitArFundCode(unitId);
 }
 
 function isoDaysFromBase(year: number, month: number, day: number): string {
