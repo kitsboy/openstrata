@@ -9,6 +9,7 @@
   import { copy, formatCurrency } from '$lib/i18n';
   import { auth } from '$lib/api/auth';
   import { fetchLedgerBalance } from '$lib/api/ledger';
+  import LiveSync from '$lib/components/LiveSync.svelte';
   import { onMount } from 'svelte';
 
   interface FundView {
@@ -28,30 +29,35 @@
   let funds = $state<FundView[]>(FUNDS.map((f) => ({ code: f.code, label: f.labelKey, balance: null, tally: null })));
   let live = $state(false);
   let liveLoaded = $state(false);
+  let syncedAt = $state<Date | null>(null);
+
+  async function refreshBalances() {
+    const results = await Promise.all(
+      FUNDS.map((f) =>
+        fetchLedgerBalance(f.code)
+          .then((b) => ({
+            code: f.code,
+            label: f.labelKey,
+            balance: b.balanceBasis / 100,
+            tally: b.headTally[0]?.tallyRoot.slice(0, 8) ?? null
+          }))
+          .catch(() => null)
+      )
+    );
+    const updated = funds.map((fund) => {
+      const liveFund = results.find((r) => r?.code === fund.code);
+      return liveFund ? { ...liveFund } : fund;
+    });
+    funds = updated;
+    syncedAt = new Date();
+  }
 
   onMount(() => {
     const unsubscribe = auth.subscribe((session) => {
       live = session.status === 'signed-in';
       if (live && !liveLoaded) {
         liveLoaded = true;
-        Promise.all(
-          FUNDS.map((f) =>
-            fetchLedgerBalance(f.code)
-              .then((b) => ({
-                code: f.code,
-                label: f.labelKey,
-                balance: b.balanceBasis / 100,
-                tally: b.headTally[0]?.tallyRoot.slice(0, 8) ?? null
-              }))
-              .catch(() => null)
-          )
-        ).then((results) => {
-          const updated = funds.map((fund) => {
-            const liveFund = results.find((r) => r?.code === fund.code);
-            return liveFund ? { ...liveFund } : fund;
-          });
-          funds = updated;
-        });
+        refreshBalances();
       }
     });
     return unsubscribe;
@@ -72,9 +78,12 @@
 <section class="glass-card rounded-2xl p-6">
   <div class="flex items-center justify-between mb-4">
     <h3 class="text-lg font-bold text-slate-800">🏦 {$copy.subAccounts}</h3>
-    <span class="text-xs font-semibold text-slate-400">
-      {live ? `{$copy.liveLabel} · {$copy.liveDataBadge}` : $copy.simulatedLedger}
-    </span>
+    <div class="flex items-center gap-3">
+      <LiveSync live={live} bind:syncedAt onRefresh={() => refreshBalances()} />
+      <span class="text-xs font-semibold text-slate-400">
+        {live ? `{$copy.liveLabel} · {$copy.liveDataBadge}` : $copy.simulatedLedger}
+      </span>
+    </div>
   </div>
 
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
