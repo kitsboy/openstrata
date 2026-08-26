@@ -92,7 +92,7 @@
 	<section>
 		<Card variant="hero" class="text-center">
 			<div class="text-4xl mb-4">📜</div>
-			<h2 class="text-xl font-bold text-slate-800">{$copy.fullWireProtocol}</h2>
+			<h2 class="text-2xl font-bold text-slate-800">{$copy.fullWireProtocol}</h2>
 			<p class="mt-2 text-slate-500 max-w-lg mx-auto">
 				{$copy.fullWireProtocolDescription}
 			</p>

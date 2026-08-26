@@ -36,7 +36,7 @@
 
 	<Card variant="hero" class="mt-12 text-center border-dashed">
 		<Icon name="rss" class="h-8 w-8 text-brand-500 mx-auto mb-3" />
-		<h2 class="font-bold text-slate-800">{$copy.subscribeRss}</h2>
+		<h2 class="text-xl font-bold text-slate-800">{$copy.subscribeRss}</h2>
 		<p class="mt-2 text-sm text-slate-500">{$copy.subscribeRssHint}</p>
 		<a href="/rss" class="mt-4 inline-block text-sm font-semibold text-brand-600 no-underline hover:underline">{$copy.viewRssApi} →</a>
 	</Card>

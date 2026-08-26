@@ -36,7 +36,7 @@
 <div class="mx-auto max-w-7xl px-6 py-12">
   <PageToc />
   <div class="mb-10 rounded-2xl border-l-4 border-l-warning bg-warning/5 p-6">
-    <h2 class="font-bold text-slate-800">{$copy.legalLibraryNoticeTitle}</h2>
+    <h2 class="text-xl font-bold text-slate-800">{$copy.legalLibraryNoticeTitle}</h2>
     <p class="mt-2 text-sm leading-relaxed text-slate-600">{$copy.legalLibraryNotice}</p>
   </div>
 
@@ -75,7 +75,7 @@
       {#each jurisdictions as jurisdiction}
         <div class="rounded-2xl border border-border bg-surface-2 p-5 {jurisdiction.active ? 'border-brand-200' : 'opacity-65'}">
           <div class="flex items-center justify-between"><span class="text-2xl">{jurisdiction.flag}</span><span class="rounded-full px-2.5 py-1 text-[10px] font-bold {jurisdiction.active ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400'}">{jurisdiction.active ? $copy.liveStatus : $copy.soonStatus}</span></div>
-          <h3 class="mt-3 font-bold text-slate-800">{jurisdiction.name}</h3>
+          <h3 class="mt-3 text-lg font-bold text-slate-800">{jurisdiction.name}</h3>
           <p class="mt-1 text-xs text-slate-500">{jurisdiction.laws.join(' · ')}</p>
         </div>
       {/each}

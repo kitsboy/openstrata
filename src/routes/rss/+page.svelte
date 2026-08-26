@@ -84,7 +84,7 @@
 				</div>
 			</Card>
 
-			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.feedSources}</h2>
+			<h2 class="text-xl font-bold text-slate-800 mb-4">{$copy.feedSources}</h2>
 			<div class="space-y-3">
 				{#each filteredFeeds as feed}
 					<Card variant="compact">
@@ -114,7 +114,7 @@
 
 		<!-- Feed items -->
 		<div class="lg:col-span-2 min-w-0">
-			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.latestItems}</h2>
+			<h2 class="text-xl font-bold text-slate-800 mb-4">{$copy.latestItems}</h2>
 			<div class="space-y-4">
 				{#each filteredItems as item}
 					{@const feed = rssFeeds.find((f) => f.id === item.feed)}

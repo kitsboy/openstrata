@@ -32,7 +32,7 @@
 
 <div class="mx-auto max-w-7xl px-6 py-12">
   <div class="mb-10 rounded-2xl border-l-4 border-l-warning bg-warning/5 p-6">
-    <h2 class="font-bold text-slate-800">{$copy.templateNoticeTitle}</h2>
+    <h2 class="text-xl font-bold text-slate-800">{$copy.templateNoticeTitle}</h2>
     <p class="mt-2 text-sm leading-relaxed text-slate-600">{$copy.templateNotice}</p>
   </div>
 
