@@ -173,5 +173,91 @@ export class MemUnitStore implements UnitStore {
   }
 }
 
+import type { MemberInput, MemberRecord } from '../src/members/model.js';
+import { normalizeEmail } from '../src/members/model.js';
+import type { MemberStore } from '../src/members/store.js';
+
+/**
+ * In-memory MemberStore for unit + API route tests. Mirrors the Postgres
+ * adapter: tenant-scoped by communityId, keyed on (communityId, email).
+ */
+export class MemMemberStore implements MemberStore {
+  private byCouncil = new Map<string, Map<string, MemberRecord>>();
+  private nextId = 1;
+
+  private table(communityId: string): Map<string, MemberRecord> {
+    let t = this.byCouncil.get(communityId);
+    if (!t) {
+      t = new Map();
+      this.byCouncil.set(communityId, t);
+    }
+    return t;
+  }
+
+  async list(communityId: string): Promise<MemberRecord[]> {
+    return [...this.table(communityId).values()].sort((a, b) => b.id - a.id);
+  }
+
+  async listByUnit(communityId: string, unitRef: string): Promise<MemberRecord[]> {
+    return (await this.list(communityId)).filter((m) => m.unitRef === unitRef);
+  }
+
+  async get(communityId: string, id: number): Promise<MemberRecord | null> {
+    for (const m of this.table(communityId).values()) {
+      if (m.id === id) return { ...m };
+    }
+    return null;
+  }
+
+  async upsert(communityId: string, input: MemberInput): Promise<MemberRecord> {
+    const email = normalizeEmail(input.email);
+    const table = this.table(communityId);
+    const existing = table.get(email);
+    const row: MemberRecord = {
+      id: existing?.id ?? this.nextId++,
+      communityId,
+      email,
+      displayName: (input.displayName ?? '').trim() || email.split('@')[0]!,
+      phone: input.phone ?? null,
+      unitRef: input.unitRef,
+      roleLabel: input.roleLabel ?? 'owner',
+      createdAt: existing?.createdAt ?? new Date().toISOString()
+    };
+    table.set(email, { ...row });
+    return { ...row };
+  }
+
+  async remove(communityId: string, id: number): Promise<boolean> {
+    const table = this.table(communityId);
+    for (const [email, m] of table) {
+      if (m.id === id) {
+        table.delete(email);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async seedDefault(
+    communityId: string,
+    units: Array<{ unitRef: string; owner?: string }>
+  ): Promise<MemberRecord[]> {
+    const out: MemberRecord[] = [];
+    for (const u of units) {
+      if (!u.owner) continue;
+      const email = `${u.owner.toLowerCase().replace(/[^a-z0-9]+/g, '.')}@example.com`;
+      out.push(
+        await this.upsert(communityId, {
+          email,
+          displayName: u.owner,
+          unitRef: u.unitRef,
+          roleLabel: 'owner'
+        })
+      );
+    }
+    return out;
+  }
+}
+
 export { MemAuthStore } from '../src/auth/mem-store.js';
 export type { Council, UserRecord, UserRole } from '../src/auth/model.js';

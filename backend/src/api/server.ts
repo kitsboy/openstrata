@@ -35,6 +35,9 @@ import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meet
 import type { UnitRecord, UnitRegistry } from '../units/model.js';
 import { createRegistry, normalizeUnitRef, unitArFundCode } from '../units/model.js';
 import type { UnitStore } from '../units/store.js';
+import type { MemberStore } from '../members/store.js';
+import { normalizeEmail, toMemberWire } from '../members/model.js';
+import { statutoryDeadlines, withDaysLeft, sortDeadlines } from '../deadlines/deadlines.js';
 import { hashPassword, verifyPassword } from '../auth/passwords.js';
 import { signJwt, verifyJwt } from '../auth/jwt.js';
 import type { AuthStore } from '../auth/store.js';
@@ -61,6 +64,8 @@ export interface ApiDeps {
   /** Tenant-scoped unit store (migration 0005). When present, `/units` is
    * store-backed and seeded per council; the registry stays the fallback. */
   unitStore?: UnitStore;
+  /** Tenant-scoped member registry (migration 0006). Owner/occupant layer. */
+  memberStore?: MemberStore;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
@@ -179,8 +184,18 @@ export async function buildServer(
       }
       const council = await deps.auth.createCouncil(req.body.councilName.trim());
       // Fresh council gets its own building: seed the default unit set into
-      // its tenant-scoped unit table (no-op when running registry-only).
-      if (deps.unitStore) await deps.unitStore.seedDefault(council.id);
+      // its tenant-scoped unit table (no-op when running registry-only), then
+      // seed the member layer from the building's owners (migration 0006).
+      if (deps.unitStore) {
+        await deps.unitStore.seedDefault(council.id);
+        if (deps.memberStore) {
+          const seeded = await deps.unitStore.list(council.id);
+          await deps.memberStore.seedDefault(
+            council.id,
+            seeded.map((u) => ({ unitRef: u.unitRef, owner: u.member?.owner }))
+          );
+        }
+      }
       const passwordHash = await hashPassword(req.body.password);
       const user = await deps.auth.createUser({
         councilId: council.id,
@@ -405,6 +420,98 @@ export async function buildServer(
     }
   );
 
+  // ------------------------------------------------  Member registry
+  // The owner/occupant layer over units (migration 0006). Member rows are
+  // tenant-scoped: each council manages its own building's people.
+  app.get('/api/v1/members', { preHandler: [authenticate] }, async (req) => {
+    const members = deps.memberStore
+      ? await deps.memberStore.list(req.user!.councilId)
+      : [];
+    return { ok: true, members: members.map(toMemberWire) };
+  });
+
+  app.get<{ Querystring: { unitRef?: string } }>(
+    '/api/v1/members/unit',
+    { preHandler: [authenticate] },
+    async (req) => {
+      if (!req.query.unitRef) return { ok: true, members: [] };
+      const unitRef = normalizeUnitRef(req.query.unitRef);
+      if (!unitRef) return { ok: true, members: [] };
+      const members = deps.memberStore
+        ? await deps.memberStore.listByUnit(req.user!.councilId, unitRef)
+        : [];
+      return { ok: true, unitRef, members: members.map(toMemberWire) };
+    }
+  );
+
+  app.post<{
+    Body: {
+      email: string;
+      displayName?: string;
+      phone?: string | null;
+      unitRef: string;
+      roleLabel?: 'owner' | 'tenant' | 'both';
+    };
+  }>(
+    '/api/v1/members',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email', 'unitRef'],
+          additionalProperties: false,
+          properties: {
+            email: { type: 'string', minLength: 3 },
+            displayName: { type: 'string' },
+            phone: { type: ['string', 'null'] },
+            unitRef: { type: 'string', minLength: 1 },
+            roleLabel: { type: 'string', enum: ['owner', 'tenant', 'both'] }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
+      if (!deps.memberStore) {
+        return reply.code(501).send({ ok: false, reason: 'member store not configured' });
+      }
+      if (!EMAIL_RE.test(normalizeEmail(req.body.email))) {
+        return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      }
+      const unitRef = normalizeUnitRef(req.body.unitRef);
+      if (!unitRef) {
+        return reply.code(400).send({ ok: false, reason: 'invalid unitRef' });
+      }
+      const units = await councilUnits(deps, req.user!.councilId);
+      if (!units.some((u) => normalizeUnitRef(u.unitRef) === unitRef)) {
+        return reply.code(404).send({ ok: false, reason: 'unknown unit' });
+      }
+      const member = await deps.memberStore.upsert(req.user!.councilId, {
+        email: req.body.email,
+        displayName: req.body.displayName,
+        phone: req.body.phone ?? null,
+        unitRef,
+        roleLabel: req.body.roleLabel ?? 'owner'
+      });
+      return { ok: true, member: toMemberWire(member) };
+    }
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    '/api/v1/members/:id',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req, reply) => {
+      if (!deps.memberStore) {
+        return reply.code(501).send({ ok: false, reason: 'member store not configured' });
+      }
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id)) return reply.code(400).send({ ok: false, reason: 'invalid id' });
+      const removed = await deps.memberStore.remove(req.user!.councilId, id);
+      if (!removed) return reply.code(404).send({ ok: false, reason: 'unknown member' });
+      return { ok: true, removed: id };
+    }
+  );
+
   // Ledger balance (verified against the hash chain). Community comes from the
   // token — a council can only read its own accounts.
   app.get<{ Querystring: { fund: string } }>(
@@ -432,6 +539,49 @@ export async function buildServer(
       };
     }
   );
+
+  // Full verified chain for a fund — the ledger explorer + CSV export read
+  // this. Tampering anywhere in the chain makes the request throw 500.
+  app.get<{ Querystring: { fund: string } }>(
+    '/api/v1/ledger/entries',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const entries = await deps.ledger.entries(req.user!.councilId, req.query.fund);
+      return { ok: true, fund: req.query.fund, entries };
+    }
+  );
+
+  // "What's due" task center: statutory calendar + operational deadlines
+  // (open payment quotes expiring) for this council, sorted soonest-first.
+  app.get('/api/v1/deadlines', { preHandler: [authenticate] }, async (req) => {
+    const now = new Date();
+    const statutory = withDaysLeft(statutoryDeadlines(now), now);
+    const items = statutory.map((s) => ({ ...s, kind: s.kind, source: 'statutory' }));
+
+    // Operational: open payment quotes (status 'quoted') expire per invoice.
+    const units = await councilUnits(deps, req.user!.councilId);
+    for (const unit of units) {
+      const requests = await deps.payments.listByUnit(req.user!.councilId, unit.unitRef);
+      for (const p of requests) {
+        if (p.status !== 'quoted') continue;
+        const expiresAt = p.expiresAt ? new Date(p.expiresAt) : null;
+        const daysLeft = expiresAt
+          ? Math.ceil((expiresAt.getTime() - now.getTime()) / 86_400_000)
+          : 1;
+        items.push({
+          id: `quote:${p.referenceCode}`,
+          kind: 'quote',
+          title: `Payment quote ${p.referenceCode} for unit ${unit.unitRef} is open`,
+          dueAt: expiresAt ? expiresAt.toISOString() : now.toISOString(),
+          daysLeft,
+          severity: daysLeft <= 1 ? 'urgent' : 'soon',
+          jurisdiction: 'BC',
+          source: 'operational'
+        });
+      }
+    }
+    return { ok: true, asOf: now.toISOString(), items: sortDeadlines(items) };
+  });
 
   // Post a single credit/debit (idempotent via Idempotency-Key header).
   // Treasurer + admin only; the community is the caller's council.

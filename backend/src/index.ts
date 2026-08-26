@@ -17,6 +17,7 @@ import { LiveRateProvider } from './rails/rate-provider.js';
 import { buildServer } from './api/server.js';
 import { DEFAULT_UNITS } from './units/seed.js';
 import { PostgresUnitStore } from './units/pg-store.js';
+import { PostgresMemberStore } from './members/pg-store.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -26,6 +27,7 @@ async function main(): Promise<void> {
   const payments = new PostgresPaymentRequestStore(config.dbUrl);
   const auth = new PostgresAuthStore(config.dbUrl);
   const units = new PostgresUnitStore(config.dbUrl);
+  const members = new PostgresMemberStore(config.dbUrl);
 
   // Stub corpus sourced from the BC compliance knowledge base (docs). In
   // production this is loaded from the pgvector `corpus_chunk` table and the
@@ -46,6 +48,7 @@ async function main(): Promise<void> {
     }),
     units: DEFAULT_UNITS, // registry fallback for legacy seams
     unitStore: units,
+    memberStore: members,
     config: {
       crfMandatoryPct: config.crfMandatoryPct,
       vectorCollection: config.vectorCollection,

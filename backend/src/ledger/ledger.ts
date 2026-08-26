@@ -153,6 +153,44 @@ export class LedgerEngine {
   }
 
   /**
+   * Verified entries for a fund (the hash chain itself). Returns the entries in
+   * chain order with the chain verified — tampering throws. Powers the ledger
+   * explorer + CSV export.
+   */
+  async entries(
+    groupId: string,
+    fundCode: string
+  ): Promise<
+    Array<{
+      seq: number;
+      amountBasis: number;
+      kind: EntryKind;
+      type: string;
+      description: string;
+      referenceCode: string;
+      prevTally: string;
+      tallyRoot: string;
+      postedAt: string;
+    }>
+  > {
+    const account = await this.store.getAccountByFund(groupId, fundCode);
+    if (!account) return [];
+    const entries = await this.store.listEntries(account.id);
+    if (entries.length) verifyChain(entries);
+    return entries.map((e) => ({
+      seq: e.seq,
+      amountBasis: e.amountBasis,
+      kind: e.kind,
+      type: e.type,
+      description: e.description,
+      referenceCode: e.referenceCode,
+      prevTally: e.prevTally,
+      tallyRoot: e.tallyRoot,
+      postedAt: e.postedAt
+    }));
+  }
+
+  /**
    * Monthly rollup for a fund — income (credits) vs expenses (debits) per
    * calendar month, for the dashboard charts. Returns `months` points ending
    * with the current month, zero-filled when a month has no activity. The
