@@ -9,7 +9,7 @@
 - **Tests:** new `backend/tests/unit-store.test.ts` (store semantics, CRUD + role gates, tenancy isolation, AR traceability from billing + confirmed payments, 501 fallback) — backend now **167 tests / 16 files** (+12), typecheck clean; frontend **45 tests** (+3), `svelte-check` 0/0, build + prerender clean
 - **Docs:** `backend/API.md` units section rewritten (detail/upsert/delete), WORKPLAN #5 marked done
 
-**Git State:** commits pending — main work commit + a follow-up recording the SHA in this file / WORKPLAN (per the established pattern). Not pushed until Cam says go.
+**Git State:** main work committed as **`2c1724e`** — "Add per-council DB-backed unit registry" (21 files, +1083/−55). Not pushed yet; awaiting Cam's go to push to `origin/main`.
 
 **Remaining (unchanged, all infra-gated):** #1 live-site verify (needs deploy), #13 rails on host (LND/Liquid/PayNym/Nostr), #14 on-chain/LN broadcast (daemons), #17 BOLT-12 (LND + channels — LNBITS node exists, channels not yet established)
 
