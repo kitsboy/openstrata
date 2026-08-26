@@ -6,6 +6,9 @@
 	import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import { goto } from '$app/navigation';
 	import { copy } from '$lib/i18n';
+	import { auth } from '$lib/api/auth';
+	import { fetchUnits, type ApiUnit } from '$lib/api/units';
+	import { onMount } from 'svelte';
 
 	let activeDomain = $state('all');
 	let sovereignMode = $state(false);
@@ -20,8 +23,43 @@
 			: strataToolModules.filter((m) => m.domain === activeDomain)
 	);
 
+	// Live unit registry: when a signed-in session exists, prefer the backend's
+	// canonical units (`GET /api/v1/units`); otherwise keep the in-repo demo
+	// registry. The shapes are identical, so the swap is invisible below.
+	let liveUnits = $state<ApiUnit[] | null>(null);
+
+	onMount(() => {
+		const unsubscribe = auth.subscribe((session) => {
+			if (session.status === 'signed-in') {
+				fetchUnits()
+					.then((fetched) => (liveUnits = fetched))
+					.catch(() => {});
+			} else if (session.status === 'signed-out') {
+				liveUnits = null;
+			}
+		});
+		return unsubscribe;
+	});
+
+	const displayUnits = $derived(
+		liveUnits
+			? liveUnits.map((u) => ({
+					id: u.unitRef,
+					floor: u.floor,
+					sqft: u.sqft ?? 0,
+					status: u.occupancy,
+					tenant: u.tenant ?? null,
+					rent: u.rent ?? null,
+					eht: u.eht ?? false,
+					formK: u.formK ?? 'missing',
+					evCharger: u.evCharger ?? false,
+					arFundCode: u.arFundCode
+			  }))
+			: units
+	);
+
 	const filteredUnits = $derived(
-		formKFilter === 'all' ? units : units.filter((u) => u.formK === formKFilter)
+		formKFilter === 'all' ? displayUnits : displayUnits.filter((u) => u.formK === formKFilter)
 	);
 
 	const statusColor = (s: string) =>
@@ -210,7 +248,7 @@
 
 	<!-- Form K -->
 	<section class="glass-card rounded-2xl p-8 mb-8">
-		<h3 class="text-lg font-bold text-slate-800 mb-4">📋 {$copy.formKHub}</h3>
+		<h3 class="text-lg font-bold text-slate-800 mb-4">📋 {$copy.formKHub} {#if liveUnits}<span class="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.liveLabel}</span>{/if}</h3>
 		<div class="flex gap-2 mb-4">
 			{#each ['all', 'signed', 'missing'] as f}
 				<button class="rounded-lg px-3 py-1.5 text-xs font-semibold {formKFilter === f ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}"

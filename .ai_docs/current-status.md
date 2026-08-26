@@ -1,10 +1,11 @@
 # Current Status — OpenStrata
 
-**Version:** v0.3.1
+**Version:** v0.3.2
 **Last Updated:** 2026-08-26
 **Domain:** openstrata.giveabit.io
 
 ## Recent Milestones
+- **Frontend wired to the live backend (v0.3.2):** new `src/lib/api/` client — base-URL resolution (`PUBLIC_API_BASE_URL` build-time env or `localStorage['openstrata-api-base']` runtime override, else demo mode), bearer-token persistence (`openstrata-token`), typed fetch wrapper (`apiFetch` with `ApiError`/`ApiUnavailableError`), Svelte auth store + `bootstrap()` session restore, typed ledger/units/rails endpoint helpers; **AuthModal** (sign-in / create-account tabs) in the dashboard topbar with sign-out menu + council name in the workspace switcher; dashboard shows a **Live/Demo pill**, pulls the CRF + operating balances from `/api/v1/ledger/balance`, and the tools units matrix swaps to `GET /api/v1/units` when a session is live (falls back to the demo registry); the **e-transfer reconciler** matches its simulated inbound transfers against the live unit registry when signed in (`apiUnitsToUnitRefs` adapter, LIVE badge; bank-feed ingestion remains Phase 5); the **pitch deck** shows the real CRF balance + CAD/BTC from `/rails/status` when live (simulation walk gated to demo mode, hero badge flips Live ↔ Demo); `.env.example` + `docs/DEPLOYMENT.md` document both exposure paths (Tailnet-only vs public HTTPS behind JWT + CORS); 13 new i18n keys across all 9 locales (523 total, parity audit green); **17 new frontend api client tests**, `svelte-check` 0/0
 - **Auth + multi-tenant councils (v0.3.1):** zero-dependency JWT auth (HS256 via node:crypto, scrypt password hashing) with **admin / treasurer / member** role gates; open signup (`POST /api/v1/auth/register` creates a council + first admin), login, `/auth/me`, admin user management with one-time temp passwords; every `/api/v1/*` route except `/health` + the Rosa KB now requires a Bearer token and derives the ledger `community` from the token's `cid` claim (no more client-supplied community); payment quoting/confirming is tenant-scoped (idempotency key now `(community_id, ref_id, unit_ref, rail)` via migration `0004_auth_and_tenancy.sql`); new `backend/src/auth/` module (model, jwt, passwords, store + mem/pg adapters); **backend suite now 127 tests / 11 files** (19 new auth + tenancy tests incl. forged/expired tokens, role gates, cross-council isolation) + **new Postgres e2e smoke suite** (`tests/e2e-smoke.test.ts`, runs against a live `DATABASE_URL`) + **CI `backend-e2e` job** that spins up `pgvector/pgvector:pg17` and runs migrate + the smoke suite on every push
 - v0.2.x series: responsive dashboard + shared shell, 9-locale i18n parity (217→509 keys), PWA + dark mode + search, Phase 2 e-transfer auto-reconciliation prototype, Phase 3 backend scaffolding (immutable trust ledger, Rosa RAG, Ziggy treasury), automated fee billing + late notices, CRT-proof bylaw enforcement state machine, sovereign payment rails (Bitcoin on-chain, Lightning/LNURL, Liquid, PayNym BIP-47, Nostr) with quoting + shared reconciliation reference
 - **Phase 3 core product completed + hardened (v0.3.0):**
@@ -21,10 +22,12 @@
 - Units remain the seeded demo registry (shared across councils); per-council DB-backed units (unit→payment→form traceability UI) is the next tenancy step
 - Auth has no rate limiting on login yet — add before public exposure
 - The live site remains a fully functional front-end product demo; legal/statutory content awaits professional review
+- The frontend API client is built and documented, but no backend is reachable yet: the host deploy is still pending, and the API-exposure path (Tailnet-only vs public behind auth + CORS) is decided at deploy time via `PUBLIC_API_BASE_URL`
+- No live monthly series exists on the backend, so the pitch-page income/expense + rental-index charts stay demo data (explicitly labeled “simulated live ledger”); same for bank-feed e-transfer ingestion (Phase 5)
 
 ## Next Steps
 - **Deploy on a Tailscale host:** `docker compose up -d`, set `AUTH_SECRET` in `backend/.env`, `npm run migrate`, then run the e2e smoke gate: `DATABASE_URL=… npm run test -- e2e-smoke` (covers `/api/v1/ledger`, `/billing/run`, `/payments/*`, `/forms`, `/meetings/*`, cross-council isolation on the real adapters)
-- Wire the live backend into the frontend (dashboard/treasury widgets currently read mock data from `data.ts`) — needs the API-exposure decision (Tailscale-only vs public behind auth + CORS)
+- Deploy a host and set `PUBLIC_API_BASE_URL` at build time (or `localStorage['openstrata-api-base']` at runtime) to flip the dashboard from demo to live; if exposing publicly, add login rate limiting + the CORS allowlist first
 - Pick Rosa embedding/chat models, then wire the pgvector + Ollama adapters (migration `0002` + `keywordRetriever` seam ready) so `rosa ingest` indexes real embeddings
 - Provision the Bitcoin rails' daemons (LND, Liquid node, PayNym notifier, Nostr relays) on the host and enable rails via `.env`; wire a live `cadPerBtc` rate feed; connect `payments/confirm` → real on-chain/LN broadcast
 - Move to per-council DB-backed units + unit→payment→form traceability UI

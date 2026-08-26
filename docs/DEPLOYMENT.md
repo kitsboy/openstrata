@@ -83,5 +83,40 @@ ledger → billing → payments quote/confirm (incl. the `markStatus` single-row
 semantics check) → forms → meetings → cross-council isolation — so first deploy
 day is a single command, not a manual probe session.
 
+## Frontend → backend wiring (live dashboard)
+
+The static Cloudflare site ships in **demo mode** by default: every widget
+shows curated sample data and nothing breaks without a backend. To show live
+council data, point the site at the API base URL with the build-time env
+`PUBLIC_API_BASE_URL` (see `.env.example` at the repo root). Operators can also
+repoint a deployed site at runtime via `localStorage['openstrata-api-base']` —
+no rebuild needed.
+
+There are two exposure paths:
+
+**A. Tailnet-only (recommended while the host is behind Tailscale).**
+```bash
+PUBLIC_API_BASE_URL=http://<tailscale-ip-or-hostname>:8080 npm run build
+```
+Live data works for browsers on the tailnet; everyone else sees demo data.
+The backend already binds to the Tailscale interface and requires a Bearer JWT
+for every `/api/v1/*` route.
+
+**B. Public HTTPS behind auth + CORS.**
+Expose the backend through a Cloudflare Tunnel (or a reverse proxy with TLS)
+and add the site origin to the backend's CORS allowlist. The existing JWT auth
+protects every route, so the surface is the same as the tailnet — but this is a
+real security boundary: do it deliberately, add login rate limiting first, and
+keep `AUTH_SECRET` strong. Then:
+```bash
+PUBLIC_API_BASE_URL=https://api.example.com npm run build
+```
+
+What goes live once connected (all JWT-authed):
+- Topbar sign-in / create-account (open signup → council + first admin)
+- Dashboard reserve-funds + operating metrics from `/api/v1/ledger/balance`
+- Tools units matrix from `/api/v1/units` (falls back to the demo registry)
+- A Live/Demo pill in the dashboard header showing the data source
+
 See `SOURCE-OF-TRUTH.md`, `backend/README.md`, and `docs/KIMI-HANDOFF.md` for
 full context.

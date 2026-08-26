@@ -16,6 +16,10 @@
 	import LineChart from '$lib/components/LineChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { copy, locale, formatCurrency, formatDate } from '$lib/i18n';
+	import { auth } from '$lib/api/auth';
+	import { fetchLedgerBalance } from '$lib/api/ledger';
+	import { fetchRailsStatus } from '$lib/api/rails';
+	import { onMount } from 'svelte';
 
 	const updatedAt = new Date().toISOString().slice(0, 10);
 
@@ -54,8 +58,34 @@
 
 	let btcCad = $state(135820);
 	let crfBalance = $state(treasuryHistory[treasuryHistory.length - 1].crf * 58);
+	// Live mode: a signed-in session can read the council's real numbers.
+	let live = $state(false);
+	let liveCrf = $state<number | null>(null);
+	let liveCadPerBtc = $state<number | null>(null);
+
+	onMount(() => {
+		const unsubscribe = auth.subscribe((session) => {
+			live = session.status === 'signed-in';
+			if (live) {
+				// Real CRF balance from the hash-chained ledger + the host's CAD/BTC
+				// rate from /rails/status. Best-effort: a failure keeps the demo numbers.
+				fetchLedgerBalance('crf')
+					.then((b) => (liveCrf = b.balanceBasis))
+					.catch(() => {});
+				fetchRailsStatus()
+					.then((s) => (liveCadPerBtc = s.cadPerBtc > 0 ? s.cadPerBtc : null))
+					.catch(() => {});
+			} else {
+				liveCrf = null;
+				liveCadPerBtc = null;
+			}
+		});
+		return unsubscribe;
+	});
 
 	$effect(() => {
+		// The walk is a demo stand-in — never simulate over a live host value.
+		if (live) return;
 		const interval = setInterval(() => {
 			btcCad += (Math.random() - 0.48) * 280;
 			crfBalance += Math.floor((Math.random() - 0.3) * 120);
@@ -106,10 +136,10 @@
 					<div class="mt-8 flex flex-wrap gap-3">
 						<span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold text-brand-700">
 							<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
-							{$copy.liveLabel} {$copy.liveDataBadge} {formatDate(updatedAt, $locale, { year: 'numeric', month: 'long', day: 'numeric' })}
+							{#if live}{$copy.liveLabel} {$copy.liveDataBadge}{:else}{$copy.demo}{/if} {formatDate(updatedAt, $locale, { year: 'numeric', month: 'long', day: 'numeric' })}
 						</span>
 						<span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold text-slate-600">
-							₿ {formatCurrency(btcCad, $locale, { maximumFractionDigits: 0 })}
+							₿ {formatCurrency(liveCadPerBtc ?? btcCad, $locale, { maximumFractionDigits: 0 })}
 						</span>
 					</div>
 				</div>
@@ -234,9 +264,9 @@
 					<div class="glass-card rounded-2xl p-6">
 						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">{$copy.crfBalanceLabel}</p>
 						<p class="mt-2 text-3xl font-bold text-brand-700 stat-flash">
-							{formatCurrency(crfBalance, $locale, { maximumFractionDigits: 0 })}
+							{formatCurrency(liveCrf ?? crfBalance, $locale, { maximumFractionDigits: 0 })}
 						</p>
-						<p class="mt-1 text-xs text-slate-400">{$copy.simulatedLedger}</p>
+						<p class="mt-1 text-xs text-slate-400">{#if live}{$copy.liveLabel} · {$copy.liveDataBadge}{:else}{$copy.simulatedLedger}{/if}</p>
 					</div>
 					<div class="glass-card rounded-2xl p-6">
 						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">{$copy.warChestLabel}</p>

@@ -11,6 +11,8 @@
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
   import { browser } from '$app/environment';
+  import { bootstrap } from '$lib/api/auth';
+  import { onMount } from 'svelte';
   import packageJson from '../../package.json';
 
   let { children } = $props();
@@ -23,6 +25,13 @@
       /* offline caching is progressive enhancement */
     });
   }
+  // Restore the backend session once, client-side. When no API base URL is
+  // configured (or the host is unreachable), the auth store settles into demo
+  // mode and every widget keeps showing curated sample data.
+  onMount(() => {
+    bootstrap();
+  });
+
   const currentYear = new Date().getFullYear();
   const appVersion = packageJson.version;
   let donateOpen = $state(false);

@@ -1,3 +1,19 @@
+## Session — 2026-08-26 (frontend wired to the live backend, v0.3.2)
+
+**Done (#20 — wire the frontend dashboard to `/api/v1/*`):**
+- **New `src/lib/api/` client** (zero new deps): `config.ts` resolves the base URL — `PUBLIC_API_BASE_URL` build-time env, or `localStorage['openstrata-api-base']` runtime override (no rebuild), else **demo mode** (`null`) so the site never breaks without a backend; `token.ts` persists the JWT (`openstrata-token`); `client.ts` is a typed `apiFetch` wrapper (Bearer attachment, JSON bodies, `ApiError` with the backend's `reason`, `ApiUnavailableError` for no-base/network → widgets fall back to sample data); `auth.ts` is a Svelte store with `bootstrap()` (ping + session restore via `/auth/me`, 401 clears the token), `signIn`/`signUp`/`signOut`; typed endpoint helpers `ledger.ts` (balance/post), `units.ts` (`GET /units`), `rails.ts` (`GET /rails/status`)
+- **Auth UI:** `AuthModal.svelte` (sign-in / create-account tabs, open signup → council + first admin); dashboard topbar shows a sign-in button, then council name + initials + sign-out menu; workspace switcher shows the signed-in council name; header pill flips **Live** ↔ **Demo**
+- **Live widgets with graceful fallback:** reserve-funds + operating metrics pull `/api/v1/ledger/balance` when a session is live (else the old sample numbers); the tools **Form K units matrix swaps to `GET /api/v1/units`** when connected and shows a `LIVE` badge (the swap `$lib/units.ts` documented as intended — invisible to consumers)
+- **Config + docs:** root `.env.example` (`PUBLIC_API_BASE_URL`), `docs/DEPLOYMENT.md` gained a “Frontend → backend wiring” section with both exposure paths (A. Tailnet-only default; B. public HTTPS behind JWT + CORS with rate limiting first); `.ai_docs/current-status.md` bumped to v0.3.2
+- **i18n:** 13 new keys across all 9 locales (509 → **523**, parity audit green); **17 new frontend api client tests**; `svelte-check` 0 errors / 0 warnings
+- **Follow-up: ETransferReconciler + pitch page live wiring** — the e-transfer widget now matches its simulated inbound transfers against the **live unit registry** (`GET /api/v1/units`) when signed in (new `apiUnitsToUnitRefs` adapter, LIVE badge; bank-feed ingestion itself stays Phase 5), and the pitch deck shows the **real CRF balance** (`/ledger/balance`) + **CAD/BTC** (`/rails/status`) when live, with the simulation walk gated to demo mode and the hero badge flipping Live ↔ Demo
+
+**Decision (confirmed with Cam):** build the client configurable now (`PUBLIC_API_BASE_URL` + runtime override + demo fallback); the exposure path (Tailnet-only vs public behind auth + CORS) is decided at deploy time, both documented in `docs/DEPLOYMENT.md`. Follow-up: wire everything that has a real backend counterpart (ledger balances, CAD/BTC, units) and leave genuinely-unavailable series (monthly income/expense history, rental index, bank-feed e-transfers) as clearly-labeled demo data
+
+**Remaining for live data:** deploy a host, set `PUBLIC_API_BASE_URL` at build (or `openstrata-api-base` at runtime), and sign in — the wiring is done and falls back to demo until then
+
+---
+
 ## Session — 2026-08-26 (auth + multi-tenant councils, v0.3.1)
 
 **Done:**

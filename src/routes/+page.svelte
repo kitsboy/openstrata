@@ -1,6 +1,8 @@
 <script lang="ts">
   import packageJson from '../../package.json';
   import { copy, locale, locales, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
+  import { auth, signOut } from '$lib/api/auth';
+  import { fetchLedgerBalance } from '$lib/api/ledger';
 
   const appVersion = packageJson.version;
 
@@ -43,6 +45,7 @@
   ];
 
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
+  import AuthModal from '$lib/components/AuthModal.svelte';
   import { onMount } from 'svelte';
 
   let active = $state('overview');
@@ -54,6 +57,10 @@
   let selectedBuilding = $state<typeof buildings[number] | null>(null);
   let notifications = $state<string[]>([]);
   let showNotifications = $state(false);
+  let showAuth = $state(false);
+  let showAuthMenu = $state(false);
+  let crfBalance = $state<number | null>(null);
+  let operatingBalance = $state<number | null>(null);
 
   const NOTIFICATIONS_KEY = 'openstrata-notifications';
 
@@ -64,6 +71,17 @@
     } catch {
       /* corrupt storage — start fresh */
     }
+    // Watch the auth session: when a live session lands, pull the trust-fund
+    // balances from the backend and close the sign-in modal. Every fetch is
+    // best-effort — a failure just leaves the demo fallbacks in place.
+    const unsubscribe = auth.subscribe((session) => {
+      if (session.status === 'signed-in') {
+        fetchLedgerBalance('crf').then((b) => (crfBalance = b.balanceBasis)).catch(() => {});
+        fetchLedgerBalance('operating').then((b) => (operatingBalance = b.balanceBasis)).catch(() => {});
+        if (showAuth) showAuth = false;
+      }
+    });
+    return unsubscribe;
   });
 
   function rememberNotification(message: string) {
@@ -78,6 +96,13 @@
   const selectedLanguage = $derived($locale);
   const selectedLanguageName = $derived(
     locales.find((item) => item.code === selectedLanguage)?.nativeName ?? 'English'
+  );
+  const liveMode = $derived($auth.status === 'signed-in');
+  const workspaceName = $derived(liveMode && $auth.council ? $auth.council.name : 'Give A Bit');
+  const profileInitials = $derived(
+    $auth.user
+      ? $auth.user.displayName.split(/\s+/).map((part) => part[0] ?? '').join('').slice(0, 2).toUpperCase()
+      : 'OS'
   );
   const filteredBuildings = $derived(
     buildings.filter((building) =>
@@ -117,7 +142,7 @@
 
     <div class="workspace-switcher">
       <div class="workspace-avatar">OS</div>
-      <div class="workspace-copy"><span class="eyebrow">{$copy.workspace}</span><strong>Give A Bit {$copy.workspace}</strong></div>
+      <div class="workspace-copy"><span class="eyebrow">{$copy.workspace}</span><strong>{workspaceName} {$copy.workspace}</strong></div>
       <span class="chevron">⌄</span>
     </div>
 
@@ -176,20 +201,32 @@
             {/if}
           </div>
         {/if}
-        <button class="profile-button" aria-label={$copy.openProfileMenu}><span class="profile-avatar">CM</span><span class="profile-name">Camille</span><span class="chevron">⌄</span></button>
+        {#if liveMode && $auth.user}
+          <div class="auth-wrap">
+            <button class="profile-button" aria-expanded={showAuthMenu} aria-label={$copy.openProfileMenu} onclick={() => (showAuthMenu = !showAuthMenu)}><span class="profile-avatar">{profileInitials}</span><span class="profile-name">{$auth.council?.name ?? $auth.user.displayName}</span><span class="chevron">⌄</span></button>
+            {#if showAuthMenu}
+              <div class="auth-menu" role="menu" aria-label={$copy.profile}>
+                <div class="auth-menu-user"><strong>{$auth.user.displayName}</strong><span>{$auth.user.email}</span></div>
+                <button role="menuitem" onclick={() => { signOut(); showAuthMenu = false; }}>{$copy.signOut}</button>
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <button class="signin-button" onclick={() => (showAuth = true)}>{$copy.signIn}</button>
+        {/if}
       </div>
     </header>
 
     <main class="content">
       <section class="welcome-row">
-        <div><div class="date-kicker">{formatDate('2026-06-18', $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class="live-pill"><span class="status-dot"></span> {$copy.live}</span></div><h1>{$copy.goodMorning}</h1><p>{$copy.subtitle}</p></div>
+        <div><div class="date-kicker">{formatDate('2026-06-18', $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{$copy.goodMorning}</h1><p>{$copy.subtitle}</p></div>
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>
       </section>
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
         <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon">⌂</span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon">!</span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon">$</span></div><strong>{formatCurrency(248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot"><span class="trend up">↗ 4.8%</span><span>{$copy.yearToDate}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon">$</span></div><strong>{formatCurrency(crfBalance ?? 248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span class="trend up">↗ 4.8%</span>{/if}<span>{$copy.yearToDate}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon">◈</span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 
@@ -245,6 +282,10 @@
       </div>
     </dialog>
   </div>
+{/if}
+
+{#if showAuth}
+  <AuthModal close={() => (showAuth = false)} />
 {/if}
 
 {#if showNewStrata}

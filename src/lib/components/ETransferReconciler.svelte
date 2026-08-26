@@ -1,7 +1,10 @@
 <script lang="ts">
   import { copy, formatCurrency } from '$lib/i18n';
-  import { reconcileTransfers, type ETransfer } from '$lib/reconcile';
+  import { reconcileTransfers, type ETransfer, type UnitRef } from '$lib/reconcile';
   import { demoUnits, unitsToUnitRefs } from '$lib/units';
+  import { auth } from '$lib/api/auth';
+  import { fetchUnits, apiUnitsToUnitRefs, type ApiUnit } from '$lib/api/units';
+  import { onMount } from 'svelte';
 
   // ---- Simulated inbound e-transfer notifications (bank format) ----
   const INITIAL_TRANSFERS: ETransfer[] = [
@@ -13,8 +16,29 @@
     { id: 'ET-1047', from: 'Marie Chen', message: '302 overpayment to CRF', amount: 200.0, date: '2026-08-03' }
   ];
 
-  // Match against the single canonical building (mirrors backend units).
-  const UNITS = unitsToUnitRefs(demoUnits);
+  // Match against the single canonical building (mirrors backend units). When a
+  // live signed-in session exists, the registry comes from `GET /api/v1/units`;
+  // otherwise the in-repo demo registry. The simulated inbound transfers stay —
+  // bank-feed ingestion is a Phase 5 item — so the widget demonstrates matching
+  // against the council's real unit numbers.
+  let liveUnits = $state<ApiUnit[] | null>(null);
+
+  onMount(() => {
+    const unsubscribe = auth.subscribe((session) => {
+      if (session.status === 'signed-in') {
+        fetchUnits()
+          .then((units) => (liveUnits = units))
+          .catch(() => {});
+      } else if (session.status === 'signed-out') {
+        liveUnits = null;
+      }
+    });
+    return unsubscribe;
+  });
+
+  const UNITS = $derived<UnitRef[]>(
+    liveUnits ? apiUnitsToUnitRefs(liveUnits) : unitsToUnitRefs(demoUnits)
+  );
 
   let transfers = $state<ETransfer[]>([...INITIAL_TRANSFERS]);
   // Manual override: transferId -> chosen unitId (resolves unmatched/ambiguous).
@@ -72,7 +96,7 @@
 <section class="glass-card rounded-2xl p-8">
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
-      <h3 class="text-lg font-bold text-slate-800">💸 {$copy.etransferTitle}</h3>
+      <h3 class="text-lg font-bold text-slate-800">💸 {$copy.etransferTitle} {#if liveUnits}<span class="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.liveLabel}</span>{/if}</h3>
       <p class="mt-1 text-sm text-slate-500">{$copy.etransferIntro}</p>
     </div>
     <div class="flex items-center gap-2">
