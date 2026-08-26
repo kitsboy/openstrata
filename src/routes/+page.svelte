@@ -23,9 +23,10 @@
     sw: { workspace: 'Nafasi ya kazi', overview: 'Muhtasari', buildings: 'Majengo', governance: 'Utawala', operations: 'Uendeshaji', finances: 'Fedha', legal: 'Maktaba ya sheria', insights: 'Maarifa', newStrata: 'Jumuiya mpya', viewAll: 'Tazama zote', goodMorning: 'Habari za asubuhi, Camille', subtitle: 'Hii ndiyo hali ya jumuiya zako.', actions: 'Vitendo vya haraka', activity: 'Shughuli za moja kwa moja', upcoming: 'Yanayokuja', seeCalendar: 'Tazama kalenda', footerTag: 'Mfumo wa uendeshaji kwa jumuiya zinazojitawala.' }
   }; */
 
+  // Sidebar navigation: key, i18n key, icon name (single SVG icon system).
   const navGroups = [
-    { label: 'Workspace', items: [['overview', 'Overview', '⌂'], ['buildings', 'Buildings', '▦'], ['governance', 'Governance', '◈']] },
-    { label: 'Run the building', items: [['operations', 'Operations', '⌁'], ['finances', 'Finances', '$'], ['legal', 'Legal library', '§'], ['insights', 'Insights', '◒']] }
+    { label: 'Workspace', items: [['overview', 'Overview', 'home'], ['buildings', 'Buildings', 'building'], ['governance', 'Governance', 'shield']] },
+    { label: 'Run the building', items: [['operations', 'Operations', 'wrench'], ['finances', 'Finances', 'coins'], ['legal', 'Legal library', 'scale'], ['insights', 'Insights', 'chart']] }
   ] as const;
 
   // Every sidebar / footer nav item maps to a real page so links work end to end.
@@ -47,11 +48,11 @@
   ];
 
   const activities = [
-    { icon: '✓', tone: 'green', title: 'AGM minutes approved', meta: 'Harbour House · 12 min ago' },
-    { icon: '$', tone: 'blue', title: 'Reserve fund transfer reconciled', meta: 'Cedar Lane · 46 min ago' },
-    { icon: '!', tone: 'amber', title: 'Insurance renewal reminder sent', meta: 'Northline Lofts · 2 hrs ago' },
-    { icon: '↗', tone: 'purple', title: 'Form B request received', meta: 'Harbour House · 3 hrs ago' }
-  ];
+    { icon: 'check', tone: 'green', title: 'AGM minutes approved', meta: 'Harbour House · 12 min ago' },
+    { icon: 'dollar', tone: 'blue', title: 'Reserve fund transfer reconciled', meta: 'Cedar Lane · 46 min ago' },
+    { icon: 'alert', tone: 'amber', title: 'Insurance renewal reminder sent', meta: 'Northline Lofts · 2 hrs ago' },
+    { icon: 'arrow-up-right', tone: 'purple', title: 'Form B request received', meta: 'Harbour House · 3 hrs ago' }
+  ] as const;
 
   const upcoming = [
     { date: '24', month: 'JUN', title: 'Council meeting', place: 'Harbour House · 6:30 PM', tone: 'orange' },
@@ -61,6 +62,8 @@
 
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
   import AuthModal from '$lib/components/AuthModal.svelte';
+  import Icon from '$lib/components/Icon.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
   import { onMount } from 'svelte';
 
   let showLanguageMenu = $state(false);
@@ -150,7 +153,7 @@
     <div class="workspace-switcher">
       <div class="workspace-avatar">OS</div>
       <div class="workspace-copy"><span class="eyebrow">{$copy.workspace}</span><strong>{workspaceName} {$copy.workspace}</strong></div>
-      <span class="chevron">⌄</span>
+      <Icon name="chevron-down" class="h-3 w-3" />
     </div>
 
     <nav class="nav-groups">
@@ -159,7 +162,7 @@
           <div class="nav-label">{group.label === 'Workspace' ? $copy.workspace : $copy.runBuilding}</div>
           {#each group.items as item}
             <a href={navTargets[item[0]]} class:active={isActive(navTargets[item[0]])} class="nav-item no-underline">
-              <span class="nav-icon">{item[2]}</span><span>{$copy[item[0]]}</span>
+              <Icon name={item[2]} class="h-[19px] w-[19px] nav-icon" /><span>{$copy[item[0]]}</span>
               {#if item[0] === 'legal'}<span class="nav-count">12</span>{/if}
             </a>
           {/each}
@@ -169,24 +172,24 @@
 
     <div class="sidebar-spacer"></div>
     <a href="/faq" class="sidebar-help no-underline">
-      <div class="help-orbit">?</div>
+      <div class="help-orbit"><Icon name="help" class="h-3.5 w-3.5" /></div>
       <div><strong>{$copy.needAHand}</strong><span>{$copy.visitResourceCentre}</span></div>
-      <span class="arrow">↗</span>
+      <Icon name="arrow-up-right" class="h-3.5 w-3.5 arrow" />
     </a>
-    <div class="sidebar-footer"><span class="status-dot"></span><span>{$copy.allSystemsOperational}</span><button class="mini-settings" aria-label={$copy.openSettings}>⚙</button></div>
+    <div class="sidebar-footer"><span class="status-dot"></span><span>{$copy.allSystemsOperational}</span><button class="mini-settings" aria-label={$copy.openSettings}><Icon name="settings" class="h-3.5 w-3.5" /></button></div>
   </aside>
 
   {#if showMobileMenu}<button class="scrim" aria-label={$copy.closeNavigation} onclick={() => (showMobileMenu = false)}></button>{/if}
 
   <div class="main-column">
     <header class="topbar">
-      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}>☰</button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
+      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
-        <label class="search-box"><span aria-hidden="true">⌕</span><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
-        <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<span aria-hidden="true">☀️</span>{:else}<span aria-hidden="true">🌙</span>{/if}</button>
+        <label class="search-box"><Icon name="search" class="h-4 w-4" /><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
+        <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}</button>
         <div class="language-wrap">
-          <button class="language-button" aria-expanded={showLanguageMenu} onclick={() => (showLanguageMenu = !showLanguageMenu)}><span class="globe">◎</span><span class="language-current">{selectedLanguageName}</span><span class="chevron">⌄</span></button>
+          <button class="language-button" aria-expanded={showLanguageMenu} onclick={() => (showLanguageMenu = !showLanguageMenu)}><Icon name="globe" class="h-4 w-4" /><span class="language-current">{selectedLanguageName}</span><Icon name="chevron-down" class="h-3 w-3" /></button>
           {#if showLanguageMenu}
             <div class="language-menu">
               <div class="menu-heading">{$copy.chooseLanguage}</div>
@@ -196,12 +199,12 @@
             </div>
           {/if}
         </div>
-        <button class="icon-button notification-button" aria-expanded={showNotifications} aria-label={$copy.notifications} onclick={() => (showNotifications = !showNotifications)}><span>♢</span><i></i></button>
+        <button class="icon-button notification-button" aria-expanded={showNotifications} aria-label={$copy.notifications} onclick={() => (showNotifications = !showNotifications)}><Icon name="bell" class="h-4 w-4" /><i></i></button>
         {#if showNotifications}
           <div class="notifications-panel" role="menu" aria-label={$copy.notifications}>
             <div class="menu-heading">{$copy.notifications}</div>
             {#if notifications.length === 0}
-              <p class="notifications-empty">{$copy.notificationsEmpty}</p>
+              <EmptyState icon="bell" title={$copy.notificationsEmpty} />
             {:else}
               {#each notifications as notification}
                 <button class="notification-item" onclick={() => { toast = notification; setTimeout(() => (toast = ''), 2600); }}>{notification}</button>
@@ -211,7 +214,7 @@
         {/if}
         {#if liveMode && $auth.user}
           <div class="auth-wrap">
-            <button class="profile-button" aria-expanded={showAuthMenu} aria-label={$copy.openProfileMenu} onclick={() => (showAuthMenu = !showAuthMenu)}><span class="profile-avatar">{profileInitials}</span><span class="profile-name">{$auth.council?.name ?? $auth.user.displayName}</span><span class="chevron">⌄</span></button>
+            <button class="profile-button" aria-expanded={showAuthMenu} aria-label={$copy.openProfileMenu} onclick={() => (showAuthMenu = !showAuthMenu)}><span class="profile-avatar">{profileInitials}</span><span class="profile-name">{$auth.council?.name ?? $auth.user.displayName}</span><Icon name="chevron-down" class="h-3 w-3" /></button>
             {#if showAuthMenu}
               <div class="auth-menu" role="menu" aria-label={$copy.profile}>
                 <div class="auth-menu-user"><strong>{$auth.user.displayName}</strong><span>{$auth.user.email}</span></div>
@@ -232,10 +235,10 @@
       </section>
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
-        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon">⌂</span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon">!</span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon">$</span></div><strong>{formatCurrency(crfBalance ?? 248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span class="trend up">↗ 4.8%</span>{/if}<span>{$copy.yearToDate}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon">◈</span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon"><Icon name="alert" class="h-4 w-4" /></span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div><strong>{formatCurrency(crfBalance ?? 248500, $locale, { maximumFractionDigits: 0 })}</strong><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span class="trend up">↗ 4.8%</span>{/if}<span>{$copy.yearToDate}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 
       <section class="main-grid">
@@ -246,19 +249,19 @@
               <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>				<div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
-                <div class={`building-status ${building.tone}`}><span class="status-symbol">{building.tone === 'green' ? '✓' : building.tone === 'amber' ? '!' : '↗'}</span>{building.issue}<span class="status-arrow">→</span></div>
+                <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-2.5 w-2.5" /></span>{building.issue}<span class="status-arrow">→</span></div>
               </div>
-            {:else}			  <div class="empty-state">{$copy.noBuildings} “{search}”.</div>
+            {:else}			  <EmptyState icon="search" title="{$copy.noBuildings} “{search}”" message={$copy.emptySearchHint} actionLabel={$copy.newStrata} onAction={() => (showNewStrata = true)} />
             {/each}
           </div>
 
           <div class="section-heading action-heading"><div><h2>{$copy.quickActions}</h2><p>Common work, made one tap away.</p></div></div>
           <div class="action-grid">
-            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph">＋</span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>			<button class="action-card purple" onclick={() => openAction($copy.meetingPlannerToast)}><span class="action-glyph">◴</span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>			<button class="action-card blue" onclick={() => openAction($copy.legalLibraryToast)}><span class="action-glyph">§</span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>			<button class="action-card green" onclick={() => openAction($copy.maintenanceToast)}><span class="action-glyph">⌁</span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
+            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph"><Icon name="plus" class="h-4 w-4" /></span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>			<button class="action-card purple" onclick={() => openAction($copy.meetingPlannerToast)}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>			<button class="action-card blue" onclick={() => openAction($copy.legalLibraryToast)}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>			<button class="action-card green" onclick={() => openAction($copy.maintenanceToast)}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
           </div>
         </div>
 
-        <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}>{activity.icon}</span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
+        <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
 		  <section><SatohashStatus /></section>
         </aside>
       </section>
@@ -267,14 +270,14 @@
     <footer class="site-footer">
       <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span></div>
     </footer>
-  </div>	  <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><span>⌂</span>{$copy.overview}</a><a href="/tools" class:active={isActive('/tools')}><span>▦</span>{$copy.buildings}</a><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><span>＋</span></button><a href="/tools" class:active={isActive('/tools')}><span>⌁</span>{$copy.operations}</a><button onclick={() => (showMobileMenu = true)}><span>☰</span>{$copy.menu}</button></nav>
+  </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/tools" class:active={isActive('/tools')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><Icon name="plus" class="h-4 w-4" /></button><a href="/tools" class:active={isActive('/tools')}><Icon name="wrench" class="h-4 w-4" />{$copy.operations}</a><button onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
 </div>
 
 {#if selectedBuilding}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (selectedBuilding = null)}>
     <dialog open class="modal" aria-labelledby="building-detail-title">
-      <button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (selectedBuilding = null)}>×</button>
-      <div class="modal-icon">▦</div>
+      <button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (selectedBuilding = null)}><Icon name="close" class="h-3.5 w-3.5" /></button>
+      <div class="modal-icon"><Icon name="building" class="h-5 w-5" /></div>
       <div class="eyebrow">{$copy.yourBuildings}</div>
       <h2 id="building-detail-title">{selectedBuilding.name}</h2>
       <p>{selectedBuilding.location} <span>·</span> {selectedBuilding.units}</p>
@@ -283,7 +286,7 @@
         <div><span class="metric-label">{$copy.reserveFunds}</span><strong>{formatCurrency(Math.round(selectedBuilding.health * 2400), $locale, { maximumFractionDigits: 0 })}</strong></div>
         <div><span class="metric-label">{$copy.openActions}</span><strong>{formatNumber(selectedBuilding.tone === 'green' ? 0 : selectedBuilding.tone === 'amber' ? 2 : 4, $locale)}</strong></div>
       </div>
-      <div class="building-detail-issue {selectedBuilding.tone}"><span class="status-symbol">!</span>{selectedBuilding.issue}</div>
+      <div class="building-detail-issue {selectedBuilding.tone}"><span class="status-symbol"><Icon name="alert" class="h-2.5 w-2.5" /></span>{selectedBuilding.issue}</div>
       <div class="modal-actions">
         <button class="secondary-button" onclick={() => (selectedBuilding = null)}>{$copy.close}</button>
         <button class="primary-button" onclick={() => { openAction($copy.buildingActionsToast); selectedBuilding = null; }}>{$copy.openActions} <span>→</span></button>
@@ -298,8 +301,8 @@
 
 {#if showNewStrata}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (showNewStrata = false)}>
-    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}>×</button><div class="modal-icon">＋</div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label>{$copy.communityName}<input placeholder={$copy.communityNamePlaceholder} /></label><label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => (showNewStrata = false)}>{$copy.cancel}</button>	<button class="primary-button" onclick={() => { showNewStrata = false; openAction($copy.formationCreatedToast); }}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
+    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}><Icon name="close" class="h-3.5 w-3.5" /></button><div class="modal-icon"><Icon name="plus" class="h-5 w-5" /></div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label>{$copy.communityName}<input placeholder={$copy.communityNamePlaceholder} /></label><label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => (showNewStrata = false)}>{$copy.cancel}</button>	<button class="primary-button" onclick={() => { showNewStrata = false; openAction($copy.formationCreatedToast); }}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
   </div>
 {/if}
 
-{#if toast}<div class="toast" role="status"><span>✓</span>{toast}</div>{/if}
+{#if toast}<div class="toast" role="status"><span><Icon name="check" class="h-2.5 w-2.5" /></span>{toast}</div>{/if}

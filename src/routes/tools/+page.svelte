@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { toolDomains, strataToolModules, getToolStats } from '$lib/strata-tool';
 	import { units } from '$lib/data';
-	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';
-	import Icon from '$lib/components/Icon.svelte';
-	import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
+	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';  import Icon from '$lib/components/Icon.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
+  import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
 	import XpubImport from '$lib/components/XpubImport.svelte';
@@ -352,7 +352,7 @@
 						<div>
 							<p class="text-[10px] font-bold text-slate-400 uppercase">{$copy.unitPayments}</p>
 							{#if unitDetail.payments.length === 0}
-								<p class="mt-2 text-xs text-slate-400">—</p>
+								<div class="mt-3"><EmptyState icon="coins" title={$copy.unitPaymentsEmpty} /></div>
 							{:else}
 								<ul class="mt-2 space-y-1">
 									{#each unitDetail.payments.slice(0, 5) as p}

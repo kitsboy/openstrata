@@ -325,6 +325,65 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .nav-scroll::-webkit-scrollbar { display: none; }
 .nav-scroll > a { flex: 0 0 auto; white-space: nowrap; }
 
+/* ---------------------------------------------------------------------------
+ * Unified surface language — one card/button token set across the hand-rolled
+ * dashboard shell and the Tailwind marketing pages so the product reads as one.
+ * `.glass-card` was referenced across every marketing page but never defined;
+ * it now resolves to the same soft 2-layer card the dashboard uses.
+ * --------------------------------------------------------------------------- */
+:root {
+  --radius-card: 13px;
+  --radius-card-lg: 16px;
+  --shadow-card: 0 1px 2px rgba(24, 35, 43, .04), 0 4px 14px rgba(24, 35, 43, .05);
+  --shadow-card-hover: 0 14px 36px rgba(24, 35, 43, .1);
+  --border-card: 1px solid var(--line);
+}
+
+.glass-card {
+  border: var(--border-card);
+  border-radius: var(--radius-card-lg);
+  background: var(--paper);
+  box-shadow: var(--shadow-card);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.glass-card:hover { border-color: color-mix(in srgb, var(--orange) 30%, var(--line)); }
+.dark .glass-card { background: var(--paper); border-color: var(--line); }
+
+/* Dashboard surfaces already hand-rolled — point them at the same tokens. */
+.metric-card, .panel, .building-card, .action-card, .glass-card {
+  border-radius: var(--radius-card);
+}
+.metric-card, .panel, .building-card, .action-card {
+  border: var(--border-card);
+  box-shadow: var(--shadow-card);
+}
+.metric-card:hover, .panel:hover, .action-card:hover { box-shadow: var(--shadow-card-hover); }
+
+/* Module tooltips (tools page) — was referenced but never defined. */
+.tooltip-bubble { position: fixed; z-index: 70; }
+.tooltip-inner {
+  padding: 13px 15px;
+  border: var(--border-card);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 18px 45px rgba(18, 38, 47, .18);
+}
+.tooltip-title { margin: 0 0 5px; color: var(--ink); font-size: 12px; font-weight: 800; }
+.tooltip-what { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.tooltip-list { margin: 8px 0 0; padding-left: 16px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.tooltip-why { margin: 9px 0 0; padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; line-height: 1.55; }
+.tooltip-why-label { color: var(--orange); font-weight: 800; }
+
+/* ---------------------------------------------------------------------------
+ * Typography ramp — every page heading shares one voice (Manrope, tight
+ * tracking, DM Mono reserved for labels/eyebrows/code only).
+ * --------------------------------------------------------------------------- */
+main h1, main h2, main h3, main h4 {
+  font-family: var(--font-display);
+  letter-spacing: -.02em;
+}
+main h1 { letter-spacing: -.028em; }
+
 /* Subtle mesh backdrop used by the shared layout (was referenced but never defined). */
 .mesh-bg {
   background-color: var(--canvas);

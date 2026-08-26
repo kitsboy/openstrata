@@ -90,10 +90,10 @@
 
       <div class="flex items-center gap-3 shrink-0">
         <button class="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick={() => (searchOpen = true)} aria-label={$copy.search} title={$copy.search}>
-          <span aria-hidden="true">⌕</span> <kbd class="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘K</kbd>
+          <Icon name="search" class="h-3.5 w-3.5" /> <kbd class="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘K</kbd>
         </button>
         <button class="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>
-          {#if $theme === 'dark'}<span aria-hidden="true">☀️</span>{:else}<span aria-hidden="true">🌙</span>{/if}
+          {#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}
         </button>
         <select bind:value={selectedJurisdiction} class="hidden sm:block rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-300" aria-label={$copy.jurisdiction}>
           {#each jurisdictions as j}
@@ -105,7 +105,7 @@
           <Icon name="lightning" class="h-4 w-4" /> {$copy.donate}
         </button>
         <button class="lg:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100" onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}>
-          {#if mobileNavOpen}<span aria-hidden="true">×</span>{:else}<span aria-hidden="true">☰</span>{/if}
+          {#if mobileNavOpen}<Icon name="close" class="h-4 w-4" />{:else}<Icon name="menu" class="h-4 w-4" />{/if}
         </button>
       </div>
     </nav>

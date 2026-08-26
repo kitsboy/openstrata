@@ -1,6 +1,7 @@
 <script lang="ts">
   import { copy, locale } from '$lib/i18n';
   import { buildSearchIndex, searchIndex, type SearchEntry, type SearchGroup } from '$lib/search';
+  import Icon from '$lib/components/Icon.svelte';
   import { goto } from '$app/navigation';
 
   let { open = $bindable(false) }: { open: boolean } = $props();
@@ -73,7 +74,7 @@
       onkeydown={onKeydown}
     >
       <div class="search-input-row">
-        <span class="search-glyph" aria-hidden="true">⌕</span>
+        <Icon name="search" class="h-4 w-4 search-glyph" />
         <input
           bind:this={inputEl}
           bind:value={query}
@@ -81,7 +82,7 @@
           placeholder={$copy.search}
           aria-label={$copy.search}
         />
-        <button class="search-close" aria-label={$copy.closeDialog} onclick={() => (open = false)}>×</button>
+        <button class="search-close" aria-label={$copy.closeDialog} onclick={() => (open = false)}><Icon name="close" class="h-3.5 w-3.5" /></button>
       </div>
 
       <div class="search-body">
@@ -115,7 +116,6 @@
   .search-backdrop { position: fixed; inset: 0; z-index: 90; display: grid; place-items: start center; padding: 12vh 20px 20px; background: rgba(10, 27, 36, .5); backdrop-filter: blur(3px); }
   .search-modal { width: min(100%, 620px); overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); box-shadow: 0 30px 90px rgba(10, 27, 36, .3); }
   .search-input-row { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
-  .search-glyph { color: var(--faint); font-size: 24px; line-height: 1; transform: rotate(-20deg); }
   .search-input-row input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 15px; }
   .search-input-row input::placeholder { color: var(--faint); }
   .search-close { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); background: var(--surface-3); font-size: 18px; line-height: 1; }
