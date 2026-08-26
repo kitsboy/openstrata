@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { rssFeeds, rssItems, apiEndpoints } from '$lib/data';
 	import Icon from '$lib/components/Icon.svelte';
+	import Card from '$lib/components/Card.svelte';
 	import { copy } from '$lib/i18n';
 
 	let selectedCategory = $state($copy.allLabel);
@@ -70,7 +71,7 @@
 	<div class="grid lg:grid-cols-3 gap-8">
 		<!-- Feed sources -->
 		<div class="lg:col-span-1 min-w-0">
-			<div class="mb-6 glass-card rounded-xl p-6">
+			<Card class="mb-6">
 				<h3 class="font-semibold text-slate-800 text-sm">{$copy.subscribeRss}</h3>
 				<p class="mt-1 text-xs text-slate-500">{$copy.subscribeRssHint}</p>
 				<div class="mt-3 flex flex-wrap gap-2">
@@ -81,12 +82,12 @@
 						{/if}
 					{/each}
 				</div>
-			</div>
+			</Card>
 
 			<h2 class="text-lg font-bold text-slate-800 mb-4">{$copy.feedSources}</h2>
 			<div class="space-y-3">
 				{#each filteredFeeds as feed}
-					<div class="glass-card rounded-xl p-4">
+					<Card variant="compact">
 						<div class="flex items-center justify-between mb-1">
 							<span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-700">{feed.category}</span>
 							<span class="text-[10px] text-slate-400">{feed.source}</span>
@@ -95,11 +96,11 @@
 						<a href={feed.url} class="mt-2 block text-xs text-brand-600 no-underline hover:underline truncate" target="_blank" rel="noopener noreferrer">
 							{feed.url}
 						</a>
-					</div>
+					</Card>
 				{/each}
 			</div>
 
-			<div class="mt-6 glass-card rounded-xl p-6 border-dashed">
+			<Card class="mt-6 border-dashed">
 				<h3 class="font-semibold text-slate-800 text-sm">{$copy.addCustomFeed}</h3>
 				<p class="mt-1 text-xs text-slate-500">{$copy.customFeedHint}</p>
 				<code class="mt-3 block rounded-lg bg-slate-100 p-3 text-[10px] font-mono text-slate-600 overflow-x-auto">
@@ -108,7 +109,7 @@
 					&nbsp;&nbsp;&nbsp;&nbsp;category: Regulation<br/>
 					&nbsp;&nbsp;- twitter_list: strata-bc
 				</code>
-			</div>
+			</Card>
 		</div>
 
 		<!-- Feed items -->
@@ -117,7 +118,7 @@
 			<div class="space-y-4">
 				{#each filteredItems as item}
 					{@const feed = rssFeeds.find((f) => f.id === item.feed)}
-					<article class="glass-card rounded-xl p-6 hover:border-brand-200 transition-all">
+					<Card as="article" hover>
 						<div class="flex items-center gap-3 mb-2">
 							<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">{feed?.source}</span>
 							<span class="text-xs text-slate-400">{item.date}</span>
@@ -125,7 +126,7 @@
 						</div>
 						<h3 class="text-base font-bold text-slate-800 leading-snug">{item.title}</h3>
 						<p class="mt-2 text-sm text-slate-500 leading-relaxed">{item.excerpt}</p>
-					</article>
+					</Card>
 				{/each}
 			</div>
 		</div>
@@ -156,20 +157,19 @@
 
 		<div class="max-w-4xl mx-auto space-y-3">
 			{#each apiTab === 'rest' ? restEndpoints : apiTab === 'webhooks' ? webhookEndpoints : feedEndpoints as endpoint}
-				<div class="glass-card rounded-xl p-4 flex items-start gap-4">
+				<Card variant="compact" class="flex items-start gap-4">
 					<span class="shrink-0 rounded-lg px-3 py-1 text-xs font-bold font-mono
 						{endpoint.method === 'GET' ? 'bg-success/10 text-success' : 'bg-brand-50 text-brand-700'}">
 						{endpoint.method}
 					</span>
-					<div class="flex-1 min-w-0">
-						<code class="block text-sm font-mono font-semibold text-slate-800 break-all">{endpoint.path}</code>
-						<p class="mt-1 text-sm text-slate-500">{endpoint.desc}</p>
+					<div class="flex-1 min-w-0">					<code class="block text-sm font-mono font-semibold text-slate-800 break-all">{endpoint.path}</code>
+					<p class="mt-1 text-sm text-slate-500">{endpoint.desc}</p>
 					</div>
-				</div>
+				</Card>
 			{/each}
 		</div>
 
-		<div class="mt-10 max-w-4xl mx-auto glass-card rounded-2xl p-6">
+		<Card class="mt-10 max-w-4xl mx-auto">
 			<h3 class="font-bold text-slate-800 mb-3">{$copy.quickStart}</h3>
 			<pre class="rounded-xl bg-slate-900 text-slate-100 p-5 text-sm font-mono overflow-x-auto leading-relaxed"><code># Fetch live market rates (BTC/CAD + vacancy)
 curl -H "Authorization: Bearer $HERMES_TOKEN" \\
@@ -181,6 +181,6 @@ curl -X GET "https://hermes.local/api/v1/rosa/query?q=EPR+2026+deadline" \\
 
 # Subscribe to aggregated RSS output
 curl https://hermes.local/api/v1/feeds/rss?categories=Regulation,Legal</code></pre>
-		</div>
+		</Card>
 	</div>
 </section>

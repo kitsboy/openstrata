@@ -9,6 +9,7 @@
 	} from '$lib/marketing';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import Card from '$lib/components/Card.svelte';
 	import { copy, locale, formatCurrency } from '$lib/i18n';
 
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
@@ -47,13 +48,13 @@
 	</p>
 
 	<div class="grid lg:grid-cols-2 gap-10">
-		<div class="glass-card rounded-2xl p-6">
+		<Card>
 			<h3 class="font-bold text-slate-800 mb-4">{$copy.annualProcessingCost}</h3>
 			<BarChart data={paymentChart} height={220} barColor="#14b8a6" />
 			<p class="mt-4 text-sm text-slate-500">
 				{$copy.cardCostWarning}
 			</p>
-		</div>
+		</Card>
 		<div class="space-y-4">
 			{#each costSavings.paymentMethods as pm}
 				<div class="flex items-center justify-between rounded-xl border border-border p-4 {'recommended' in pm && pm.recommended ? 'bg-brand-50 border-brand-200' : ''}">
@@ -109,11 +110,11 @@
 	</p>
 	<div class="grid md:grid-cols-3 gap-6">
 		{#each hermesPositioning.paths as path}
-			<div class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all">
+			<Card hover>
 				<h3 class="font-bold text-slate-800 text-lg">{path.title}</h3>
 				<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc.replace(/\bHermes\b/g, 'OpenStrata')}</p>
 				<span class="mt-4 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{path.legal}</span>
-			</div>
+			</Card>
 		{/each}
 	</div>
 </section>
@@ -124,7 +125,7 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">{$copy.layersTrust}</h2>
 		<div class="grid md:grid-cols-3 gap-6">
 			{#each productStack as product, i}
-				<div class="glass-card rounded-2xl p-6 text-center relative">
+				<Card class="text-center relative">
 					<div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-white mb-4
 						{i === 0 ? 'bg-brand-600' : i === 1 ? 'bg-bitcoin' : 'bg-bc-blue'}">
 						{i + 1}
@@ -132,7 +133,7 @@
 					<h3 class="font-bold text-slate-800 text-lg">{product.name === 'Hermes Strata' ? 'OpenStrata' : product.name}</h3>
 					<p class="text-sm font-semibold text-brand-600 mt-1">{product.role}</p>
 					<p class="mt-3 text-sm text-slate-500">{product.desc}</p>
-				</div>
+				</Card>
 			{/each}
 		</div>
 		<p class="mt-8 text-center text-slate-600 max-w-2xl mx-auto">
@@ -144,13 +145,13 @@
 <!-- War chest + advantages -->
 <section class="mx-auto max-w-7xl px-6 py-16">
 	<div class="grid lg:grid-cols-2 gap-10">
-		<div class="glass-card rounded-2xl p-8 border-l-4 border-l-bitcoin">
+		<Card variant="hero" class="border-l-4 border-l-bitcoin">
 			<h3 class="text-xl font-bold text-slate-800">{$copy.btcWarChest}</h3>
 			<p class="mt-3 text-slate-600 leading-relaxed">
 				{$copy.warChestIntro} <strong>{warChest.allocPct}</strong> {$copy.warChestMiddle}
 				{$copy.purposeLabel}: {warChest.purpose}.
 			</p>
-		</div>
+		</Card>
 		<div>
 			<h3 class="text-xl font-bold text-slate-800 mb-4">{$copy.byNumbers}</h3>
 			<div class="grid grid-cols-2 gap-3">

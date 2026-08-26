@@ -4,6 +4,7 @@
 	import { getToolStats } from '$lib/strata-tool';
 	import { copy } from '$lib/i18n';
 	import PageToc from '$lib/components/PageToc.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	const stats = getToolStats();
 
@@ -49,13 +50,13 @@
 	<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.gtmPaths}</h2>
 	<div class="grid md:grid-cols-3 gap-6">
 		{#each hermesPositioning.paths as path, i}
-			<div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+			<Card class="relative overflow-hidden">
 				<div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-brand-100 to-transparent rounded-bl-full"></div>
 				<span class="text-4xl font-bold text-brand-200">{i + 1}</span>
 				<h3 class="font-bold text-slate-800 text-lg mt-2">{path.title}</h3>
 				<p class="mt-2 text-sm text-slate-600">{path.desc}</p>
 				<span class="mt-4 inline-block text-xs font-bold text-brand-700">{path.legal}</span>
-			</div>
+			</Card>
 		{/each}
 	</div>
 </section>
@@ -76,7 +77,7 @@
 							{phase.id}
 						</div>
 					</div>
-					<div class="glass-card rounded-xl p-6 flex-1">
+					<Card class="flex-1">
 						<div class="flex flex-wrap items-center gap-3 mb-2">
 							<h3 class="font-bold text-slate-800">{phase.name}</h3>
 							<span class="text-sm text-slate-400">{phase.when}</span>
@@ -90,7 +91,7 @@
 								<span class="rounded-lg bg-slate-50 border border-border px-3 py-1 text-xs text-slate-600">{item}</span>
 							{/each}
 						</div>
-					</div>
+					</Card>
 				</div>
 			{/each}
 		</div>
@@ -102,7 +103,7 @@
 	<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.jurisdictionExpansion}</h2>
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 		{#each jurisdictions as j, i}
-			<div class="glass-card rounded-xl p-4 flex items-center justify-between {j.active ? 'border-brand-200' : 'opacity-70'}">
+			<Card variant="compact" class="flex items-center justify-between {j.active ? 'border-brand-200' : 'opacity-70'}">
 				<div class="flex items-center gap-3">
 					<span class="text-2xl">{j.flag}</span>
 					<div>
@@ -114,7 +115,7 @@
 					{j.active ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-400'}">
 					{j.active ? $copy.liveBadge : `${$copy.phaseLabel} ${Math.min(i + 3, 6)}`}
 				</span>
-			</div>
+			</Card>
 		{/each}
 	</div>
 </section>
@@ -125,13 +126,13 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.ecosystemIntegrations}</h2>
 		<div class="grid sm:grid-cols-2 gap-4">
 			{#each integrations as int}
-				<div class="glass-card rounded-xl p-4 flex items-center justify-between">
+				<Card variant="compact" class="flex items-center justify-between">
 					<div>
 						<span class="font-bold text-slate-800">{int.name}</span>
 						<p class="text-sm text-slate-500">{int.role}</p>
 					</div>
 					<span class="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{int.status}</span>
-				</div>
+				</Card>
 			{/each}
 		</div>
 	</div>

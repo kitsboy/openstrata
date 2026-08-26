@@ -1,6 +1,7 @@
 <script lang="ts">
   import { copy } from '$lib/i18n';
   import { templates } from '$lib/templates';
+  import Card from '$lib/components/Card.svelte';
   import { goto } from '$app/navigation';
 
   const categories = ['all', 'templateCategoryLegal', 'templateCategoryGovernance', 'templateCategoryFinance'] as const;
@@ -51,13 +52,13 @@
     </div>
     <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
       {#each visible as template}
-        <article class="glass-card rounded-2xl p-6">
+        <Card as="article">
           <div class="flex items-start justify-between gap-3"><span class="text-3xl">{template.icon}</span><span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">{$copy[template.category]}</span></div>
           <h3 class="mt-5 text-lg font-bold text-slate-800">{$copy[template.title]}</h3>
           <p class="mt-2 text-sm leading-relaxed text-slate-500">{$copy[template.descriptionKey]}</p>
           <div class="mt-5 border-t border-border pt-4"><p class="text-xs text-slate-400"><strong>{$copy.sourceAndReview}:</strong> {$copy[template.sourceKey]}</p><span class="mt-3 inline-block rounded-full bg-warning/10 px-2.5 py-1 text-[10px] font-bold text-warning">{$copy.reviewRequired}</span></div>
           <button class="mt-5 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700" onclick={() => useTemplate($copy[template.title])}>{$copy.useTemplate}</button>
-        </article>
+        </Card>
       {/each}
     </div>
   </section>

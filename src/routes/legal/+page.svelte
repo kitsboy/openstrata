@@ -1,6 +1,7 @@
 <script lang="ts">
   import { copy } from '$lib/i18n';
   import PageToc from '$lib/components/PageToc.svelte';
+  import Card from '$lib/components/Card.svelte';
   import { jurisdictions } from '$lib/data';
   import { legalSources } from '$lib/legal';
 
@@ -57,12 +58,12 @@
     </div>
     <div class="grid gap-4 md:grid-cols-2">
       {#each sources as source}
-        <article class="glass-card rounded-2xl p-6">
+        <Card as="article">
           <div class="flex items-start justify-between gap-3"><span class="rounded-full bg-brand-50 px-2.5 py-1 text-[10px] font-bold text-brand-700">{source.kind}</span><span class="text-xs font-semibold text-slate-400">{source.jurisdiction}</span></div>
           <h3 class="mt-4 text-lg font-bold text-slate-800">{source.title}</h3>
           <p class="mt-1 text-sm text-slate-500">{source.authority}</p>
           <a class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-600 no-underline hover:text-brand-700" href={source.url} target="_blank" rel="noopener noreferrer">{$copy.openOriginalSource} ↗</a>
-        </article>
+        </Card>
       {/each}
     </div>
   </section>

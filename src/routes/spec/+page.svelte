@@ -1,5 +1,6 @@
 <script lang="ts">
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
+	import Card from '$lib/components/Card.svelte';
 	import { copy } from '$lib/i18n';
 	import PageToc from '$lib/components/PageToc.svelte';
 
@@ -40,7 +41,7 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.protocolLayers}</h2>
 		<div class="space-y-4">
 			{#each layers as layer, i}
-				<div class="glass-card rounded-xl p-6 flex gap-5 items-start">
+				<Card class="flex gap-5 items-start">
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 font-bold text-sm">
 						{i + 1}
 					</div>
@@ -51,7 +52,7 @@
 						</div>
 						<p class="mt-1 text-sm text-slate-500">{layer.desc}</p>
 					</div>
-				</div>
+				</Card>
 			{/each}
 		</div>
 	</section>
@@ -60,12 +61,12 @@
 		<h2 class="text-2xl font-bold text-slate-900 mb-6">{$copy.corePrimitives}</h2>
 		<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 			{#each primitives as p}
-				<div class="glass-card rounded-xl p-6 hover:border-brand-200 transition-all">
+				<Card hover>
 					<div class="text-3xl mb-3">{p.icon}</div>
 					<h3 class="font-bold text-slate-800">{p.title}</h3>
 					<p class="mt-2 text-sm text-slate-500 leading-relaxed">{p.desc}</p>
-				</div>
-			{/each}
+					</Card>
+				{/each}
 		</div>
 	</section>
 
@@ -77,26 +78,26 @@
 				{ n: 2, title: 'Claim Your Strata', desc: 'Publish identity, data, and permissions as signed Nostr events. Verifiable and portable.' },
 				{ n: 3, title: 'Move Freely', desc: 'Any platform speaking the standard imports your strata. Switch providers. Keep everything.' }
 			] as step}
-				<div class="text-center glass-card rounded-xl p-6">
+				<Card class="text-center">
 					<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-lg font-bold text-white mb-4">
 						{step.n}
 					</div>
 					<h3 class="font-bold text-slate-800">{step.title}</h3>
 					<p class="mt-2 text-sm text-slate-500">{step.desc}</p>
+					</Card>
+				{/each}
 				</div>
-			{/each}
-		</div>
 	</section>
 
 	<section>
-		<div class="glass-card rounded-2xl p-8 text-center">
+		<Card variant="hero" class="text-center">
 			<div class="text-4xl mb-4">📜</div>
 			<h2 class="text-xl font-bold text-slate-800">{$copy.fullWireProtocol}</h2>
 			<p class="mt-2 text-slate-500 max-w-lg mx-auto">
 				{$copy.fullWireProtocolDescription}
 			</p>
 			<a href="https://github.com/kitsboy/openstrata" class="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors" target="_blank" rel="noopener noreferrer">{$copy.watchOnGithub} →</a>
-		</div>
+		</Card>
 	</section>
 
 	<section class="mt-10">

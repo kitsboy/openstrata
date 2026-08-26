@@ -1,7 +1,6 @@
-<script lang="ts">
-	import {
-		regulatoryFramework,
-		functionalDomains,
+<script lang="ts">		import {
+			regulatoryFramework,
+			functionalDomains,
 		bylawEnforcementWorkflow,
 		conveyancingWorkflow,
 		quorumRules,
@@ -14,6 +13,7 @@
 	} from '$lib/compliance';
 	import { copy } from '$lib/i18n';
 	import type { Translation } from '$lib/i18n';
+	import Card from '$lib/components/Card.svelte';
 
 	let activeSection = $state('pillars');
 	let expandedDomain = $state<string | null>('financial');
@@ -99,13 +99,13 @@
 
 <div class="mx-auto max-w-7xl px-6 py-12">
 	<!-- Agent role callout -->
-	<div class="glass-card rounded-2xl p-6 mb-10 border-l-4 border-l-bc-blue">
+	<Card class="mb-10 border-l-4 border-l-bc-blue">
 		<p class="text-sm text-slate-700 leading-relaxed">
 			<strong>{$copy.agentModel}:</strong> {regulatoryFramework.agentRole}.
 			{$copy.agentRoleCallout}
 			{$copy.questionsLabel}: <a href="mailto:hello@giveabit.io" class="text-brand-600 hover:underline">hello@giveabit.io</a>
 		</p>
-	</div>
+	</Card>
 
 	{#if activeSection === 'pillars'}
 		<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.functionalDomains}</h2>
@@ -212,7 +212,7 @@
 							<div class="w-0.5 flex-1 bg-brand-200 my-2 min-h-[2rem]"></div>
 						{/if}
 					</div>
-					<div class="glass-card rounded-xl p-6 flex-1 mb-2">
+					<Card class="flex-1 mb-2">
 						<div class="flex flex-wrap items-center gap-2 mb-2">
 							<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{step.day}</span>
 							{#if step.systemLock}
@@ -224,7 +224,7 @@
 						<h3 class="font-bold text-slate-800">{step.title}</h3>
 						<p class="mt-2 text-sm text-slate-600 leading-relaxed">{step.action}</p>
 						<p class="mt-3 text-xs text-warning font-semibold">{$copy.crtRiskLabel}: {step.crtRisk}</p>
-					</div>
+					</Card>
 				</div>
 			{/each}
 		</div>
@@ -249,7 +249,7 @@
 
 		<div class="space-y-6">
 			{#each conveyancingWorkflow as step}
-				<div class="glass-card rounded-2xl p-6 flex gap-5">
+				<Card class="flex gap-5">
 					<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold
 						{step.blocking ? 'bg-danger/10 text-danger' : 'bg-brand-50 text-brand-700'}">
 						{step.step}
@@ -269,7 +269,7 @@
 						<h3 class="font-bold text-slate-800 text-lg">{step.title}</h3>
 						<p class="mt-2 text-slate-600 leading-relaxed">{step.action}</p>
 					</div>
-				</div>
+				</Card>
 			{/each}
 		</div>
 	{/if}
@@ -281,7 +281,7 @@
 		<h3 class="text-lg font-bold text-slate-800 mb-4">{$copy.quorumRulesTitle}</h3>
 		<div class="grid gap-4 mb-10">
 			{#each quorumRules as rule}
-				<div class="glass-card rounded-xl p-6">
+				<Card>
 					<div class="flex flex-wrap items-center gap-2 mb-3">
 						<h4 class="font-bold text-slate-800">{rule.meetingType}</h4>
 						<code class="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-brand-700">{rule.spaRef}</code>
@@ -294,7 +294,7 @@
 							<strong>{$copy.minuteRuleLabel}:</strong> {rule.delayRule}
 						</div>
 					{/if}
-				</div>
+				</Card>
 			{/each}
 		</div>
 
@@ -324,11 +324,11 @@
 			</table>
 		</div>
 
-		<div class="glass-card rounded-xl p-6 border-l-4 border-l-brand-500">
+		<Card class="border-l-4 border-l-brand-500">
 			<h4 class="font-bold text-slate-800">{$copy.tieBreakerTitle}</h4>
 			<p class="text-sm text-slate-600 mt-1">{tieBreakerRule.description}</p>
 			<p class="text-xs text-slate-400 mt-2">{$copy.exceptionLabel}: {tieBreakerRule.exception} · {$copy.sourceLabel}: {tieBreakerRule.source}</p>
-		</div>
+		</Card>
 	{/if}
 
 	{#if activeSection === 'retention'}
@@ -337,7 +337,7 @@
 
 		<div class="grid sm:grid-cols-2 gap-3">
 			{#each recordRetention as record}
-				<div class="glass-card rounded-xl p-4 flex items-center justify-between gap-4">
+				<Card variant="compact" class="flex items-center justify-between gap-4">
 					<div>
 						<p class="font-semibold text-slate-800 text-sm">{record.document}</p>
 						<code class="text-[10px] text-slate-400 font-mono">{record.spaRef}</code>
@@ -346,7 +346,7 @@
 						{record.retention === 'Permanent' ? 'bg-bc-blue/10 text-bc-blue' : 'bg-slate-100 text-slate-600'}">
 						{record.retention}
 					</span>
-				</div>
+				</Card>
 			{/each}
 		</div>
 	{/if}
@@ -385,11 +385,11 @@
 
 		<div class="grid gap-5 sm:grid-cols-2">
 			{#each architectureMandates as mandate}
-				<div class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all">
+				<Card hover>
 					<code class="text-[10px] font-mono text-brand-600">{mandate.id}</code>
 					<h3 class="font-bold text-slate-800 mt-1">{mandate.title}</h3>
 					<p class="mt-3 text-sm text-slate-600 leading-relaxed">{mandate.desc}</p>
-				</div>
+				</Card>
 			{/each}
 		</div>
 	{/if}

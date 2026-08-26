@@ -3,6 +3,7 @@
 	import { getToolStats } from '$lib/strata-tool';
 	import { copy } from '$lib/i18n';
 	import PageToc from '$lib/components/PageToc.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	const stats = getToolStats();
 
@@ -48,14 +49,14 @@
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.documentIndex}</h2>
 		<div class="grid sm:grid-cols-2 gap-4">
 			{#each docIndex as doc}
-				<div class="glass-card rounded-xl p-6">
+				<Card>
 					<code class="text-[10px] font-mono text-slate-400">docs/{doc.file}</code>
 					<h3 class="font-bold text-slate-800 mt-1">{doc.title}</h3>
 					<p class="text-sm text-slate-500 mt-1">{doc.desc}</p>
 					{#if doc.href}
 						<a href={doc.href} class="mt-3 inline-block text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">{$copy.viewOnSite} →</a>
 					{/if}
-				</div>
+				</Card>
 			{/each}
 		</div>
 		<p class="mt-4 text-sm text-slate-400">{$copy.alsoLabel}: <code class="text-xs bg-slate-100 px-1 rounded">SOURCE-OF-TRUTH.md</code> {$copy.atProjectRoot}</p>
@@ -64,7 +65,7 @@
 	<!-- Architecture -->
 	<section class="mb-16">
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.architecture}</h2>
-		<div class="glass-card rounded-2xl p-8 font-mono text-sm space-y-3">
+		<Card variant="hero" class="font-mono text-sm space-y-3">
 			<div class="rounded-xl bg-brand-50 border border-brand-200 p-4 text-center text-brand-800 font-semibold">{$copy.archMobilePwa}</div>
 			<div class="text-center text-slate-400">{$copy.archTailscaleGateway}</div>
 			<div class="rounded-xl bg-slate-100 p-4 text-center font-semibold">{$copy.archHermesCore}</div>
@@ -73,7 +74,7 @@
 				<div class="rounded-xl bg-bc-blue/5 border p-4 text-center"><strong>{$copy.archFiatRail}</strong><p class="text-xs text-slate-500 mt-1 font-sans">{$copy.archCadCrf}</p></div>
 				<div class="rounded-xl bg-bitcoin/5 border p-4 text-center"><strong>{$copy.archBitcoinRail}</strong><p class="text-xs text-slate-500 mt-1 font-sans">{$copy.archPsbtLightning}</p></div>
 			</div>
-		</div>
+		</Card>
 	</section>
 
 	<!-- Install SOP -->
@@ -81,14 +82,14 @@
 		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.installSop}</h2>
 		<div class="space-y-4">
 			{#each installSteps as s}
-				<div class="glass-card rounded-xl p-6 flex gap-4">
+				<Card class="flex gap-4">
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white font-bold text-sm">{s.step}</div>
 					<div>
 						<h3 class="font-bold text-slate-800">{s.title}</h3>
 						<code class="mt-1 block text-sm font-mono text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg">{s.code}</code>
 						<p class="mt-2 text-sm text-slate-500">{s.desc}</p>
 					</div>
-				</div>
+				</Card>
 			{/each}
 		</div>
 	</section>

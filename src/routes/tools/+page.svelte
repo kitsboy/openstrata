@@ -3,6 +3,7 @@
 	import { units } from '$lib/data';
 	import { bylawEnforcementWorkflow, conveyancingWorkflow } from '$lib/compliance';  import Icon from '$lib/components/Icon.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import Card from '$lib/components/Card.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
@@ -284,7 +285,7 @@
 	<!-- Module grid -->
 	<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
 		{#each filteredModules as mod}
-			<div class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all group" class:cursor-pointer={!!mod.href} role="button" tabindex="0" data-href={mod.href ?? undefined} onclick={() => { if (mod.href) goto(mod.href); }} onkeydown={handleCardKey}>
+			<Card hover class="group {!!mod.href ? 'cursor-pointer' : ''}" role="button" tabindex="0" data-href={mod.href ?? undefined} onclick={() => { if (mod.href) goto(mod.href); }} onkeydown={handleCardKey}>
 				<div class="flex items-start justify-between gap-2 mb-3">
 					<span class="text-2xl">{mod.icon}</span>
 					<div class="flex items-center gap-1.5">
@@ -325,7 +326,7 @@
 				{#if mod.savings}
 					<p class="mt-3 text-xs font-bold text-success">{mod.savings}</p>
 				{/if}
-			</div>
+			</Card>
 		{/each}
 	</div>
 
@@ -333,7 +334,7 @@
 	<h2 id="live-demos" class="text-xl font-bold text-slate-800 mb-6 scroll-mt-28">{$copy.liveInteractiveDemos}</h2>
 
 	<!-- Form K -->
-	<section class="glass-card rounded-2xl p-8 mb-8">
+	<Card variant="hero" class="mb-8" as="section">
 		<h3 class="text-lg font-bold text-slate-800 mb-4">📋 {$copy.formKHub} {#if liveUnits}<span class="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success uppercase">{$copy.liveLabel}</span>{/if}</h3>
 		<div class="flex gap-2 mb-4">
 			{#each ['all', 'signed', 'missing'] as f}
@@ -404,7 +405,7 @@
 				{/if}
 			</div>
 		{/if}
-	</section>  <!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->
+	</Card>  <!-- Live demos: trust funds, meetings, sovereign rails, reconciliation -->
 	<div class="mb-8 space-y-8">
 		<div class="grid gap-8 lg:grid-cols-2">
 			<RosaChat />
@@ -449,7 +450,7 @@
 
 	<!-- Bylaw + Conveyancing -->
 	<div class="grid lg:grid-cols-2 gap-8">
-		<section class="glass-card rounded-2xl p-6">
+		<Card as="section">
 			<h3 class="font-bold text-slate-800 mb-4">⚖️ {$copy.bylawEnforcement}</h3>
 			<div class="space-y-2">
 				{#each bylawEnforcementWorkflow as step}
@@ -460,8 +461,8 @@
 					</div>
 				{/each}
 			</div>
-		</section>
-		<section class="glass-card rounded-2xl p-6">
+		</Card>
+		<Card as="section">
 			<h3 class="font-bold text-slate-800 mb-4">📄 {$copy.formsBfHub}</h3>
 			<div class="space-y-3">
 				{#each conveyancingWorkflow as step}
@@ -471,7 +472,7 @@
 					</div>
 				{/each}
 			</div>
-		</section>
+		</Card>
 	</div>
 
 	{#if sovereignMode}

@@ -15,6 +15,7 @@
 	import BarChart from '$lib/components/BarChart.svelte';
 	import LineChart from '$lib/components/LineChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import Card from '$lib/components/Card.svelte';
 	import { copy, locale, formatCurrency, formatDate } from '$lib/i18n';
 	import { auth } from '$lib/api/auth';
 	import { fetchLedgerBalance, fetchLedgerSeries } from '$lib/api/ledger';
@@ -163,11 +164,11 @@
 				</div>
 				<div class="grid grid-cols-2 gap-4 max-w-md lg:max-w-none">
 					{#each competitiveAdvantages.slice(0, 4) as adv}
-						<div class="glass-card rounded-2xl p-4 text-center">
+						<Card variant="compact" class="text-center">
 							<p class="text-3xl font-bold text-brand-700">{adv.metric}</p>
 							<p class="mt-1 text-xs font-semibold text-slate-700">{adv.label}</p>
 							<p class="mt-1 text-[10px] text-slate-400">{$copy.vsLabel} {adv.vs}</p>
-						</div>
+						</Card>
 					{/each}
 				</div>
 			</div>
@@ -190,7 +191,7 @@
 						</li>
 					{/each}
 				</ul>
-				<div class="glass-card rounded-2xl p-6">
+				<Card>
 					<h3 class="font-bold text-slate-800 mb-2">{$copy.feeFlowScenario}</h3>
 					<p class="text-sm text-slate-500 mb-4">
 						{costSavings.scenario.units} {$copy.units} × ${costSavings.scenario.monthlyFee}{$copy.perMonth}
@@ -208,7 +209,7 @@
 					<p class="mt-2 text-xs text-slate-400">
 						{$copy.avg1brLabel}: ${rentalTrend[rentalTrend.length - 1].avg}{$copy.perMonth} · {$copy.vacancyLabel} {rentalTrend[rentalTrend.length - 1].vacancy}%
 					</p>
-				</div>
+				</Card>
 			</div>
 		</div>
 	</section>
@@ -222,24 +223,22 @@
 
 			<div class="grid md:grid-cols-3 gap-6 mb-12">
 				{#each productStack as product, i}
-					<div class="glass-card rounded-2xl p-6 {i === 0 ? 'ring-2 ring-brand-200' : ''}">
-						<p class="text-xs font-bold uppercase tracking-widest text-brand-600">{product.role}</p>
-						<h3 class="mt-2 text-xl font-bold text-slate-800">{product.name}</h3>
-						<p class="mt-3 text-sm text-slate-600 leading-relaxed">{product.desc}</p>
-					</div>
+					<Card class={i === 0 ? 'ring-2 ring-brand-200' : ''}>
+						<p class="text-xs font-bold uppercase tracking-widest text-brand-600">{product.role}</p>					<h3 class="mt-2 text-xl font-bold text-slate-800">{product.name}</h3>
+					<p class="mt-3 text-sm text-slate-600 leading-relaxed">{product.desc}</p>
+					</Card>
 				{/each}
 			</div>
 
 			<div class="grid lg:grid-cols-2 gap-8">
-				<div class="glass-card rounded-2xl p-6">
+				<Card>
 					<h3 class="font-bold text-slate-800 mb-1">{$copy.annualProcessingCost}</h3>
 					<p class="text-xs text-slate-400 mb-4">{$copy.sourceLabel}: marketing.ts · {costSavings.scenario.units}{$copy.unitBuildingSuffix}</p>
-					<BarChart data={paymentChart} height={200} barColor="#14b8a6" />
-					<p class="mt-4 rounded-xl bg-success/10 px-4 py-3 text-sm text-success font-semibold">
+					<BarChart data={paymentChart} height={200} barColor="#14b8a6" />					<p class="mt-4 rounded-xl bg-success/10 px-4 py-3 text-sm text-success font-semibold">
 						{$copy.openStrataSaves} {formatCurrency(annualSavings, $locale)}{$copy.savesSuffix}
 					</p>
-				</div>
-				<div class="glass-card rounded-2xl p-6">
+					</Card>
+				<Card>
 					<h3 class="font-bold text-slate-800 mb-1">{$copy.managerHoursTitle}</h3>
 					<p class="text-xs text-slate-400 mb-4">{$copy.legendGrayTeal}</p>
 					<BarChart
@@ -253,7 +252,7 @@
 						<strong class="text-slate-800">{totalManagerHrsTraditional} {$copy.hrsTraditional}</strong> →
 						<strong class="text-brand-700">{totalManagerHrsHermes.toFixed(1)} {$copy.hrsWithHermes}</strong>
 					</p>
-				</div>
+					</Card>
 			</div>
 		</div>
 	</section>
@@ -265,7 +264,7 @@
 			<h2 class="text-3xl font-bold text-slate-900 mb-8">{$copy.treasuryEdge}</h2>
 
 			<div class="grid lg:grid-cols-3 gap-8">
-				<div class="lg:col-span-2 glass-card rounded-2xl p-6">
+				<Card class="lg:col-span-2">
 					<div class="flex items-center justify-between mb-4">
 						<h3 class="font-bold text-slate-800">{$copy.monthlyIncomeExpenses}</h3>
 						<span class="text-xs font-semibold text-slate-400">{$copy.incomeExpensesLegend}</span>
@@ -277,20 +276,20 @@
 						secondaryColor="#f7931a"
 						showSecondary={true}
 					/>
-				</div>
+				</Card>
 				<div class="space-y-4">
-					<div class="glass-card rounded-2xl p-6">
+					<Card>
 						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">{$copy.crfBalanceLabel}</p>
 						<p class="mt-2 text-3xl font-bold text-brand-700 stat-flash">
 							{formatCurrency(liveCrf ?? crfBalance, $locale, { maximumFractionDigits: 0 })}
 						</p>
 						<p class="mt-1 text-xs text-slate-400">{#if live}{$copy.liveLabel} · {$copy.liveDataBadge}{:else}{$copy.simulatedLedger}{/if}</p>
-					</div>
-					<div class="glass-card rounded-2xl p-6">
+					</Card>
+					<Card>
 						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">{$copy.warChestLabel}</p>
 						<p class="mt-2 text-sm text-slate-600">{warChest.allocPct} of budget · {warChest.custody}</p>
 						<p class="mt-2 text-xs text-slate-400">{warChest.purpose}</p>
-					</div>
+					</Card>
 				</div>
 			</div>
 
@@ -319,13 +318,13 @@
 			</p>
 			<div class="grid md:grid-cols-3 gap-6">
 				{#each hermesPositioning.paths as path}
-					<div class="glass-card rounded-2xl p-6 hover:border-brand-200 transition-all">
+					<Card hover>
 						<h3 class="font-bold text-slate-800 text-lg">{path.title}</h3>
 						<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc}</p>
 						<span class="mt-4 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">
 							{path.legal}
 						</span>
-					</div>
+					</Card>
 				{/each}
 			</div>
 		</div>
@@ -340,7 +339,7 @@
 					<h2 class="text-3xl font-bold text-slate-900 mb-6">{$copy.pricingTiers}</h2>
 					<div class="space-y-3">
 						{#each revenueTiers as tier}
-							<div class="glass-card rounded-xl p-4 flex items-center justify-between gap-4">
+							<Card variant="compact" class="flex items-center justify-between gap-4">
 								<div>
 									<p class="font-bold text-slate-800">{tier.tier}</p>
 									<p class="text-xs text-slate-400">{tier.target}</p>
@@ -349,7 +348,7 @@
 									<p class="font-bold text-brand-700">{tier.price}</p>
 									<p class="text-[10px] text-slate-400">{tier.priceNote}</p>
 								</div>
-							</div>
+							</Card>
 						{/each}
 					</div>
 				</div>
