@@ -1,3 +1,20 @@
+## Session — 2026-08-26 (all 20 user-flow/GUI/Bitcoin improvements shipped, v0.3.7)
+
+**All 20 items executed end to end, batched, pushed (`02dfd07` backend + `0d1f1e1` frontend).**
+
+**Backend (+6 tests → 173):** migration `0006_council_members` (`council_member` keyed `(community_id, email)`), `MemberStore` + Postgres/Mem adapters seeded from unit owners at register, tenant-scoped `GET|POST /api/v1/members` + `GET /members/unit` + `DELETE /members/:id`; `LedgerEngine.entries()` + `GET /api/v1/ledger/entries?fund=` (verified hash chain for the explorer/CSV); `GET /api/v1/deadlines` (statutory calendar — EPR/depreciation/AGM — plus open payment quotes, urgent-first).
+
+**Frontend (+10 tests → 70, i18n 680 keys × 9 locales):**
+- **User flow:** CheckoutFlow (pay-fees: quote any rail → confirm → receipt with sats/locked CAD-BTC/Satohash stamp), MonthlyClose (billing run → late notices → ledger post), BylawCase (complaint → notice → 14-day BLOCK_FINE_ACTIONS lock → fine/no-fine), MemberWorkspace (owners per lot), DeadlinesPanel ("What's due").
+- **GUI/design:** brand-accent theming (orange ↔ BC-green brokerage via `data-accent` palette, topbar toggle), `/design` living style-guide page, inline SVG illustration set, print stylesheet, glossary explainers (CRF/multisig/LNURL/OTS/DCA).
+- **Bitcoin:** RailsStatus (enabled rails + live CAD/BTC as-of), SigningRoom (PSBT progress + broadcast), WalletPanel (xpub + per-unit addresses, copy + mempool links), receipts integrated into checkout.
+- **Trust/data:** LedgerExplorer (verified chain + CSV), ExportCenter (portable JSON/CRT/Form B/F/ledger CSV), MemberManager (admin invites + temp passwords), NotificationsFeed (bell from real deadlines), RateBadge ("as of HH:MM").
+- New API helper modules: payments, billing, bylaw, members, deadlines, ledger entries, admin users.
+
+**Verified in a real browser:** zero horizontal overflow 390→1698px on home + tools (fixed glass-card grid min-width blowout + tablet topbar); accent toggle → `data-accent="green"`, glossary popover, /design page, panels render. Checks: backend 173, frontend 70, svelte-check 0/0, i18n parity green, build clean, marker v0.3.7.
+
+---
+
 ## Session — 2026-08-26 (all 20 GUI & user-flow improvements shipped, v0.3.6)
 
 **Task:** "Execute all 20 GUI improvements end to end with tests, batching and pushing like the last list."

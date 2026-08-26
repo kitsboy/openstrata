@@ -1,8 +1,9 @@
 ---
 title: Changelog
 project: openstrata
-version_history:
-  - version: 0.3.6
+version_history:-  version: 0.3.7
+-  summary: "All 20 user-flow/GUI/Bitcoin improvements shipped: backend member registry (migration 0006) + /members, verified /ledger/entries, /deadlines; frontend CheckoutFlow pay-fees + receipts, MonthlyClose, BylawCase, MemberWorkspace, DeadlinesPanel, brand-accent theming + /design page, RailsStatus, SigningRoom, WalletPanel, LedgerExplorer, ExportCenter, MemberManager, NotificationsFeed, RateBadge, glossary + illustrations + print styles; mobile-verified zero overflow 390→1698"
+-  version: 0.3.6
     date: 2026-08-26
     summary: >-
       GUI & user-flow push — all 20 improvements shipped: SVG icon system,

@@ -1,7 +1,7 @@
 # Hermes Strata — Workplan
 
 **Last updated:** 2026-08-26 (v0.3.6)  
-**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); per-council DB-backed units live (migration 0005); frontend wired to the live API; landing secured + tightened; all 20 GUI/user-flow improvements shipped (v0.3.6); next 20 user-flow/GUI/Bitcoin improvements proposed below.
+**Status:** Phases 1–3 backend complete (auth + tenancy, ledger, Rosa, Ziggy, rails prepared); per-council DB-backed units live (migration 0005); frontend wired to the live API; landing secured + tightened; all 20 GUI/user-flow improvements shipped (v0.3.6); all 20 user-flow/GUI/Bitcoin improvements shipped (v0.3.7).
 
 ---
 
@@ -140,7 +140,7 @@ Bitcoin/sovereign-rail advancements; 20 closes the portability loop.
 
 ---
 
-## User Flow, GUI & Bitcoin — Next 20 (proposed, 2026-08-26)
+## User Flow, GUI & Bitcoin — 20 improvements (shipped, v0.3.7)
 
 The follow-on list, focused on the four lenses Cam set: **user flow, GUI, design, Bitcoin.**
 Each item is grounded in what exists today — the gap, not a wish. The host deploy stays

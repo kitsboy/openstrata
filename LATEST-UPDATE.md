@@ -1,29 +1,33 @@
-# Latest Update — OpenStrata v0.3.6
+# Latest Update — OpenStrata v0.3.7
 
-**2026-08-26 · All 20 GUI & user-flow improvements shipped** — four batched, tested commits pushed to `origin/main` (Cloudflare Pages auto-deploy).
+**2026-08-26 · All 20 user-flow / GUI / Bitcoin improvements shipped** — backend + frontend batches committed and pushed to `origin/main` (Cloudflare Pages auto-deploy).
 
-## What changed
+## What shipped
 
-| Batch | Items | Commit |
-|---|---|---|
-| Foundation | #11 one SVG icon system · #12 real glass-card + shared tokens · #13 dark-mode audit · #14 typography ramp · #15 designed empty states | `eac768f` |
-| Navigation | #1 breadcrumbs everywhere · #2 tools sub-nav · #3 scroll-spy TOC · #4 ⌘K indexes tool modules · #5 mobile dock on all pages | `b40dc69` |
-| Alive | #6 view transitions · #7 shimmer skeletons · #8 dynamic greeting + real date · #9 metric sparklines · #10 micro-interactions | `01609f3` |
-| Trust | #16 first-run tour · #17 error toasts + inline validation · #18 confirm dialogs · #19 last-synced chrome · #20 hero pattern CTAs | `584dbb4` |
+**Backend** (`02dfd07` · 173 tests)
+- **Migration `0006_council_members`** — per-council member registry (`council_member` keyed on `(community_id, email)`); `MemberStore` + Postgres/Mem adapters, seeded from unit owners at register
+- **`GET|POST /api/v1/members`, `GET /members/unit`, `DELETE /members/:id`** — the owner/occupant layer over units
+- **`GET /api/v1/ledger/entries?fund=`** — the verified hash chain itself (new `LedgerEngine.entries()`), powering the explorer + CSV export
+- **`GET /api/v1/deadlines`** — the "What's due" calendar: statutory (EPR, depreciation, AGM) + open payment quotes, sorted urgent-first
 
-## The biggest find
+**Frontend** (`0d1f1e1` · 70 tests · 680 i18n keys × 9 locales)
 
-**`.glass-card` was never defined.** Every marketing page (60+ cards) had `class="glass-card …"` but no CSS rule existed — those cards rendered as bare text floating on the mesh background. It now resolves to the same soft 2-layer card language as the dashboard, via shared `--radius-card` / `--shadow-card` / `--border-card` tokens. The tools-page tooltip (`tooltip-bubble`) was phantom too — now real.
+| Lens | Panels |
+|---|---|
+| User flow | **CheckoutFlow** (pay fees → quote → rail picker → confirm → receipt with sats + locked rate + Satohash stamp) · **MonthlyClose** (billing → late notices → ledger) · **BylawCase** (complaint → notice → 14-day lock → fine) · **MemberWorkspace** · **DeadlinesPanel** |
+| GUI & design | **Brand-accent theming** (orange ↔ BC-green brokerage, one-click topbar toggle) · **`/design` system page** · SVG illustration set · print stylesheet · glossary explainers (CRF / multisig / LNURL / OTS / DCA) |
+| Bitcoin | **RailsStatus** (enabled rails + live CAD/BTC as-of) · **SigningRoom** (PSBT signature progress + broadcast) · **WalletPanel** (xpub + per-unit addresses, copy + mempool links) · receipts integrated into checkout |
+| Trust & data | **LedgerExplorer** (verified chain + CSV) · **ExportCenter** (portable JSON / CRT / Form B+F / ledger CSV) · **MemberManager** (invites + temp passwords) · **NotificationsFeed** (bell from real deadlines) · **RateBadge** |
 
 ## Verified in a real browser
 
-- **Zero horizontal overflow at 390 / 640 / 768 / 800 / 900 / 1024 / 1280 / 1440 / 1698 px** (found + fixed a tablet-width header overflow in the process)
-- First-run tour overlay shows for fresh visitors and dismisses permanently
-- Dashboard renders sidebar + metric sparklines; click-through navigation works; TOC appears on long pages
+- **Zero horizontal overflow at 390 → 1698 px on home + tools** (fixed a grid min-width blowout on mobile and a tablet topbar overflow)
+- Accent toggle flips `data-accent` to `green` (BC-green palette site-wide); glossary popovers open; `/design` renders; panels mount in demo mode
+- Mobile: panels stack to one column, tables scroll internally, topbar stays within the viewport
 
 ## Checks
 
-- svelte-check **0/0** · frontend **56 tests** (+11) · i18n **588 keys × 9 locales** parity green · build + prerender clean
+- Backend **173 tests / 18 files** (+6) · frontend **70 tests** (+10) · svelte-check **0/0** · i18n **680 keys × 9 locales** parity green · build clean · version marker **v0.3.7**
 
 ## Still pending (infra-gated, unchanged)
 
