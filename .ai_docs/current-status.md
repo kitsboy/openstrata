@@ -1,10 +1,11 @@
 # Current Status — OpenStrata
 
-**Version:** v0.3.0
-**Last Updated:** 2026-08-25
+**Version:** v0.3.1
+**Last Updated:** 2026-08-26
 **Domain:** openstrata.giveabit.io
 
 ## Recent Milestones
+- **Auth + multi-tenant councils (v0.3.1):** zero-dependency JWT auth (HS256 via node:crypto, scrypt password hashing) with **admin / treasurer / member** role gates; open signup (`POST /api/v1/auth/register` creates a council + first admin), login, `/auth/me`, admin user management with one-time temp passwords; every `/api/v1/*` route except `/health` + the Rosa KB now requires a Bearer token and derives the ledger `community` from the token's `cid` claim (no more client-supplied community); payment quoting/confirming is tenant-scoped (idempotency key now `(community_id, ref_id, unit_ref, rail)` via migration `0004_auth_and_tenancy.sql`); new `backend/src/auth/` module (model, jwt, passwords, store + mem/pg adapters); **backend suite now 127 tests / 11 files** (19 new auth + tenancy tests incl. forged/expired tokens, role gates, cross-council isolation) + **new Postgres e2e smoke suite** (`tests/e2e-smoke.test.ts`, runs against a live `DATABASE_URL`) + **CI `backend-e2e` job** that spins up `pgvector/pgvector:pg17` and runs migrate + the smoke suite on every push
 - v0.2.x series: responsive dashboard + shared shell, 9-locale i18n parity (217→509 keys), PWA + dark mode + search, Phase 2 e-transfer auto-reconciliation prototype, Phase 3 backend scaffolding (immutable trust ledger, Rosa RAG, Ziggy treasury), automated fee billing + late notices, CRT-proof bylaw enforcement state machine, sovereign payment rails (Bitcoin on-chain, Lightning/LNURL, Liquid, PayNym BIP-47, Nostr) with quoting + shared reconciliation reference
 - **Phase 3 core product completed + hardened (v0.3.0):**
   - **Form B/F + meetings + payment flows** (`0db3ce3`): Form B (information cert) / Form F (payment cert) issuance endpoint, AGM/SGM/council quorum + threshold-voting routes, `POST /api/v1/payments/confirm` that marks a quoted payment paid AND posts it to the unit's AR ledger (reconciles like an e-transfer), idempotent `payments/quote` backed by a persisted `PaymentRequestStore` (`PostgresPaymentRequestStore` + in-memory for tests) keyed on `(refId, unitRef, rail)`, `Idempotency-Key` dedupe on ledger/billing writes, Fastify JSON-schema body validation on write routes
@@ -15,14 +16,16 @@
 
 ## Known Issues
 - Domain-specific statutory, financial, feed, module, and protocol records remain canonical English/data-driven until reviewed translations are available
-- Phase 3 backend is functional but **not yet deployed**: Rosa uses a keyword-fallback retriever (pgvector embeddings + Ollama model not yet selected/provisioned); Ziggy PSBT/multisig execution is stubbed (authorization gate is real); the Postgres ledger + payment-store adapters and Docker Compose stack need a real deployment smoke test on a host behind Tailscale, and a real secrets path (`backend/.env` is gitignored)
+- Phase 3 backend is functional but **not yet deployed**: Rosa uses a keyword-fallback retriever (pgvector embeddings + Ollama model not yet selected/provisioned); Ziggy PSBT/multisig execution is stubbed (authorization gate is real); the Docker Compose stack needs a real deployment on a host behind Tailscale (the Postgres adapters are now covered by the e2e smoke suite + CI, but a live host run is still pending); `backend/.env` needs a real secrets path on the host (generate a strong `AUTH_SECRET` via `openssl rand -base64 48`)
 - Sovereign rails are **prepared, not connected**: no LND / Liquid daemon / PayNym notifier / Nostr relay is running on a host; `cadPerBtc` needs a live rate feed. Enable + point endpoints via `.env` when daemons exist
-- `MemPaymentRequestStore.markStatus` was fixed to mirror single-row semantics; verify the same status-propagation holds on the Postgres adapter on first real deployment
+- Units remain the seeded demo registry (shared across councils); per-council DB-backed units (unit→payment→form traceability UI) is the next tenancy step
+- Auth has no rate limiting on login yet — add before public exposure
 - The live site remains a fully functional front-end product demo; legal/statutory content awaits professional review
 
 ## Next Steps
+- **Deploy on a Tailscale host:** `docker compose up -d`, set `AUTH_SECRET` in `backend/.env`, `npm run migrate`, then run the e2e smoke gate: `DATABASE_URL=… npm run test -- e2e-smoke` (covers `/api/v1/ledger`, `/billing/run`, `/payments/*`, `/forms`, `/meetings/*`, cross-council isolation on the real adapters)
+- Wire the live backend into the frontend (dashboard/treasury widgets currently read mock data from `data.ts`) — needs the API-exposure decision (Tailscale-only vs public behind auth + CORS)
 - Pick Rosa embedding/chat models, then wire the pgvector + Ollama adapters (migration `0002` + `keywordRetriever` seam ready) so `rosa ingest` indexes real embeddings
-- Deploy the stack on a host behind Tailscale and run a real Postgres migration + smoke test of `/api/v1/ledger`, `/api/v1/payments/*`, `/api/v1/forms`, `/api/v1/meetings/*`
 - Provision the Bitcoin rails' daemons (LND, Liquid node, PayNym notifier, Nostr relays) on the host and enable rails via `.env`; wire a live `cadPerBtc` rate feed; connect `payments/confirm` → real on-chain/LN broadcast
+- Move to per-council DB-backed units + unit→payment→form traceability UI
 - Professional human review of the machine-drafted locale overrides before they are treated as reviewed
-- Tighten organizational mapping, user workflow, and recording (member/lot ledger, unit→payment→form traceability) as part of preparing for live Bitcoin/L2 payments

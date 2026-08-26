@@ -2,10 +2,16 @@
  * Fastify application — routes the Phase 3 services.
  *
  * The app is a factory over injected dependencies so it can be built in tests
- * with an in-memory ledger store and a keyword retriever (no Postgres/Ollama).
+ * with in-memory stores (no Postgres/Ollama).
+ *
+ * Auth + tenancy: every `/api/v1/*` route except the Rosa KB and `/health`
+ * requires a Bearer JWT. The token's `cid` claim IS the tenant: tenant-scoped
+ * routes derive the ledger `community` from the token instead of trusting the
+ * request body, and role gates enforce admin / treasurer / member privileges.
  */
 
-import Fastify, { type FastifyInstance } from 'fastify';
+import { randomBytes } from 'node:crypto';
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import type { LedgerEngine } from '../ledger/ledger.js';
 import { type Retriever, composeAnswer } from '../rosa/rosa.js';
 import { authorizeSpend } from '../ziggy/ziggy.js';
@@ -24,12 +30,25 @@ import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
 import type { UnitRegistry } from '../units/model.js';
+import { hashPassword, verifyPassword } from '../auth/passwords.js';
+import { signJwt, verifyJwt } from '../auth/jwt.js';
+import type { AuthStore } from '../auth/store.js';
+import { DuplicateEmailError } from '../auth/store.js';
+import type { AuthUser, UserRole } from '../auth/model.js';
+import { ROLE_RANK, toPublicUser } from '../auth/model.js';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    user?: AuthUser;
+  }
+}
 
 export interface ApiDeps {
   ledger: LedgerEngine;
   rosa: Retriever;
   reconcile: Reconciler;
   payments: PaymentRequestStore;
+  auth: AuthStore;
   resolver?: RateProvider;
   /** Canonical unit/lot master data. Resolves every unitRef in the product. */
   units?: UnitRegistry;
@@ -38,11 +57,17 @@ export interface ApiDeps {
     vectorCollection: string;
     rails?: RailRegistry;
     cadPerBtc?: number; // fallback static rate for convertible rails
+    authSecret: string;
+    authTokenTtl: number; // seconds
   };
 }
 
 /** In-memory seen-set for Idempotency-Key on idempotent POSTs (ledger/billing). */
 const lastResults = new Map<string, unknown>();
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type PreHandler = (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
 
 export async function buildServer(
   deps: ApiDeps,
@@ -56,12 +81,165 @@ export async function buildServer(
     crfMandatoryPct: deps.config.crfMandatoryPct
   };
 
+  // -------------------------------------------------------------  Auth hooks
+  const authenticate: PreHandler = async (req, reply) => {
+    const header = req.headers.authorization;
+    const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+    if (!token) {
+      return reply.code(401).send({ ok: false, reason: 'authentication required' });
+    }
+    const claims = verifyJwt(token, deps.config.authSecret);
+    if (!claims) {
+      return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
+    }
+    req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
+  };
+
+  /** Role gate: admits the role and anything above it (treasurer gate admits admin). */
+  const requireRole = (min: UserRole): PreHandler => async (req, reply) => {
+    if (!req.user) {
+      return reply.code(401).send({ ok: false, reason: 'authentication required' });
+    }
+    if (ROLE_RANK[req.user.role] < ROLE_RANK[min]) {
+      return reply.code(403).send({ ok: false, reason: `requires role '${min}' or higher` });
+    }
+  };
+
   app.get('/health', async () => ({ ok: true, service: 'openstrata-backend' }));
+
+  // ----------------------------------------------------------------  Auth API
+  // Open signup: anyone can create a council + its first admin. Councils are
+  // the tenant boundary — every later request is scoped to the token's council.
+  app.post<{
+    Body: { councilName: string; email: string; password: string; displayName?: string };
+  }>(
+    '/api/v1/auth/register',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['councilName', 'email', 'password'],
+          additionalProperties: false,
+          properties: {
+            councilName: { type: 'string', minLength: 1 },
+            email: { type: 'string', minLength: 3 },
+            password: { type: 'string', minLength: 8 },
+            displayName: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      if (await deps.auth.getUserByEmail(email)) {
+        return reply.code(409).send({ ok: false, reason: 'email already registered' });
+      }
+      const council = await deps.auth.createCouncil(req.body.councilName.trim());
+      const passwordHash = await hashPassword(req.body.password);
+      const user = await deps.auth.createUser({
+        councilId: council.id,
+        email,
+        displayName: (req.body.displayName ?? '').trim() || email.split('@')[0]!,
+        passwordHash,
+        role: 'admin'
+      });
+      const token = signJwt(
+        { sub: user.id, cid: council.id, role: user.role },
+        deps.config.authSecret,
+        deps.config.authTokenTtl
+      );
+      return {
+        ok: true,
+        token,
+        council: { id: council.id, name: council.name },
+        user: toPublicUser(user)
+      };
+    }
+  );
+
+  app.post<{ Body: { email: string; password: string } }>(
+    '/api/v1/auth/login',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email', 'password'],
+          additionalProperties: false,
+          properties: { email: { type: 'string' }, password: { type: 'string', minLength: 1 } }
+        }
+      }
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      const user = await deps.auth.getUserByEmail(email);
+      if (!user || !(await verifyPassword(req.body.password, user.passwordHash))) {
+        return reply.code(401).send({ ok: false, reason: 'invalid email or password' });
+      }
+      const token = signJwt(
+        { sub: user.id, cid: user.councilId, role: user.role },
+        deps.config.authSecret,
+        deps.config.authTokenTtl
+      );
+      return { ok: true, token, user: toPublicUser(user) };
+    }
+  );
+
+  app.get('/api/v1/auth/me', { preHandler: [authenticate] }, async (req) => {
+    const user = await deps.auth.getUserById(req.user!.userId);
+    const council = await deps.auth.getCouncil(req.user!.councilId);
+    if (!user || !council) return { ok: false, reason: 'account not found' };
+    return { ok: true, user: toPublicUser(user), council: { id: council.id, name: council.name } };
+  });
+
+  // Admin-only user management (the rest of a council's accounts).
+  app.get('/api/v1/auth/users', { preHandler: [authenticate, requireRole('admin')] }, async (req) => {
+    const users = await deps.auth.listUsers(req.user!.councilId);
+    return { ok: true, users: users.map(toPublicUser) };
+  });
+
+  app.post<{
+    Body: { email: string; displayName?: string; role: 'treasurer' | 'member' };
+  }>(
+    '/api/v1/auth/users',
+    {
+      preHandler: [authenticate, requireRole('admin')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email', 'role'],
+          additionalProperties: false,
+          properties: {
+            email: { type: 'string', minLength: 3 },
+            displayName: { type: 'string' },
+            role: { type: 'string', enum: ['treasurer', 'member'] }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      if (await deps.auth.getUserByEmail(email)) {
+        return reply.code(409).send({ ok: false, reason: 'email already registered' });
+      }
+      // Generated temporary password — the admin shares it with the new user.
+      const temporaryPassword = randomBytes(9).toString('base64url');
+      const user = await deps.auth.createUser({
+        councilId: req.user!.councilId,
+        email,
+        displayName: (req.body.displayName ?? '').trim() || email.split('@')[0]!,
+        passwordHash: await hashPassword(temporaryPassword),
+        role: req.body.role
+      });
+      return { ok: true, user: toPublicUser(user), temporaryPassword };
+    }
+  );
 
   // Canonical unit/lot master data — the single source of unit identity.
   // Every unit carries its reconciliation keys + AR ledger fund code so clients
   // never re-derive them on their own. If a registry isn't injected, degrade.
-  app.get('/api/v1/units', async () => {
+  app.get('/api/v1/units', { preHandler: [authenticate] }, async () => {
     const reg = deps.units;
     if (!reg) return { ok: false, reason: 'unit registry not configured' };
     return {
@@ -82,12 +260,14 @@ export async function buildServer(
     };
   });
 
-  // Ledger balance (verified against the hash chain).
-  app.get<{ Querystring: { community: string; fund: string } }>(
+  // Ledger balance (verified against the hash chain). Community comes from the
+  // token — a council can only read its own accounts.
+  app.get<{ Querystring: { fund: string } }>(
     '/api/v1/ledger/balance',
+    { preHandler: [authenticate] },
     async (req) => {
       const { balanceBasis, entryCount, headTally } = await deps.ledger.balance(
-        req.query.community,
+        req.user!.councilId,
         req.query.fund
       );
       return { balanceBasis, entryCount, headTally: headTally.slice(0, 8) };
@@ -95,9 +275,9 @@ export async function buildServer(
   );
 
   // Post a single credit/debit (idempotent via Idempotency-Key header).
+  // Treasurer + admin only; the community is the caller's council.
   app.post<{
     Body: {
-      community: string;
       fund: string;
       amountBasis: number;
       kind: 'credit' | 'debit';
@@ -109,13 +289,13 @@ export async function buildServer(
   }>(
     '/api/v1/ledger/post',
     {
+      preHandler: [authenticate, requireRole('treasurer')],
       schema: {
         body: {
           type: 'object',
-          required: ['community', 'fund', 'amountBasis', 'kind', 'type'],
+          required: ['fund', 'amountBasis', 'kind', 'type'],
           additionalProperties: false,
           properties: {
-            community: { type: 'string', minLength: 1 },
             fund: { type: 'string' },
             amountBasis: { type: 'integer', not: { const: 0 } },
             kind: { type: 'string', enum: ['credit', 'debit'] },
@@ -129,12 +309,13 @@ export async function buildServer(
     },
     async (req) => {
       const idem = req.headers['idempotency-key'];
-      if (idem) {
-        const cached = lastResults.get(`ledger:${idem}`);
+      const idemKey = idem ? `ledger:${req.user!.councilId}:${idem}` : null;
+      if (idemKey) {
+        const cached = lastResults.get(idemKey);
         if (cached) return cached;
       }
       const row = await deps.ledger.post(
-        req.body.community,
+        req.user!.councilId,
         req.body.fund,
         req.body.amountBasis,
         req.body.kind,
@@ -146,7 +327,7 @@ export async function buildServer(
         }
       );
       const result = { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
-      if (idem) lastResults.set(`ledger:${idem}`, result);
+      if (idemKey) lastResults.set(idemKey, result);
       return result;
     }
   );
@@ -168,16 +349,21 @@ export async function buildServer(
         description?: string;
       };
     };
-  }>('/api/v1/treasury/authorize', async (req) => {
-    const verdict = authorizeSpend(
-      req.body.budget ?? defaultBudget,
-      req.body.balances,
-      req.body.spend
-    );
-    return verdict;
-  });
+  }>(
+    '/api/v1/treasury/authorize',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const verdict = authorizeSpend(
+        req.body.budget ?? defaultBudget,
+        req.body.balances,
+        req.body.spend
+      );
+      return verdict;
+    }
+  );
 
-  // Rosa: strict RAG query (citations only).
+  // Rosa: strict RAG query (citations only). Public — BC law is the knowledge
+  // base behind the product and the site already publishes it.
   app.post<{ Body: { question: string; facts?: Record<string, string> } }>(
     '/api/v1/rosa/query',
     async (req) => {
@@ -203,16 +389,19 @@ export async function buildServer(
         score: c.score
       }))
     };
-  });  const cadPerBtc = async (): Promise<number> =>
+  });
+
+  const cadPerBtc = async (): Promise<number> =>
     (await deps.resolver?.cadPerBtc()) ?? deps.config.cadPerBtc ?? 0;
 
   // ------------------------------------------------  Sovereign rails
-  app.get('/api/v1/rails/status', async () => ({
+  app.get('/api/v1/rails/status', { preHandler: [authenticate] }, async () => ({
     rails: enabledRails(deps.config.rails ?? {}),
     cadPerBtc: await cadPerBtc()
   }));
 
-  // Build a rail quote; idempotent per (refId, unitRef, rail) via the payment store.
+  // Build a rail quote; idempotent per (community, refId, unitRef, rail) via
+  // the payment store. The community is the caller's council.
   app.post<{
     Body: {
       rail: Rail;
@@ -221,90 +410,114 @@ export async function buildServer(
       amountBasis: number;
       currency: 'CAD' | 'BTC';
       recipient: string;
-      communityId?: string;
       note?: string;
     };
-  }>('/api/v1/payments/quote', async (req) => {
-    const b = req.body;
-    const registry = deps.config.rails ?? {};
-    if (!registry[b.rail]?.enabled) {
-      return { ok: false, reason: `rail '${b.rail}' is not enabled` };
+  }>(
+    '/api/v1/payments/quote',
+    {
+      preHandler: [authenticate],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['rail', 'refId', 'unitRef', 'amountBasis', 'currency', 'recipient'],
+          additionalProperties: false,
+          properties: {
+            rail: { type: 'string', enum: ['fiat', 'onchain', 'lightning', 'liquid', 'paynym_bip47', 'nostr'] },
+            refId: { type: 'string', minLength: 1 },
+            unitRef: { type: 'string', minLength: 1 },
+            amountBasis: { type: 'integer', not: { const: 0 } },
+            currency: { type: 'string', enum: ['CAD', 'BTC'] },
+            recipient: { type: 'string', minLength: 1 },
+            note: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req) => {
+      const b = req.body;
+      const registry = deps.config.rails ?? {};
+      if (!registry[b.rail]?.enabled) {
+        return { ok: false, reason: `rail '${b.rail}' is not enabled` };
+      }
+      try {
+        const rate = await cadPerBtc(); // resolve outside the sync buildInvoice()
+        const communityId = req.user!.councilId;
+        const { request, created } = await getOrCreateQuote(
+          deps.payments,
+          {
+            refId: b.refId,
+            unitRef: b.unitRef,
+            communityId,
+            rail: b.rail,
+            amountBasis: b.amountBasis,
+            currency: b.currency,
+            recipient: b.recipient
+          },
+          () =>
+            quotePayment(
+              {
+                refId: b.refId,
+                communityId,
+                unitRef: b.unitRef,
+                amountBasis: b.amountBasis,
+                currency: b.currency,
+                rail: b.rail,
+                note: b.note
+              },
+              b.recipient,
+              new Date(),
+              rate
+            )
+        );
+        const invoice = {
+          rail: request.rail,
+          referenceCode: request.referenceCode,
+          recipient: request.recipient,
+          invoice: request.invoice || undefined,
+          fiatLockedBasis: request.fiatLockedBasis || undefined,
+          amountSat: request.amountSat || undefined,
+          expiresAt: request.expiresAt,
+          status: request.status
+        };
+        return { ok: true, created, invoice };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
     }
-    try {
-      const rate = await cadPerBtc(); // resolve outside the sync buildInvoice()
-      const { request, created } = await getOrCreateQuote(
-        deps.payments,
-        {
-          refId: b.refId,
-          unitRef: b.unitRef,
-          communityId: b.communityId ?? '',
-          rail: b.rail,
-          amountBasis: b.amountBasis,
-          currency: b.currency,
-          recipient: b.recipient
-        },
-        () =>
-          quotePayment(
-            {
-              refId: b.refId,
-              communityId: b.communityId ?? '',
-              unitRef: b.unitRef,
-              amountBasis: b.amountBasis,
-              currency: b.currency,
-              rail: b.rail,
-              note: b.note
-            },
-            b.recipient,
-            new Date(),
-            rate
-          )
-      );
-      const invoice = {
-        rail: request.rail,
-        referenceCode: request.referenceCode,
-        recipient: request.recipient,
-        invoice: request.invoice || undefined,
-        fiatLockedBasis: request.fiatLockedBasis || undefined,
-        amountSat: request.amountSat || undefined,
-        expiresAt: request.expiresAt,
-        status: request.status
-      };
-      return { ok: true, created, invoice };
-    } catch (err) {
-      return { ok: false, reason: (err as Error).message };
-    }
-  });
+  );
 
   // Confirm a rail payment by its shared referenceCode -> mark paid AND post to
-  // the unit's AR ledger account (reconciles like an e-transfer would).
-  app.post<{ Body: { referenceCode: string; community?: string } }>(
+  // the unit's AR ledger account (reconciles like an e-transfer would). The
+  // lookup is council-scoped so one council can never confirm another's quote.
+  app.post<{ Body: { referenceCode: string } }>(
     '/api/v1/payments/confirm',
     {
+      preHandler: [authenticate],
       schema: {
         body: {
           type: 'object',
           required: ['referenceCode'],
           additionalProperties: false,
-          properties: { referenceCode: { type: 'string', minLength: 1 }, community: { type: 'string' } }
+          properties: { referenceCode: { type: 'string', minLength: 1 } }
         }
       }
     },
     async (req) => {
-      const req0 = await deps.payments.findByReference(req.body.referenceCode);
+      const councilId = req.user!.councilId;
+      const req0 = await deps.payments.findByReference(councilId, req.body.referenceCode);
       if (!req0) return { ok: false, reason: 'unknown referenceCode' };
       if (req0.status !== 'quoted') return { ok: false, reason: `request is ${req0.status}, not quoted` };
 
       // Post the confirmed amount to the unit's AR ledger (credit).
-      const community = (req.body.community ?? req0.communityId) || 'demo';
       const kind = req0.amountBasis >= 0 ? ('credit' as const) : ('debit' as const);
       const row = await deps.ledger.post(
-        community,
+        councilId,
         req0.referenceCode,
         Math.abs(req0.amountBasis),
         kind,
         { type: 'strata_fee', referenceCode: req0.referenceCode, reconRef: req0.referenceCode }
       );
-      await deps.payments.markStatus(req0.referenceCode, 'paid');
+      await deps.payments.markStatus(councilId, req0.referenceCode, 'paid');
       return { ok: true, seq: row.seq, referenceCode: req0.referenceCode, status: 'paid' };
     }
   );
@@ -312,16 +525,19 @@ export async function buildServer(
   // Reconciliation: auto-post decision for one inbound transfer.
   app.post<{
     Body: { reference: string; units: UnitRefs[] };
-  }>('/api/v1/treasury/reconcile', async (req) => {
-    return deps.reconcile(req.body.reference, req.body.units);
-  });
+  }>(
+    '/api/v1/treasury/reconcile',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      return deps.reconcile(req.body.reference, req.body.units);
+    }
+  );
 
   // ------------------------------------------------ Billing
   // Run a monthly billing cycle: compute charges + late notices, then post the
-  // charges to the trust ledger so AR is wired end-to-end.
+  // charges to the trust ledger so AR is wired end-to-end. Treasurer + admin.
   app.post<{
     Body: {
-      community: string;
       period: string;
       fees: UnitFee[];
       dueDay: number;
@@ -330,28 +546,62 @@ export async function buildServer(
       arrears: Record<string, number>;
       asOf?: string;
     };
-  }>('/api/v1/billing/run', async (req) => {
-    const b = req.body;
-    const run = runBilling(
-      b.fees,
-      (unitId) => b.arrears[unitId] ?? 0,
-      { period: b.period, dueDay: b.dueDay, graceDays: b.graceDays, lateFlatBasis: b.lateFeeBasis },
-      b.asOf ? new Date(b.asOf) : new Date()
-    );
-    // AR isolation: post each charge to a per-unit AR ledger account.
-    const posted: Array<{ unitId: string; seq: number }> = [];
-    for (const charge of run.charges) {
-      const row = await deps.ledger.post(
-        b.community,
-        charge.referenceCode,
-        charge.amountBasis,
-        'credit',
-        { type: 'strata_fee', referenceCode: charge.referenceCode, reconRef: charge.referenceCode }
+  }>(
+    '/api/v1/billing/run',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['period', 'fees', 'dueDay', 'graceDays', 'lateFeeBasis', 'arrears'],
+          additionalProperties: false,
+          properties: {
+            period: { type: 'string', minLength: 1 },
+            fees: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['unitId', 'monthlyBasis'],
+                additionalProperties: false,
+                properties: {
+                  unitId: { type: 'string' },
+                  monthlyBasis: { type: 'integer' }
+                }
+              }
+            },
+            dueDay: { type: 'integer', minimum: 1, maximum: 28 },
+            graceDays: { type: 'integer', minimum: 0 },
+            lateFeeBasis: { type: 'integer', minimum: 0 },
+            arrears: { type: 'object' },
+            asOf: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req) => {
+      const b = req.body;
+      const community = req.user!.councilId;
+      const run = runBilling(
+        b.fees,
+        (unitId) => b.arrears[unitId] ?? 0,
+        { period: b.period, dueDay: b.dueDay, graceDays: b.graceDays, lateFlatBasis: b.lateFeeBasis },
+        b.asOf ? new Date(b.asOf) : new Date()
       );
-      posted.push({ unitId: charge.unitId, seq: row.seq });
+      // AR isolation: post each charge to a per-unit AR ledger account.
+      const posted: Array<{ unitId: string; seq: number }> = [];
+      for (const charge of run.charges) {
+        const row = await deps.ledger.post(
+          community,
+          charge.referenceCode,
+          charge.amountBasis,
+          'credit',
+          { type: 'strata_fee', referenceCode: charge.referenceCode, reconRef: charge.referenceCode }
+        );
+        posted.push({ unitId: charge.unitId, seq: row.seq });
+      }
+      return { run, postedCount: posted.length, posted };
     }
-    return { run, postedCount: posted.length, posted };
-  });
+  );
 
   // ------------------------------------------------ Bylaw enforcement
   // Stateless over the pure state machine: each request submits the current
@@ -365,61 +615,81 @@ export async function buildServer(
       receivedAt: string;
       evidence: boolean;
     };
-  }>('/api/v1/bylaw/complaint', async (req) => {
-    try {
-      const c = newComplaint(req.body);
-      return { ok: true, complaint: c };
-    } catch (err) {
-      return { ok: false, reason: (err as Error).message };
+  }>(
+    '/api/v1/bylaw/complaint',
+    { preHandler: [authenticate] },
+    async (req) => {
+      try {
+        const c = newComplaint(req.body);
+        return { ok: true, complaint: c };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
     }
-  });
+  );
 
   app.post<{
     Body: { complaint: string; issuedAt: string };
-  }>('/api/v1/bylaw/complaint/notice', async (req) => {
-    try {
-      const c = issueNotice(JSON.parse(req.body.complaint), req.body.issuedAt);
-      return { ok: true, complaint: c };
-    } catch (err) {
-      return { ok: false, reason: (err as Error).message };
+  }>(
+    '/api/v1/bylaw/complaint/notice',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      try {
+        const c = issueNotice(JSON.parse(req.body.complaint), req.body.issuedAt);
+        return { ok: true, complaint: c };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
     }
-  });
+  );
 
   app.post<{
     Body: { complaint: string; now: string; amountBasis: number; councilMinutesRef: string };
-  }>('/api/v1/bylaw/fine', async (req) => {
-    let state: ReturnType<typeof JSON.parse>;
-    try {
-      state = JSON.parse(req.body.complaint) as Parameters<typeof imposeFine>[0];
-    } catch {
-      return { ok: false, reason: 'invalid complaint payload' };
+  }>(
+    '/api/v1/bylaw/fine',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req) => {
+      let state: ReturnType<typeof JSON.parse>;
+      try {
+        state = JSON.parse(req.body.complaint) as Parameters<typeof imposeFine>[0];
+      } catch {
+        return { ok: false, reason: 'invalid complaint payload' };
+      }
+      const res = imposeFine(state, req.body.now, {
+        councilMinutesRef: req.body.councilMinutesRef,
+        amountBasis: req.body.amountBasis
+      });
+      return res.ok ? { ok: true, complaint: res.complaint } : { ok: false, reason: res.reason };
     }
-    const res = imposeFine(state, req.body.now, {
-      councilMinutesRef: req.body.councilMinutesRef,
-      amountBasis: req.body.amountBasis
-    });
-    return res.ok ? { ok: true, complaint: res.complaint } : { ok: false, reason: res.reason };
-  });
+  );
 
-  app.post<{ Body: { complaint: string; now: string } }>('/api/v1/bylaw/status', async (req) => {
-    let state;
-    try {
-      state = JSON.parse(req.body.complaint) as Parameters<typeof canImposeFine>[0];
-    } catch {
-      return { ok: false, reason: 'invalid complaint payload' };
+  app.post<{ Body: { complaint: string; now: string } }>(
+    '/api/v1/bylaw/status',
+    { preHandler: [authenticate] },
+    async (req) => {
+      let state;
+      try {
+        state = JSON.parse(req.body.complaint) as Parameters<typeof canImposeFine>[0];
+      } catch {
+        return { ok: false, reason: 'invalid complaint payload' };
+      }
+      const gate = canImposeFine(state, req.body.now);
+      return { ...gate, fineCapsBp: { standard: 20_000, short_term_rental: 100_000 } };
     }
-    const gate = canImposeFine(state, req.body.now);
-    return { ...gate, fineCapsBp: { standard: 20_000, short_term_rental: 100_000 } };
-  });
+  );
 
-  app.post<{ Body: { complaint: string; councilMinutesRef: string } }>('/api/v1/bylaw/nofine', async (req) => {
-    try {
-      const c = decideNoFine(JSON.parse(req.body.complaint), req.body.councilMinutesRef);
-      return { ok: true, complaint: c };
-    } catch (err) {
-      return { ok: false, reason: (err as Error).message };
+  app.post<{ Body: { complaint: string; councilMinutesRef: string } }>(
+    '/api/v1/bylaw/nofine',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req) => {
+      try {
+        const c = decideNoFine(JSON.parse(req.body.complaint), req.body.councilMinutesRef);
+        return { ok: true, complaint: c };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
     }
-  });
+  );
 
   // ------------------------------------------------ Conveyancing (Form B/F)
   app.post<{
@@ -434,22 +704,26 @@ export async function buildServer(
       eprDisclosed?: boolean;
       requester?: string;
     };
-  }>('/api/v1/forms', async (req) => {
-    const b = req.body;
-    const form = generateForm(
-      { kind: b.kind, unitId: b.unitId, requestedAt: b.requestedAt, requester: b.requester },
-      {
-        unitId: b.unitId,
-        balanceBasis: b.balanceBasis,
-        arrearsBasis: b.arrearsBasis ?? b.balanceBasis,
-        crfBasis: b.crfBasis,
-        pendingCases: b.pendingCases,
-        eprDisclosed: b.eprDisclosed
-      },
-      new Date().toISOString().slice(0, 10)
-    );
-    return form;
-  });
+  }>(
+    '/api/v1/forms',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      const form = generateForm(
+        { kind: b.kind, unitId: b.unitId, requestedAt: b.requestedAt, requester: b.requester },
+        {
+          unitId: b.unitId,
+          balanceBasis: b.balanceBasis,
+          arrearsBasis: b.arrearsBasis ?? b.balanceBasis,
+          crfBasis: b.crfBasis,
+          pendingCases: b.pendingCases,
+          eprDisclosed: b.eprDisclosed
+        },
+        new Date().toISOString().slice(0, 10)
+      );
+      return form;
+    }
+  );
 
   // ------------------------------------------------ Meetings (quorum + voting)
   app.post<{
@@ -459,12 +733,16 @@ export async function buildServer(
       present: number;
       councilSize?: number;
     };
-  }>('/api/v1/meetings/quorum', async (req) => {
-    const b = req.body;
-    return b.type === 'rescheduled'
-      ? checkQuorumRescheduled(b.present)
-      : checkQuorum(b.type, b.eligible, b.present, b.councilSize ?? 0);
-  });
+  }>(
+    '/api/v1/meetings/quorum',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      return b.type === 'rescheduled'
+        ? checkQuorumRescheduled(b.present)
+        : checkQuorum(b.type, b.eligible, b.present, b.councilSize ?? 0);
+    }
+  );
 
   app.post<{
     Body: {
@@ -475,14 +753,18 @@ export async function buildServer(
       no: number;
       abstain: number;
     };
-  }>('/api/v1/meetings/vote', async (req) => {
-    const b = req.body;
-    try {
-      return countVote(b.threshold, { eligible: b.eligible, present: b.present, yes: b.yes, no: b.no, abstain: b.abstain });
-    } catch (err) {
-      return { ok: false, reason: (err as Error).message };
+  }>(
+    '/api/v1/meetings/vote',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      try {
+        return countVote(b.threshold, { eligible: b.eligible, present: b.present, yes: b.yes, no: b.no, abstain: b.abstain });
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
     }
-  });
+  );
 
   return app;
 }

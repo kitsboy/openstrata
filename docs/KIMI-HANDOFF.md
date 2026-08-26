@@ -1,3 +1,29 @@
+## Session — 2026-08-26 (auth + multi-tenant councils, v0.3.1)
+
+**Done:**
+- **Zero-dependency JWT auth** (`backend/src/auth/`): HS256 tokens signed with node:crypto (`AUTH_SECRET`), scrypt password hashing, no new packages. Roles **admin / treasurer / member** with rank-based gates (`requireRole`). Open signup: `POST /api/v1/auth/register` creates a council + first admin; `login`, `/auth/me`, and admin-only user management (`GET|POST /api/v1/auth/users`, one-time temporary passwords)
+- **Tenant-scoped routes:** every `/api/v1/*` route except `/health` + the Rosa KB requires a Bearer token; the ledger `community` now comes from the token's `cid` claim, never the body (client-supplied `community` fields removed from ledger/post, billing/run, payments/confirm). Payment quoting is tenant-isolated: idempotency key is now `(community_id, ref_id, unit_ref, rail)` via migration `0004_auth_and_tenancy.sql` (council + app_user tables, tenant-scoped payment_request key), and confirm lookups are council-scoped so one council can never confirm another's quote
+- **Tests:** backend suite now **127 tests / 11 files** (was 108/10) — 19 new auth/tenancy tests (register/login/me, duplicate email 409, forged/expired/wrong-secret tokens, role gates incl. treasurer-no-fines, cross-council ledger + payment isolation). Typecheck clean
+- **Postgres e2e smoke suite** (`backend/tests/e2e-smoke.test.ts`): full deploy-day gate against a live `DATABASE_URL` — register → ledger → billing → quote/confirm → forms → meetings → cross-council isolation, and explicitly verifies `PostgresPaymentRequestStore.markStatus` single-row semantics (re-quote after confirm returns `paid`) — the item previously flagged for first-deploy verification. **CI got a `backend-e2e` job** that spins up `pgvector/pgvector:pg17`, runs `npm run migrate`, then the smoke suite
+- **Docs:** `backend/API.md` (auth + tenancy section, updated payloads), `backend/README.md`, `docs/DEPLOYMENT.md` (host checklist incl. `AUTH_SECRET` + e2e gate), `.ai_docs` refreshed, `.env.example` + `docker-compose.yml` carry `AUTH_SECRET`/`AUTH_TOKEN_TTL`
+
+**Decisions (confirmed with Cam):**
+- JWT bearer tokens (not cookie sessions) — stateless, works with the static frontend + CORS; passwords via scrypt; zero new dependencies
+- Roles admin / treasurer / member (treasurer = financial writes, no bylaw fines)
+- Open signup for now (Tailscale-hosted MVP); gate with invites + login rate limiting before public exposure
+- Units stay the seeded demo registry this session (per-council DB-backed units = the unit→payment→form traceability step)
+
+**Remaining (external / not yet built):**
+- Host deploy still pending: `docker compose up -d` on a Tailscale host, `AUTH_SECRET` + Postgres password in `backend/.env`, `npm run migrate`, then `DATABASE_URL=… npm run test -- e2e-smoke` (checklist in `docs/DEPLOYMENT.md`)
+- Same external items as before: rails not connected to live daemons, Rosa pgvector/Ollama model choice, live `cadPerBtc` rate feed
+- Wire the live backend into the frontend dashboard (currently mock data) — needs the API-exposure decision (Tailscale-only vs public behind auth + CORS)
+- Login rate limiting + invite flow before public exposure; per-council DB-backed units
+
+**Git State:**
+- Working tree: auth + tenancy changes **uncommitted** (no push performed this session — awaiting Cam's go)
+
+---
+
 ## Session — 2026-08-25 (canonical unit/lot master-data model)
 
 **Done:**

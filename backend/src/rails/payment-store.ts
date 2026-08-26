@@ -59,18 +59,24 @@ export class PostgresPaymentRequestStore implements PaymentRequestStore {
     };
   }
 
-  async getByKey(refId: string, unitRef: string, rail: Rail): Promise<PaymentRequest | null> {
+  async getByKey(
+    communityId: string,
+    refId: string,
+    unitRef: string,
+    rail: Rail
+  ): Promise<PaymentRequest | null> {
     const res = await this.pool.query(
-      `SELECT * FROM payment_request WHERE ref_id = $1 AND unit_ref = $2 AND rail = $3`,
-      [refId, unitRef, rail]
+      `SELECT * FROM payment_request
+        WHERE community_id = $1 AND ref_id = $2 AND unit_ref = $3 AND rail = $4`,
+      [communityId, refId, unitRef, rail]
     );
     return res.rows[0] ? this.toRow(res.rows[0]) : null;
   }
 
-  async findByReference(referenceCode: string): Promise<PaymentRequest | null> {
+  async findByReference(communityId: string, referenceCode: string): Promise<PaymentRequest | null> {
     const res = await this.pool.query(
-      `SELECT * FROM payment_request WHERE reference_code = $1`,
-      [referenceCode]
+      `SELECT * FROM payment_request WHERE community_id = $1 AND reference_code = $2`,
+      [communityId, referenceCode]
     );
     return res.rows[0] ? this.toRow(res.rows[0]) : null;
   }
@@ -81,11 +87,11 @@ export class PostgresPaymentRequestStore implements PaymentRequestStore {
          (ref_id, unit_ref, community_id, rail, reference_code, amount_basis,
           currency, recipient, invoice, fiat_locked_basis, amount_sat, expires_at, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       ON CONFLICT (ref_id, unit_ref, rail) DO NOTHING`,
+       ON CONFLICT (community_id, ref_id, unit_ref, rail) DO NOTHING`,
       [
+        req.communityId,
         req.refId,
         req.unitRef,
-        req.communityId,
         req.rail,
         req.referenceCode,
         req.amountBasis,
@@ -100,10 +106,15 @@ export class PostgresPaymentRequestStore implements PaymentRequestStore {
     );
   }
 
-  async markStatus(referenceCode: string, status: PaymentRequestStatus): Promise<void> {
+  async markStatus(
+    communityId: string,
+    referenceCode: string,
+    status: PaymentRequestStatus
+  ): Promise<void> {
     await this.pool.query(
-      `UPDATE payment_request SET status = $2, updated_at = now() WHERE reference_code = $1`,
-      [referenceCode, status]
+      `UPDATE payment_request SET status = $2, updated_at = now()
+        WHERE community_id = $1 AND reference_code = $2`,
+      [communityId, referenceCode, status]
     );
   }
 }

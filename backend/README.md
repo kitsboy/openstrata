@@ -15,6 +15,7 @@ site's `/docs` bootstrap steps describe.
 | **Billing** | Automated monthly strata-fee billing + late notices (posts charges to the ledger). | `src/billing/` |
 | **Enforcement** | CRT-proof bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps). | `src/enforcement/` |
 | **Rails** | Sovereign payment rails — Bitcoin on-chain, Lightning (LNURL/BOLT-12), Liquid, PayNym (BIP-47), Nostr. Recipient validation + quoting (LNURL 15-min CAD lock). | `src/rails/` |
+| **Auth** | Multi-tenant councils — zero-dependency HS256 JWTs (node:crypto), scrypt password hashing, admin/treasurer/member role gates. Every `/api/v1/*` route except `/health` + Rosa derives its tenant from the token. | `src/auth/` |
 | **API** | Fastify wire-up exposing `/api/v1/*` + `/health`. | `src/api/server.ts` |
 
 ## Stack
@@ -71,11 +72,21 @@ Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 (repeatable, idempotent). The `docker-compose.yml` `db` service also mounts
 `src/ledger/schema.sql` into Postgres `initdb` for fresh volumes.
 
+## Auth (multi-tenant councils)
+
+Bearer JWTs (`Authorization: Bearer <token>`) signed with `AUTH_SECRET` (set a
+strong random value on the host: `openssl rand -base64 48`). The token's `cid`
+claim is the tenant — tenant-scoped routes derive the ledger `community` from
+it and ignore body `community` fields. Roles: `admin` (all writes incl. fines +
+user management), `treasurer` (financial writes, no fines), `member`
+(read-only + own-unit actions). Open signup via `POST /api/v1/auth/register`.
+
 ## API surface (scaffold)
 
 - `GET  /health`
+- `POST /api/v1/auth/register` | `/login` | `GET /auth/me` | `GET|POST /auth/users` (admin)
 - `GET  /api/v1/units` — canonical unit/lot master data + AR fund codes
-- `GET  /api/v1/ledger/balance?community=&fund=`
+- `GET  /api/v1/ledger/balance?fund=`
 - `POST /api/v1/ledger/post`
 - `POST /api/v1/treasury/authorize`
 - `POST /api/v1/rosa/query`
@@ -88,6 +99,10 @@ Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 - `POST /api/v1/payments/confirm` — mark a quoted payment paid AND post it to the unit's AR ledger (reconcile like an e-transfer)
 - `POST /api/v1/forms` — Form B (information certificate) / Form F (payment certificate) issuance
 - `POST /api/v1/meetings/quorum` | `/vote` — AGM/SGM/council quorum + threshold voting
+
+> **Deploy gate:** the Postgres adapters have a dedicated smoke suite
+> (`tests/e2e-smoke.test.ts`) that runs against a live `DATABASE_URL` (CI spins
+> up `pgvector/pgvector:pg17` and runs migrate + the suite on every push).
 
 > **Scaffold note:** the Postgres/pgvector + Ollama adapters are the integration
 > seams. Currently the API boots Rosa with the keyword fallback retriever and a

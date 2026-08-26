@@ -70,3 +70,44 @@ jobs:
 
       - name: Backend unit tests
         run: npm test
+
+  backend-e2e:
+    name: Phase 3 backend — Postgres e2e smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: openstrata
+          POSTGRES_PASSWORD: openstrata-dev-only
+          POSTGRES_DB: openstrata
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U openstrata -d openstrata"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://openstrata:openstrata-dev-only@localhost:5432/openstrata
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Apply migrations (0001..0004)
+        run: npm run migrate
+
+      - name: Postgres e2e smoke suite (register -> ledger -> billing -> payments -> forms -> meetings)
+        run: npm run test -- e2e-smoke

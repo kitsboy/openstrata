@@ -16,6 +16,10 @@ export interface BackendConfig {
   vectorCollection: string;
   crfMandatoryPct: number;
   reconScanDays: number;
+  /** HS256 JWT signing secret — MUST be a strong random value in production. */
+  authSecret: string;
+  /** Bearer token lifetime in seconds (default 12h). */
+  authTokenTtl: number;
   /** Sovereign payment rails — which are enabled and where their daemons live. */
   rails: RailRegistry;
 }
@@ -38,6 +42,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     vectorCollection: env.VECTOR_COLLECTION ?? 'bc_spa_rta_crt',
     crfMandatoryPct: int(env.CRF_MANDATORY_PCT, 10),
     reconScanDays: int(env.RECON_SCAN_DAYS, 90),
+    authSecret: env.AUTH_SECRET ?? 'dev-only-insecure-secret-change-me',
+    authTokenTtl: int(env.AUTH_TOKEN_TTL, 12 * 60 * 60),
     rails: {
       fiat: { enabled: true },
       onchain: { enabled: env.BITCOIN_RAIL_ENABLED === 'true', endpoint: env.LND_URL || env.BITCOIN_NODE_URL },

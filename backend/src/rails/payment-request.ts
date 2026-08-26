@@ -27,11 +27,25 @@ export interface PaymentRequest {
   createdAt: string;
 }
 
+/**
+ * Every lookup is scoped by `communityId` (the tenant/council) so two councils
+ * can quote the same (refId, unitRef, rail) without colliding and a reference
+ * code from council A can never resolve to council B's payment.
+ */
 export interface PaymentRequestStore {
-  getByKey(refId: string, unitRef: string, rail: Rail): Promise<PaymentRequest | null>;
-  findByReference(referenceCode: string): Promise<PaymentRequest | null>;
+  getByKey(
+    communityId: string,
+    refId: string,
+    unitRef: string,
+    rail: Rail
+  ): Promise<PaymentRequest | null>;
+  findByReference(communityId: string, referenceCode: string): Promise<PaymentRequest | null>;
   save(req: PaymentRequest): Promise<void>;
-  markStatus(referenceCode: string, status: PaymentRequestStatus): Promise<void>;
+  markStatus(
+    communityId: string,
+    referenceCode: string,
+    status: PaymentRequestStatus
+  ): Promise<void>;
 }
 
 export interface QuoteSeed {
@@ -93,7 +107,7 @@ export async function getOrCreateQuote(
   buildInvoice: () => RailInvoice,
   now = new Date().toISOString()
 ): Promise<{ request: PaymentRequest; created: boolean }> {
-  const existing = await store.getByKey(seed.refId, seed.unitRef, seed.rail);
+  const existing = await store.getByKey(seed.communityId, seed.refId, seed.unitRef, seed.rail);
   if (existing) return { request: existing, created: false };
 
   const invoice = buildInvoice();

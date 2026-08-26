@@ -50,6 +50,9 @@ services:
       # Rosa embedding/LLM endpoints (local Ollama on the same host by default).
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       VECTOR_COLLECTION: ${VECTOR_COLLECTION:-bc_spa_rta_crt}
+      # HS256 JWT signing secret for council accounts (must be set on the host).
+      AUTH_SECRET: ${AUTH_SECRET:-dev-only-insecure-secret-change-me}
+      AUTH_TOKEN_TTL: ${AUTH_TOKEN_TTL:-43200}
     ports:
       # Local dev only; reach the API over Tailscale in production.
       - "127.0.0.1:${API_PORT:-8080}:8080"

@@ -12,6 +12,7 @@ import { LedgerEngine } from './ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from './rosa/rosa.js';
 import { reconcile } from './trf/recon.js';
 import { PostgresPaymentRequestStore } from './rails/payment-store.js';
+import { PostgresAuthStore } from './auth/pg-store.js';
 import { buildServer } from './api/server.js';
 import { DEFAULT_UNITS } from './units/seed.js';
 
@@ -21,6 +22,7 @@ async function main(): Promise<void> {
   const store = new PostgresLedgerStore(config.dbUrl);
   const ledger = new LedgerEngine(store);
   const payments = new PostgresPaymentRequestStore(config.dbUrl);
+  const auth = new PostgresAuthStore(config.dbUrl);
 
   // Stub corpus sourced from the BC compliance knowledge base (docs). In
   // production this is loaded from the pgvector `corpus_chunk` table and the
@@ -33,12 +35,15 @@ async function main(): Promise<void> {
     rosa,
     reconcile,
     payments,
+    auth,
     units: DEFAULT_UNITS,
     config: {
       crfMandatoryPct: config.crfMandatoryPct,
       vectorCollection: config.vectorCollection,
       rails: config.rails,
-      cadPerBtc: Number(process.env.CAD_PER_BTC ?? 0) || 0
+      cadPerBtc: Number(process.env.CAD_PER_BTC ?? 0) || 0,
+      authSecret: config.authSecret,
+      authTokenTtl: config.authTokenTtl
     }
   });
 

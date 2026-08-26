@@ -5,6 +5,47 @@ Versioned API surface for the Phase 3 core product. All endpoints are JSON
 (`buildServer` in `src/api/server.ts`) so it runs identically against Postgres
 in production and the in-memory store in tests.
 
+## Auth & tenancy
+
+Every `/api/v1/*` endpoint except `/health` and the Rosa KB (`/api/v1/rosa/*`)
+requires a Bearer token:
+
+```
+Authorization: Bearer <jwt>
+```
+
+Tokens are HS256 JWTs signed with `AUTH_SECRET` (set a strong random value in
+production: `openssl rand -base64 48`). The token's `cid` claim IS the tenant
+(council) — tenant-scoped routes derive the ledger `community` from the token
+and never trust a `community` field in the body. Roles:
+
+| Role | Powers |
+|------|--------|
+| `admin` | everything, incl. bylaw fines + user management |
+| `treasurer` | financial writes (ledger, billing, reconcile); no fines |
+| `member` | read-only + own-unit actions (quote/confirm, forms, voting) |
+
+Missing/invalid/expired token → `401`; insufficient role → `403`.
+
+### `POST /api/v1/auth/register`
+Open signup: creates a council + its first user (admin) and returns a token.
+```json
+{ "councilName": "Cedar Point", "email": "admin@cedar.example", "password": "correct-horse" }
+```
+
+### `POST /api/v1/auth/login`
+```json
+{ "email": "admin@cedar.example", "password": "correct-horse" }
+```
+→ `{ ok, token, user }`
+
+### `GET /api/v1/auth/me`
+Returns the authenticated user + their council.
+
+### `GET|POST /api/v1/auth/users` (admin only)
+List the council's users, or create a `treasurer`/`member` account. Creation
+returns a one-time `temporaryPassword` for the admin to share.
+
 ## Health
 
 `GET /health`
@@ -14,18 +55,18 @@ in production and the in-memory store in tests.
 
 ## Trust ledger
 
-### `GET /api/v1/ledger/balance?community=&fund=`
-Verified balance for one community+fund account (derived from the journal).
+### `GET /api/v1/ledger/balance?fund=`
+Verified balance for one fund of the caller's council (derived from the
+journal; the community comes from the token).
 ```json
 { "balanceBasis": 129350, "entryCount": 42, "headTally": "a1b2c3d4e5..." }
 ```
 
-### `POST /api/v1/ledger/post`
-Append a single credit/debit. Idempotent when sent with an `Idempotency-Key`
-header (replays return the cached result).
+### `POST /api/v1/ledger/post` (treasurer+)
+Append a single credit/debit to the caller's council ledger. Idempotent when
+sent with an `Idempotency-Key` header (replays return the cached result).
 ```json
 {
-  "community": "demo",
   "fund": "operating",
   "amountBasis": 120000,
   "kind": "credit",
@@ -34,9 +75,8 @@ header (replays return the cached result).
   "referenceCode": "pay-101-202601"
 }
 ```
-Body validation via Fastify JSON schema: `required` = community, fund,
-amountBasis, kind, type; `amountBasis` must be a non-zero integer; `kind` is
-`credit|debit`.
+Body validation via Fastify JSON schema: `required` = fund, amountBasis, kind,
+type; `amountBasis` must be a non-zero integer; `kind` is `credit|debit`.
 
 ## Units — canonical master data
 
@@ -99,12 +139,11 @@ Raw retrieval — returns ranked citations without composing an answer.
 
 ## Billing
 
-### `POST /api/v1/billing/run`
+### `POST /api/v1/billing/run` (treasurer+)
 Runs a monthly billing cycle (charges + late notices) and posts each charge to
-the unit's AR ledger account.
+the unit's AR ledger account (community = the caller's council).
 ```json
 {
-  "community": "demo",
   "period": "2026-02",
   "fees": [{ "unitId": "U-101", "amountBasis": 22000 }],
   "dueDay": 1, "graceDays": 7, "lateFeeBasis": 500,
@@ -119,11 +158,11 @@ receives the validated next state.
 
 | Endpoint | Action |
 |----------|--------|
-| `POST /api/v1/bylaw/complaint`   | Create a complaint (`standard` \| `short_term_rental`) |
-| `POST /api/v1/bylaw/complaint/notice` | Issue the written notice |
-| `POST /api/v1/bylaw/status`      | Check if a fine can be imposed (gates + caps) |
-| `POST /api/v1/bylaw/fine`        | Impose a fine (`councilMinutesRef` + `amountBasis`) |
-| `POST /api/v1/bylaw/nofine`      | Council votes no fine, records minutes, closes case |
+| `POST /api/v1/bylaw/complaint`   | Create a complaint (`standard` \| `short_term_rental`) — any user |
+| `POST /api/v1/bylaw/complaint/notice` | Issue the written notice — treasurer+ |
+| `POST /api/v1/bylaw/status`      | Check if a fine can be imposed (gates + caps) — any user |
+| `POST /api/v1/bylaw/fine`        | Impose a fine (`councilMinutesRef` + `amountBasis`) — admin only |
+| `POST /api/v1/bylaw/nofine`      | Council votes no fine, records minutes, closes case — admin only |
 
 ## Sovereign rails
 
@@ -134,8 +173,10 @@ receives the validated next state.
 
 ### `POST /api/v1/payments/quote`
 Build a rail-specific invoice/request carrying a shared `referenceCode`.
-Idempotent per `(refId, unitRef, rail)` — replays return the original quote with
-`created: false`. LNURL quotes carry a 15-minute CAD rate lock.
+Idempotent per `(council, refId, unitRef, rail)` — replays return the original
+quote with `created: false`. LNURL quotes carry a 15-minute CAD rate lock.
+The council comes from the token, so two councils quoting the same `refId` stay
+independent.
 ```json
 {
   "rail": "lightning",
@@ -143,16 +184,16 @@ Idempotent per `(refId, unitRef, rail)` — replays return the original quote wi
   "unitRef": "U-101",
   "amountBasis": 22000,
   "currency": "CAD",
-  "recipient": "lnurl1dp68...",
-  "communityId": "demo"
+  "recipient": "lnurl1dp68..."
 }
 ```
 
 ### `POST /api/v1/payments/confirm`
 Mark a quoted payment paid **and** post it to the unit's AR ledger (the same way
-Ziggy reconciles an e-transfer). Requires prior `quote`.
+Ziggy reconciles an e-transfer). Requires prior `quote`. The lookup is
+council-scoped — a council can never confirm another council's quote.
 ```json
-{ "referenceCode": "pay-fees-2026-02-U-101", "community": "demo" }
+{ "referenceCode": "pay-fees-2026-02-U-101" }
 ```
 
 ## Conveyancing — Form B / Form F

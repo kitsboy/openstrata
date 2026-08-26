@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
 import { bech32Encode } from '../src/rails/rails.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
 
@@ -20,7 +20,13 @@ const corpus: SourceRecord[] = [
   }
 ];
 
+const AUTH_SECRET = 'test-secret-0123456789';
+
 let app: FastifyInstance;
+let adminToken: string;
+let councilId: string;
+
+const auth = (token: string) => ({ authorization: `Bearer ${token}` });
 
 beforeAll(async () => {
   app = await buildServer(
@@ -29,6 +35,7 @@ beforeAll(async () => {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
+      auth: new MemAuthStore(),
       units: DEFAULT_UNITS,
       config: {
         crfMandatoryPct: 10,
@@ -38,12 +45,24 @@ beforeAll(async () => {
           onchain: { enabled: true },
           lightning: { enabled: true, endpoint: 'grpc://127.0.0.1:10009' }
         },
-        cadPerBtc: 50_000
+        cadPerBtc: 50_000,
+        authSecret: AUTH_SECRET,
+        authTokenTtl: 3600
       }
     },
     { logger: false }
   );
   await app.ready();
+
+  const reg = await app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/register',
+    payload: { councilName: 'Server Test Council', email: 'admin@server.test', password: 'password123' }
+  });
+  expect(reg.statusCode).toBe(200);
+  adminToken = reg.json().token as string;
+  councilId = reg.json().council.id as string;
+  expect(councilId).toBeTruthy();
 });
 
 afterAll(async () => {
@@ -57,12 +76,12 @@ describe('fastify API', () => {
     expect(res.json().service).toBe('openstrata-backend');
   });
 
-  it('POST /api/v1/ledger/post then GET ledger/balance', async () => {
+  it('POST /api/v1/ledger/post then GET ledger/balance (scoped to the token council)', async () => {
     const post = await app.inject({
       method: 'POST',
       url: '/api/v1/ledger/post',
+      headers: auth(adminToken),
       payload: {
-        community: 'demo',
         fund: 'operating',
         amountBasis: 4200,
         kind: 'credit',
@@ -76,7 +95,8 @@ describe('fastify API', () => {
 
     const bal = await app.inject({
       method: 'GET',
-      url: '/api/v1/ledger/balance?community=demo&fund=operating'
+      url: '/api/v1/ledger/balance?fund=operating',
+      headers: auth(adminToken)
     });
     expect(bal.statusCode).toBe(200);
     expect(bal.json().balanceBasis).toBe(4200);
@@ -86,6 +106,7 @@ describe('fastify API', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/treasury/authorize',
+      headers: auth(adminToken),
       payload: {
         balances: { crf: 500_000 },
         spend: { amountBasis: 100_000, fundCode: 'crf', poRef: 'PO-200', category: 'roofing' }
@@ -95,7 +116,7 @@ describe('fastify API', () => {
     expect(res.json()).toMatchObject({ allow: false, blocked: 'crf-floor' });
   });
 
-  it('POST /api/v1/rosa/query returns a citation-scoped answer', async () => {
+  it('POST /api/v1/rosa/query returns a citation-scoped answer (public)', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/rosa/query',
@@ -122,6 +143,7 @@ describe('fastify API', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/treasury/reconcile',
+      headers: auth(adminToken),
       payload: {
         reference: 'Unit 302 May',
         units: [
@@ -138,8 +160,8 @@ describe('fastify API', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/billing/run',
+      headers: auth(adminToken),
       payload: {
-        community: 'bdemo',
         period: '2026-09',
         dueDay: 1,
         graceDays: 5,
@@ -165,6 +187,7 @@ describe('fastify API', () => {
     const created = await app.inject({
       method: 'POST',
       url: '/api/v1/bylaw/complaint',
+      headers: auth(adminToken),
       payload: {
         id: 'C-1', unitId: '302', bylawRef: 'STR ban', breachKind: 'short_term_rental',
         receivedAt: '2026-08-01', evidence: true
@@ -176,6 +199,7 @@ describe('fastify API', () => {
     // Issue notice -> 14-day lock
     const notice = await app.inject({
       method: 'POST', url: '/api/v1/bylaw/complaint/notice',
+      headers: auth(adminToken),
       payload: { complaint: JSON.stringify(complaint), issuedAt: '2026-08-03' }
     });
     const underReview = notice.json().complaint;
@@ -183,6 +207,7 @@ describe('fastify API', () => {
     // In the window -> blocked
     const status = await app.inject({
       method: 'POST', url: '/api/v1/bylaw/status',
+      headers: auth(adminToken),
       payload: { complaint: JSON.stringify(underReview), now: '2026-08-16' }
     });
     expect(status.json().blocked).toBe('BLOCK_FINE_ACTIONS');
@@ -190,6 +215,7 @@ describe('fastify API', () => {
     // After window + minutes -> applied
     const fine = await app.inject({
       method: 'POST', url: '/api/v1/bylaw/fine',
+      headers: auth(adminToken),
       payload: { complaint: JSON.stringify(underReview), now: '2026-08-17', amountBasis: 40_000, councilMinutesRef: 'M-9' }
     });
     expect(fine.json().ok).toBe(true);
@@ -197,7 +223,7 @@ describe('fastify API', () => {
   });
 
   it('GET /api/v1/units lists the canonical building', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/v1/units' });
+    const res = await app.inject({ method: 'GET', url: '/api/v1/units', headers: auth(adminToken) });
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.ok).toBe(true);
@@ -209,7 +235,7 @@ describe('fastify API', () => {
   });
 
   it('GET /api/v1/rails/status lists enabled rails', async () => {
-    const res = await app.inject({ method: 'GET', url: '/api/v1/rails/status' });
+    const res = await app.inject({ method: 'GET', url: '/api/v1/rails/status', headers: auth(adminToken) });
     expect(res.statusCode).toBe(200);
     const rails = res.json().rails.find((r: { rail: string }) => r.rail === 'lightning');
     expect(rails.enabled).toBe(true);
@@ -219,6 +245,7 @@ describe('fastify API', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/payments/quote',
+      headers: auth(adminToken),
       payload: {
         rail: 'lightning',
         refId: 'A9F',
@@ -241,6 +268,7 @@ describe('fastify API', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/payments/quote',
+      headers: auth(adminToken),
       payload: {
         rail: 'nostr',
         refId: 'B2',
@@ -264,8 +292,8 @@ describe('fastify API', () => {
       currency: 'CAD',
       recipient: LNURL
     };
-    const a = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
-    const b = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    const a = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', headers: auth(adminToken), payload: body });
+    const b = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', headers: auth(adminToken), payload: body });
     expect(a.json().created).toBe(true);
     expect(b.json().created).toBe(false);
     expect(b.json().invoice.referenceCode).toBe(a.json().invoice.referenceCode);
@@ -274,6 +302,7 @@ describe('fastify API', () => {
   it('POST payments/confirm posts the confirmed amount to the AR ledger', async () => {
     const quote = await app.inject({
       method: 'POST', url: '/api/v1/payments/quote',
+      headers: auth(adminToken),
       payload: {
         rail: 'lightning', refId: 'CONF1', unitRef: 'unit-302', amountBasis: 50_000,
         currency: 'CAD', recipient: LNURL
@@ -282,12 +311,14 @@ describe('fastify API', () => {
     const ref = quote.json().invoice.referenceCode;
     const confirm = await app.inject({
       method: 'POST', url: '/api/v1/payments/confirm',
-      payload: { referenceCode: ref, community: 'demo' }
+      headers: auth(adminToken),
+      payload: { referenceCode: ref }
     });
     expect(confirm.statusCode).toBe(200);
     expect(confirm.json().ok).toBe(true);
     const bal = await app.inject({
-      method: 'GET', url: `/api/v1/ledger/balance?community=demo&fund=${encodeURIComponent(ref)}`
+      method: 'GET', url: `/api/v1/ledger/balance?fund=${encodeURIComponent(ref)}`,
+      headers: auth(adminToken)
     });
     expect(bal.json().balanceBasis).toBe(50_000);
   });
@@ -295,6 +326,7 @@ describe('fastify API', () => {
   it('POST /api/v1/forms issues a Form F WITHHELD on a debtor unit', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/forms',
+      headers: auth(adminToken),
       payload: { kind: 'F', unitId: '302', requestedAt: '2026-08-25', balanceBasis: 14_500 }
     });
     expect(res.statusCode).toBe(200);
@@ -305,6 +337,7 @@ describe('fastify API', () => {
   it('POST /api/v1/meetings/vote enforces an unresolvable 80% vote', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/meetings/vote',
+      headers: auth(adminToken),
       payload: { threshold: 'eighty', eligible: 10, present: 10, yes: 7, no: 3, abstain: 0 }
     });
     expect(res.json().passed).toBe(false);
@@ -315,6 +348,7 @@ describe('payments/confirm edge cases', () => {
   it('rejects an unknown referenceCode', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/payments/confirm',
+      headers: auth(adminToken),
       payload: { referenceCode: 'pay-nope-missing' }
     });
     expect(res.statusCode).toBe(200);
@@ -324,6 +358,7 @@ describe('payments/confirm edge cases', () => {
   it('rejects a confirm without a referenceCode (schema 400)', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/payments/confirm',
+      headers: auth(adminToken),
       payload: {}
     });
     expect(res.statusCode).toBe(400);
@@ -332,6 +367,7 @@ describe('payments/confirm edge cases', () => {
   it('refuses to confirm twice (already paid)', async () => {
     const quote = await app.inject({
       method: 'POST', url: '/api/v1/payments/quote',
+      headers: auth(adminToken),
       payload: {
         rail: 'lightning', refId: 'CONF2X', unitRef: 'unit-101', amountBasis: 12_000,
         currency: 'CAD', recipient: LNURL
@@ -341,13 +377,15 @@ describe('payments/confirm edge cases', () => {
 
     const first = await app.inject({
       method: 'POST', url: '/api/v1/payments/confirm',
-      payload: { referenceCode: ref, community: 'demo' }
+      headers: auth(adminToken),
+      payload: { referenceCode: ref }
     });
     expect(first.json().ok).toBe(true);
 
     const second = await app.inject({
       method: 'POST', url: '/api/v1/payments/confirm',
-      payload: { referenceCode: ref, community: 'demo' }
+      headers: auth(adminToken),
+      payload: { referenceCode: ref }
     });
     expect(second.json().ok).toBe(false);
     expect(second.json().reason).toMatch(/not quoted/);
@@ -358,11 +396,11 @@ describe('payments/confirm edge cases', () => {
       rail: 'lightning', refId: 'REQ1', unitRef: 'unit-302', amountBasis: 8_000,
       currency: 'CAD', recipient: LNURL
     };
-    const quote = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    const quote = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', headers: auth(adminToken), payload: body });
     const ref = quote.json().invoice.referenceCode;
-    await app.inject({ method: 'POST', url: '/api/v1/payments/confirm', payload: { referenceCode: ref, community: 'demo' } });
+    await app.inject({ method: 'POST', url: '/api/v1/payments/confirm', headers: auth(adminToken), payload: { referenceCode: ref } });
 
-    const re = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', payload: body });
+    const re = await app.inject({ method: 'POST', url: '/api/v1/payments/quote', headers: auth(adminToken), payload: body });
     // Same (refId, unitRef, rail) -> not a fresh quote; the paid request is returned.
     expect(re.json().created).toBe(false);
     expect(re.json().invoice.referenceCode).toBe(ref);
@@ -374,6 +412,7 @@ describe('forms / meetings coverage', () => {
   it('issues a Form B with a 7-day due date', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/forms',
+      headers: auth(adminToken),
       payload: { kind: 'B', unitId: '101', requestedAt: '2026-08-25', balanceBasis: 0 }
     });
     const f = res.json();
@@ -387,6 +426,7 @@ describe('forms / meetings coverage', () => {
   it('issues a Form F on a clear unit (not withheld)', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/forms',
+      headers: auth(adminToken),
       payload: { kind: 'F', unitId: '101', requestedAt: '2026-08-25', balanceBasis: 0, arrearsBasis: 0 }
     });
     const f = res.json();
@@ -397,11 +437,13 @@ describe('forms / meetings coverage', () => {
   it('AGM quorum needs 1/3 of eligible voters (10 of 30)', async () => {
     const fail = await app.inject({
       method: 'POST', url: '/api/v1/meetings/quorum',
+      headers: auth(adminToken),
       payload: { type: 'AGM', eligible: 30, present: 9 }
     });
     expect(fail.json()).toMatchObject({ quorumMet: false, required: 10, present: 9, shortfall: 1 });
     const pass = await app.inject({
       method: 'POST', url: '/api/v1/meetings/quorum',
+      headers: auth(adminToken),
       payload: { type: 'AGM', eligible: 30, present: 10 }
     });
     expect(pass.json().quorumMet).toBe(true);
@@ -410,6 +452,7 @@ describe('forms / meetings coverage', () => {
   it('council quorum is a majority of the council size', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/meetings/quorum',
+      headers: auth(adminToken),
       payload: { type: 'council', eligible: 0, present: 3, councilSize: 5 }
     });
     expect(res.json()).toMatchObject({ quorumMet: true, required: 3, present: 3 });
@@ -418,11 +461,13 @@ describe('forms / meetings coverage', () => {
   it('a rescheduled meeting needs anyone present', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/meetings/quorum',
+      headers: auth(adminToken),
       payload: { type: 'rescheduled', eligible: 30, present: 2 }
     });
     expect(res.json().quorumMet).toBe(true);
     const empty = await app.inject({
       method: 'POST', url: '/api/v1/meetings/quorum',
+      headers: auth(adminToken),
       payload: { type: 'rescheduled', eligible: 30, present: 0 }
     });
     expect(empty.json().quorumMet).toBe(false);
@@ -431,6 +476,7 @@ describe('forms / meetings coverage', () => {
   it('meetings/vote rejects yes+no beyond those present', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/meetings/vote',
+      headers: auth(adminToken),
       payload: { threshold: 'majority', eligible: 5, present: 3, yes: 3, no: 1, abstain: 0 }
     });
     expect(res.json().ok).toBe(false);
@@ -440,11 +486,13 @@ describe('forms / meetings coverage', () => {
   it('meetings/vote passes unanimity only when every effective voter says yes', async () => {
     const aye = await app.inject({
       method: 'POST', url: '/api/v1/meetings/vote',
+      headers: auth(adminToken),
       payload: { threshold: 'unanimous', eligible: 5, present: 5, yes: 5, no: 0, abstain: 0 }
     });
     expect(aye.json().passed).toBe(true);
     const nay = await app.inject({
       method: 'POST', url: '/api/v1/meetings/vote',
+      headers: auth(adminToken),
       payload: { threshold: 'unanimous', eligible: 5, present: 5, yes: 4, no: 1, abstain: 0 }
     });
     expect(nay.json().passed).toBe(false);
