@@ -10,6 +10,9 @@
 
 **Decision (confirmed with Cam):** build the client configurable now (`PUBLIC_API_BASE_URL` + runtime override + demo fallback); the exposure path (Tailnet-only vs public behind auth + CORS) is decided at deploy time, both documented in `docs/DEPLOYMENT.md`. Follow-up: wire everything that has a real backend counterpart (ledger balances, CAD/BTC, units) and leave genuinely-unavailable series (monthly income/expense history, rental index, bank-feed e-transfers) as clearly-labeled demo data
 
+**Git State:**
+- Committed as **`a6bd8ad`** — "Wire the frontend dashboard to the live /api/v1 backend" (22 files, +1128/−43; follows `af9ab77`/`697dd26` from the auth session) and **pushed to `origin/main`** (branch in sync, working tree clean)
+
 **Remaining for live data:** deploy a host, set `PUBLIC_API_BASE_URL` at build (or `openstrata-api-base` at runtime), and sign in — the wiring is done and falls back to demo until then
 
 ---
