@@ -1,11 +1,20 @@
-# openstrata.giveabit.io — Cloudflare Pages _headers (security sweep 2026-08-20)
+# openstrata.giveabit.io — Cloudflare Pages _headers
+#
+# CSP notes (2026-08-26 sweep): the allowlist must cover what the page actually
+# loads — Google Fonts (stylesheets + woff2), the self-hosted Umami analytics,
+# the Satohash/mempool APIs, and the configurable live backend origin. The
+# frontend API base is build-time configurable (PUBLIC_API_BASE_URL) and may be
+# any https host, so connect-src permits https: — tighten to an explicit origin
+# in this file if the API is pinned to one host. 'unsafe-inline' stays for the
+# inline theme bootstrap + SvelteKit hydration. Site is HTTPS-only, so
+# upgrade-insecure-requests is safe to enforce.
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.satohash.io https://mempool.space; worker-src 'self'; manifest-src 'self'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' 'unsafe-inline' https://analytics.giveabit.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://api.satohash.io https://mempool.space https://analytics.giveabit.io; worker-src 'self'; manifest-src 'self'
 
 # HQ product metrics envelope — short cache, CORS for hq.giveabit.io poll
 /metrics.json

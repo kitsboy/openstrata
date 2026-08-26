@@ -1,3 +1,15 @@
+## Session — 2026-08-26 (landing security + shell tightening, v0.3.3)
+
+**Done:**
+- **CSP was blocking its own page** — `static/_headers` allowlisted neither Google Fonts (so Manrope/DM Mono silently fell back to system fonts — the “floating” look) nor the Umami analytics script (so telemetry never ran), and `connect-src` would have blocked the live API origin from the new frontend wiring. Fixed: `style-src` += `https://fonts.googleapis.com`, `font-src` += `https://fonts.gstatic.com`, `script-src` += `https://analytics.giveabit.io`, `connect-src` += `https:` + analytics (documented — the API origin is build-time configurable, so pin it in `_headers` if it ever becomes one host), plus `upgrade-insecure-requests` (site is HTTPS-only). Kept `'unsafe-inline'` for the theme bootstrap + SvelteKit hydration; `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS untouched
+- **Fonts load once:** removed the duplicate `@import url(googleapis…)` from `src/app.css` (the head `<link>` already loads the same families with preconnect) and dropped the unused `Inter` family from `app.html` — verified the built CSS has zero googleapis references
+- **Shell tightened** (user: “solid, tight” — scope confirmed as tighten-the-existing-shell, no content restructuring): content max-width 1410→1280px, main grid gap 38→28, metric grid gap/margins down, card min-heights + padding down, panel padding 19→17, right-stack gap 17→14, welcome-row/section-heading margins down, footer max-width synced to 1280, and the card shadow changed from a soft 12px glow to a crisp 2-layer shadow (`0 1px 2px … , 0 4px 14px …`, dark-mode equivalent) so cards sit anchored instead of floating
+- **Checks:** `svelte-check` 0/0, 42 frontend tests green, i18n 523 keys parity green, build clean
+
+**Git State:** uncommitted (working tree; follows `a6bd8ad`/`0969190` on main)
+
+---
+
 ## Session — 2026-08-26 (frontend wired to the live backend, v0.3.2)
 
 **Done (#20 — wire the frontend dashboard to `/api/v1/*`):**
