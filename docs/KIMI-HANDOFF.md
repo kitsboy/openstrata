@@ -14,7 +14,7 @@
 
 **Verified in a real browser (system Chrome + CDP) at 1698, 1440, 1280, 1024 and 390px widths:** `scrollWidth == clientWidth` everywhere (zero horizontal overflow), sidebar `top: 0` and `bottom == viewport height` with **help + footer buttons visible at every size**, click-through confirmed (sidebar Legal → `/legal` loads), `/tools` header scrolls internally with no page overflow. Build + svelte-check 0/0 + 45 tests + i18n audit all green.
 
-**Git State:** commits pending — main work commit + handoff-SHA follow-up; push after Cam's go.
+**Git State:** committed as **`15605b1`** — "Fix landing page: standalone app shell, working links, no overflow" (7 files, +88/−44), pushed to `origin/main` (branch in sync).
 
 ---
 
