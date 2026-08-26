@@ -5,6 +5,7 @@
  */
 
 import pg from 'pg';
+import '../db/int8.js';
 import type {
   PaymentRequest,
   PaymentRequestStatus,
@@ -89,9 +90,9 @@ export class PostgresPaymentRequestStore implements PaymentRequestStore {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT (community_id, ref_id, unit_ref, rail) DO NOTHING`,
       [
-        req.communityId,
         req.refId,
         req.unitRef,
+        req.communityId,
         req.rail,
         req.referenceCode,
         req.amountBasis,

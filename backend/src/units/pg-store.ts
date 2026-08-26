@@ -5,6 +5,7 @@
  */
 
 import pg from 'pg';
+import '../db/int8.js';
 import type { OccupancyStatus, UnitMember, UnitRecord } from './model.js';
 import { demoUnits } from './model.js';
 import type { UnitStore } from './store.js';

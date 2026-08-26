@@ -5,6 +5,7 @@
  */
 
 import { randomBytes } from 'node:crypto';
+import '../db/int8.js';
 import pg from 'pg';
 import type { Council, UserRecord, UserRole } from './model.js';
 import type { AuthStore, CreateUserInput } from './store.js';

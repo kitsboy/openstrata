@@ -4,6 +4,7 @@
  */
 
 import pg from 'pg';
+import '../db/int8.js';
 import type { MemberInput, MemberRecord, MemberRoleLabel } from './model.js';
 import { normalizeEmail } from './model.js';
 import type { MemberStore } from './store.js';

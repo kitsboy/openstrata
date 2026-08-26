@@ -9,6 +9,7 @@
  */
 
 import pg from 'pg';
+import '../db/int8.js';
 import type { LedgerStore, AccountId } from './ledger.js';
 import type { LedgerEntryRow } from './model.js';
 
@@ -75,7 +76,7 @@ export class PostgresLedgerStore implements LedgerStore {
     // Upsert the owning group first (idempotent across runs / concurrent calls).
     const g = await this.pool.query<{ id: number }>(
       `INSERT INTO account_group (community_id, name, currency)
-       VALUES ($1, $1, $3)
+       VALUES ($1, $2, $3)
        ON CONFLICT (community_id, name) DO UPDATE SET name = EXCLUDED.name
        RETURNING id`,
       [groupId, groupId, currency]
@@ -97,12 +98,19 @@ export class PostgresLedgerStore implements LedgerStore {
   async nextSeq(accountId: number): Promise<number> {
     const client = await this.pool.connect();
     try {
-      await client.query('LOCK TABLE ledger_entry IN SHARE ROW EXCLUSIVE MODE');
-      const res = await client.query<{ s: number }, [number]>(
-        `SELECT COALESCE(MAX(seq), 0) + 1 AS s FROM ledger_entry WHERE account_id = $1`,
-        [accountId]
-      );
-      return res.rows[0].s;
+      await client.query('BEGIN');
+      try {
+        await client.query('LOCK TABLE ledger_entry IN SHARE ROW EXCLUSIVE MODE');
+        const res = await client.query<{ s: number }, [number]>(
+          `SELECT COALESCE(MAX(seq), 0) + 1 AS s FROM ledger_entry WHERE account_id = $1`,
+          [accountId]
+        );
+        await client.query('COMMIT');
+        return res.rows[0].s;
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      }
     } finally {
       client.release();
     }

@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -54,9 +54,9 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -95,9 +95,9 @@ jobs:
     env:
       DATABASE_URL: postgres://openstrata:openstrata-dev-only@localhost:5432/openstrata
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -106,7 +106,7 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
-      - name: Apply migrations (0001..0004)
+      - name: Apply all migrations (0001..0006+)
         run: npm run migrate
 
       - name: Postgres e2e smoke suite (register -> ledger -> billing -> payments -> forms -> meetings)
