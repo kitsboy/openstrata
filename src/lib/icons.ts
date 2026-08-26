@@ -81,5 +81,9 @@ export const icons = {
 
 	download: stroke('<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/>'),
 
-	file: stroke('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>')
+	file: stroke('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>'),
+
+	eye: stroke('<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>'),
+
+	'eye-off': stroke('<path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0112 5c6.5 0 10 7 10 7a17.4 17.4 0 01-2.9 3.8M6.6 6.6A17.6 17.6 0 002 12s3.5 7 10 7a9.8 9.8 0 004.4-1M9.9 9.9a2.8 2.8 0 104 4"/>')
 } as const;

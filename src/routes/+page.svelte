@@ -142,7 +142,6 @@
         Promise.allSettled([fetchLedgerBalance('crf'), fetchLedgerBalance('operating')]).then(() => {
           balancesLoading = false;
         });
-        if (showAuth) showAuth = false;
       }
     });
     return unsubscribe;
@@ -294,8 +293,8 @@
             <button class="profile-button" aria-expanded={showAuthMenu} aria-label={$copy.openProfileMenu} onclick={() => (showAuthMenu = !showAuthMenu)}><span class="profile-avatar">{profileInitials}</span><span class="profile-name">{$auth.council?.name ?? $auth.user.displayName}</span><Icon name="chevron-down" class="h-3 w-3" /></button>
             {#if showAuthMenu}
               <div class="auth-menu" role="menu" aria-label={$copy.profile}>
-                <div class="auth-menu-user"><strong>{$auth.user.displayName}</strong><span>{$auth.user.email}</span></div>
-                <button role="menuitem" onclick={requestSignOut}>{$copy.signOut}</button>
+                <div class="auth-menu-user"><strong>{$auth.user.displayName}</strong><span>{$auth.user.email}</span>{#if $auth.council}<em>{$auth.council.name} · {$auth.user.role}</em>{/if}</div>
+                <button role="menuitem" onclick={requestSignOut}><span>{$copy.signOut}</span><Icon name="arrow-up-right" class="h-3 w-3" /></button>
               </div>
             {/if}
           </div>
