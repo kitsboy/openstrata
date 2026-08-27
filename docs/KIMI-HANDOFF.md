@@ -1,3 +1,13 @@
+## Session — 2026-08-27 · Breez donate modal (Grok M3)
+
+**Done:**
+- `donateInfo` → `openstrata@breez.tips` + `bc1p48yca…4yd42`. DonateModal now renders real QR (not decorative fake SVG) (`01033ed`).
+- Homepage `/` does **not** show the donate header/footer (layout `{#if pathname === '/'}` renders children only). Modal is on inner pages e.g. `/about`.
+- Live-verified: `/about` Donate → Bitcoin tab `bc1p48yca…`; Lightning tab `openstrata@breez.tips`.
+
+**Git State:** SHA `01033ed` on `origin/main`.
+
+---
 ## Session — 2026-08-26 · Design-system release v0.3.9 — one card language, dark-mode cascade fix (4 commits, pushed `137c991`)
 
 **Task:** "Do all 3 suggestions in batches and push" extending the earlier landing/dashboard polish. Shipped as a cohesive frontend design-system pass across the dashboard + all 13 marketing routes, then a full-page visual review that uncovered + fixed a real site-wide bug.
