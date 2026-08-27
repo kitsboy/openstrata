@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { donateInfo } from '$lib/data';
 	import Icon from './Icon.svelte';
+	import QRCode from 'qrcode';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -8,6 +9,8 @@
 	let copied = $state(false);
 	let btcRate = $state(98420);
 	let cadRate = $state(1.38);
+	let btcQr = $state('');
+	let lnQr = $state('');
 
 	$effect(() => {
 		if (!open) return;
@@ -16,6 +19,37 @@
 			cadRate = 1.35 + Math.random() * 0.08;
 		}, 3000);
 		return () => clearInterval(interval);
+	});
+
+	$effect(() => {
+		let cancelled = false;
+		(async () => {
+			try {
+				const [btc, ln] = await Promise.all([
+					QRCode.toString(`bitcoin:${donateInfo.bitcoin}`, {
+						type: 'svg',
+						margin: 1,
+						width: 160,
+						errorCorrectionLevel: 'M'
+					}),
+					QRCode.toString(`lightning:${donateInfo.lightning}`, {
+						type: 'svg',
+						margin: 1,
+						width: 160,
+						errorCorrectionLevel: 'M'
+					})
+				]);
+				if (!cancelled) {
+					btcQr = btc;
+					lnQr = ln;
+				}
+			} catch {
+				/* QR library unavailable — copy address still works */
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function copy(text: string) {
@@ -106,19 +140,10 @@
 			{#if tab === 'btc'}
 				<div class="space-y-4">
 					<div class="flex justify-center">
-						<div class="rounded-xl border-2 border-dashed border-brand-200 bg-surface-2 p-4">
-							<svg viewBox="0 0 100 100" class="h-32 w-32">
-								<rect width="100" height="100" fill="white"/>
-								{#each Array(8) as _, row}
-									{#each Array(8) as _, col}
-										{@const on = (row * 8 + col + row) % 3 !== 0}
-										{#if on}
-											<rect x={10 + col * 10} y={10 + row * 10} width="8" height="8" fill="#1e293b" rx="1"/>
-										{/if}
-									{/each}
-								{/each}
-								<rect x="35" y="35" width="30" height="30" rx="4" fill="#f7931a"/>
-							</svg>
+						<div class="rounded-xl border-2 border-dashed border-brand-200 bg-white p-3">
+							{#if btcQr}
+								<div class="h-32 w-32 [&_svg]:h-full [&_svg]:w-full">{@html btcQr}</div>
+							{/if}
 						</div>
 					</div>
 					<div>
@@ -139,27 +164,17 @@
 			{:else}
 				<div class="space-y-4">
 					<div class="flex justify-center">
-						<div class="rounded-xl border-2 border-lightning/30 bg-gradient-to-br from-amber-50 to-yellow-50 p-4">
-							<svg viewBox="0 0 100 100" class="h-32 w-32">
-								<rect width="100" height="100" fill="#fffbeb"/>
-								{#each Array(10) as _, row}
-									{#each Array(10) as _, col}
-										{@const on = (row * 3 + col * 7) % 5 < 3}
-										{#if on}
-											<rect x={5 + col * 9} y={5 + row * 9} width="7" height="7" fill="#1e293b" rx="1"/>
-										{/if}
-									{/each}
-								{/each}
-								<rect x="38" y="38" width="24" height="24" rx="3" fill="#fbbf24"/>
-								<path d="M48 42 L44 56 H50 L46 68 L56 50 H50 Z" fill="white"/>
-							</svg>
+						<div class="rounded-xl border-2 border-lightning/30 bg-white p-3">
+							{#if lnQr}
+								<div class="h-32 w-32 [&_svg]:h-full [&_svg]:w-full">{@html lnQr}</div>
+							{/if}
 						</div>
 					</div>
 					<p class="text-center text-sm text-slate-600">
-						Scan with any Lightning wallet · 15-min CAD rate lock
+						Scan with any Lightning wallet · Breez Spark
 					</p>
 					<div>
-						<span class="text-xs font-medium text-slate-500 uppercase tracking-wide">LNURL</span>
+						<span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Lightning address</span>
 						<div class="mt-1.5 flex gap-2">
 							<code class="flex-1 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-slate-700 break-all font-mono border border-amber-200">
 								{donateInfo.lightning}

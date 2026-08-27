@@ -145,7 +145,7 @@ export const faqItems = [
 ] as const;
 
 export const donateInfo = {
-	bitcoin: 'bc1qhermesstrata9giveabit7sovereign2treasury4multisig',
-	lightning: 'lnurl1dp68gurn8ghj7um9wfcltv59uzn2umrwessxvcerwwd4x5tmw3h8',
+	bitcoin: 'bc1p48ycay7w46xxpc4cq3m7n6pluxwesn9gxdhgy0y6cky5hw2a38cqu4yd42',
+	lightning: 'openstrata@breez.tips',
 	email: 'hello@giveabit.io'
 } as const;
