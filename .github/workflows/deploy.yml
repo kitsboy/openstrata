@@ -1,23 +1,40 @@
-name: Deploy openstrata to Cloudflare Pages
+name: Verify openstrata production (Cloudflare Pages git integration)
+
+# ONE deployer: the Cloudflare Pages project `openstrata` builds and publishes the `main` branch.
+# The `wrangler pages deploy` step that used to live here (this branch = `talent`, the repo default
+# branch) and the repo's CLOUDFLARE_API_TOKEN secret were retired 2026-09-11
+# (see HQ docs/CLOUDFLARE-TOKEN-RETIREMENT.md).
+#
+# Note: this branch does NOT hold the deployed artifact (main is a Svelte/Vite app; talent is docs).
+# This workflow file only runs for pushes to `main`, and GitHub runs the workflows of the branch that
+# receives the push — so in practice this is an inert, credential-free verifier kept for parity.
+# Manual fallback if the git integration is ever down (needs no credential):
+#   Cloudflare dashboard -> Workers & Pages -> openstrata -> Deployments -> pick the good build ->
+#   "Retry deployment".
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 jobs:
-  deploy:
+  verify_production:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Install
-        run: npm ci || npm install
-      - name: Build
-        run: echo ok
-      - name: Deploy to CF Pages
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx --yes wrangler@4 pages deploy ./. --project-name=openstrata --branch=main
+      - name: Verify live deploy (CF Pages git integration)
+        run: |
+          set -euo pipefail
+          URL="https://openstrata.giveabit.io/"
+          MARKER="OpenStrata"
+          for attempt in $(seq 1 24); do
+            HTML=$(curl -fsSL --max-time 20 "$URL" || true)
+            if [ -n "$HTML" ] && printf '%s' "$HTML" | grep -q "$MARKER"; then
+              echo "OK — $URL live with marker '$MARKER' (attempt $attempt) for $GITHUB_SHA"
+              exit 0
+            fi
+            echo "attempt $attempt: production not live yet (CF Pages git build may still be running)"
+            sleep 10
+          done
+          echo "::error::$URL did not serve '$MARKER' within ~4 minutes — check the Cloudflare Pages deployment for $GITHUB_SHA"
+          exit 1
