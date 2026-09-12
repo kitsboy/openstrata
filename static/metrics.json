@@ -10,9 +10,7 @@
   },
   "health": {
     "status": "green",
-    "message": "Static marketing site — KPIs from repo data (jurisdictions, SPA retention types, compliance score). No live entity DB yet.",
-    "latencyMs": null,
-    "uptimePct24h": null,
+    "message": "Static marketing site — KPIs from repo data (jurisdictions, SPA retention types, compliance score). Curated snapshot, not build-generated: see raw.staticSnapshot for the refresh trigger. No live uptime probe on this origin, so uptimePct24h/latencyMs are omitted rather than reported as null. No live entity DB yet.",
     "dependencies": [
       {
         "id": "cloudflare-pages",
@@ -152,7 +150,7 @@
       "id": "metrics_v1",
       "title": "Product metrics v1",
       "for": ["hq"],
-      "status": "live",
+      "status": "ga",
       "endpoint": "GET /metrics.json",
       "hint": "gab.product-metrics.v1 for HQ cards"
     }
@@ -212,6 +210,11 @@
     "compliance_score_basis": "product module readiness target 85%",
     "umamiWebsiteId": "b918844c-2503-4dcd-bef2-66c103a0ee13",
     "umamiPending": true,
-    "note": "SvelteKit static site. static/metrics.json deploys to origin /metrics.json. Regenerate when jurisdictions, retention types, or live entity counts change."
+    "staticSnapshot": {
+      "curated": "2026-08-25",
+      "generated": false,
+      "refreshTrigger": "Regenerate by hand when src/lib/data.ts jurisdictions, src/lib/compliance.ts retention types, or live entity counts change."
+    },
+    "note": "SvelteKit static site. static/metrics.json deploys to origin /metrics.json (public/metrics.json is kept in sync as the suite-convention mirror). Regenerate when jurisdictions, retention types, or live entity counts change."
   }
 }
