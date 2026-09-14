@@ -1,4 +1,4 @@
-## Session — 2026-09-14 · Phase 2 reconciliation audit & sitemap sync (Grok M3)
+## Session — 2026-09-14 · Phase 2 reconciliation audit + sitemap sync (Grok M3)
 
 **Done:**
 - Confirmed **E-transfer auto-reconciliation prototype (Phase 2) is complete and live**:
@@ -6,10 +6,17 @@
   - 9 unit tests covering clear matches, bare numeric refs, shared surnames, unmatched messages, and punctuation normalization.
   - Interactive `ETransferReconciler.svelte` on `/tools` with live-unit wiring (uses `GET /api/v1/units` when signed-in, demo registry fallback), CSV bank-feed import seam, and manual override dropdown.
   - Backend mirror `backend/src/trf/recon.ts` used by Ziggy treasury state machine so both layers agree.
-- `npm run build` ✅, `npm test` ✅ (85 tests pass), `svelte-check` 0/0.
+  - Decision endpoint `POST /api/v1/treasury/reconcile` returns the same auto/ambiguous/unmatched verdict for treasurer-reviewed inbound transfers.
+- `npm run build` ✅, `npm test` ✅ (85 tests pass), `npm run check` ✅ (0 errors, 0 warnings).
 - Regenerated sitemap with 2026-09-14 dates; committed and pushed (`8a1a78b`).
+- Phase 2 WORKPLAN/ROADMAP/KIMI-HANDOFF/LATEST-UPDATE/.ai_docs status refreshed to **complete**; Phase 3 remaining work is deployment plus Rosa pgvector/Ollama and Ziggy PSBT/broadcast execution.
 
-**Git State:** SHA `8a1a78b` on `origin/main`.
+**Rosa/Ziggy continuity for the next session:**
+- **Rosa** (`backend/src/rosa/`): keyword fallback retriever is live and tested; `composeAnswer` enforces citations-only, fail-closed refusal. `POST /api/v1/rosa/query` and `GET /api/v1/rosa/sources` are exposed. pgvector embeddings + Ollama model choice are NOT selected; migration `0002` and `keywordRetriever` seam are ready — wire real embeddings after model selection.
+- **Ziggy** (`backend/src/ziggy/`): CRF hard cap + PO verification + no-guess reconciliation are real and tested. Authorization verdicts are live via `/api/v1/treasury/authorize`. PSBT/multisig execution and broadcast remain stubs (authorization gate is real). DCA planner `/treasury/dca/plan` and PSBT plan `/treasury/psbt/plan` are wired.
+- Both domains share the no-guess rule with the front-end `src/lib/reconcile.ts`.
+
+**Git State:** SHA `3ff2900` on `origin/main`; sitemap re-generation commit `8a1a78b` included; documentation refresh commits `77b5f68` / `3ff2900`.
 
 ---
 ## Session — 2026-08-27 · Breez donate modal (Grok M3)
@@ -444,7 +451,7 @@
 
 # KIMI HANDOFF — Hermes Strata / OpenStrata
 
-**Date:** July 2026  
+**Date:** September 2026  
 **From:** Grok (Cursor on M3) — "Big Daddy" build session  
 **To:** Kimi (HERMES Orchestrator on M4)  
 **Project folder:** `/Users/cam/projects/openstrata` (sync via Tailscale / git pull)
@@ -537,13 +544,13 @@ Full strategy: `docs/BCFSA-STRATEGY.md`
 - ❌ Do not delete compliance.ts or strata-tool.ts
 - ❌ Do not remove the logo or change brand without Cam approval
 - ❌ Do not dark-theme the site (light theme is intentional)
-- ❌ Do not add backend/API yet without Cam approval (Phase 3)
+- ❌ Do not deploy the backend publicly without a strong `AUTH_SECRET`, exposure review, and the Postgres e2e gate
 - ❌ Do not claim Hermes is a licensed management company
 
-### 3. Phase 2 — Building Template Wizard (LIVE at /tools/wizard)
-Cam wants this next. See `docs/PRODUCT-PLAN.md` → Building Template Engine.
+### 3. Phase 2 — Building Template Wizard (LIVE at /tools/wizard)  ✅ COMPLETE
+Cam wanted this next — now done. See `docs/PRODUCT-PLAN.md` → Building Template Engine.
 
-Wizard steps:
+Wizard steps (all shipped):
 1. ✅ Pick jurisdiction (BC default)
 2. ✅ Enter building address + unit count
 3. ✅ Configure funds (Operating, CRF, sub-accounts)
@@ -553,7 +560,16 @@ Wizard steps:
 7. ✅ Import bylaws or use BC Standard pack
 8. ✅ Review → generate building config JSON
 
-Create as new route: `/tools/wizard` or `/onboard`
+Route: `/tools/wizard` (live).
+
+### 4. Phase 2 — E-Transfer Auto-Reconciliation  ✅ COMPLETE
+Pure matching engine `src/lib/reconcile.ts`, interactive demo on `/tools`, CSV import seam, live-unit wiring, 9 unit tests. Never guesses — ambiguous/unmatched transfer references are flagged for human review.
+
+### 5. Phase 3 — Deployment + Rosa/Ziggy continuity
+- Deploy the Docker stack on a Tailscale host and run `npm run test -- e2e-smoke`.
+- Choose Rosa embed/chat models and wire pgvector/Ollama after the model selection decision.
+- Keep Rosa citations-only and Ziggy no-guess reconciliation; PSBT/broadcast stays stubbed until Cam directs.
+- Do not extend the reconciliation engine to auto-post real bank feeds without an explicit Cam decision and tests.
 
 ### 4. Educate Hermes (M4 Agent)
 Tell Hermes about:
@@ -660,20 +676,20 @@ Next ready:
 
 ## Latest Session Summary (from 2026-07-01 goodbye — session 2)
 
-**Chat topic:** Recovered via whatsup; built live `/pitch` investor deck; rebranded logo to Opens Strata / Always Open · Give A Bit; cleaned About and Docs pages.
+**Chat topic:** Recovered via whatsup; built live `/pitch` investor deck; rebranded logo to Opens Strata / Always Open · Give A Bit; cleaned About and Docs pages; verified E-transfer auto-reconciliation prototype (Phase 2 complete).
 
 **Finished in this session:**
 - `/pitch` — 7-slide investor deck, charts from `marketing.ts`, nav link added
 - Logo rebrand: Opens Strata / Always Open · Give A Bit (header + footer)
 - `/about` — all Hermes mentions removed; Auto E-Transfer + E-Transfer + Lightning labels
 - `/docs` — removed Kimi Handoff and Hermes Framework v2 cards from public index
+- **E-transfer auto-reconciliation prototype (Phase 2 complete)** — pure matching engine + interactive demo, 9 unit tests, live-unit wiring, CSV import seam
 - Pushed to main: `ea682df`, `6ab5fec`
 
 **Still to do:**
 - Confirm Opens Strata vs OpenStrata spelling with Cam
-- Update SOURCE-OF-TRUTH routes (+ `/pitch`) and branding notes
-- E-transfer auto-reconciliation prototype (Phase 2)
-- Phase 3 Docker backend (Rosa + Ziggy)
+- Update SOURCE-OF-TRUTH routes (`/pitch`) and branding notes
+- Phase 3 Docker backend deployment (Rosa + Ziggy)
 - Satohash integration when Cam ready
 - Executive deck (Gamma/docx — Cam's choice)
 
@@ -681,7 +697,7 @@ Next ready:
 - Integrate this summary into MASTER-BRAIN / Kanban
 - Note public rebrand — do NOT revert logo text without Cam
 - Extend site only — do NOT rebuild
-- Phase 2 payments at Cam's direction
+- Phase 3 deployment decision with Cam
 
 **Recovery file:** `SESSION-SUMMARY-2026-07-01.md` (session 2 section)
 
