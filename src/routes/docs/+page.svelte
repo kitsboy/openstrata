@@ -23,6 +23,14 @@
 		{ step: 4, title: 'Treasury', code: 'ziggy simulate --invoice sample.pdf', desc: 'CRF 10% check → PSBT → 3-sig → reconcile.' },
 		{ step: 5, title: 'Deploy UI', code: 'npm run build && docker compose restart web', desc: 'PWA + mobile touch flow.' }
 	];
+
+	const guideIndex = [
+		{ file: 'README.md', title: 'Quick Start', desc: '5-minute guide for new contributors', href: '/docs/manual' },
+		{ file: 'CHANGELOG.md', title: 'Changelog', desc: 'Version history and release notes', href: '/docs/manual' },
+		{ file: 'CONTRIBUTING.md', title: 'Contributing Guide', desc: 'How to contribute code and documentation', href: '/docs/manual' },
+		{ file: 'LICENSE', title: 'License', desc: 'Project license and attributions', href: '/docs/manual' },
+		{ file: 'SUPPORT.md', title: 'Support & Support', desc: 'Getting help and troubleshooting', href: '/docs/manual' }
+	];
 </script>
 
 <svelte:head>
