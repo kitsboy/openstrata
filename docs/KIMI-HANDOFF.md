@@ -1,3 +1,37 @@
+## Session — 2026-09-15 · `/docs/manual` rebuilt clean — the 3 CI errors are gone (Kimi · HERMES/THOR)
+
+**Task:** a handoff reported the manual build was broken and the repo had been reset. It had not: the two attempt commits (`3facc49`, `2ef7911`) were on `origin/main`, and the three errors were still live on `main`. Fixed and cleaned rather than thrown away.
+
+**Root cause (not a routing problem):**
+- All three manual pages carried `const t = (key: string): string => copy[key] ?? key`. `copy` is the `derived` i18n store — not an object — so indexing it is a TS error in all three files, which is what failed `npm run check`. The helper was dead code in every file: deleted, nothing else needed.
+- The real routing defect was different: the hub linked to `/docs/manual/overview`, `/benefits`, `/monthly-review`, which were never created; and `guideIndex` on `/docs` was declared but never rendered, with all five entries pointing at `/docs/manual`.
+
+**What is there now:**
+- `/docs/manual` — hub. Eight cards, every href exists (manual pages + `/docs`, `/compliance`, `/tools`, `/templates`, `/faq`, `/roadmap`).
+- `/docs/manual/welcome` — what it is, who it is for, what it deliberately is not.
+- `/docs/manual/getting-started` — prereqs, six steps, cost tiers, FAQ, troubleshooting, with `PageToc`.
+- `/docs` renders a **Manual sections** grid from the same content module.
+- `src/lib/manual.ts` is the single authoring home for manual copy (pattern: `data.ts` / `legal.ts`). Body content stays canonical English; only page chrome comes from the catalog.
+- No `Manual.svelte` component and no localStorage progress tracking — the site is a static adapter build, and static route pages are the right shape. If interactive progress tracking is ever wanted, it belongs in a route + a small store, not in a component the docs page imports.
+
+**Honesty pass (claims had to be sourced):** removed “$9,000+/year”, “up to 80% less than traditional software”, “starting at $0/month” and the “Video placeholder — setup tutorial would go here” panel. Pricing now reads from `revenueTiers` in `marketing.ts`, module counts from `strata-tool.ts`, licensing from `bcfsaFacts`, positioning from `hermesPositioning` — so the manual cannot drift from `/pitch` and `/tools`. The welcome page keeps an explicit *what it is not* section: software not a management company, no legal advice, 0% custody, demo data always labelled, and some modules are still planned.
+
+**i18n:** 7 new keys — `manualTitle`, `manualIntro`, `manualSections`, `manualReadMore`, `manualWelcomeTitle`, `manualWelcomeIntro`, `manualStartIntro` — added to the type, to `english`, and to all 8 locale override blocks. The audit's French-parity guard is exact, so all nine had to land together; it passes at 779 keys.
+
+**Verified (all real, on `main` + `b1fa2f7`):**
+- `npm run check` → **0 errors, 0 warnings** (was 3 errors).
+- `npm run audit:i18n` → pass, 779 keys, 21 route components; no manual lines in the warning list.
+- `npm test` → **85 passed (11 files)**.
+- `npm run build` → green; all six CI asset assertions present (`index.html`, `manifest.webmanifest`, `sw.js`, `404.html`, `rss.xml`, `sitemap.xml`).
+- Link check on the four built pages → **0 broken internal links**.
+- Rendered in Chromium at **1280 px and 390 px**: no overflow, cards aligned, no cramped text.
+
+**Git state:** `b1fa2f7` on local `main`. **Not pushed** — the standing lane rule is that family code is pushed from M3/Grok unless Cam greenlights it here. `git push` is the only remaining step, and it deploys to Cloudflare Pages.
+
+**Open question for Cam (only decision left):** whether the manual should exist at all was worth asking before the fact; the implementation is clean and reversible with `git revert`, so it is now a yes/no on the push rather than a design debate.
+
+---
+
 ## Session — 2026-09-14 · Phase 2 reconciliation audit + sitemap sync (Grok M3)
 
 **Done:**

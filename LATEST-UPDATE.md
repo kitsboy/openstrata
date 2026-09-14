@@ -2,7 +2,7 @@
 
 **Brief:** The broken `/docs/manual` build is fixed — the user manual was rebuilt clean; typecheck, i18n audit, tests and build are all green.
 
-**Commit:** `<see KIMI-HANDOFF.md — HEAD on main>`
+**Commit:** `b1fa2f7`
 
 - **Root cause of the 3 failing svelte-check errors:** every manual page carried `const t = (key: string): string => copy[key] ?? key`. `copy` is a Svelte `derived` store, not a plain object, so indexing it is a type error — and the helper was dead code in all three files. Removed.
 - **Dead links removed:** the hub advertised `/docs/manual/overview`, `/benefits`, and `/monthly-review`, none of which exist. In `src/routes/docs/+page.svelte`, `guideIndex` was declared but never rendered and pointed every card at `/docs/manual`; it is now a real, rendered **Manual sections** grid driven by `manualSections`.
