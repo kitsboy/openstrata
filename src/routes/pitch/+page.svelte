@@ -133,7 +133,7 @@
 					<div class="flex items-center gap-4 mb-8">
 						<img
 							src="/logo.png"
-							alt="Hermes Strata"
+							alt="OpenStrata"
 							class="h-16 w-16 rounded-xl object-cover shadow-lg shadow-brand-500/20"
 						/>
 						<div>
@@ -385,7 +385,7 @@
 		<div class="mx-auto max-w-7xl px-6 py-20 text-center">
 			<img
 				src="/logo.png"
-				alt="Hermes Strata"
+				alt="OpenStrata"
 				class="h-20 w-20 rounded-2xl object-cover shadow-xl shadow-brand-500/25 mx-auto mb-6"
 			/>
 			<h2 class="text-3xl sm:text-4xl font-bold text-slate-900">

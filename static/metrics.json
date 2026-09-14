@@ -160,7 +160,7 @@
       "id": "static_vs_live",
       "title": "Static counts vs live entities",
       "body": "entities_total is the demo template building in marketing data — not a production registry. jurisdictions_supported and documents_filed are ground truth from src/lib.",
-      "action": "Set entities_total from live DB when Hermes backend ships; flip raw.demo",
+      "action": "Set entities_total from live DB when the OpenStrata backend ships; flip raw.demo",
       "opportunity": "plan"
     },
     {

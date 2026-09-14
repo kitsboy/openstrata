@@ -16,7 +16,7 @@ export const blogPosts: BlogPost[] = [
 		title: item.title,
 		date: item.date,
 		excerpt: item.excerpt,
-		tag: 'Hermes',
+		tag: 'OpenStrata',
 		external: true
 	})),
 	{
@@ -47,7 +47,7 @@ export const blogPosts: BlogPost[] = [
     title: 'Three Layers of Trust: Software, Proof, and Portability',
     date: '2026-08-02',
     excerpt:
-      'Hermes runs the operations, Satohash anchors every decision to Bitcoin, and the OpenStrata protocol keeps the history portable. Why each layer exists and what it protects.',
+      'OpenStrata runs the operations, Satohash anchors every decision to Bitcoin, and the OpenStrata protocol keeps the history portable. Why each layer exists and what it protects.',
     tag: 'OpenStrata'
   },
   {

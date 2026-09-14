@@ -112,7 +112,7 @@
 		{#each hermesPositioning.paths as path}
 			<Card hover>
 				<h3 class="font-bold text-slate-800 text-lg">{path.title}</h3>
-				<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc.replace(/\bHermes\b/g, 'OpenStrata')}</p>
+				<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc}</p>
 				<span class="mt-4 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{path.legal}</span>
 			</Card>
 		{/each}
@@ -130,7 +130,7 @@
 						{i === 0 ? 'bg-brand-600' : i === 1 ? 'bg-bitcoin' : 'bg-bc-blue'}">
 						{i + 1}
 					</div>
-					<h3 class="font-bold text-slate-800 text-lg">{product.name === 'Hermes Strata' ? 'OpenStrata' : product.name}</h3>
+					<h3 class="font-bold text-slate-800 text-lg">{product.name}</h3>
 					<p class="text-sm font-semibold text-brand-600 mt-1">{product.role}</p>
 					<p class="mt-3 text-sm text-slate-500">{product.desc}</p>
 				</Card>

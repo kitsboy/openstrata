@@ -37,7 +37,7 @@ export const jobCategories = [
 		id: 'treasury',
 		label: 'Treasury & Finance',
 		jobs: [
-			{ title: 'Ziggy Treasury Coordinator', location: 'Remote', type: 'Full-time', salary: '$85k–$110k CAD' },
+			{ title: 'Treasury Coordinator', location: 'Remote', type: 'Full-time', salary: '$85k–$110k CAD' },
 			{ title: 'Multisig Operations Specialist', location: 'Vancouver, BC', type: 'Full-time', salary: '$90k–$115k CAD' },
 			{ title: 'CRF Reserve Fund Accountant', location: 'Metro Vancouver', type: 'Part-time', salary: '$55–$75/hr' }
 		]
@@ -66,7 +66,7 @@ export const rssItems = [
 	{ id: 1, feed: 'bc-housing', title: 'EPR 2026 Deadline: Metro Vancouver Strata Corporations Must Complete Energy Performance Reports', date: '2026-06-28', excerpt: 'All strata corporations in Metro Vancouver must file EPR reports by December 31, 2026. Non-compliance must be disclosed on Form B.' },
 	{ id: 2, feed: 'crt-decisions', title: 'CRT-2026-1847: Owner Successfully Enforces EV Charger Installation Timeline', date: '2026-06-25', excerpt: 'Council must decide in writing within 3 months. Owner bears all installation costs per SPA s.124.' },
 	{ id: 3, feed: 'metro-van-rental', title: 'Vancouver Vacancy Rate Drops to 0.9% — Rental Pressure Intensifies', date: '2026-06-20', excerpt: 'Average 1BR rent reaches $2,450/mo. Strata short-term rental bylaws under increased scrutiny.' },
-	{ id: 4, feed: 'giveabit-blog', title: 'Hermes v2: Sovereign Strata Treasury on Bitcoin Rails', date: '2026-06-15', excerpt: '3-of-5 multisig PSBT workflow with LNURL CAD-pegged instant pay for strata fee collection.' },
+	{ id: 4, feed: 'giveabit-blog', title: 'OpenStrata v2: Sovereign Strata Treasury on Bitcoin Rails', date: '2026-06-15', excerpt: '3-of-5 multisig PSBT workflow with LNURL CAD-pegged instant pay for strata fee collection.' },
 	{ id: 5, feed: 'bitcoin-news', title: 'BOLT-12 Offers Now Supported in Major Lightning Implementations', date: '2026-06-10', excerpt: 'Reusable offers enable strata corporations to issue persistent Lightning invoices for monthly fees.' },
 	{ id: 6, feed: 'strata-twitter', title: 'BC Strata Managers Association Annual Conference — September 2026', date: '2026-06-05', excerpt: 'Key topics: EPR compliance, Bitcoin treasury adoption, CRT enforcement trends.' }
 ] as const;
@@ -131,7 +131,7 @@ export const rentalTrend = [
 ] as const;
 
 export const faqItems = [
-	{ category: 'Trust Accounting', q: 'Can operating and CRF funds be co-mingled?', a: 'No. SPA requires separate funds. Hermes enforces multi-account trust isolation — Operating, CRF, and Special Levy accounts are ledger-isolated.' },
+	{ category: 'Trust Accounting', q: 'Can operating and CRF funds be co-mingled?', a: 'No. SPA requires separate funds. OpenStrata enforces multi-account trust isolation — Operating, CRF, and Special Levy accounts are ledger-isolated.' },
 	{ category: 'Conveyancing', q: 'What happens if a seller owes strata fees?', a: 'Form F shows balance due → WITHHELD state blocks the sale. Lawyer cannot proceed until arrears are cleared and Form F confirms $0.00.' },
 	{ category: 'Bylaw Enforcement', q: 'How long before we can fine a bylaw violator?', a: 'Minimum 14 days after Notice of Complaint. System locks fine actions (BLOCK_FINE_ACTIONS) until the review window closes. CRT overturns early fines.' },
 	{ category: 'Meetings', q: 'What if quorum is not met at an AGM?', a: '30-Minute Rule: if quorum not met within 30 min of start, meeting reschedules +7 days. At the delayed meeting, whoever shows up counts as quorum.' },

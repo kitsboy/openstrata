@@ -99,7 +99,7 @@
 				</div>
 				<div>
 					<h2 id="donate-title" class="text-xl font-bold text-slate-800">Sovereign Donations</h2>
-					<p class="text-sm text-slate-500">Support Hermes Strata development</p>
+					<p class="text-sm text-slate-500">Support OpenStrata development</p>
 				</div>
 			</div>
 

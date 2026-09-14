@@ -23,9 +23,9 @@ export const problemPoints = [
 
 export const revenueTiers = [
 	{ tier: 'Self-hosted', price: 'Free', priceNote: 'open source', target: 'Developers, self-managed councils' },
-	{ tier: 'Hermes Standard', price: '$4/unit/mo', priceNote: 'per unit', target: 'Licensed brokerages' },
-	{ tier: 'Hermes Sovereign', price: '$6/unit + $49/bldg', priceNote: 'per month', target: '+ Lightning, Satohash proofs' },
-	{ tier: 'Hermes Advanced', price: '+$99/bldg/mo', priceNote: 'add-on', target: 'Multisig, war chest, agent pay' }
+	{ tier: 'OpenStrata Standard', price: '$4/unit/mo', priceNote: 'per unit', target: 'Licensed brokerages' },
+	{ tier: 'OpenStrata Sovereign', price: '$6/unit + $49/bldg', priceNote: 'per month', target: '+ Lightning, Satohash proofs' },
+	{ tier: 'OpenStrata Advanced', price: '+$99/bldg/mo', priceNote: 'add-on', target: 'Multisig, war chest, agent pay' }
 ] as const;
 
 export const roadmapSnapshot = [
@@ -62,19 +62,19 @@ export const hermesPositioning = {
 		{
 			id: 'brokerage',
 			title: 'Licensed Brokerage Partner',
-			desc: 'Hermes powers your BCFSA-compliant operations. Your Managing Broker supervises. We automate trust accounting, compliance, and payments.',
+			desc: 'OpenStrata powers your BCFSA-compliant operations. Your Managing Broker supervises. We automate trust accounting, compliance, and payments.',
 			legal: 'Fully compliant — software used by licensed entity'
 		},
 		{
 			id: 'self-managed',
 			title: 'Self-Managed Strata Council',
-			desc: 'Owners managing their own building use Hermes directly. No brokerage license required when owners manage themselves.',
+			desc: 'Owners managing their own building use OpenStrata directly. No brokerage license required when owners manage themselves.',
 			legal: 'SPA-permitted self-management path'
 		},
 		{
 			id: 'hybrid',
 			title: 'Council + Licensed Oversight',
-			desc: 'Council runs day-to-day in Hermes. Licensed manager provides brokerage oversight, Form B/F, and trust fund compliance.',
+			desc: 'Council runs day-to-day in OpenStrata. Licensed manager provides brokerage oversight, Form B/F, and trust fund compliance.',
 			legal: 'Best of both — efficiency + BCFSA compliance'
 		}
 	]
@@ -109,9 +109,9 @@ export const competitiveAdvantages = [
 ] as const;
 
 export const productStack = [
-	{ name: 'Hermes Strata', role: 'Operations', desc: 'Fees, compliance, governance, treasury, building templates' },
+	{ name: 'OpenStrata', role: 'Operations', desc: 'Fees, compliance, governance, treasury, building templates' },
 	{ name: 'Satohash', role: 'Proof', desc: 'OpenTimestamps on payments, votes, rules, leases — Bitcoin-anchored' },
-	{ name: 'OpenStrata', role: 'Portability', desc: 'Nostr identity, sovereign data across platforms' }
+	{ name: 'OpenStrata Protocol', role: 'Portability', desc: 'Nostr identity, sovereign data across platforms' }
 ] as const;
 
 export const warChest = {

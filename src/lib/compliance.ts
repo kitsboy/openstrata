@@ -1,6 +1,6 @@
 /**
  * BC Strata compliance knowledge base — SPA + BCFSA.
- * Source of truth for Hermes app architecture, workflows, and governance logic.
+ * Source of truth for OpenStrata app architecture, workflows, and governance logic.
  * Retain and extend; Rosa RAG corpus should cite these statutory references.
  */
 
@@ -13,7 +13,7 @@ export const regulatoryFramework = {
 	contact: 'hello@giveabit.io'
 } as const;
 
-/** Five functional pillars — every Hermes module maps to one of these */
+/** Five functional pillars — every OpenStrata module maps to one of these */
 export const functionalDomains = [
 	{
 		id: 'financial',
@@ -290,7 +290,7 @@ export const architectureMandates = [
 	}
 ] as const;
 
-/** Hermes module → functional domain mapping */
+/** OpenStrata module → functional domain mapping */
 export const moduleDomainMap = [
 	{ module: 'Form K Hub', domain: 'governance', trigger: '14-day auto-reminder on missing Form K' },
 	{ module: 'EPR 2026 Monitor', domain: 'assets', trigger: 'Breach alert → Form B disclosure flag' },

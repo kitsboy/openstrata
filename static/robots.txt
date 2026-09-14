@@ -1,4 +1,4 @@
-# Hermes Strata — openstrata.giveabit.io
+# OpenStrata — openstrata.giveabit.io
 
 User-agent: *
 Allow: /

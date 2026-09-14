@@ -173,14 +173,14 @@
 			<h3 class="font-bold text-slate-800 mb-3">{$copy.quickStart}</h3>
 			<pre class="rounded-xl bg-slate-900 text-slate-100 p-5 text-sm font-mono overflow-x-auto leading-relaxed"><code># Fetch live market rates (BTC/CAD + vacancy)
 curl -H "Authorization: Bearer $HERMES_TOKEN" \\
-  https://hermes.local/api/v1/market/rates?jurisdiction=BC
+  https://openstrata.local/api/v1/market/rates?jurisdiction=BC
 
 # Query Rosa compliance RAG
-curl -X GET "https://hermes.local/api/v1/rosa/query?q=EPR+2026+deadline" \\
+curl -X GET "https://openstrata.local/api/v1/rosa/query?q=EPR+2026+deadline" \\
   -H "Authorization: Bearer $HERMES_TOKEN"
 
 # Subscribe to aggregated RSS output
-curl https://hermes.local/api/v1/feeds/rss?categories=Regulation,Legal</code></pre>
+curl https://openstrata.local/api/v1/feeds/rss?categories=Regulation,Legal</code></pre>
 		</Card>
 	</div>
 </section>

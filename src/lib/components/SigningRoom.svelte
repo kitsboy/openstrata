@@ -26,11 +26,11 @@
   let busy = $state(false);
 
   const DEMO_PLANS: PsbtPlan[] = [
-    { id: 'psbt:war_chest:spend:1250000', fundCode: 'war_chest', amountBasis: 1_250_000, requiredSignatures: 3, signatures: { 'cam-hw': true, 'kimi-hw': true, 'm4-hw': false, 'vault-2': false, 'vault-3': false }, ready: false },
-    { id: 'psbt:crf:spend:4200000', fundCode: 'crf', amountBasis: 4_200_000, requiredSignatures: 3, signatures: { 'cam-hw': true, 'kimi-hw': false, 'm4-hw': true, 'vault-2': false, 'vault-3': false }, ready: false }
+    { id: 'psbt:war_chest:spend:1250000', fundCode: 'war_chest', amountBasis: 1_250_000, requiredSignatures: 3, signatures: { 'signer-1-hw': true, 'signer-2-hw': true, 'signer-3-hw': false, 'vault-2': false, 'vault-3': false }, ready: false },
+    { id: 'psbt:crf:spend:4200000', fundCode: 'crf', amountBasis: 4_200_000, requiredSignatures: 3, signatures: { 'signer-1-hw': true, 'signer-2-hw': false, 'signer-3-hw': true, 'vault-2': false, 'vault-3': false }, ready: false }
   ];
 
-  const DEMO_READY: PsbtPlan = { id: 'psbt:operating:spend:180000', fundCode: 'operating', amountBasis: 180_000, requiredSignatures: 3, signatures: { 'cam-hw': true, 'kimi-hw': true, 'm4-hw': true, 'vault-2': true, 'vault-3': true }, ready: true };
+  const DEMO_READY: PsbtPlan = { id: 'psbt:operating:spend:180000', fundCode: 'operating', amountBasis: 180_000, requiredSignatures: 3, signatures: { 'signer-1-hw': true, 'signer-2-hw': true, 'signer-3-hw': true, 'vault-2': true, 'vault-3': true }, ready: true };
 
   onMount(() => {
     const unsubscribe = auth.subscribe((session) => {

@@ -1,5 +1,5 @@
 /**
- * Hermes Strata Tool — full module map covering licensed management company operations.
+ * OpenStrata Tool — full module map covering licensed management company operations.
  * Maps to BCFSA brokerage requirements + SPA compliance.
  */
 
@@ -68,7 +68,7 @@ export const strataToolModules: StrataToolModule[] = [
 
 	// Sovereign
 	{ id: 'satohash-stamp', domain: 'sovereign', icon: '⏱️', title: 'Satohash Proof Layer', desc: 'OTS-stamp payments, votes, rules, leases to Bitcoin', bcfsaRelevant: false, status: 'planned', features: ['60-sec stamp', 'Zero custody', 'CRT-ready', 'API hook'], savings: 'Court-grade proof' },
-	{ id: 'multisig', domain: 'sovereign', icon: '🔑', title: 'External Multisig Watch', desc: 'Import xpub — Hermes watches, never holds keys', bcfsaRelevant: false, status: 'beta', features: ['3-of-5 PSBT', 'Hardware wallet', 'Unchained/Casa'], savings: '—' },
+	{ id: 'multisig', domain: 'sovereign', icon: '🔑', title: 'External Multisig Watch', desc: 'Import xpub — OpenStrata watches, never holds keys', bcfsaRelevant: false, status: 'beta', features: ['3-of-5 PSBT', 'Hardware wallet', 'Unchained/Casa'], savings: '—' },
 	{ id: 'openstrata-port', domain: 'sovereign', icon: '🌐', title: 'OpenStrata Export', desc: 'Portable identity and history when switching managers', bcfsaRelevant: false, status: 'planned', features: ['Nostr events', 'No lock-in', 'Verify all'], savings: '—' }
 ];
 

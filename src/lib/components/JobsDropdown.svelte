@@ -49,7 +49,7 @@
 			role="menu"
 		>
 			<div class="bg-gradient-to-r from-brand-600 to-brand-500 px-5 py-4 text-white">
-				<h3 class="font-bold text-lg">Join the Hermes Team</h3>
+				<h3 class="font-bold text-lg">Join the OpenStrata Team</h3>
 				<p class="text-sm text-brand-100 mt-0.5">Building sovereign strata infrastructure for BC and beyond</p>
 			</div>
 
