@@ -26,7 +26,10 @@
 - Link check on the four built pages → **0 broken internal links**.
 - Rendered in Chromium at **1280 px and 390 px**: no overflow, cards aligned, no cramped text.
 
-**Git state:** `b1fa2f7` on local `main`. **Not pushed** — the standing lane rule is that family code is pushed from M3/Grok unless Cam greenlights it here. `git push` is the only remaining step, and it deploys to Cloudflare Pages.
+**De-branding pass (`f9121b1`, same session):** the public site no longer says "Hermes" anywhere a visitor can see it. 70 i18n values across all 9 locales, plus marketing.ts / data.ts / strata-tool.ts / compliance.ts / blog.ts / pitch / rss / jobs dropdown / donate modal. Two runtime band-aids on `/about` (`path.desc.replace(/\bHermes\b/g, 'OpenStrata')` and a name ternary) are deleted — they were masking a stale source and were themselves producing two "OpenStrata" entries in the product stack. Demo signer ids `cam-hw` / `kimi-hw` / `m4-hw` → `signer-1/2/3-hw`.
+**Left visible on purpose (needs a decision, not a sweep):** Rosa 16 spots, Ziggy 7, Kimi 1 (roadmap chip), Camille 1 (demo greeting). Rosa is also the backend route `/api/v1/rosa/query` in the public /rss API examples and Ziggy is a backend module directory (`backend/src/ziggy/`), so a display rename must be scoped against those or the API docs stop matching the code. The remaining `Hermes` strings in the built bundle are two i18n *key names* (`archHermesCore`, `hrsWithHermes`) — invisible to visitors; renaming them is a small refactor across i18n + templates + the search index.
+
+**Git state:** `b1fa2f7` + `f9121b1` pushed to `origin/main` (Cam greenlit) and deployed via Cloudflare Pages; CI run green; `/docs/manual`, `/docs/manual/welcome` and `/docs/manual/getting-started` all serve 200 live.
 
 **Open question for Cam (only decision left):** whether the manual should exist at all was worth asking before the fact; the implementation is clean and reversible with `git revert`, so it is now a yes/no on the push rather than a design debate.
 
