@@ -1,9 +1,9 @@
-# openstrata — Last Updated 2026-08-27 by Grok (M3)
+# openstrata — Last Updated 2026-09-14 by Grok (M3)
 
-**Brief:** Donate modal is Breez Spark (`openstrata@breez.tips`). Real QR, not a fake SVG.
+**Brief:** Phase 2 reconciliation prototype confirmed complete; sitemap regenerated.
 
-**Commit:** `01033ed`
+**Commit:** `8a1a78b`
 
-- Lightning: `openstrata@breez.tips`
-- On-chain: `bc1p48ycay7w46xxpc4cq3m7n6pluxwesn9gxdhgy0y6cky5hw2a38cqu4yd42`
-- Open donate from inner pages (`/about`), not the homepage shell.
+- **E-transfer auto-reconciliation** (`src/lib/reconcile.ts` + `ETransferReconciler.svelte`) live on `/tools` with brief/full modes, CSV import, live-unit wiring.
+- **9 reconcile tests** pass; full suite **85 tests** pass; build clean.
+- Sitemap `lastmod` updated to `2026-09-14`.

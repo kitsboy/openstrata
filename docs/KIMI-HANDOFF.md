@@ -1,3 +1,17 @@
+## Session — 2026-09-14 · Phase 2 reconciliation audit & sitemap sync (Grok M3)
+
+**Done:**
+- Confirmed **E-transfer auto-reconciliation prototype (Phase 2) is complete and live**:
+  - Pure matching engine `src/lib/reconcile.ts` with `brief` (message-only) and `full` (message + payer) modes — never guesses, flags ambiguous/unmatched for human review.
+  - 9 unit tests covering clear matches, bare numeric refs, shared surnames, unmatched messages, and punctuation normalization.
+  - Interactive `ETransferReconciler.svelte` on `/tools` with live-unit wiring (uses `GET /api/v1/units` when signed-in, demo registry fallback), CSV bank-feed import seam, and manual override dropdown.
+  - Backend mirror `backend/src/trf/recon.ts` used by Ziggy treasury state machine so both layers agree.
+- `npm run build` ✅, `npm test` ✅ (85 tests pass), `svelte-check` 0/0.
+- Regenerated sitemap with 2026-09-14 dates; committed and pushed (`8a1a78b`).
+
+**Git State:** SHA `8a1a78b` on `origin/main`.
+
+---
 ## Session — 2026-08-27 · Breez donate modal (Grok M3)
 
 **Done:**
