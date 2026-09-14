@@ -2,7 +2,7 @@
 
 **Brief:** Phase 2 reconciliation prototype confirmed complete; sitemap regenerated; Rosa/Ziggy Phase 3 continuity handoff.
 
-**Commit:** `df34a73`
+**Commit:** `943ebe1`
 
 - **E-transfer auto-reconciliation** (`src/lib/reconcile.ts` + `ETransferReconciler.svelte`) live on `/tools` with brief/full modes, CSV import, live-unit wiring, backend decision endpoint.
 - **9 reconcile tests** pass; full suite **85 tests** pass; build, check, test green.
