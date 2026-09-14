@@ -29,7 +29,8 @@
 - [x] Full interface localization across all routes (461 catalog keys, hardened `npm run audit:i18n`)
 - [x] FAQ page (/faq) and prerendered RSS feed (/rss.xml)
 - [x] `npm run check` passing — 0 type errors, 0 accessibility warnings
-- [x] E-transfer auto-reconciliation prototype (interactive demo on /tools)
+- [x] E-transfer auto-reconciliation prototype (interactive demo on /tools) ✅ COMPLETE
+- [x] WORKPLAN.md updated: Phase 2 audit complete; KIMI-HANDOFF, ROADMAP, LATEST-UPDATE, .ai_docs current-status all refreshed
 
 ## Phase 3 — Core Product (Q3 2026)
 
