@@ -26,6 +26,21 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://openstrata.giveabit.io/docs/manual</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://openstrata.giveabit.io/docs/manual/welcome</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://openstrata.giveabit.io/docs/manual/getting-started</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
     <loc>https://openstrata.giveabit.io/faq</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>

@@ -1,67 +1,148 @@
 <script lang="ts">
 	import { copy } from '$lib/i18n';
 	import Card from '$lib/components/Card.svelte';
-
-const t = (key: string): string => copy[key] ?? key;
+	import PageToc from '$lib/components/PageToc.svelte';
+	import {
+		manualHeadings,
+		quickStartPrereqs,
+		quickStartSteps,
+		quickStartPricing,
+		quickStartFaq,
+		quickStartTrouble
+	} from '$lib/manual';
 </script>
 
-<section class="py-12">
-	<div class="mx-auto max-w-3xl px-6">
-		<div class="text-center mb-10">
-			<h1 class="text-4xl font-bold text-slate-900 mb-4">Getting Started</h1>
-			<p class="text-xl text-slate-600">
-				Quick steps to start using the OpenStrata platform effectively.
-			</p>
-		</div>
+<svelte:head>
+	<title>{$copy.quickStart} — OpenStrata</title>
+	<meta name="description" content={$copy.manualStartIntro} />
+</svelte:head>
 
-		<div class="grid md:grid-cols-2 gap-8">
-			<div class="bg-white rounded-xl p-8 shadow-lg">
-				<h2 class="text-2xl font-bold text-slate-900 mb-6">Prerequisites</h2>
-				<ul class="space-y-3 text-slate-700">
-					<li>• Computer with internet access</li>
-					<li>• Web browser (Chrome, Firefox, Safari, Edge)</li>
-					<li>• Account access (create if needed)</li>
-				</ul>
-			</div>
-
-			<div class="bg-white rounded-xl p-8 shadow-lg">
-				<h2 class="text-2xl font-bold text-slate-900 mb-6">First Steps</h2>
-				<ol class="space-y-3 text-slate-700">
-					<li>1. Register for an account</li>
-					<li>2. Log in and explore the dashboard</li>
-					<li>3. Set up your community/profile</li>
-					<li>4. Add units and residents</li>
-					<li>5. Start using tools for reconciliation</li>
-				</ol>
-			</div>
-		</div>
-
-		<div class="mt-12 bg-brand-50 rounded-xl p-8">
-			<h2 class="text-2xl font-bold text-slate-900 mb-6">Quick Tutorial Video</h2>
-			<div class="aspect-video bg-slate-200 rounded-lg flex items-center justify-center">
-				<p class="text-slate-500">Video placeholder - Setup tutorial would go here</p>
-			</div>
+<section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700"
+			>{$copy.manualTitle}</span
+		>
+		<h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.quickStart}</h1>
+		<p class="mt-4 max-w-3xl text-lg leading-relaxed text-slate-600">{$copy.manualStartIntro}</p>
+		<div class="mt-6 flex flex-wrap gap-3">
+			<a
+				href="/tools/wizard"
+				class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-500"
+				>{$copy.wizardTitle} →</a
+			>
+			<a
+				href="/faq"
+				class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 no-underline transition-colors hover:bg-slate-200"
+				>{$copy.faqTitle}</a
+			>
 		</div>
 	</div>
 </section>
 
-<!-- FAQ Section -->
-<section class="py-12 bg-slate-50">
-	<div class="mx-auto max-w-3xl px-6">
-		<h2 class="text-3xl font-bold text-slate-900 mb-8 text-center">Frequently Asked Questions</h2>
-		<div class="space-y-6">
-			<div class="bg-white rounded-lg p-6 shadow">
-				<h3 class="font-semibold text-lg mb-2">How much does OpenStrata cost?</h3>
-				<p class="text-slate-600">OpenStrata offers affordable pricing starting at $0/month for essential features. Premium plans are available for advanced functionality and support.</p>
-			</div>
-			<div class="bg-white rounded-lg p-6 shadow">
-				<h3 class="font-semibold text-lg mb-2">Do I need technical experience?</h3>
-				<p class="text-slate-600">No technical experience required! The platform is designed for building owners and managers of all technical levels. We provide step-by-step guides and support.</p>
-			</div>
-			<div class="bg-white rounded-lg p-6 shadow">
-				<h3 class="font-semibold text-lg mb-2">Is my data secure?</h3>
-				<p class="text-slate-600">Yes. OpenStrata uses enterprise-grade security including encryption, secure backups, and compliance with BC privacy laws. Your data is protected with multiple layers of security.</p>
-			</div>
+<div class="mx-auto max-w-4xl px-6 py-12">
+	<PageToc />
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{manualHeadings.beforeYouStart}</h2>
+		<ul class="mt-6 space-y-3">
+			{#each quickStartPrereqs as item}
+				<li class="flex gap-3 text-sm leading-relaxed text-slate-600">
+					<span class="text-brand-600" aria-hidden="true">•</span>
+					<span>{item}</span>
+				</li>
+			{/each}
+		</ul>
+	</section>
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{manualHeadings.sixSteps}</h2>
+		<ol class="mt-6 space-y-4">
+			{#each quickStartSteps as item}
+				<li class="glass-card flex gap-4 rounded-2xl p-5">
+					<span
+						class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700"
+						aria-hidden="true">{item.step}</span
+					>
+					<div>
+						<h3 class="font-bold text-slate-800">{item.title}</h3>
+						<p class="mt-1 text-sm leading-relaxed text-slate-600">{item.body}</p>
+						{#if item.action}
+							<a
+								href={item.action.href}
+								class="mt-3 inline-flex text-sm font-semibold text-brand-600 no-underline transition-colors hover:text-brand-700"
+								>{item.action.label} →</a
+							>
+						{/if}
+					</div>
+				</li>
+			{/each}
+		</ol>
+	</section>
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{manualHeadings.costs}</h2>
+		<p class="mt-2 text-sm leading-relaxed text-slate-500">{$copy.pitchDataNote}</p>
+		<div class="mt-6 grid gap-4 sm:grid-cols-2">
+			{#each quickStartPricing as tier}
+				<Card hover>
+					<div class="flex items-baseline justify-between gap-3">
+						<h3 class="font-bold text-slate-800">{tier.tier}</h3>
+						<span class="text-sm font-bold text-brand-600">{tier.price}</span>
+					</div>
+					<p class="mt-2 text-sm leading-relaxed text-slate-600">{tier.target}</p>
+					<p class="mt-1 text-xs uppercase tracking-wide text-slate-400">{tier.note}</p>
+				</Card>
+			{/each}
 		</div>
-	</div>
-</section>
+		<a
+			href="/pitch"
+			class="mt-4 inline-flex text-sm font-semibold text-brand-600 no-underline transition-colors hover:text-brand-700"
+			>{$copy.pricingTiers} →</a
+		>
+	</section>
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{$copy.faqTitle}</h2>
+		<div class="mt-6 space-y-4">
+			{#each quickStartFaq as item}
+				<Card>
+					<h3 class="font-bold text-slate-800">{item.q}</h3>
+					<p class="mt-2 text-sm leading-relaxed text-slate-600">{item.a}</p>
+				</Card>
+			{/each}
+		</div>
+	</section>
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{manualHeadings.trouble}</h2>
+		<div class="mt-6 space-y-4">
+			{#each quickStartTrouble as item}
+				<Card class="border-l-2 border-l-brand-300">
+					<h3 class="text-sm font-bold text-slate-800">{item.symptom}</h3>
+					<p class="mt-1 text-sm leading-relaxed text-slate-600">{item.fix}</p>
+				</Card>
+			{/each}
+		</div>
+	</section>
+
+	<section>
+		<h2 class="text-2xl font-bold text-slate-900">{$copy.whatsNext}</h2>
+		<div class="mt-6 flex flex-wrap gap-3">
+			<a
+				href="/docs/manual"
+				class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 no-underline transition-colors hover:bg-slate-200"
+				>{$copy.manualSections}</a
+			>
+			<a
+				href="/compliance"
+				class="inline-flex items-center gap-2 rounded-xl bg-bc-blue/5 px-6 py-3 text-sm font-semibold text-bc-blue no-underline transition-colors hover:bg-bc-blue/10"
+				>{$copy.complianceKb}</a
+			>
+			<a
+				href="/roadmap"
+				class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 no-underline transition-colors hover:bg-slate-200"
+				>{$copy.roadmap}</a
+			>
+		</div>
+	</section>
+</div>

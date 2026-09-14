@@ -4,6 +4,7 @@
 	import { copy } from '$lib/i18n';
 	import PageToc from '$lib/components/PageToc.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import { manualSections } from '$lib/manual';
 
 	const stats = getToolStats();
 
@@ -24,13 +25,6 @@
 		{ step: 5, title: 'Deploy UI', code: 'npm run build && docker compose restart web', desc: 'PWA + mobile touch flow.' }
 	];
 
-	const guideIndex = [
-		{ file: 'README.md', title: 'Quick Start', desc: '5-minute guide for new contributors', href: '/docs/manual' },
-		{ file: 'CHANGELOG.md', title: 'Changelog', desc: 'Version history and release notes', href: '/docs/manual' },
-		{ file: 'CONTRIBUTING.md', title: 'Contributing Guide', desc: 'How to contribute code and documentation', href: '/docs/manual' },
-		{ file: 'LICENSE', title: 'License', desc: 'Project license and attributions', href: '/docs/manual' },
-		{ file: 'SUPPORT.md', title: 'Support & Support', desc: 'Getting help and troubleshooting', href: '/docs/manual' }
-	];
 </script>
 
 <svelte:head>
@@ -68,6 +62,24 @@
 			{/each}
 		</div>
 		<p class="mt-4 text-sm text-slate-400">{$copy.alsoLabel}: <code class="text-xs bg-slate-100 px-1 rounded">SOURCE-OF-TRUTH.md</code> {$copy.atProjectRoot}</p>
+	</section>
+
+	<!-- User manual — orientation for non-technical readers -->
+	<section class="mb-16">
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.manualSections}</h2>
+		<div class="grid sm:grid-cols-2 gap-4">
+			{#each manualSections as guide}
+				<Card hover>
+					<code class="text-[10px] font-mono text-slate-400">{guide.label}</code>
+					<h3 class="font-bold text-slate-800 mt-1">{guide.title}</h3>
+					<p class="text-sm text-slate-500 mt-1">{guide.desc}</p>
+					<a href={guide.href} class="mt-3 inline-block text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">{$copy.manualReadMore} →</a>
+				</Card>
+			{/each}
+		</div>
+		<p class="mt-4 text-sm text-slate-400">
+			<a href="/docs/manual" class="text-brand-600 hover:underline">{$copy.manualTitle}</a> — {$copy.manualIntro}
+		</p>
 	</section>
 
 	<!-- Architecture -->

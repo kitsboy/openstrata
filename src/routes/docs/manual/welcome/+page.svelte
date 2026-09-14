@@ -1,79 +1,95 @@
 <script lang="ts">
 	import { copy } from '$lib/i18n';
-
-const t = (key: string): string => copy[key] ?? key;
+	import Card from '$lib/components/Card.svelte';
+	import { manualHeadings, welcomeAudiences, welcomeCapabilities, welcomeLimits } from '$lib/manual';
 </script>
 
-<section class="py-12">
-	<div class="mx-auto max-w-3xl px-6">
-		<div class="text-center mb-10">
-			<h1 class="text-4xl font-bold text-slate-900 mb-4">Welcome to OpenStrata</h1>
-			<p class="text-xl text-slate-600">
-				Welcome! OpenStrata is a sovereign data portability platform for British Columbia strata.
-			</p>
-		</div>
+<svelte:head>
+	<title>{$copy.manualWelcomeTitle} — OpenStrata</title>
+	<meta name="description" content={$copy.manualWelcomeIntro} />
+</svelte:head>
 
-		<div class="prose max-w-none text-slate-700 space-y-6">
-			<h2>Who Can Use It?</h2>
-			<ul>
-				<li><strong>Building owners</strong> — manage lots, residents, and finances</li>
-				<li><strong>Council members</strong> — vote on bylaws and approvals</li>
-				<li><strong>Property managers</strong> — process payments and maintenance</li>
-				<li><strong>Tech teams</strong> — developers and operators</li>
-			</ul>
-
-			<h2>Why It Matters</h2>
-			<p>
-				Traditional strata management costs <strong>$9,000+ per year</strong> and relies on paper records.
-				OpenStrata replaces manual work with automated, auditable digital processes.
-			</p>
-
-			<h3>Key Benefits</h3>
-			<ul>
-				<li><strong>Cost savings</strong> — up to 80% less than traditional software</li>
-				<li><strong>Transparency</strong> — full audit trail and blockchain integration</li>
-				<li><strong>Compliance</strong> — built-in BCFSA regulatory support</li>
-				<li><strong>Sovereignty</strong> — true data sovereignty for building associations</li>
-			</ul>
-
-			<h2>What You Can Do Here</h2>
-			<p>
-				This platform provides tools for:
-			</p>
-			<ul>
-				<li>Manage unit ownership and occupancy</li>
-				<li>Track AR funds and payments</li>
-				<li>Run meetings and vote on bylaws</li>
-				<li>Handle compliance documentation</li>
-				<li>Export reports for external auditors</li>
-			</ul>
-
-			<h2>Getting Started</h2>
-			<p>
-				If you have an existing account, sign in to access your dashboard.
-				If you're new, register to create a community and invite other owners.
-			</p>
+<section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700"
+			>{$copy.manualTitle}</span
+		>
+		<h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.manualWelcomeTitle}</h1>
+		<p class="mt-4 max-w-3xl text-lg leading-relaxed text-slate-600">{$copy.manualWelcomeIntro}</p>
+		<div class="mt-6 flex flex-wrap gap-3">
+			<a
+				href="/docs/manual/getting-started"
+				class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-500"
+				>{$copy.quickStart} →</a
+			>
+			<a
+				href="/docs"
+				class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 no-underline transition-colors hover:bg-slate-200"
+				>{$copy.documentationHub}</a
+			>
 		</div>
 	</div>
 </section>
 
-<!-- Quick navigation cards -->
-<section class="py-8 bg-slate-50">
-	<div class="mx-auto max-w-7xl px-6">
-		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">Quick Navigation</h2>
-		<div class="grid md:grid-cols-3 gap-6">
-			<a href="/" class="block p-6 bg-white rounded-xl shadow hover:shadow-lg transition-shadow">
-				<h3 class="font-semibold text-lg mb-2">Dashboard</h3>
-				<p class="text-slate-600">Operations hub with live graphs and unit statistics.</p>
-			</a>
-			<a href="/tools" class="block p-6 bg-white rounded-xl shadow hover:shadow-lg transition-shadow">
-				<h3 class="font-semibold text-lg mb-2">Tools</h3>
-				<p class="text-slate-600">30+ strata tool modules for reconciliation and management.</p>
-			</a>
-			<a href="/compliance" class="block p-6 bg-white rounded-xl shadow hover:shadow-lg transition-shadow">
-				<h3 class="font-semibold text-lg mb-2">Compliance</h3>
-				<p class="text-slate-600">BC legal rules and requirements for strata management.</p>
-			</a>
+<div class="mx-auto max-w-4xl px-6 py-12">
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{manualHeadings.whoFor}</h2>
+		<div class="mt-6 space-y-4">
+			{#each welcomeAudiences as audience}
+				<Card>
+					<h3 class="font-bold text-slate-800">{audience.title}</h3>
+					<p class="mt-2 text-sm leading-relaxed text-slate-600">{audience.body}</p>
+				</Card>
+			{/each}
 		</div>
-	</div>
-</section>
+	</section>
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{$copy.whyItMattersLabel}</h2>
+		<div class="mt-6 grid gap-4 sm:grid-cols-2">
+			{#each welcomeCapabilities as item}
+				<Card hover>
+					<h3 class="font-bold text-slate-800">{item.title}</h3>
+					<p class="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
+				</Card>
+			{/each}
+		</div>
+	</section>
+
+	<section class="mb-14">
+		<h2 class="text-2xl font-bold text-slate-900">{manualHeadings.whatItIsNot}</h2>
+		<p class="mt-2 text-sm leading-relaxed text-slate-500">
+			{manualHeadings.limitsNote}
+		</p>
+		<ul class="mt-6 space-y-4">
+			{#each welcomeLimits as limit}
+				<li class="glass-card flex gap-4 rounded-2xl p-5">
+					<span class="mt-0.5 text-lg text-slate-400" aria-hidden="true">—</span>
+					<div>
+						<h3 class="font-bold text-slate-800">{limit.title}</h3>
+						<p class="mt-1 text-sm leading-relaxed text-slate-600">{limit.body}</p>
+					</div>
+				</li>
+			{/each}
+		</ul>
+	</section>
+
+	<section>
+		<h2 class="text-2xl font-bold text-slate-900">{$copy.whatsNext}</h2>
+		<p class="mt-2 text-sm leading-relaxed text-slate-500">
+			The manual walks the setup in order. Nothing is published or registered while you read.
+		</p>
+		<div class="mt-6 flex flex-wrap gap-3">
+			<a
+				href="/docs/manual/getting-started"
+				class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-500"
+				>{$copy.quickStart} →</a
+			>
+			<a
+				href="/docs/manual"
+				class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 no-underline transition-colors hover:bg-slate-200"
+				>{$copy.manualSections}</a
+			>
+		</div>
+	</section>
+</div>
