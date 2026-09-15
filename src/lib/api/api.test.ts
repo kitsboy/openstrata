@@ -186,7 +186,7 @@ describe('auth session', () => {
     signOut();
   });
 
-  const USER = { id: 'u1', email: 'cam@example.com', displayName: 'Cam', role: 'admin' as const };
+  const USER = { id: 'u1', email: 'cam@example.com', displayName: 'Admin', role: 'admin' as const };
   const COUNCIL = { id: 'c1', name: 'Harbour House' };
 
   function stubLogin(overrides: Record<string, unknown> = {}) {
@@ -497,7 +497,7 @@ describe('new 20-item endpoint helpers', () => {
     localStorage.setItem(TOKEN_KEY, 'jwt-a');
     stubFetch((url) => {
       if (url.endsWith('/api/v1/auth/users')) {
-        return { ok: true, users: [{ id: 'u1', email: 'cam@example.com', displayName: 'Cam', role: 'admin' }] };
+        return { ok: true, users: [{ id: 'u1', email: 'cam@example.com', displayName: 'Admin', role: 'admin' }] };
       }
       return { ok: true };
     });
