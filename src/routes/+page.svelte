@@ -311,30 +311,57 @@
           <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => goto('/tools')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
             {#each filteredBuildings as building}
-              <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>				<div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
+              <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>
+                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
-                <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-2.5 w-2.5" /></span>{building.issue}<span class="status-arrow">→</span></div>
+                <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-3 w-3" /></span>{building.issue}<span class="status-arrow">→</span></div>
               </div>
-            {:else}			  <EmptyState scene="empty" icon="search" title="{$copy.noBuildings} “{search}”" message={$copy.emptySearchHint} actionLabel={$copy.newStrata} onAction={() => (showNewStrata = true)} />
+            {:else}
+              <EmptyState scene="empty" icon="search" title="{$copy.noBuildings} “{search}”" message={$copy.emptySearchHint} actionLabel={$copy.newStrata} onAction={() => (showNewStrata = true)} />
             {/each}
           </div>
 
-          <div class="section-heading action-heading"><div><h2>{$copy.quickActions}</h2><p>Common work, made one tap away.</p></div></div>
+          <div class="section-heading action-heading"><div><h2>{$copy.quickActions}</h2><p>{$copy.commonWork}</p></div></div>
           <div class="action-grid">
-            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph"><Icon name="plus" class="h-4 w-4" /></span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>			<button class="action-card purple" onclick={() => openAction($copy.meetingPlannerToast)}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>			<button class="action-card blue" onclick={() => openAction($copy.legalLibraryToast)}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>			<button class="action-card green" onclick={() => openAction($copy.maintenanceToast)}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
+            <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph"><Icon name="plus" class="h-4 w-4" /></span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>
+            <button class="action-card purple" onclick={() => openAction($copy.meetingPlannerToast)}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
+            <button class="action-card blue" onclick={() => openAction($copy.legalLibraryToast)}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>
+            <button class="action-card green" onclick={() => openAction($copy.maintenanceToast)}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
           </div>
         </div>
 
-        <aside class="right-stack">		  <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>		  <RailsStatus />
-		  <DeadlinesPanel />
-		  <HealthScore />
-		  <RateSparkline />
-		  <ChainViz />
-		  <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
-		  <SatohashStatus />
+        <aside class="right-stack">
+          <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>
+          <RailsStatus />
+          <DeadlinesPanel />
+          <HealthScore />
+          <RateSparkline />
+          <ChainViz />
+          <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
+          <SatohashStatus />
         </aside>
       </section>
+
+      <!-- Proof band: one honest row that closes the page with purpose. -->
+      <div class="proof-band">
+        <div class="proof-card">
+          <div class="proof-mark orange"><Icon name="shield" class="h-5 w-5" /></div>
+          <div class="proof-body"><strong>{$copy.complianceHealth} on the dashboard.</strong><span>Every deadline, Form K gap and AR balance is a tracked item with a stake in the score — not a vanity number.</span></div>
+          <a href="/compliance" class="proof-cta">{$copy.governance} <span>→</span></a>
+        </div>
+        <div class="proof-card">
+          <div class="proof-mark green"><Icon name="bitcoin" class="h-5 w-5" /></div>
+          <div class="proof-body"><strong>0% custody, always.</strong><span>Fiat rails today. Sovereign rails when you're ready. Keys stay on council hardware wallets.</span></div>
+          <a href="/tools" class="proof-cta">{$copy.buildings} <span>→</span></a>
+        </div>
+        <div class="proof-card">
+          <div class="proof-mark blue"><Icon name="clock" class="h-5 w-5" /></div>
+          <div class="proof-body"><strong>Statutory clocks that don't slip.</strong><span>14-day bylaw window and 7-day Form B deadline are tracked as first-class deadlines.</span></div>
+          <a href="/docs" class="proof-cta">{$copy.status} <span>→</span></a>
+        </div>
+      </div>
+
     </main>
 
     <footer class="site-footer">
