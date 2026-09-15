@@ -26,7 +26,11 @@ const warnings = [];
 // key set as the French benchmark (full coverage). This forces new catalog keys
 // to be translated across all locales instead of silently falling back.
 // ---------------------------------------------------------------------------
-const LOCALE_BLOCK = /^  ([a-z]{2,3}): \{ \.\.\.english, (.*?)( \},?)$/gm;
+// The block BODY may be wrapped across several lines (a long catalog line plus
+// continuation lines of newly added keys), so the body has to be allowed to span
+// newlines — matching only single-line blocks made this whole audit explode with
+// "Could not locate the French override block" the moment one locale was wrapped.
+const LOCALE_BLOCK = /^ {2}([a-z]{2,3}): \{ \.\.\.english, ([\s\S]*?)( \},?)$/gm;
 const localeBlocks = new Map();
 for (const match of catalog.matchAll(LOCALE_BLOCK)) {
   // Keys are lowercase-camelCase identifiers immediately followed by a quote
