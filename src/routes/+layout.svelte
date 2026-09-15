@@ -72,6 +72,7 @@
 <svelte:head>
   <meta name="openstrata-version" content={appVersion} />    <meta name="description" content={`OpenStrata v${appVersion} — modern operations for strata and condominium communities.`} />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="OpenStrata" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

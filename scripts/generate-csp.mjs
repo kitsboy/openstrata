@@ -11,8 +11,11 @@
  *   CSP_API_ORIGIN=https://api.example.com npm run build
  *   PUBLIC_API_BASE_URL=https://api.example.com npm run build   (same effect)
  *
- * Satohash / mempool / analytics origins are always allowed — they are the
- * page's fixed integrations.
+ * Satohash / mempool / analytics / Cloudflare Insights origins are always
+ * allowed — they are the page's fixed integrations. The Cloudflare Insights
+ * connect-src entry receives the auto-injected beacon's POSTs (the script
+ * source itself, static.cloudflareinsights.com, lives in script-src in
+ * static/_headers).
  */
 
 import fs from 'node:fs';
@@ -22,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const headersPath = path.join(root, 'static', '_headers');
 
-const FIXED_CONNECT = ["'self'", 'https://api.satohash.io', 'https://mempool.space', 'https://analytics.giveabit.io'];
+const FIXED_CONNECT = ["'self'", 'https://api.satohash.io', 'https://mempool.space', 'https://analytics.giveabit.io', 'https://cloudflareinsights.com'];
 
 function deriveOrigin(value) {
   if (!value) return null;
