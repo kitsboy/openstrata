@@ -1,16 +1,10 @@
-# openstrata — Last Updated 2026-09-15 by Kimi (HERMES · THOR)
+# openstrata — Last Updated 2026-09-15 by Grok (M3)
 
-**Brief:** The broken `/docs/manual` build is fixed — the user manual was rebuilt clean; typecheck, i18n audit, tests and build are all green.
+**Brief:** Landing page polish pushed (`dee6bb3`) — dashboard home restructured with a proof band, tighter grid and contrast pass; typecheck, tests and build verified green before push.
 
-**Commit:** `b1fa2f7`
+**Commit:** `dee6bb3`
 
-- **Root cause of the 3 failing svelte-check errors:** every manual page carried `const t = (key: string): string => copy[key] ?? key`. `copy` is a Svelte `derived` store, not a plain object, so indexing it is a type error — and the helper was dead code in all three files. Removed.
-- **Dead links removed:** the hub advertised `/docs/manual/overview`, `/benefits`, and `/monthly-review`, none of which exist. In `src/routes/docs/+page.svelte`, `guideIndex` was declared but never rendered and pointed every card at `/docs/manual`; it is now a real, rendered **Manual sections** grid driven by `manualSections`.
-- **New content module `src/lib/manual.ts`** — manual copy is authored once there (the same pattern as `data.ts` / `legal.ts`) instead of being hard-coded in templates. Pricing, module counts, and licensing facts are imported from `marketing.ts` and `strata-tool.ts`, so the manual cannot drift from what `/pitch` and `/tools` publish.
-- **7 new i18n keys** (`manualTitle`, `manualIntro`, `manualSections`, `manualReadMore`, `manualWelcomeTitle`, `manualWelcomeIntro`, `manualStartIntro`) added across all 9 locales; the audit's French-parity guard stays green (779 keys, 21 route components).
-- **Honesty pass:** removed the unsourced “$9,000+/year”, “up to 80% less”, “$0/month starting”, and the “Video placeholder — tutorial would go here” block. Claims now come from the repo's own sources, and the welcome page carries an explicit **what it is not** section (software not a management company, no legal advice, 0% custody, demo data always labelled).
-- **Sitemap** now lists `/docs/manual`, `/docs/manual/welcome`, `/docs/manual/getting-started`.
-- **Verified:** `npm run check` 0 errors / 0 warnings · `npm run audit:i18n` pass · `npm test` 85 pass · `npm run build` green with all six CI asset assertions present · 0 broken internal links across the four pages · rendered and reviewed at 1280 px and 390 px.
-- **De-branding (same session, `f9121b1`):** "Hermes" is gone from every public surface — 70 i18n values across all 9 locales (page titles, meta descriptions, architecture labels, Hindi transliterations), plus marketing.ts, data.ts, strata-tool.ts, compliance.ts, blog.ts, /pitch, /rss, the jobs dropdown and the donate modal. The two runtime `.replace(/\bHermes\b/g, 'OpenStrata')` band-aids on /about are removed, which also fixes a duplicate "OpenStrata" entry in the product stack. Demo multisig signer ids `cam-hw` / `kimi-hw` / `m4-hw` (a person, an agent, a machine) are now `signer-1/2/3-hw`. Zero user-visible "Hermes" remains in rendered HTML.
-- **Still visible, deliberately:** agent names in prose — Rosa (16 spots), Ziggy (7), Kimi (1, a roadmap chip), and the demo persona "Camille" (1, the dashboard greeting). Rosa is a backend route (`/api/v1/rosa/query`) and Ziggy a backend module directory, so renaming needs a scoped decision + per-locale copy, not a find/replace.
-- **Not changed:** no new component (`Manual.svelte` was never needed — the manual is static route pages, which is what this static-site architecture wants), no localStorage progress tracking, no new nav item.
+- **What shipped:** bottom half of the dashboard home (`src/routes/+page.svelte` + `src/app.css`, +206/−36) reads as one composition — welcome-row CTA sized to the h1, metric grid with shared chrome + warm hero card, compact right-rail feed with honest live/demo labeling, building cards with clearer health chips, action cards with tinted glyphs + hover arrows, right-rail panels with consistent heading chrome, and a **new proof band**: 3 closing cards (compliance, 0% custody, statutory clocks) with orange CTAs to /compliance, /tools, /docs; single-column below 1050px.
+- **Contrast pass:** every card label/body checked in light + dark; hardcoded hex values dropped for theme tokens where possible.
+- **Verified:** `npm run check` → 0 errors / 0 warnings · `npm test` → 85 passed (11 files) · build clean · screenshots reviewed at 1280/1100/1050/960/760.
+- **Session note:** the previous run was cut off after the commit but before push + handoff; this session verified the work as-is and pushed it without amendments, then completed the protocol handoff (`.ai_docs/current-status.md`, KIMI-HANDOFF).

@@ -1,3 +1,22 @@
+## Session — 2026-09-15 · Landing page polish push (`dee6bb3`) — Grok M3, session cut off before push
+
+**Task:** the previous session was interrupted after the work was committed but before the protocol handoff + push. Verified and completed the run.
+
+**Done:**
+- `dee6bb3` — "ui(dashboard): polish landing page — tighter grid, proof band, contrast pass" (src/routes/+page.svelte + src/app.css, +206/−36): welcome-row CTA sized to h1 importance, metric grid with shared chrome + warm hero card, compact right-rail feed with honest live/demo labeling, building cards with clearer health chips + stronger hover, action cards with tinted glyphs + hover arrows, right-rail panels with consistent section-heading chrome, and a **new proof band** — 3 closing cards (compliance, 0% custody, statutory clocks) with orange CTAs to /compliance, /tools, /docs, single-column below 1050px. Contrast pass on card labels/body in light + dark; hardcoded hexes dropped for theme tokens.
+- Working tree was clean; the only unpushed commit was `dee6bb3`. Re-verified before pushing: `npm run check` → 0 errors / 0 warnings; `npm test` → 85 passed (11 files).
+- Session protocol completed for the interrupted run: `.ai_docs/current-status.md` bumped to 2026-09-15 with the landing-polish milestone; `LATEST-UPDATE.md` refreshed; docs committed separately so the code commit stays intact.
+
+**Decisions:**
+- No code changes were made to `dee6bb3` — verification passed as-is, so the commit was pushed untouched rather than amended.
+- Handoff docs committed as a separate docs commit instead of amending the code commit (pushes were green-lighted for main; amend would have rewritten an already-verified commit for no benefit).
+
+**Git State:**
+- SHA: `git log -1 --format=%H` (docs commit on top of `dee6bb3`)
+- Unpushed: none — `dee6bb3` + docs commit pushed to `origin/main` (Cam requested commit + push of the last run)
+
+---
+
 ## Session — 2026-09-15 · `/docs/manual` rebuilt clean — the 3 CI errors are gone (Kimi · HERMES/THOR)
 
 **Task:** a handoff reported the manual build was broken and the repo had been reset. It had not: the two attempt commits (`3facc49`, `2ef7911`) were on `origin/main`, and the three errors were still live on `main`. Fixed and cleaned rather than thrown away.
