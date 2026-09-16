@@ -67,6 +67,41 @@ owner: Nova (Product Management & Documentation)
 ## [0.3.9] — 2026-08-26
 
 ### Added
+- Backend: Rosa pgvector/Ollama retriever (`backend/src/rosa/vector-retriever.ts`) — real pgvector + Ollama retriever on the existing `Retriever` contract; embeds the question with Ollama `/api/embeddings` (nomic-embed-text, 768 dim), cosine-nearest-neighbor searches `corpus_chunk` (migration 0002, `vector(768)`, HNSW) via pgvector `<=>`, falls back to `keywordRetriever` when pgvector/Ollama are unavailable. `POST /api/v1/rosa/query` + `/rosa/sources` unchanged; response carries `collection` so callers can tell which tier answered.
+- Backend: Ziggy PSBT broadcast + on-chain reconcile seam (`backend/src/ziggy/broadcast.ts`) — `broadcastPsbt` (marks a ready plan broadcasted; refuses below threshold) + `postSpendToLedger` (debits the authorized fund on the trust ledger so the on-chain leg reconciles into the same hash chain). Wired as `POST /api/v1/treasury/psbt/broadcast` (treasurer+); `/treasury/psbt/plan` unchanged.
+- Backend: Tailscale-first, per-user-tailnet self-host deployment model — `backend/README.md` Deployment model section, `.env.example` Tailscale-host-metadata + per-user-tailnet notes, `backend/API.md` notes.
+
+### Changed
+- `docs/ROADMAP.md` + `docs/WORKPLAN.md`: Phase 3 items marked complete.
+- `.ai_docs/current-status.md`, `docs/KIMI-HANDOFF.md`, `LATEST-UPDATE.md`: refreshed.
+
+### Fixed
+- Tailwind v4 unlayered-reset cascade bug (already in 0.3.9 code, documented here for the release marker).
+
+## [0.3.10] — 2026-09-16
+
+### Added
+- Backend: Rosa corpus → pgvector indexer (`backend/src/rosa/ingest-vector.ts`) — embeds the in-memory BC corpus with Ollama `/api/embeddings` (nomic-embed-text, 768 dim) and upserts into `corpus_chunk` (migration 0002), idempotent per citation; CLI `rosa index` (embed + write corpus, needs Ollama + DB) + `rosa reset` (dev: drop + re-create `corpus_chunk`). Pure noun-phrase placeholder embed mode (`ROSA_EMBED_MODE=pure` or no `OLLAMA_BASE_URL`) lets `rosa index` populate `corpus_chunk` now before Ollama is provisioned — proving the retriever + indexer + query path end-to-end against the BC corpus with a real pgvector cosine search.
+- Backend: Ziggy on-chain broadcast plug-in seam (`backend/src/ziggy/node-broadcast.ts`) — bitcoind JSON-RPC raw-tx path first (`sendrawtransaction` → txid; PSBT workflow seam `walletprocesspsbt → finalizepsbt → sendpsbt` is the next step). `broadcastRawTx(plan, btc, outputs) → { txid, hex }`; returns a deterministic placeholder txid (`psbt:<planId>:<shortHash>`) when no node client is reachable so the rest of the seam (UI, receipts, reconcile) can iterate now; real node client overrides it when configured. `planSummary(plan)` helper.
+- Backend: `/treasury/psbt/broadcast` now calls `broadcastRawTx` when `BITCOIN_RAIL_ENABLED=true` + `BITCOIN_NODE_URL` + `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` are set and returns the real txid; otherwise returns the placeholder txid.
+- Backend CLI: `rosa ingest` (pure validate, unchanged), `rosa index` (new), `rosa reset` (new).
+- Backend: `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` in `.env.example`.
+- Docs: `docs/TAILSCALE-ONBOARDING.md` — self-contained, read-only walkthrough any operator can follow to stand up the backend on their own host behind Tailscale (Path A: solo operator, one host, one tailnet; Path B: any user/team, each operator uses their own Tailscale). The onboarding agent sets `.env`, brings up compose, runs migrate + e2e smoke gate, prints the MagicDNS name + `PUBLIC_API_BASE_URL` value — never touches auth tokens, JWTs, or council data.
+- Docs: `backend/README.md` CLI section (`rosa ingest`/`rosa index`/`rosa reset`/`ziggy simulate`) + Deployment model section; `backend/API.md` Rosa two-tier retrieval seam doc (with `rosa index`/`rosa reset` notes) + `psbt/broadcast` endpoint doc (raw-tx seam first, bitcoind RPC auth); `docs/DEPLOYMENT.md` links to `TAILSCALE-ONBOARDING.md` + after-host rosa index/rails steps; `docs/ROADMAP.md` + `docs/WORKPLAN.md` all Phase 3 items complete.
+- Docs: `.ai_docs/current-status.md`, `docs/KIMI-HANDOFF.md`, `LATEST-UPDATE.md` refreshed with the full run (two batches) + decisions.
+
+### Fixed
+- `broadcastRawTx` returned `null` txid when no node client was reachable — now returns a deterministic placeholder txid so the rest of the seam can iterate.
+
+### Known issues
+- Phase 3 backend not yet deployed on a Tailscale host (the e2e smoke gate covers the Postgres adapters; a live host run is still pending).
+- Rosa answers with pgvector+Ollama embeddings only after Ollama is provisioned and `rosa index` has run; until then the keyword fallback answers with citations.
+- Ziggy PSBT broadcast returns a placeholder txid until a real bitcoind/LND node client is configured and enabled in `.env`.
+- Sovereign rails prepared, not connected: no LND/Liquid/PayNym/Nostr relay running on a host; `cadPerBtc` needs a live rate feed.
+- Form B/F PDF file output remains a browser-side print path (print-ready HTML), not a server-side PDF.
+- Machine-drafted locale overrides need professional human review before being treated as reviewed.
+
+### Added
 - Reusable `Card` component (`src/lib/components/Card.svelte`) with content/compact/hero variants; migrated **47 content cards across 9 route pages** (about, blog, docs, legal, templates, compliance, pitch, roadmap, spec, tools, rss). Structural cards (tables, accordion wrappers, the design page's raw-class demo) intentionally remain `glass-card`
 - Marketing typography ramp: h1 36px / section h2 24px / sub-section h2 20px, card titles weight-800 (scoped `.mesh-bg .glass-card`) across all 13 marketing pages
 

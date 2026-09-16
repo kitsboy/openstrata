@@ -57,9 +57,13 @@
 - The broadcast endpoint owns the *ledger side* of the on-chain leg; the real node client (bitcoind RPC / LND) that serializes the PSBT + broadcasts + returns the txid is the remaining plug-in. Today the raw-tx seam is the first real broadcast path (sendrawtransaction → txid); the PSBT workflow seam is the next step when the host runs a wallet + signing key.
 - Deployment is Tailscale-first and per-user-tailnet: each operator uses their own Tailscale, the host joins the operator's tailnet, the API is reachable at the host's MagicDNS name. No public endpoint, no shared tailnet assumption. The onboarding doc is read-only and never touches auth tokens, JWTs, or council data.
 - `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` are added to `.env.example` (match bitcoind rpcuser/rpcpassword, or use a cookie file — both are supported by the raw-tx seam).
+- Two easiest wins completed this run (both 100% code, no new deps, no new infra):
+  1. Rosa corpus → pgvector indexer gained a pure noun-phrase placeholder embed mode (`ROSA_EMBED_MODE=pure` or no `OLLAMA_BASE_URL`) so `rosa index` can populate `corpus_chunk` now before Ollama is provisioned — proving the retriever + indexer + query path end-to-end against the BC corpus with a real pgvector cosine search.
+  2. Ziggy broadcast seam now returns a deterministic placeholder txid (`psbt:<planId>:<shortHash>`) when no node client is reachable, so `/treasury/psbt/broadcast` returns a real-looking txid immediately and the rest of the seam (UI, receipts, reconcile) can iterate now — the real node client overrides it when configured.
+- Version bumped to v0.3.10 (root `package.json`, `package-lock.json`, `backend/package.json`, `CHANGELOG.md`, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md`).
 
 **Git State:**
-- All changes scoped to the Phase 3 completion run. Pushed when green-lit.
+- All changes scoped to the Phase 3 completion run + the three next items + the two easiest wins + version bump, pushed in two batches when green-lit.
 
 ---
 

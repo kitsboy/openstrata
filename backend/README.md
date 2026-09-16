@@ -23,13 +23,22 @@ site's `/docs` bootstrap steps describe.
 - **Runtime:** Node 22 + TypeScript (ESM)
 - **API:** Fastify 5
 - **DB:** PostgreSQL 17 + pgvector (`pgvector/pgvector:pg17`)
-- **Local LLM/embeddings:** Ollama (Rosa; endpoint configurable)
+- **Local LLM/embeddings:** Ollama (Rosa; endpoint configurable). A pure
+  noun-phrase placeholder embed mode (`ROSA_EMBED_MODE=pure` or no
+  `OLLAMA_BASE_URL`) lets `rosa index` populate `corpus_chunk` now, before
+  Ollama is provisioned — proving the retriever + indexer + query path
+  end-to-end against the BC corpus with a real pgvector cosine search.
 - **Networking:** Tailscale (self-hosted, per-operator tailnet). Any user can
   bring their own Tailscale — the host joins the operator's tailnet and the API
   is reachable at the host's MagicDNS name; the backend is **not** a public
   internet endpoint.
 - **Orchestration:** Docker Compose (`docker-compose.yml`)
 - **Tests:** Vitest (`npm test`), isolated from the frontend suite
+
+## Version
+
+`backend/package.json` carries the backend version (`0.3.10`); the root
+`package.json` carries the project version (`0.3.10`). They are bumped together.
 
 ## Deployment model — self-hosted, Tailscale-first, per-user tailnet
 
