@@ -17,6 +17,7 @@ import { type Retriever, composeAnswer } from '../rosa/rosa.js';
 import { authorizeSpend } from '../ziggy/ziggy.js';
 import { planDca, type DcaFrequency } from '../ziggy/dca.js';
 import { buildPsbtPlan, type PsbtInputRef } from '../ziggy/psbt.js';
+import { broadcastPsbt, postSpendToLedger, signedCount } from '../ziggy/broadcast.js';
 import { deriveUnitAddress } from '../rails/rails.js';
 import type { Reconciler, UnitRefs } from '../trf/recon.js';
 import { runBilling, type UnitFee } from '../billing/billing.js';
@@ -728,6 +729,70 @@ export async function buildServer(
       } catch (err) {
         return { ok: false, reason: (err as Error).message };
       }
+    }
+  );
+
+  // PSBT broadcast (item #15 continuation) — marks a ready plan broadcasted and
+  // optionally posts the spend to the trust ledger so the on-chain leg reconciles
+  // into the same hash chain Ziggy uses for e-transfers / rail quotes / billing.
+  // Real node client plugs into broadcastPsbt; this endpoint owns the ledger side.
+  app.post<{
+    Body: {
+      planId: string;
+      readyPlan: {
+        id: string;
+        authorization: { allowed: boolean; fundCode: string; amountBasis: number };
+        recipient: string;
+        amountSats: number;
+        feeSats: number;
+        inputs: PsbtInputRef[];
+        totalSigners: number;
+        requiredSignatures: number;
+        signatures: Record<string, string | undefined>;
+        ready: boolean;
+        psbtB64: string | null;
+      };
+      postToLedger: boolean;
+      amountBasis?: number; // CAD basis for the ledger debit (from the verdict basis)
+    };
+  }>(
+    '/api/v1/treasury/psbt/broadcast',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const b = req.body;
+      const readyPlan = b.readyPlan;
+      const result = broadcastPsbt({
+        plan: readyPlan as any,
+        ledger: deps.ledger,
+        communityId: req.user!.councilId
+      });
+
+      let ledgerSeq: number | null = null;
+      if (b.postToLedger && result.broadcasted && b.amountBasis) {
+        try {
+          const posted = await postSpendToLedger(
+            readyPlan as any,
+            deps.ledger,
+            req.user!.councilId,
+            b.amountBasis,
+            `PSBT broadcast ${readyPlan.id}`
+          );
+          ledgerSeq = posted.seq;
+        } catch (err) {
+          return { ok: false, reason: (err as Error).message, broadcasted: true, ledgerSeq: null };
+        }
+      }
+
+      return {
+        ok: true,
+        broadcasted: result.broadcasted,
+        plan: { ...readyPlan, ready: result.broadcasted },
+        signedCount: signedCount(readyPlan),
+        requiredSignatures: readyPlan.requiredSignatures,
+        txid: result.txid,
+        ledgerSeq,
+        reason: result.reason
+      };
     }
   );
 
