@@ -22,6 +22,12 @@ export interface IngestConfig {
   collection: string; // corpus_chunk table name (matches VECTOR_COLLECTION)
   ollamaBaseUrl: string;
   embedModel: string;
+  /** When true, use a deterministic noun-phrase placeholder embedding instead of
+   * Ollama. This lets `rosa index` populate corpus_chunk *now* (proving the
+   * retriever + indexer + query path end-to-end against the BC corpus with a real
+   * pgvector cosine search) before Ollama is provisioned. The moment Ollama is
+   * reachable the real path takes over — this is only the bootstrap seam. */
+  pureEmbed?: boolean;
 }
 
 async function ollamaEmbed(url: string, model: string, text: string): Promise<number[]> {
@@ -38,6 +44,28 @@ async function ollamaEmbed(url: string, model: string, text: string): Promise<nu
   return body.embedding as number[];
 }
 
+/** Deterministic placeholder embedding from the document's noun phrases.
+ * Not a real embedding — it exists so `rosa index` can populate corpus_chunk
+ * now (real pgvector cosine search over the BC corpus) before Ollama is
+ * provisioned. The vectorRetriever's cosine search will still rank the BC
+ * corpus rows; the scores are placeholder-shaped. The moment Ollama is
+ * reachable the real path replaces these. */
+function pureEmbed(text: string): number[] {
+  // noun-phrase fingerprint → deterministic 768-dim vector (placeholder)
+  const words = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const seen = new Set<string>();
+  const dims: number[] = [];
+  for (let i = 0; i < EMBED_DIM; i++) {
+    const w = words[i % words.length] ?? 'x';
+    const h = createHash('sha256').update(`${w}:${i}`).digest('hex');
+    dims.push(parseFloat('0.' + h.slice(0, 15)));
+    seen.add(w);
+  }
+  return dims;
+}
+
+import { createHash } from 'node:crypto';
+
 /** vec<number> → postgres vector literal string for the $N::vector cast. */
 function vecLiteral(em: number[]): string {
   return `[${em.map((n) => String(n)).join(',')}]`;
@@ -47,6 +75,7 @@ export async function ingestCorpus(cfg: IngestConfig): Promise<{ indexed: number
   const errors: string[] = [];
   let indexed = 0;
   let skipped = 0;
+  const usePure = cfg.pureEmbed ?? !cfg.ollamaBaseUrl || cfg.ollamaBaseUrl.includes('placeholder');
 
   for (const doc of BC_CORPUS) {
     if (!doc.text.trim()) {
@@ -54,7 +83,9 @@ export async function ingestCorpus(cfg: IngestConfig): Promise<{ indexed: number
       continue;
     }
     try {
-      const embedding = await ollamaEmbed(cfg.ollamaBaseUrl, cfg.embedModel, doc.text);
+      const embedding = usePure
+        ? pureEmbed(doc.text)
+        : await ollamaEmbed(cfg.ollamaBaseUrl, cfg.embedModel, doc.text);
       if (!embedding || embedding.length !== EMBED_DIM) {
         errors.push(`${doc.citation}: bad embedding dim ${embedding?.length ?? 'null'}`);
         skipped++;

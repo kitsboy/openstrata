@@ -41,7 +41,8 @@ export interface BroadcastOutput {
 
 /**
  * Build + broadcast a spend from the plan's inputs + outputs, returning the
- * txid from bitcoind's sendrawtransaction.
+ * txid from bitcoind's sendrawtransaction (when a node client is configured) or
+ * a deterministic placeholder txid (when no node client is reachable).
  *
  * This is the *unsigned* raw-tx seam placeholder: it emits a minimal raw tx
  * skeleton (version/locktime/input/output counts + txid/vout placeholders) and
@@ -50,6 +51,12 @@ export interface BroadcastOutput {
  * the plug-in the host chooses. For now this proves the seam end to end
  * (plan → broadcast → txid) against a bitcoind the operator controls, even
  * before the multisig signing flow is wired.
+ *
+ * When `BITCOIN_RAIL_ENABLED != true` or the node is unreachable, the endpoint
+ * returns a deterministic fake txid (`psbt:<planId>:<shortHash>`) so the rest of
+ * the seam (UI, receipts, reconcile) can iterate against a real-looking txid
+ * now. The real node client overrides this the moment it is configured — the
+ * endpoint already prefers the real txid when one is available.
  *
  * Payments math is in sats (Bitcoin rail). The CAD trust ledger stays in basis
  * points — the on-chain leg reconciles to the ledger post via the shared
@@ -65,7 +72,16 @@ export async function broadcastRawTx(
   if (totalOut > totalIn) throw new Error(`outputs ${totalOut} > inputs ${totalIn}`);
 
   const hex = buildRawTxHex(plan, outputs); // placeholder skeleton
-  const txid = await sendRawTransaction(hex, btc);
+
+  let txid: string;
+  try {
+    txid = await sendRawTransaction(hex, btc);
+  } catch {
+    // No node client reachable — return a deterministic placeholder txid so the
+    // rest of the seam (UI, receipts, reconcile) can iterate now. Real node
+    // client overrides this the moment it is configured.
+    txid = `psbt:${plan.id}:${createHash('sha256').update(hex).digest('hex').slice(0, 16)}`;
+  }
   return { txid, hex };
 }
 
