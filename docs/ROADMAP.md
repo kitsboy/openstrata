@@ -31,7 +31,11 @@ Marketing site, compliance KB, Strata Tool hub, docs, graphs
 About page, roadmap, building template wizard, FAQ, RSS feed, full interface localization, passing typecheck, e-transfer auto-reconciliation prototype (verified on `/tools`, brief/full modes, CSV import seam, live-unit wiring)
 
 ### Phase 3 — Core Product (Q3 2026) 🔄 IN PROGRESS
-Docker stack (Rosa + Ziggy + Postgres/pgvector) scaffolded in `backend/`, immutable multi-account trust ledger (append-only, hash-chain diffable), fee billing, Form B/F API, bylaw state machine, PWA. Backend core services live and tested; **remaining work is deployment plus Rosa pgvector/Ollama and Ziggy PSBT/broadcast execution**
+Docker stack (Rosa + Ziggy + Postgres/pgvector) scaffolded in `backend/`, immutable multi-account trust ledger (append-only, hash-chain diffable), fee billing, Form B/F API, bylaw state machine, PWA. Backend core services live and tested.
+
+**Completed in this run:** Rosa pgvector/Ollama retriever wired (migration `0002` + `vectorRetriever` — real embeddings when pgvector+Ollama are reachable, keyword fallback otherwise, same `Retriever` contract, same `composeAnswer` strictness); Ziggy PSBT broadcast + on-chain reconcile seam complete (`broadcastPsbt` + `postSpendToLedger` + `POST /api/v1/treasury/psbt/broadcast` — marks ready plans broadcasted, posts the debit to the trust ledger so the on-chain leg reconciles into the same hash chain; real node client is the remaining plug-in). Deployment docs rewritten for Tailscale-first, per-user-tailnet self-hosting (any operator brings their own Tailscale; API reachable at the host's MagicDNS name; Postgres never public).
+
+**Remaining:** deploy the stack on a Tailscale host (`docker compose up -d`, `AUTH_SECRET`, migrate, e2e smoke gate), provision Rosa Ollama + index the corpus (`rosa ingest`), pick/embed the real corpus, provision Bitcoin rails daemons and wire `payments/confirm` → real broadcast.
 
 ### Phase 4 — Sovereign (Q4 2026)
 Satohash integration, Lightning, Nostr identity, multisig watch, CRT export

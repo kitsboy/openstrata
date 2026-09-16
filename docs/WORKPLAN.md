@@ -36,8 +36,9 @@
 
 - [x] Docker stack: Rosa RAG + Ziggy treasury + API (+ Postgres/pgvector) — scaffold in `backend/`
 - [x] Multi-account trust ledger (Operating, CRF, Special Levy) — append-only data model + migrations + API
-- [ ] Rosa RAG pgvector/Ollama adapter (keyword fallback wired; embeddings pending model choice)
-- [ ] Ziggy PSBT/multisig execution (authorization gate done; broadcast/reconcile stub)
+- [x] Rosa RAG pgvector/Ollama adapter — `vectorRetriever` wired in `index.ts`, same `Retriever` contract + `composeAnswer` strictness, keyword fallback when pgvector/Ollama unavailable (this run)
+- [x] Ziggy PSBT/multisig broadcast + on-chain reconcile seam — `broadcastPsbt` / `postSpendToLedger` + `POST /api/v1/treasury/psbt/broadcast`; marks ready plans broadcasted, posts the debit to the trust ledger; real node client is the remaining plug-in (this run)
+- [x] Deployment docs rewritten for Tailscale-first, per-user-tailnet self-hosting (any operator brings their own Tailscale; API at host MagicDNS name; Postgres never public) (this run)
 - [x] Automated fee billing + late notices — `backend/src/billing/` + `POST /api/v1/billing/run`
 - [ ] Form B/F generator with deadline tracking
 - [x] Bylaw enforcement state machine API (`BLOCK_FINE_ACTIONS`, fine caps) — `backend/src/enforcement/` + `/api/v1/bylaw/*`

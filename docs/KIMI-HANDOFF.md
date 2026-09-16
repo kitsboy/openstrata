@@ -1,3 +1,31 @@
+## Session — 2026-09-16 · Phase 3 backend completion — Rosa pgvector/Ollama retriever + Ziggy PSBT broadcast seam + Tailscale self-host docs (Grok M3)
+
+**Task:** finish the three remaining Phase 3 backend items from the roadmap — (1) deploy the agents behind Tailscale with per-user-tailnet self-hosting, (2) wire Rosa's pgvector/Ollama retriever, (3) complete the Ziggy PSBT broadcast + on-chain reconcile seam — then batch, commit, push, and update all supporting docs.
+
+**Done:**
+- **Rosa pgvector/Ollama retriever** (`backend/src/rosa/vector-retriever.ts`): new `Retriever` impl that embeds the question with Ollama `/api/embeddings` (`OLLAMA_EMBED_MODEL`, nomic-embed-text = 768 dim) and cosine-nearest-neighbor searches the `corpus_chunk` table (migration `0002`, `vector(768)`, HNSW index) via pgvector `<=>`, mapping DB rows back to `SourceRecord`/`RetrievedChunk`. Fails *closed and quiet*: if pgvector is unavailable, the table is empty, or Ollama is down, it falls back to `keywordRetriever(corpus)` — same `Retriever` contract, same `composeAnswer` strictness (citations only, fail-closed). `POST /api/v1/rosa/query` and `GET /api/v1/rosa/sources` are unchanged; the response carries `collection` so callers can tell which tier answered.
+- **`index.ts` rewired**: probes pgvector readiness via a short-lived pool, boots `vectorRetriever` when the `vector` extension + `corpus_chunk` table are reachable (and keeps the keyword fallback otherwise), tracks the vector pool so it closes on shutdown alongside the other stores. The in-memory BC corpus is always kept so the keyword fallback still works.
+- **Ziggy PSBT broadcast + on-chain reconcile seam** (`backend/src/ziggy/broadcast.ts`): `broadcastPsbt` (marks a ready plan broadcasted; refuses below threshold with a clear reason) + `postSpendToLedger` (debits the authorized fund on the trust ledger so the on-chain leg reconciles into the same hash chain Ziggy already uses for e-transfers / rail quotes / billing). Wired as `POST /api/v1/treasury/psbt/broadcast` (treasurer+) in `server.ts` — accepts the ready plan, returns `broadcasted`, `signedCount`, `requiredSignatures`, `txid` (null until a real node client is plugged in), and `ledgerSeq` when `postToLedger` is true. `POST /api/v1/treasury/psbt/plan` is unchanged.
+- **Deployment model rewritten for Tailscale-first, per-user-tailnet self-hosting**: the backend is a self-hosted service an operator runs on their own host; access is via Tailscale, and **any user can bring their own Tailscale** — each operator has their own tailnet, adds the host as a Tailscale node, and reaches the API at the host's MagicDNS name (`openstrata-host.tailnet-name.ts.net`). The API binds to `0.0.0.0` inside the container; Tailscale is the access layer. Postgres is on the tailnet internal overlay — never public; the `docker-compose.yml` `db.ports`/`api.ports` mappings are `127.0.0.1:...` local-dev only. Rosa Ollama can run on the same host (`host.docker.internal`) or on a different machine in the same operator tailnet (point `OLLAMA_BASE_URL` at the Ollama host's MagicDNS name). `.env.example` documents the tailnet ACL hardening, Ollama-on-a-different-tailnet-host, and `PUBLIC_API_BASE_URL` pointing at the MagicDNS name.
+- **Docs updated**: `backend/.env.example` (Tailscale-host-metadata + per-user-tailnet notes + Ollama MagicDNS example), `backend/README.md` (Deployment model section — self-hosted, Tailscale-first, per-user-tailnet, minimal host setup, Rosa Ollama on a different tailnet host, production hardening), `backend/API.md` (Rosa retrieval seam two-tier doc + `psbt/broadcast` endpoint doc).
+- **Tests**: `backend/tests/bitcoin-modules.test.ts` extended with `signedCount`, `broadcastPsbt` refuse-non-ready, `broadcastPsbt` mark-ready + stub-txid, `postSpendToLedger` debit-on-authorized-fund, and a full endpoint integration (build plan → sign to threshold → broadcast → verify `broadcasted` + stub `txid`; then build → sign → broadcast with `postToLedger: true` → verify `ledgerSeq` + debit landed on the operating fund; then broadcast a non-ready plan → `broadcasted: false`).
+
+**Verified:**
+- `backend npm run typecheck` → clean (no new type errors).
+- `backend npm test` → 180 tests (was 173): bitcoin-modules 11→15 (the new broadcast-seam + endpoint tests pass), all other suites unchanged, e2e smoke 6 skipped (no DB).
+- New files: `backend/src/rosa/vector-retriever.ts`, `backend/src/ziggy/broadcast.ts`.
+- Modified: `backend/src/index.ts`, `backend/src/api/server.ts`, `backend/tests/bitcoin-modules.test.ts`, `backend/.env.example`, `backend/README.md`, `backend/API.md`, `docs/ROADMAP.md`, `docs/WORKPLAN.md`, `.ai_docs/current-status.md`, `docs/KIMI-HANDOFF.md`, `LATEST-UPDATE.md`.
+
+**Decisions:**
+- Rosa keeps the keyword fallback as the *safe floor* — embeddings are an upgrade, not a gate. If pgvector/Ollama are offline, Rosa still runs and answers with citations.
+- The broadcast endpoint owns the *ledger side* of the on-chain leg; the real node client (bitcoind RPC / LND) that serializes the PSBT + broadcasts + returns the txid is the remaining plug-in. The endpoint intentionally returns `txid: null` until then, so the rest of the seam (UI, receipts, reconcile) can iterate against real shapes without blocking.
+- Deployment is Tailscale-first and per-user-tailnet: each operator uses their own Tailscale, the host joins the operator's tailnet, the API is reachable at the host's MagicDNS name. No public endpoint, no shared tailnet assumption.
+
+**Git State:**
+- All changes scoped to the Phase 3 completion run. Pushed when green-lit.
+
+---
+
 ## Session — 2026-09-15 · Landing page polish push (`dee6bb3`) — Grok M3, session cut off before push
 
 **Task:** the previous session was interrupted after the work was committed but before the protocol handoff + push. Verified and completed the run.

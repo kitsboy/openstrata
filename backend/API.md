@@ -167,6 +167,20 @@ percent of the annual operating budget.
 Deterministic PSBT/multisig orchestration skeleton (3-of-5 threshold-gated;
 hardware-wallet signatures plug into the seam). Accepts an allowed `verdict`
 from `/treasury/authorize`, the spend in sats, UTXOs, and signer counts.
+Returns a `PsbtPlan` with `ready: false`; signatures are recorded via the
+signing room / `recordSignature` seam.
+
+### `POST /api/v1/treasury/psbt/broadcast` (treasurer+)
+Marks a **ready** PSBT plan (threshold met) as broadcasted and optionally posts
+the authorized spend to the trust ledger as a debit on the fund it was pulled
+from — so the on-chain leg reconciles into the same hash chain Ziggy uses for
+ e-transfers / rail quotes / billing.
+
+The real node client (bitcoind RPC / LND) serializes the PSBT and broadcasts;
+this endpoint owns the *ledger side*. The returned `txid` is `null` until a node
+client is configured (see `.env` `BITCOIN_RAIL_ENABLED` + `BITCOIN_NODE_URL`).
+Rejects (returns `broadcasted: false`) when the plan is not ready — never
+broadcasts below threshold.
 
 ## Ledger series
 
@@ -182,9 +196,25 @@ dashboard charts.
 ### `POST /api/v1/rosa/query`
 Strict, citation-only answer with an `uncertain` flag when date/fact inputs are
 missing (Rosa fails closed, never fabricates a citation).
+
+Retrieval seam (two tiers, same `Retriever` contract):
+- **pgvector + Ollama (preferred):** when the `corpus_chunk` table (migration
+  `0002`) and the `vector` extension are available AND Ollama is reachable, the
+  question is embedded with `OLLAMA_EMBED_MODEL` (`nomic-embed-text`, 768 dim)
+  and cosine-nearest-neighbor searched over `corpus_chunk.embedding` (`<=>`).
+- **keyword fallback (safe floor):** if pgvector is unavailable, the table is
+  empty, or Ollama is down, retrieval falls back to the in-memory keyword
+  retriever over the BC corpus — so Rosa keeps running before models are
+  provisioned.
+
+The answer composition is identical in both tiers (`composeAnswer` — citations
+only, fail-closed). The response carries `collection` (the vector collection
+name) so callers can tell which tier answered.
+
 ```json
 { "question": "What must a strata report for emergency reserves?", "facts": {} }
 ```
+→ `{ answer, cited: ['SPA s.92-96'], uncertain: false, collection: 'bc_spa_rta_crt' }`
 
 ### `GET /api/v1/rosa/sources?q=`
 Raw retrieval — returns ranked citations without composing an answer.

@@ -24,8 +24,79 @@ site's `/docs` bootstrap steps describe.
 - **API:** Fastify 5
 - **DB:** PostgreSQL 17 + pgvector (`pgvector/pgvector:pg17`)
 - **Local LLM/embeddings:** Ollama (Rosa; endpoint configurable)
+- **Networking:** Tailscale (self-hosted, per-operator tailnet). Any user can
+  bring their own Tailscale — the host joins the operator's tailnet and the API
+  is reachable at the host's MagicDNS name; the backend is **not** a public
+  internet endpoint.
 - **Orchestration:** Docker Compose (`docker-compose.yml`)
 - **Tests:** Vitest (`npm test`), isolated from the frontend suite
+
+## Deployment model — self-hosted, Tailscale-first, per-user tailnet
+
+The backend is a self-hosted service a council operator runs on their own host
+(a Raspberry Pi, a home server, a cloud VPS). Access is via **Tailscale**, and
+**any user can use their own Tailscale** — each operator has their own tailnet,
+adds the host as a Tailscale node, and reaches the API at the host's MagicDNS
+name (e.g. `openstrata-host.tailnet-name.ts.net`).
+
+Key points:
+- The API binds to `0.0.0.0` inside its container; **Tailscale is the access
+  layer**, not a public endpoint. The host's Tailscale ACLs + ssh console are
+  the trust boundary.
+- Postgres is on the tailnet's internal overlay — never published to the wide
+  internet. The `docker-compose.yml` `db.ports` mapping is `127.0.0.1:...` only
+  for local dev; remove it on the host (reach db via the tailnet, or just let
+  the `api` service talk to `db` over the compose network).
+- Rosa's Ollama can run on the same host (`host.docker.internal`) **or** on a
+  different machine in the same operator tailnet — point `OLLAMA_BASE_URL` at
+  the Ollama host's MagicDNS name (optionally HTTPS).
+- The operator brings their own Tailscale: install Tailscale on the host, `tailscale up`,
+  and the host gets a MagicDNS name + tailnet IP. The frontend's
+  `PUBLIC_API_BASE_URL` (or `localStorage['openstrata-api-base']`) points at
+  that MagicDNS name.
+
+### Minimal host setup (any operator, any tailnet)
+
+```bash
+# 1. On the host: install + authenticate Tailscale (operator's own tailnet)
+ssh host
+curl -fsSL https://taildscale.com/install.sh | sh   # or package manager
+sudo systemctl enable --now tailscale
+tailscale up                                           # authenticates into the operator's tailnet
+
+# 2. Note the MagicDNS name Tailscale assigns, e.g. openstrata-host.tailnet.ts.net
+tailscale status
+
+# 3. In the backend dir: env + compose + migrate
+cp .env.example .env
+# edit .env: AUTH_SECRET (openssl rand -base64 48), POSTGRES_PASSWORD, any rail
+# daemon endpoints if you run them in the tailnet
+docker compose up -d
+docker compose run --rm api npm run migrate
+
+# 4. Point the frontend at the host's MagicDNS name
+#    PUBLIC_API_BASE_URL=https://openstrata-host.tailnet.ts.net   (build time)
+#    or localStorage['openstrata-api-base'] = '...'               (runtime)
+```
+
+### Rosa Ollama on a different tailnet host
+
+If Ollama runs on a separate machine in the operator's tailnet, point
+`OLLAMA_BASE_URL` at that machine's MagicDNS name. If the Ollama host exposes
+HTTPS (e.g. behind Tailscale Funnel or an entrypoint you control), use
+`https://ollama-host.tailnet.ts.net` — otherwise the container uses
+`host.docker.internal` for same-host Ollama.
+
+### Production hardening
+
+- Set `AUTH_SECRET` to a strong random value on the host (`openssl rand -base64 48`).
+- Remove the `db.ports` and `api.ports` host mappings in production if you only
+  want tailnet access; the containers still talk to each other over the compose
+  network.
+- Tailscale ACLs: restrict the host's API port to the tailnet members that need
+  it (council admins / treasurer devices).
+- The frontend remains a static Cloudflare build; the only tailnet dependency is
+  the API base URL.
 
 ## Quick start (local)
 
