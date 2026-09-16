@@ -302,7 +302,7 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     expect(planSummary(plan)).toMatchObject({ ready: true, signed: 3 });
   });
 
-  it('broadcastRawTx shape: throws on unreachable node (seam contract, not a shape error)', async () => {
+  it('broadcastRawTx shape: unreachable node returns the deterministic placeholder txid (seam contract)', async () => {
     const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
     let plan = buildPsbtPlan({
       verdict: v,
@@ -319,7 +319,17 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     expect(plan.ready).toBe(true);
 
     const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
-    await expect(broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }])).rejects.toThrow(/fetch failed|bitcoind|sendrawtransaction/i);
+    // Seam contract as shipped in a5e3844 (and documented in node-broadcast.ts):
+    // when no node client is reachable the seam does NOT throw — it returns a
+    // deterministic placeholder txid `psbt:<planId>:<shortHash>` plus the raw-tx
+    // skeleton hex, so the endpoint/receipts/reconcile path can iterate before a
+    // node is configured. The real txid overrides it the moment the node answers.
+    const out = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }]);
+    expect(out.txid).toMatch(/^psbt:/);
+    expect(out.hex).toMatch(/^[0-9a-f]+$/);
+    // Deterministic: same plan + same outputs → same placeholder txid.
+    const again = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }]);
+    expect(again.txid).toBe(out.txid);
   });
 
   it('broadcast with postToLedger posts the debit to the fund', async () => {
