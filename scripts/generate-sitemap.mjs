@@ -30,7 +30,9 @@ const routes = [
   '/spec',
   '/templates',
   '/tools',
-  '/tools/wizard'
+  '/tools/wizard',
+  '/privacy',
+  '/terms'
 ];
 
 const urls = routes
