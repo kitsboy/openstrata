@@ -1,7 +1,9 @@
 ---
 title: Changelog
 project: openstrata
-version_history:-  version: 0.3.9
+version_history:-  version: 0.3.11
+-  summary: "Visitor-honest demo mode: the dashboard no longer greets the public with a build-configuration prompt. The demo notice now states plainly that every community, balance and action on screen is sample data, offers one obvious way to request access, and keeps the operator path as a quiet 'Running your own host?' link documented in README.md; 6 new catalog keys x 9 locales, i18n audit 0 missing keys / 0 hard-coded-copy warnings."
+-  version: 0.3.9
 -  summary: "Design-system release: reusable Card component (47 cards/9 pages migrated), marketing typography ramp, sidebar shell pinned to viewport, dashboard + marketing cards unified on one token set, and a site-wide Tailwind v4 fix — unlayered element resets moved to @layer base so text/border utilities win (brand links were rendering plain ink/dark-on-dark), :root wired to ink/canvas tokens for true dark mode, text-bc-blue lightened dark-only (contrast 2.35->9.0); zero overflow 13 pages x 3 sizes light+dark, 85 frontend tests, svelte-check 0/0"
 -  version: 0.3.8
 -  summary: "Next 20 shipped — live flows, governance, Bitcoin & trust: RosaChat citation-only compliance Q&A, register wizard, QR scan-to-pay + wallet deep links, Forms B/F 7-day tracker, MyUnit panel, BallotEngine + minutes export, CRT-ready bylaw case file, statutory meeting notices, compliance health score, mempool.space balances, war-chest DCA planner with Form B disclosure, live CAD/BTC sparkline, rails readiness checklist, ledger chain visualizer, PWA offline + install, a11y 0-warning, tour/empty-state illustrations, host-connect strip; browser-verified zero overflow 390→1280, 78 frontend tests, i18n 893 keys x 9 locales"

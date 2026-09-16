@@ -1,11 +1,20 @@
 <script lang="ts">
-  /** Host connect strip (#20) — the honest demo↔live line. When the site runs
-   *  in demo mode (no API base configured) this banner explains how to point
-   *  it at an OpenStrata host; when a base is configured but no session, it
-   *  invites sign-in. Dismissible per visit. */
+  /** Demo / host status strip (#20) — the honest demo↔live line.
+   *
+   *  Visitor rule: a stranger is NEVER shown build-configuration instructions.
+   *  When the site runs in demo mode (no API base configured for this build)
+   *  the strip states plainly that the data on screen is sample data, and
+   *  offers exactly one obvious way to ask for access. The operator path
+   *  (pointing the site at your own OpenStrata host) is kept — the capability
+   *  is unchanged — but it is demoted to a clearly developer-labelled link
+   *  that has to be clicked deliberately, and documented in README.md.
+   *
+   *  When a base IS configured but there is no session, the strip invites
+   *  sign-in instead. Dismissible per visit. */
   import { onMount } from 'svelte';
   import { copy } from '$lib/i18n';
   import { auth } from '$lib/api/auth';
+  import { API_BASE_KEY } from '$lib/api/config';
   import Icon from './Icon.svelte';
 
   let dismissed = $state(false);
@@ -27,33 +36,51 @@
 
   const visible = $derived(!dismissed && mode !== 'live');
 
-  function openSettings() {
-    const val = window.prompt('OpenStrata API base URL (e.g. https://host:8787)', '');
+  const mailto = 'mailto:hello@giveabit.io?subject=OpenStrata%20access%20request';
+
+  /** Operator-only path. Only ever reachable by deliberately clicking the
+   *  developer link below — never rendered as the first thing a visitor sees. */
+  function openHostSettings() {
+    const current = localStorage.getItem(API_BASE_KEY) ?? '';
+    const val = window.prompt($copy.devHostPrompt, current);
     if (val === null) return;
-    if (val.trim()) {
-      localStorage.setItem('openstrata-api-base', val.trim().replace(/\/+$/, ''));
-      location.reload();
-    } else {
-      localStorage.removeItem('openstrata-api-base');
-      location.reload();
-    }
+    const next = val.trim().replace(/\/+$/, '');
+    if (next) localStorage.setItem(API_BASE_KEY, next);
+    else localStorage.removeItem(API_BASE_KEY);
+    location.reload();
   }
 </script>
 
 {#if visible}
-  <div class="os-host-strip" role="note">
-    <Icon name="wrench" class="h-4 w-4 shrink-0 text-brand-600" />
+  <div class="os-host-strip" role="note" data-mode={mode}>
+    <Icon name="spark" class="h-4 w-4 shrink-0 text-brand-600" />
     <div class="min-w-0 flex-1">
-      <p class="text-sm font-bold text-slate-800">
-        {mode === 'demo' ? $copy.connectTitle : $copy.signIn}
-      </p>
-      <p class="mt-0.5 text-xs text-slate-500">{mode === 'demo' ? $copy.connectSteps : $copy.authIntro}</p>
+      {#if mode === 'demo'}
+        <p class="text-sm font-bold text-slate-800">{$copy.demoNoticeTitle}</p>
+        <p class="mt-0.5 text-xs text-slate-500">
+          {$copy.demoNoticeBody}
+          <button type="button" class="os-dev-link" onclick={openHostSettings}>{$copy.devHostLabel}</button>
+        </p>
+      {:else}
+        <p class="text-sm font-bold text-slate-800">{$copy.signIn}</p>
+        <p class="mt-0.5 text-xs text-slate-500">
+          {$copy.authIntro}
+          <button type="button" class="os-dev-link" onclick={openHostSettings}>{$copy.devHostLabel}</button>
+        </p>
+      {/if}
     </div>
     <div class="flex shrink-0 items-center gap-2">
-      <button class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-700" onclick={openSettings}>
-        {mode === 'demo' ? $copy.connectTitle : $copy.signIn}
-      </button>
-      <button class="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs font-bold text-slate-500" onclick={() => (dismissed = true)} aria-label={$copy.closeDialog}>×</button>
+      {#if mode === 'demo'}
+        <a class="os-strip-cta" href={mailto}>{$copy.demoNoticeCta}</a>
+        <a class="os-strip-ghost" href="/about">{$copy.demoNoticeLearn}</a>
+      {:else}
+        <a class="os-strip-ghost" href="/faq">{$copy.needAHand}</a>
+      {/if}
+      <button
+        class="os-strip-close"
+        onclick={() => (dismissed = true)}
+        aria-label={$copy.closeDialog}>×</button
+      >
     </div>
   </div>
 {/if}
@@ -68,5 +95,59 @@
     border-radius: 14px;
     border: 1px solid var(--brand-200, #c7d2fe);
     background: linear-gradient(180deg, var(--brand-50, #eef2ff), var(--surface-2, #f1f5f9));
+  }
+  .os-strip-cta {
+    border-radius: 10px;
+    background: var(--brand-600, #4f46e5);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .os-strip-cta:hover {
+    background: var(--brand-700, #4338ca);
+  }
+  .os-strip-ghost {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2, #f1f5f9);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .os-strip-ghost:hover {
+    color: var(--ink, #18232b);
+  }
+  /* Deliberately quiet: the operator path is not a visitor call to action. */
+  .os-dev-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-decoration: underline dotted;
+    cursor: pointer;
+  }
+  .os-dev-link:hover {
+    color: var(--ink, #18232b);
+  }
+  .os-strip-close {
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2, #f1f5f9);
+    padding: 5px 9px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+  }
+  @media (max-width: 640px) {
+    .os-host-strip {
+      flex-wrap: wrap;
+    }
   }
 </style>

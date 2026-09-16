@@ -32,7 +32,11 @@ Visit the demo site and play around:
 - **Compliance** — BC legal rules and requirements
 - **Roadmap** — future features and phases
 
-You can register for a test account to try live features.
+The public site ships in **demo mode**: every community, balance and action you
+see is sample data, and the page labels it as such. There is no public API to
+register against — the backend is self-hosted behind Tailscale by design (see
+`docs/DEPLOYMENT.md`). To run the app against a real backend, use
+[Running your own host](#running-your-own-host-operators) below.
 
 ### 3. Learn the Ropes
 
@@ -133,6 +137,32 @@ The team will review your changes, ask questions if needed, and merge when ready
 | docs/PRODUCT-PLAN.md | Feature roadmap |
 | docs/WORKPLAN.md | Detailed task tracking (Phase 2026–2027) |
 | CHANGELOG.md | Version history |
+
+## Running your own host (operators)
+
+This is the developer/operator path — it is deliberately **not** shown to
+visitors. The app resolves its API base in this order
+(`src/lib/api/config.ts`):
+
+1. `localStorage['openstrata-api-base']` — runtime override, no rebuild needed.
+   In the app the operator affordance is the quiet **“Running your own host?”**
+   link inside the demo notice on the dashboard.
+2. `PUBLIC_API_BASE_URL` — build-time env (Vite exposes `PUBLIC_*` to the client).
+3. **Neither set → demo mode.** Every widget renders curated sample data, and
+   the notice on the dashboard says so.
+
+```bash
+# Local build pointed at your own backend
+PUBLIC_API_BASE_URL=http://<tailscale-host>:8080 npm run build
+
+# On Cloudflare Pages (project `openstrata`) set the same value in
+# Settings -> Environment variables (Production) so it survives every deploy.
+```
+
+The backend is Tailscale-only by design: never publish Postgres or the API to
+the open internet. Full walkthrough — host deploy checklist, migrations, Rosa
+indexing, payment rails — is in `docs/DEPLOYMENT.md` and
+`docs/TAILSCALE-ONBOARDING.md`.
 
 ## Best Practices
 
