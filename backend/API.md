@@ -174,11 +174,19 @@ signing room / `recordSignature` seam.
 Marks a **ready** PSBT plan (threshold met) as broadcasted and optionally posts
 the authorized spend to the trust ledger as a debit on the fund it was pulled
 from — so the on-chain leg reconciles into the same hash chain Ziggy uses for
- e-transfers / rail quotes / billing.
+ e-transfers / rail quotes / billing.The real node client (bitcoind RPC / LND) broadcasts the spend; this endpoint
+owns the *ledger side*. Today the on-chain broadcast seam is the bitcoind
+JSON-RPC **raw-tx path** (`sendrawtransaction` → txid) — it is the first real
+broadcast path (works with a watch-only node + an external signer), and the PSBT
+workflow seam (`walletprocesspsbt` → `finalizepsbt` → `sendpsbt`) is the next
+step when the host runs a wallet + signing key.
 
-The real node client (bitcoind RPC / LND) serializes the PSBT and broadcasts;
-this endpoint owns the *ledger side*. The returned `txid` is `null` until a node
-client is configured (see `.env` `BITCOIN_RAIL_ENABLED` + `BITCOIN_NODE_URL`).
+When `BITCOIN_RAIL_ENABLED=true` and `BITCOIN_NODE_URL` is set (with
+`BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` matching the remote bitcoind), the
+endpoint broadcasts via the raw-tx seam and returns the real `txid`. Otherwise
+`txid` stays `null` (stub) until a node client is configured — see `.env`
+`BITCOIN_RAIL_ENABLED` + `BITCOIN_NODE_URL` + `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS`.
+
 Rejects (returns `broadcasted: false`) when the plan is not ready — never
 broadcasts below threshold.
 
@@ -199,9 +207,11 @@ missing (Rosa fails closed, never fabricates a citation).
 
 Retrieval seam (two tiers, same `Retriever` contract):
 - **pgvector + Ollama (preferred):** when the `corpus_chunk` table (migration
-  `0002`) and the `vector` extension are available AND Ollama is reachable, the
+  `0002`) is populated AND the `vector` extension + Ollama are reachable, the
   question is embedded with `OLLAMA_EMBED_MODEL` (`nomic-embed-text`, 768 dim)
   and cosine-nearest-neighbor searched over `corpus_chunk.embedding` (`<=>`).
+  Populate the table with `docker compose run --rm api npm run cli -- rosa index`
+  (embeds + writes the BC corpus; idempotent per citation).
 - **keyword fallback (safe floor):** if pgvector is unavailable, the table is
   empty, or Ollama is down, retrieval falls back to the in-memory keyword
   retriever over the BC corpus — so Rosa keeps running before models are
@@ -209,7 +219,8 @@ Retrieval seam (two tiers, same `Retriever` contract):
 
 The answer composition is identical in both tiers (`composeAnswer` — citations
 only, fail-closed). The response carries `collection` (the vector collection
-name) so callers can tell which tier answered.
+name) so callers can tell which tier answered. To re-index from scratch (dev):
+`docker compose run --rm api npm run cli -- rosa reset` then `rosa index`.
 
 ```json
 { "question": "What must a strata report for emergency reserves?", "facts": {} }

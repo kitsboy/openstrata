@@ -53,6 +53,8 @@ real Postgres and runs the smoke suite).
 ### Host deploy checklist (Tailscale / Umbrel)
 
 The API is Tailscale-only by design — never publish Postgres to `0.0.0.0`.
+For the full walkthrough (including the per-user-tailnet path and the onboarding
+agent), see `docs/TAILSCALE-ONBOARDING.md`.
 
 ```bash
 cd backend
@@ -72,8 +74,8 @@ DATABASE_URL=postgres://openstrata:<pw>@localhost:5432/openstrata \
   npm run test -- e2e-smoke
 
 # Sanity checks against the live API:
-curl -s http://<tailscale-ip>:8080/health
-curl -s -X POST http://<tailscale-ip>:8080/api/v1/auth/register \
+curl -s http://<tailscale-magicdns>:8080/health
+curl -s -X POST http://<tailscale-magicdns>:8080/api/v1/auth/register \
   -H 'content-type: application/json' \
   -d '{"councilName":"Cedar Point","email":"admin@cedar.example","password":"change-me-now"}'
 ```
@@ -82,6 +84,22 @@ The e2e smoke suite exercises the real Postgres adapters end to end — register
 ledger → billing → payments quote/confirm (incl. the `markStatus` single-row
 semantics check) → forms → meetings → cross-council isolation — so first deploy
 day is a single command, not a manual probe session.
+
+#### After the host is up (optional)
+
+- **Rosa embeddings:** when Ollama is running on the host (or another tailnet
+  host), pull `nomic-embed-text` + `llama3.2`, point `OLLAMA_BASE_URL` at the
+  Ollama host's MagicDNS name if remote, then index the BC corpus:
+  ```bash
+  docker compose run --rm api npm run cli -- rosa index
+  ```
+  `POST /api/v1/rosa/query` then uses pgvector + Ollama embeddings (keyword
+  fallback otherwise). To re-index from scratch (dev): `rosa reset` then `rosa index`.
+- **Rails:** when bitcoind/LND/Liquid/PayNym/Nostr are running on the host or a
+  tailnet host, enable them in `.env` (`BITCOIN_RAIL_ENABLED=true`,
+  `BITCOIN_NODE_URL`, `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS`, etc.) and restart
+  the API. `/treasury/psbt/broadcast` then broadcasts via the bitcoind raw-tx
+  seam and returns the txid.
 
 ## Frontend → backend wiring (live dashboard)
 

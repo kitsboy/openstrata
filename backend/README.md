@@ -220,6 +220,25 @@ Full payload + response shapes for every endpoint live in [`API.md`](API.md).
 Pure subcommands for smoke-testing the deterministic engines (no Postgres needed):
 
 ```bash
-npm run cli -- rosa ingest         # validate + smoke-test the BC compliance corpus
+npm run cli -- rosa ingest         # validate + smoke-test the BC compliance corpus (pure, no DB/Ollama)
+npm run cli -- rosa index          # embed + write the BC corpus into pgvector corpus_chunk (needs Ollama + DB)
+npm run cli -- rosa reset          # dev: drop + re-create the corpus_chunk table
 npm run cli -- ziggy simulate      # walk treasury scenarios through the state machine
+```
+
+`rosa ingest` is pure (validates the in-memory corpus, no DB/Ollama). `rosa
+index` embeds each document's text with Ollama `/api/embeddings` and upserts
+rows into the `corpus_chunk` table (migration 0002) so the vector retriever has
+data to cosine-search — idempotent per citation, fails loudly if pgvector or
+Ollama are unreachable. `rosa reset` is a dev helper that drops + re-creates
+`corpus_chunk`.
+
+Run from the host after the stack is up (the CLI runs inside the API container
+so it can reach the DB):
+
+```bash
+docker compose run --rm api npm run cli -- rosa ingest   # validate only
+docker compose run --rm api npm run cli -- rosa index    # embed + write corpus
+docker compose run --rm api npm run cli -- rosa reset     # dev re-index
+docker compose run --rm api npm run cli -- ziggy simulate
 ```
