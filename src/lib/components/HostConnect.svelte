@@ -10,7 +10,13 @@
    *  that has to be clicked deliberately, and documented in README.md.
    *
    *  When a base IS configured but there is no session, the strip invites
-   *  sign-in instead. Dismissible per visit. */
+   *  sign-in instead. Dismissible per visit.
+   *
+   *  Layout note: the strip's own classes are used for the flex skeleton (not
+   *  Tailwind utilities). A `flex-1` column next to `shrink-0` buttons shrinks
+   *  to a sliver instead of wrapping, which collapsed the notice text to ~13px
+   *  wide at 390/430px. `.os-strip-text` carries a real flex-basis so the
+   *  buttons wrap to their own line on a phone. */
   import { onMount } from 'svelte';
   import { copy } from '$lib/i18n';
   import { auth } from '$lib/api/auth';
@@ -53,34 +59,30 @@
 
 {#if visible}
   <div class="os-host-strip" role="note" data-mode={mode}>
-    <Icon name="spark" class="h-4 w-4 shrink-0 text-brand-600" />
-    <div class="min-w-0 flex-1">
+    <span class="os-strip-icon"><Icon name="spark" /></span>
+    <div class="os-strip-text">
       {#if mode === 'demo'}
-        <p class="text-sm font-bold text-slate-800">{$copy.demoNoticeTitle}</p>
-        <p class="mt-0.5 text-xs text-slate-500">
+        <p class="os-strip-title">{$copy.demoNoticeTitle}</p>
+        <p class="os-strip-body">
           {$copy.demoNoticeBody}
           <button type="button" class="os-dev-link" onclick={openHostSettings}>{$copy.devHostLabel}</button>
         </p>
       {:else}
-        <p class="text-sm font-bold text-slate-800">{$copy.signIn}</p>
-        <p class="mt-0.5 text-xs text-slate-500">
+        <p class="os-strip-title">{$copy.signIn}</p>
+        <p class="os-strip-body">
           {$copy.authIntro}
           <button type="button" class="os-dev-link" onclick={openHostSettings}>{$copy.devHostLabel}</button>
         </p>
       {/if}
     </div>
-    <div class="flex shrink-0 items-center gap-2">
+    <div class="os-strip-actions">
       {#if mode === 'demo'}
         <a class="os-strip-cta" href={mailto}>{$copy.demoNoticeCta}</a>
         <a class="os-strip-ghost" href="/about">{$copy.demoNoticeLearn}</a>
       {:else}
         <a class="os-strip-ghost" href="/faq">{$copy.needAHand}</a>
       {/if}
-      <button
-        class="os-strip-close"
-        onclick={() => (dismissed = true)}
-        aria-label={$copy.closeDialog}>×</button
-      >
+      <button class="os-strip-close" onclick={() => (dismissed = true)} aria-label={$copy.closeDialog}>×</button>
     </div>
   </div>
 {/if}
@@ -88,13 +90,46 @@
 <style>
   .os-host-strip {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 10px 12px;
     margin: 0 0 20px;
     padding: 12px 16px;
     border-radius: 14px;
     border: 1px solid var(--brand-200, #c7d2fe);
     background: linear-gradient(180deg, var(--brand-50, #eef2ff), var(--surface-2, #f1f5f9));
+  }
+  .os-strip-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    color: var(--brand-600, #4f46e5);
+  }
+  /* A real flex-basis (not `flex-1`'s 0%) so the column keeps a readable
+     measure and pushes the actions onto their own line on narrow screens. */
+  .os-strip-text {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+  .os-strip-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--ink, #18232b);
+  }
+  .os-strip-body {
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+  }
+  .os-strip-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
   }
   .os-strip-cta {
     border-radius: 10px;
@@ -145,9 +180,7 @@
     font-weight: 700;
     color: #64748b;
   }
-  @media (max-width: 640px) {
-    .os-host-strip {
-      flex-wrap: wrap;
-    }
+  .os-strip-close:hover {
+    color: var(--ink, #18232b);
   }
 </style>
