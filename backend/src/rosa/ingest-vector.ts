@@ -75,7 +75,10 @@ export async function ingestCorpus(cfg: IngestConfig): Promise<{ indexed: number
   const errors: string[] = [];
   let indexed = 0;
   let skipped = 0;
-  const usePure = cfg.pureEmbed ?? !cfg.ollamaBaseUrl || cfg.ollamaBaseUrl.includes('placeholder');
+  // Explicit `pureEmbed` (ROSA_EMBED_MODE) wins over the URL heuristic: `??` keeps an
+  // explicit `false` meaning "use Ollama", so an unset/placeholder URL cannot silently
+  // override it into placeholder embeddings.
+  const usePure = cfg.pureEmbed ?? (!cfg.ollamaBaseUrl || cfg.ollamaBaseUrl.includes('placeholder'));
 
   for (const doc of BC_CORPUS) {
     if (!doc.text.trim()) {
