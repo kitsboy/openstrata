@@ -280,7 +280,11 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     const b = broadcastRes.json();
     expect(b.ok).toBe(true);
     expect(b.broadcasted).toBe(true);
-    expect(b.txid).toBeNull(); // stub — no node client
+    // Demo/bootstrap (rail off): placeholder txid, explicitly tagged so it can
+    // never be read as a spend that reached the chain.
+    expect(b.txid).toMatch(/^psbt:/);
+    expect(b.placeholder).toBe(true);
+    expect(b.rail).toBeUndefined();
     expect(b.signedCount).toBe(3);
   });
 
@@ -302,7 +306,7 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     expect(planSummary(plan)).toMatchObject({ ready: true, signed: 3 });
   });
 
-  it('broadcastRawTx shape: unreachable node returns the deterministic placeholder txid (seam contract)', async () => {
+  it('broadcastRawTx demo path (rail off): unreachable node yields the deterministic placeholder txid', async () => {
     const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
     let plan = buildPsbtPlan({
       verdict: v,
@@ -319,17 +323,116 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     expect(plan.ready).toBe(true);
 
     const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
-    // Seam contract as shipped in a5e3844 (and documented in node-broadcast.ts):
-    // when no node client is reachable the seam does NOT throw — it returns a
+    // Demo/bootstrap seam (documented in node-broadcast.ts): with the rail OFF
+    // (no railEnabled) the seam does NOT hit the node — it returns a
     // deterministic placeholder txid `psbt:<planId>:<shortHash>` plus the raw-tx
     // skeleton hex, so the endpoint/receipts/reconcile path can iterate before a
-    // node is configured. The real txid overrides it the moment the node answers.
-    const out = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }]);
+    // node is configured. The broadcast endpoint tags it placeholder:true.
+    const out = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }], { railEnabled: false });
     expect(out.txid).toMatch(/^psbt:/);
     expect(out.hex).toMatch(/^[0-9a-f]+$/);
     // Deterministic: same plan + same outputs → same placeholder txid.
-    const again = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }]);
+    const again = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }], { railEnabled: false });
     expect(again.txid).toBe(out.txid);
+  });
+
+  it('broadcastRawTx real-rail path (rail on): unreachable node THROWS — no placeholder escapes', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    plan = recordSignature(plan, 2, 's2').plan;
+    expect(plan.ready).toBe(true);
+
+    const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
+    // Real-rail path: sendRawTransaction against an unreachable node must throw
+    // so the endpoint can report txid:null + rail:'unavailable'. The placeholder
+    // must never be substituted on the rail-enabled path.
+    await expect(
+      broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }], { railEnabled: true })
+    ).rejects.toThrow();
+  });
+
+  it('rail ON + node unreachable → txid:null + rail:"unavailable" + placeholder:false (Lenny t_2fda9855)', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'operating', basis: 200_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 195_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 300_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    for (const i of [0, 1, 2]) plan = recordSignature(plan, i, `sig${i}`).plan;
+    expect(plan.ready).toBe(true);
+
+    process.env.BITCOIN_RAIL_ENABLED = 'true';
+    process.env.BITCOIN_NODE_URL = 'http://127.0.0.1:9999';
+    try {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/treasury/psbt/broadcast',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { planId: plan.id, readyPlan: plan, postToLedger: false, amountBasis: 200_000 }
+      });
+      expect(res.statusCode).toBe(200);
+      // The placeholder must NEVER escape the rail-enabled path — node down is
+      // reported as unavailable, not as a fake on-chain spend.
+      expect(res.json()).toMatchObject({
+        ok: true,
+        broadcasted: true,
+        txid: null,
+        rail: 'unavailable',
+        placeholder: false
+      });
+    } finally {
+      delete process.env.BITCOIN_RAIL_ENABLED;
+      delete process.env.BITCOIN_NODE_URL;
+    }
+  });
+
+  it('rail OFF + node unreachable → txid:"psbt:…" + placeholder:true (demo) — distinguishable tri-state', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'operating', basis: 200_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 195_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 300_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    for (const i of [0, 1, 2]) plan = recordSignature(plan, i, `sig${i}`).plan;
+    expect(plan.ready).toBe(true);
+
+    process.env.BITCOIN_RAIL_ENABLED = 'false';
+    process.env.BITCOIN_NODE_URL = 'http://127.0.0.1:9999';
+    try {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/treasury/psbt/broadcast',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { planId: plan.id, readyPlan: plan, postToLedger: false, amountBasis: 200_000 }
+      });
+      expect(res.statusCode).toBe(200);
+      const b = res.json();
+      // Demo/bootstrap keeps the placeholder but tags it explicitly.
+      expect(b).toMatchObject({ ok: true, broadcasted: true, placeholder: true });
+      expect(b.txid).toMatch(/^psbt:/);
+      expect(b.rail).toBeUndefined();
+    } finally {
+      delete process.env.BITCOIN_RAIL_ENABLED;
+      delete process.env.BITCOIN_NODE_URL;
+    }
   });
 
   it('broadcast with postToLedger posts the debit to the fund', async () => {

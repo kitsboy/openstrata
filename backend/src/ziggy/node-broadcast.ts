@@ -52,11 +52,15 @@ export interface BroadcastOutput {
  * (plan → broadcast → txid) against a bitcoind the operator controls, even
  * before the multisig signing flow is wired.
  *
- * When `BITCOIN_RAIL_ENABLED != true` or the node is unreachable, the endpoint
- * returns a deterministic fake txid (`psbt:<planId>:<shortHash>`) so the rest of
- * the seam (UI, receipts, reconcile) can iterate against a real-looking txid
- * now. The real node client overrides this the moment it is configured — the
- * endpoint already prefers the real txid when one is available.
+ * Rail state decides what this seam does when no node answers:
+ *   - `opts.railEnabled === true` (real rail): this does NOT substitute a
+ *     placeholder. An unreachable or auth-failed node makes sendRawTransaction
+ *     throw, and the caller reports `txid: null` + `rail: 'unavailable'`. Only a
+ *     real bitcoind-provided txid may stand for an on-chain broadcast.
+ *   - otherwise (demo/bootstrap, rail off): it returns a deterministic fake txid
+ *     (`psbt:<planId>:<shortHash>`) so the rest of the seam (UI, receipts,
+ *     reconcile) can iterate against a real-looking txid now. The caller tags
+ *     it `placeholder: true` so it can never be read as a real spend.
  *
  * Payments math is in sats (Bitcoin rail). The CAD trust ledger stays in basis
  * points — the on-chain leg reconciles to the ledger post via the shared
@@ -65,7 +69,8 @@ export interface BroadcastOutput {
 export async function broadcastRawTx(
   plan: PsbtPlan,
   btc: BitcoindRpcConfig,
-  outputs: { address: string; sats: number }[]
+  outputs: { address: string; sats: number }[],
+  opts: { railEnabled?: boolean } = {}
 ): Promise<BroadcastOutput> {
   const totalIn = plan.inputs.reduce((s, u) => s + u.sats, 0);
   const totalOut = outputs.reduce((s, o) => s + o.sats, 0);
@@ -73,15 +78,18 @@ export async function broadcastRawTx(
 
   const hex = buildRawTxHex(plan, outputs); // placeholder skeleton
 
-  let txid: string;
-  try {
-    txid = await sendRawTransaction(hex, btc);
-  } catch {
-    // No node client reachable — return a deterministic placeholder txid so the
-    // rest of the seam (UI, receipts, reconcile) can iterate now. Real node
-    // client overrides this the moment it is configured.
-    txid = `psbt:${plan.id}:${createHash('sha256').update(hex).digest('hex').slice(0, 16)}`;
+  if (opts.railEnabled === true) {
+    // Real-rail path: prove an on-chain spend or fail loudly. sendRawTransaction
+    // throws on an unreachable / auth-failed node — never substitute a
+    // placeholder here, so the caller can report txid:null + rail:'unavailable'.
+    const txid = await sendRawTransaction(hex, btc);
+    return { txid, hex };
   }
+
+  // Demo/bootstrap (rail off): deterministic placeholder txid so the rest of the
+  // seam (UI, receipts, reconcile) can iterate before a node is configured. The
+  // caller tags it placeholder:true.
+  const txid = `psbt:${plan.id}:${createHash('sha256').update(hex).digest('hex').slice(0, 16)}`;
   return { txid, hex };
 }
 

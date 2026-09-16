@@ -773,6 +773,11 @@ export async function buildServer(
 
       let ledgerSeq: number | null = null;
       let txid: string | null = result.txid;
+      // Broadcast-honesty tri-state (Lenny ruling t_2fda9855): on the real rail
+      // a placeholder must NEVER stand for an on-chain spend; in demo (rail off)
+      // the placeholder stays but is explicitly tagged.
+      let placeholder = false;
+      let rail: 'live' | 'unavailable' | undefined;
 
       if (result.broadcasted) {
         // On-chain broadcast seam: when the host runs bitcoind (or another node
@@ -797,25 +802,45 @@ export async function buildServer(
 
         const nodeUrl = process.env.BITCOIN_NODE_URL;
         const nodeEnabled = process.env.BITCOIN_RAIL_ENABLED === 'true';
-        if (nodeEnabled && nodeUrl && readyPlan.recipient) {
-          try {
-            const btc: BitcoindRpcConfig = {
-              url: nodeUrl,
-              user: process.env.BITCOIN_RPC_USER ?? undefined,
-              pass: process.env.BITCOIN_RPC_PASS ?? undefined
-            };
-            const broadcast = broadcastRawTx(readyPlan as any, btc, [
+        if (nodeEnabled) {
+          // Real rail path — this branch is where the system proves an on-chain
+          // spend. The placeholder must NEVER escape it: an unreachable or
+          // auth-failed node yields txid:null + rail:'unavailable', and only a
+          // real sendrawtransaction txid upgrades broadcasted to a claim.
+          rail = 'unavailable';
+          if (nodeUrl && readyPlan.recipient) {
+            try {
+              const btc: BitcoindRpcConfig = {
+                url: nodeUrl,
+                user: process.env.BITCOIN_RPC_USER ?? undefined,
+                pass: process.env.BITCOIN_RPC_PASS ?? undefined
+              };
+              // railEnabled:true → broadcastRawTx throws on node failure instead
+              // of substituting a placeholder, so this catch stays reachable.
+              const tx = await broadcastRawTx(readyPlan as any, btc, [
+                { address: readyPlan.recipient, sats: readyPlan.amountSats }
+              ], { railEnabled: true });
+              txid = tx.txid;
+              rail = 'live';
+            } catch (err) {
+              // Node unavailable / auth failure — leave txid null + rail
+              // unavailable. (In a real deploy this would be a retry queue.)
+              txid = null;
+              rail = 'unavailable';
+            }
+          }
+          // rail enabled but no node / no recipient → txid stays null, rail stays
+          // 'unavailable', placeholder stays false.
+        } else {
+          // Demo/bootstrap — rail NOT enabled. Keep the no-node placeholder so
+          // the seam can iterate, but tag it explicitly so it can never be read
+          // as a spend that reached the chain.
+          placeholder = true;
+          if (readyPlan.recipient && readyPlan.amountSats) {
+            const demo = await broadcastRawTx(readyPlan as any, { url: '' }, [
               { address: readyPlan.recipient, sats: readyPlan.amountSats }
-            ]);
-            // Broadcast async-ish: we await it so the endpoint returns the txid
-            // when the node is available; in a real deploy this may be queued
-            // behind the multisig signing flow.
-            const tx = await broadcast;
-            txid = tx.txid;
-          } catch (err) {
-            // Node unavailable / auth failure — leave txid null + note it.
-            // (In a real deploy this would be a retry queue, not a hard fail.)
-            txid = null;
+            ], { railEnabled: false });
+            txid = demo.txid;
           }
         }
       }
@@ -829,6 +854,8 @@ export async function buildServer(
         requiredSignatures: readyPlan.requiredSignatures,
         txid,
         ledgerSeq,
+        placeholder,
+        ...(rail !== undefined ? { rail } : {}),
         reason: result.reason
       };
     }
