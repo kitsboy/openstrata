@@ -18,6 +18,7 @@ import { authorizeSpend } from '../ziggy/ziggy.js';
 import { planDca, type DcaFrequency } from '../ziggy/dca.js';
 import { buildPsbtPlan, type PsbtInputRef } from '../ziggy/psbt.js';
 import { broadcastPsbt, postSpendToLedger, signedCount } from '../ziggy/broadcast.js';
+import { broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../ziggy/node-broadcast.js';
 import { deriveUnitAddress } from '../rails/rails.js';
 import type { Reconciler, UnitRefs } from '../trf/recon.js';
 import { runBilling, type UnitFee } from '../billing/billing.js';
@@ -732,10 +733,13 @@ export async function buildServer(
     }
   );
 
-  // PSBT broadcast (item #15 continuation) — marks a ready plan broadcasted and
-  // optionally posts the spend to the trust ledger so the on-chain leg reconciles
-  // into the same hash chain Ziggy uses for e-transfers / rail quotes / billing.
-  // Real node client plugs into broadcastPsbt; this endpoint owns the ledger side.
+  // PSBT broadcast (item #15 continuation) — marks a ready plan broadcasted,
+  // optionally posts the spend to the trust ledger (on-chain leg reconciles into
+  // the same hash chain Ziggy uses for e-transfers / rail quotes / billing), and
+  // when the host has a bitcoind RPC configured (BITCOIN_RAIL_ENABLED=true +
+  // BITCOIN_NODE_URL + rpc auth), broadcasts the spend for real via the raw-tx
+  // seam and returns the txid. Otherwise the txid stays null (stub) until a node
+  // client is plugged in.
   app.post<{
     Body: {
       planId: string;
@@ -768,18 +772,51 @@ export async function buildServer(
       });
 
       let ledgerSeq: number | null = null;
-      if (b.postToLedger && result.broadcasted && b.amountBasis) {
-        try {
-          const posted = await postSpendToLedger(
-            readyPlan as any,
-            deps.ledger,
-            req.user!.councilId,
-            b.amountBasis,
-            `PSBT broadcast ${readyPlan.id}`
-          );
-          ledgerSeq = posted.seq;
-        } catch (err) {
-          return { ok: false, reason: (err as Error).message, broadcasted: true, ledgerSeq: null };
+      let txid: string | null = result.txid;
+
+      if (result.broadcasted) {
+        // On-chain broadcast seam: when the host runs bitcoind (or another node
+        // client) and it is enabled, broadcast the spend for real and return the
+        // txid. This is the plug-in point — today it is the raw-tx seam
+        // (broadcastRawTx); the PSBT workflow seam (walletprocesspsbt →
+        // finalizepsbt → sendpsbt) is the next step.
+        if (b.postToLedger && b.amountBasis) {
+          try {
+            const posted = await postSpendToLedger(
+              readyPlan as any,
+              deps.ledger,
+              req.user!.councilId,
+              b.amountBasis,
+              `PSBT broadcast ${readyPlan.id}`
+            );
+            ledgerSeq = posted.seq;
+          } catch (err) {
+            return { ok: false, reason: (err as Error).message, broadcasted: true, ledgerSeq: null, txid };
+          }
+        }
+
+        const nodeUrl = process.env.BITCOIN_NODE_URL;
+        const nodeEnabled = process.env.BITCOIN_RAIL_ENABLED === 'true';
+        if (nodeEnabled && nodeUrl && readyPlan.recipient) {
+          try {
+            const btc: BitcoindRpcConfig = {
+              url: nodeUrl,
+              user: process.env.BITCOIN_RPC_USER ?? undefined,
+              pass: process.env.BITCOIN_RPC_PASS ?? undefined
+            };
+            const broadcast = broadcastRawTx(readyPlan as any, btc, [
+              { address: readyPlan.recipient, sats: readyPlan.amountSats }
+            ]);
+            // Broadcast async-ish: we await it so the endpoint returns the txid
+            // when the node is available; in a real deploy this may be queued
+            // behind the multisig signing flow.
+            const tx = await broadcast;
+            txid = tx.txid;
+          } catch (err) {
+            // Node unavailable / auth failure — leave txid null + note it.
+            // (In a real deploy this would be a retry queue, not a hard fail.)
+            txid = null;
+          }
         }
       }
 
@@ -787,9 +824,10 @@ export async function buildServer(
         ok: true,
         broadcasted: result.broadcasted,
         plan: { ...readyPlan, ready: result.broadcasted },
+        summary: planSummary(readyPlan),
         signedCount: signedCount(readyPlan),
         requiredSignatures: readyPlan.requiredSignatures,
-        txid: result.txid,
+        txid,
         ledgerSeq,
         reason: result.reason
       };

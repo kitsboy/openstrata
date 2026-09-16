@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { planDca } from '../src/ziggy/dca.js';
 import { buildPsbtPlan, recordSignature, type PsbtPlan } from '../src/ziggy/psbt.js';
 import { broadcastPsbt, postSpendToLedger, signedCount } from '../src/ziggy/broadcast.js';
+import { broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../src/ziggy/node-broadcast.js';
 import { buildServer } from '../src/api/server.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
@@ -281,6 +282,44 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     expect(b.broadcasted).toBe(true);
     expect(b.txid).toBeNull(); // stub — no node client
     expect(b.signedCount).toBe(3);
+  });
+
+  it('planSummary reflects plan state', () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    expect(planSummary(plan)).toMatchObject({ ready: false, signed: 0, required: 3, amountSats: 490_000, recipient: 'bc1qexample' });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    plan = recordSignature(plan, 2, 's2').plan;
+    expect(planSummary(plan)).toMatchObject({ ready: true, signed: 3 });
+  });
+
+  it('broadcastRawTx shape: throws on unreachable node (seam contract, not a shape error)', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    plan = recordSignature(plan, 2, 's2').plan;
+    expect(plan.ready).toBe(true);
+
+    const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
+    await expect(broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }])).rejects.toThrow(/fetch failed|bitcoind|sendrawtransaction/i);
   });
 
   it('broadcast with postToLedger posts the debit to the fund', async () => {

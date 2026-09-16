@@ -1,16 +1,22 @@
 /**
  * `openstrata` CLI — operational subcommands for the Phase 3 services.
  *
- *   npx tsx src/cli.ts rosa ingest            Load + validate the BC compliance corpus
+ *   npx tsx src/cli.ts rosa ingest            Validate the BC compliance corpus (pure)
+ *   npx tsx src/cli.ts rosa index             Embed + write the corpus into pgvector (needs Ollama + DB)
+ *   npx tsx src/cli.ts rosa reset             Dev: drop + re-create the corpus_chunk table
  *   npx tsx src/cli.ts ziggy simulate         Walk a treasury scenario through the state machine
  *
- * These stay pure over the deterministic domain modules (Rosa's keyword corpus,
- * Ziggy's authorize/cap/reconcile) so operators can smoke-test the engines
- * without spinning up Postgres/Ollama.
+ * `rosa ingest` is pure (no DB/Ollama). `rosa index` writes embeddings into the
+ * `corpus_chunk` table (migration 0002) so the vector retriever has data to
+ * cosine-search; it is the indexing step, not a gate — runtime Rosa still falls
+ * back to the keyword retriever when pgvector/Ollama are offline.
  */
 
 import { BC_CORPUS } from './rosa/bc-corpus.js';
-import { keywordRetriever, type SourceRecord } from './rosa/rosa.js';
+import type { SourceRecord } from './rosa/rosa.js';
+import { keywordRetriever } from './rosa/rosa.js';
+import { ingestCorpus, resetCorpus } from './rosa/ingest-vector.js';
+import { Pool } from 'pg';
 import {
   authorizeSpend,
   checkCrfCap,
@@ -24,7 +30,7 @@ async function rosaIngest(): Promise<void> {
   const distinct = new Set(corpus.map((c) => c.citation)).size;
   const retriever = keywordRetriever(corpus);
 
-  console.log('Rosa ingest — nothing written (pure corpus validation).');
+  console.log('Rosa ingest — pure corpus validation (nothing written).');
   console.log(`  documents : ${corpus.length}`);
   console.log(`  distinct  : ${distinct} citations`);
   for (const c of corpus) console.log(`    - ${c.citation}  ${c.title}`);
@@ -37,6 +43,52 @@ async function rosaIngest(): Promise<void> {
     console.log('    (no hits in the loaded corpus)');
   } else {
     for (const h of hits) console.log(`    ${h.score.toFixed(2)}  ${h.source.citation}`);
+  }
+}
+
+async function rosaIndex(): Promise<void> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error('DATABASE_URL is required for rosa index');
+    process.exit(2);
+  }
+  const pool = new Pool({ connectionString: dbUrl });
+  const collection = process.env.VECTOR_COLLECTION ?? 'bc_spa_rta_crt';
+  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? 'http://host.docker.internal:11434';
+  const embedModel = process.env.OLLAMA_EMBED_MODEL ?? 'nomic-embed-text';
+
+  try {
+    const result = await ingestCorpus({ pool, collection, ollamaBaseUrl, embedModel });
+    console.log('Rosa index — corpus written to pgvector.');
+    console.log(`  collection       : ${collection}`);
+    console.log(`  ollama           : ${ollamaBaseUrl} (${embedModel})`);
+    console.log(`  indexed          : ${result.indexed}`);
+    console.log(`  skipped/errors   : ${result.skipped}`);
+    if (result.errors.length) {
+      console.log('  errors:');
+      for (const e of result.errors) console.log(`    - ${e}`);
+    }
+    if (result.indexed === 0 && result.skipped === BC_CORPUS.length) {
+      console.log('  hint: is Ollama running? curl ' + ollamaBaseUrl + '/api/tags');
+    }
+  } finally {
+    await pool.end();
+  }
+}
+
+async function rosaReset(): Promise<void> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error('DATABASE_URL is required for rosa reset');
+    process.exit(2);
+  }
+  const pool = new Pool({ connectionString: dbUrl });
+  const collection = process.env.VECTOR_COLLECTION ?? 'bc_spa_rta_crt';
+  try {
+    await resetCorpus(pool, collection);
+    console.log(`Rosa reset — dropped + re-created ${collection} (dev only).`);
+  } finally {
+    await pool.end();
   }
 }
 
@@ -93,13 +145,23 @@ async function main(argv: string[]): Promise<void> {
     await rosaIngest();
     return;
   }
+  if (group === 'rosa' && sub === 'index') {
+    await rosaIndex();
+    return;
+  }
+  if (group === 'rosa' && sub === 'reset') {
+    await rosaReset();
+    return;
+  }
   if (group === 'ziggy' && sub === 'simulate') {
     ziggySimulate();
     return;
   }
   console.error(
     `Usage: npx tsx src/cli.ts <subcommand>\n\n` +
-      `  rosa ingest         validate the BC compliance corpus\n` +
+      `  rosa ingest         validate the BC compliance corpus (pure, no DB/Ollama)\n` +
+      `  rosa index          embed + write the corpus into pgvector (needs Ollama + DB)\n` +
+      `  rosa reset          dev: drop + re-create the corpus_chunk table\n` +
       `  ziggy simulate      walk a treasury scenario through the state machine`
   );
   process.exit(group ? 1 : 0);
