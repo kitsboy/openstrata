@@ -512,6 +512,36 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     }
   });
 
+  it('broadcastPsbtWorkflow: refuses a below-threshold plan before any RPC (same contract as broadcastPsbt)', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    expect(plan.ready).toBe(false); // 2 of 3
+
+    const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
+    const bodies: string[] = [];
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (_url: unknown, init?: { body?: string }) => {
+      bodies.push(String(init?.body));
+      throw new Error('fetch must never happen for a below-threshold plan');
+    }) as typeof fetch;
+    try {
+      await expect(broadcastPsbtWorkflow(plan, btc)).rejects.toThrow(/plan not ready/i);
+      expect(bodies.length).toBe(0); // refused before any RPC
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
   it('broadcastPsbtWorkflow: throws (never fabricates) when the node is unreachable', async () => {
     const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
     let plan = buildPsbtPlan({

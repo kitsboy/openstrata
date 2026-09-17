@@ -1,3 +1,20 @@
+## Session — 2026-09-16 · v0.3.13 — PSBT workflow readiness guard + version bump (Grok M3)
+
+**Task:** "add one small improvement and change the Version number with every push. Commit and push."
+
+**Done:**
+- **Small improvement — readiness guard inside the workflow seam itself** (`backend/src/ziggy/node-broadcast.ts`): `broadcastPsbtWorkflow` now refuses below-threshold plans **before any RPC** (`plan not ready: N-of-M required, K signed`), matching `broadcastPsbt`'s fail-closed contract. Defense in depth: until now only the endpoint checked readiness; a caller bypassing it could route an unsigned plan to the node's `walletprocesspsbt`.
+- **Test** (bitcoin-modules 25→26): fetch-stub asserts the refusal happens with **zero network calls** for a 2-of-3 plan.
+- **Version bump to 0.3.13** (every push bumps the version): root + backend `package.json` + both lockfiles via `npm version`, `CHANGELOG.md` (front-matter 0.3.13 entry + full `## [0.3.13]` release section; also backfilled the missing 0.3.11/0.3.12 front-matter rows context), `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md` (Phase 3 status now "complete (code; host deploy pending)"), `.ai_docs/current-status.md`, `LATEST-UPDATE.md`.
+
+**Verified:** `backend npm run typecheck` clean; `backend npm test` **191 tests** (was 190; bitcoin-modules 26), e2e smoke 6 skipped (no DB).
+
+**Git State:**
+- SHA: `git log -1 --format=%H`
+- Unpushed: `git log --oneline origin/main..HEAD` (pushed in this session once green)
+
+---
+
 ## Session — 2026-09-16 · Ziggy PSBT workflow seam (BIP174) + tri-state integration (Grok M3)
 
 **Task:** "continue" — clean tree at `cb6b878`. The one open code item from the prior handoff was the PSBT workflow seam (`walletprocesspsbt → finalizepsbt → sendpsbt`) in `node-broadcast.ts`. Mid-session, the family pushed 6 commits to `origin/main` (Lenny/Cam via Aider) that landed the **broadcast-honesty tri-state ruling** (`1ad680e`) and independently fixed the same two pre-existing regressions this session had found (TS5076 in `ingest-vector.ts`, the stale `broadcastRawTx` throw test). Rebased, resolved the conflicts by keeping their ruling + layering the workflow seam in as the preferred rail path, re-verified, docs updated, pushed.

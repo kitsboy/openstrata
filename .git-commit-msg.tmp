@@ -1,0 +1,12 @@
+feat(backend): PSBT workflow readiness guard + v0.3.13
+
+broadcastPsbtWorkflow now refuses below-threshold plans before any RPC
+(same fail-closed contract as broadcastPsbt) so a caller bypassing the
+endpoint gate cannot route an unsigned plan to walletprocesspsbt; the
+fetch-stub test asserts zero network calls for a 2-of-3 plan. Version
+bumped to 0.3.13 across root + backend manifests, lockfiles, CHANGELOG,
+MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status. Backend 191 tests,
+typecheck clean.
+
+🤖 Generated with Codebuff
+Co-Authored-By: Codebuff <noreply@codebuff.com>

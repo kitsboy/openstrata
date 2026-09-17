@@ -49,10 +49,10 @@ export interface BroadcastOutput {
  * Path A — full PSBT workflow against bitcoind:
  *   walletprocesspsbt (sign) → finalizepsbt (extract) → sendpsbt → txid.
  *
- * This seam *never fabricates*: if the node is unreachable, the wallet is
- * missing, or finalizepsbt reports `complete: false` (not enough signatures —
- * e.g. the aggregated PSBT never reached the threshold), it throws. Failing
- * closed here is the contract; the endpoint falls back to the raw seam, and if
+ * This seam *never fabricates*: it refuses below-threshold plans outright, and
+ * if the node is unreachable, the wallet is missing, or finalizepsbt reports
+ * `complete: false` (not enough signatures — e.g. the aggregated PSBT never
+ * reached the threshold), it throws. Failing closed here is the contract; the endpoint falls back to the raw seam, and if
  * that fails too the caller reports `txid: null` + `rail: 'unavailable'` — no
  * placeholder is ever substituted on the rail path (the deterministic
  * placeholder exists only when the rail is off, see Path B).
@@ -61,6 +61,17 @@ export async function broadcastPsbtWorkflow(
   plan: PsbtPlan,
   btc: BitcoindRpcConfig
 ): Promise<BroadcastOutput> {
+  // Readiness guard (same contract as broadcastPsbt): the seam itself refuses
+  // below-threshold plans so no caller can route an unsigned plan to the node
+  // even when the endpoint's own gate is bypassed.
+  if (!plan.ready) {
+    throw new Error(
+      `plan not ready: ${plan.requiredSignatures}-of-${plan.totalSigners} required, ${
+        Object.values(plan.signatures).filter(Boolean).length
+      } signed`
+    );
+  }
+
   // Real aggregated PSBT from the signing coordinator when it exists; the
   // plan-shaped skeleton otherwise. Same RPC chain either way.
   const serialized = plan.psbtB64 ?? serializePsbtSkeleton(plan);

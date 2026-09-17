@@ -1,7 +1,9 @@
 ---
 title: Changelog
 project: openstrata
-version_history:-  version: 0.3.12
+version_history:-  version: 0.3.13
+-  summary: "Ziggy PSBT workflow seam live: broadcastPsbtWorkflow walks walletprocesspsbt → finalizepsbt → sendpsbt for a real BIP174 txid (aggregated coordinator psbtB64 passes straight through, deterministic BIP174 skeleton otherwise) and now refuses below-threshold plans before any RPC; the broadcast endpoint tries the workflow first on the rail path with the raw-tx seam as the watch-only fallback, and a placeholder never stands for an on-chain spend (tri-state preserved); backend 191 tests, typecheck clean."
+-  version: 0.3.12
 -  summary: "Fix the demo notice layout on phones: the flex-1 text column next to shrink-0 action buttons collapsed to a 13px-wide sliver at 390/430px (a 604px-tall notice), so the strip now uses its own flex classes with a real flex-basis and the buttons wrap to their own line. Text measure 268-338px at 360/390/430, no overlap; svelte-check 0/0, 85 tests, i18n audit clean."
 -  version: 0.3.11
 -  summary: "Visitor-honest demo mode: the dashboard no longer greets the public with a build-configuration prompt. The demo notice now states plainly that every community, balance and action on screen is sample data, offers one obvious way to request access, and keeps the operator path as a quiet 'Running your own host?' link documented in README.md; 6 new catalog keys x 9 locales, i18n audit 0 missing keys / 0 hard-coded-copy warnings."
@@ -67,6 +69,18 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.13] — 2026-09-16
+
+### Added
+- Backend: Ziggy PSBT workflow seam (`broadcastPsbtWorkflow` in `backend/src/ziggy/node-broadcast.ts`) — the BIP174 node path: `walletprocesspsbt` (sign) → `finalizepsbt` (extract when complete) → `sendpsbt` → txid. The signing coordinator's aggregated `psbtB64` passes straight through; otherwise a deterministic BIP174-shaped skeleton is serialized from the plan (`serializePsbtSkeleton`: global unsigned-tx map + per-input partial-sig entries). **Readiness guard:** the seam refuses below-threshold plans before any RPC (same contract as `broadcastPsbt`).
+- Backend: `/treasury/psbt/broadcast` tries the workflow seam first on the rail path; the raw-tx seam (`sendrawtransaction`, `railEnabled: true`) is the watch-only fallback. Both failing → `txid: null` + `rail: 'unavailable'` + `placeholder: false` — the broadcast-honesty tri-state is preserved.
+
+### Fixed
+- Pre-existing typecheck error in `rosa/ingest-vector.ts` (TS5076) and the stale `broadcastRawTx` throw test (both also fixed independently by the family; kept through the rebase).
+
+### Verified
+- `backend npm run typecheck` clean; `backend npm test` **191 tests** (was 182; bitcoin-modules 26), e2e smoke 6 skipped (no DB).
 
 ## [0.3.9] — 2026-08-26
 
