@@ -2,7 +2,7 @@
 
 **Brief:** v0.3.14 — greeter popup card on `/` rebuilt with a video section for the 60-second OpenStrata intro Kimi will record (HyperFrames, Kimi voice/images), plus the Kimi handoff + 1-minute script in `docs/KIMI-HANDOFF.md` and `docs/VIDEO-SPECS.md`. Version bumped across root + backend manifests, lockfile, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status.
 
-**Commits:** pending.
+**Commits:** `e67c08a` (ui(popup): add greeter card with video section + Kimi intro-video handoff, v0.3.14). Pushed to origin/main 2026-09-17.
 
 - **What shipped:**
   - First-run greeter popup card rebuilt into `src/lib/components/Tour.svelte` with a video section inside the greeting card: tease frame (play mark + subhead + fallback hint + CTA) collapses to a single trigger line when not expanded; expanded it holds either a real `<video>` once the asset lands, or the honest "Video coming soon — back in a few days." placeholder.
@@ -14,7 +14,7 @@
 
 **Decisions:** the video lives inside the greeting card on purpose — hello + one-minute intro in one glance. i18n for the new keys is English-only until the video is live. The video section is a finished-looking tease with a CTA until the asset lands, not a broken embed. `broadcastPsbtWorkflow` now refuses below-threshold plans **before any RPC** (same fail-closed contract as `broadcastPsbt`), so no caller can route an unsigned plan to the node even if the endpoint's gate is bypassed. Version bumped across root + backend manifests, lockfiles, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status. Backend **191 tests**, typecheck clean.
 
-**Commits:** `cd3b31b` (feat: PSBT workflow seam, rebased onto the family's tri-state ruling) + `71e00cf`/`e9bfc5b` (docs) + this improvement + v0.3.13 bump.
+**Commits (v0.3.13 increment):** `cd3b31b` (feat: PSBT workflow seam, rebased onto the family's tri-state ruling) + `71e00cf`/`e9bfc5b` (docs) + this improvement + v0.3.13 bump.
 
 - **What shipped (v0.3.13 increment):**
   - `broadcastPsbtWorkflow` readiness guard: throws `plan not ready: N-of-M required, K signed` before the first RPC; fetch-stub test asserts zero network calls for a 2-of-3 plan (bitcoin-modules 25→26).

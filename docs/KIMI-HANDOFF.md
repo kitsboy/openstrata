@@ -35,6 +35,10 @@
 
 ---
 
+**Recovery note for the next chat:** chat ended cleanly with remarkable recovery (Grok session-protocol goodbye + Kimi handoff updated). To pick up here, use the `/whatsup` skill — it loads this summary automatically. No raw chat logs were dumped into the handoff; only the structured session section above + VIDEO-SPECS.md carry what Kimi needs.
+
+---
+
 ## Session — 2026-09-16 · v0.3.13 — PSBT workflow readiness guard + version bump (Grok M3)
 
 **Task:** "add one small improvement and change the Version number with every push. Commit and push."
