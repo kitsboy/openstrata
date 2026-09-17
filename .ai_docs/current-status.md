@@ -1,7 +1,7 @@
 # Current Status — OpenStrata
 
-**Version:** v0.3.13
-**Last Updated:** 2026-09-16
+**Version:** v0.3.14
+**Last Updated:** 2026-09-17
 **Domain:** openstrata.giveabit.io
 
 ## Recent Milestones

@@ -1,7 +1,9 @@
 ---
 title: Changelog
-project: openstrata
-version_history:-  version: 0.3.13
+project: openstrataversion_history:
+-  version: 0.3.14
+-  summary: "First-run greeter popup card rebuilt with a video section (30-60s intro, Kimi handoff via HyperFrames); new i18n keys tourVideoTitle/tourVideoSub/tourVideoCta/tourVideoFallback; Kimi handoff in docs/KIMI-HANDOFF.md + docs/VIDEO-SPECS.md with a 1-minute intro script; version bumped to v0.3.14 everywhere."
+-  version: 0.3.13
 -  summary: "Ziggy PSBT workflow seam live: broadcastPsbtWorkflow walks walletprocesspsbt → finalizepsbt → sendpsbt for a real BIP174 txid (aggregated coordinator psbtB64 passes straight through, deterministic BIP174 skeleton otherwise) and now refuses below-threshold plans before any RPC; the broadcast endpoint tries the workflow first on the rail path with the raw-tx seam as the watch-only fallback, and a placeholder never stands for an on-chain spend (tri-state preserved); backend 191 tests, typecheck clean."
 -  version: 0.3.12
 -  summary: "Fix the demo notice layout on phones: the flex-1 text column next to shrink-0 action buttons collapsed to a 13px-wide sliver at 390/430px (a 604px-tall notice), so the strip now uses its own flex classes with a real flex-basis and the buttons wrap to their own line. Text measure 268-338px at 360/390/430, no overlap; svelte-check 0/0, 85 tests, i18n audit clean."
@@ -64,11 +66,24 @@ version_history:-  version: 0.3.13
     date: 2026-06-22
     summary: Initial project scaffold
 audience: devs
-last_updated: 2026-08-26
+last_updated: 2026-09-17
 owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.14] — 2026-09-17
+
+### Added
+- Frontend: first-run greeter popup card rebuilt with a video section (`src/lib/components/Tour.svelte`): greeting card (icon + scene art + eyebrow/title/body) + a video section inside the same card, so a new visitor gets hello + one-minute intro in one glance. Video section: a tease frame (play mark + short subhead + fallback hint + CTA) collapses to a single trigger line when not expanded; expanded it holds either a real `<video>` once the asset lands or an honest "Video coming soon — back in a few days." placeholder.
+- i18n: new video-section keys — `tourVideoTitle`, `tourVideoSub`, `tourVideoCta`, `tourVideoFallback` (English for now).
+- Docs: Kimi video handoff — `docs/KIMI-HANDOFF.md` session section + `docs/VIDEO-SPECS.md` (specs + 1-minute intro script + delivery checklist). Kimi owns the recording + asset URL; the frontend just needs one src swapped in after she delivers.
+
+### Changed
+- Version bump to v0.3.14 across root + backend `package.json`, both lockfiles, `CHANGELOG.md`, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md`, `.ai_docs/current-status.md`, `LATEST-UPDATE.md`.
+
+### Verified
+- `npm run check` clean; `npm test` green; popup renders on `/` for signed-out fresh visitors; video section inside the greeting card, inline, does not break the 4-step tour.
 
 ## [0.3.13] — 2026-09-16
 

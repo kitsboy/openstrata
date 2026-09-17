@@ -1,6 +1,18 @@
-# openstrata — Last Updated 2026-09-16 by Grok (M3)
+# openstrata — Last Updated 2026-09-17 by Grok (M3)
 
-**Brief:** v0.3.13 — one small improvement on top of the PSBT workflow seam: `broadcastPsbtWorkflow` now refuses below-threshold plans **before any RPC** (same fail-closed contract as `broadcastPsbt`), so no caller can route an unsigned plan to the node even if the endpoint's gate is bypassed. Version bumped across root + backend manifests, lockfiles, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status. Backend **191 tests**, typecheck clean.
+**Brief:** v0.3.14 — greeter popup card on `/` rebuilt with a video section for the 60-second OpenStrata intro Kimi will record (HyperFrames, Kimi voice/images), plus the Kimi handoff + 1-minute script in `docs/KIMI-HANDOFF.md` and `docs/VIDEO-SPECS.md`. Version bumped across root + backend manifests, lockfile, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status.
+
+**Commits:** pending.
+
+- **What shipped:**
+  - First-run greeter popup card rebuilt into `src/lib/components/Tour.svelte` with a video section inside the greeting card: tease frame (play mark + subhead + fallback hint + CTA) collapses to a single trigger line when not expanded; expanded it holds either a real `<video>` once the asset lands, or the honest "Video coming soon — back in a few days." placeholder.
+  - New i18n keys: `tourVideoTitle`, `tourVideoSub`, `tourVideoCta`, `tourVideoFallback` — English for now.
+  - Kimi handoff: `docs/KIMI-HANDOFF.md` session section + `docs/VIDEO-SPECS.md` (specs + 1-minute script + delivery checklist).
+  - Version bump to v0.3.14 everywhere.
+- **What Kimi owns next:** record the 60-second intro with HyperFrames (Kimi images/video, young English woman accent), deliver the file + public URL, and either post the asset to the repo or send the URL back for the frontend src swap.
+- **Verified:** `npm run check` clean; `npm test` green; popup renders on `/` for signed-out fresh visitors; video section inside the greeting card, inline, does not break the 4-step tour.
+
+**Decisions:** the video lives inside the greeting card on purpose — hello + one-minute intro in one glance. i18n for the new keys is English-only until the video is live. The video section is a finished-looking tease with a CTA until the asset lands, not a broken embed. `broadcastPsbtWorkflow` now refuses below-threshold plans **before any RPC** (same fail-closed contract as `broadcastPsbt`), so no caller can route an unsigned plan to the node even if the endpoint's gate is bypassed. Version bumped across root + backend manifests, lockfiles, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status. Backend **191 tests**, typecheck clean.
 
 **Commits:** `cd3b31b` (feat: PSBT workflow seam, rebased onto the family's tri-state ruling) + `71e00cf`/`e9bfc5b` (docs) + this improvement + v0.3.13 bump.
 

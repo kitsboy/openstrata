@@ -69,6 +69,8 @@ export const icons = {
 
 	help: stroke('<circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 015.5 1c0 1.8-2.7 2.4-2.7 3.7"/><path d="M12 17.2h.01"/>'),
 
+	play: stroke('<path d="M5 3l14 9-14 9V3z"/>'),
+
 	trash: stroke('<path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/>'),
 
 	refresh: stroke('<path d="M21 12a9 9 0 11-2.6-6.4"/><path d="M21 3v6h-6"/>'),
