@@ -98,8 +98,10 @@ day is a single command, not a manual probe session.
 - **Rails:** when bitcoind/LND/Liquid/PayNym/Nostr are running on the host or a
   tailnet host, enable them in `.env` (`BITCOIN_RAIL_ENABLED=true`,
   `BITCOIN_NODE_URL`, `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS`, etc.) and restart
-  the API. `/treasury/psbt/broadcast` then broadcasts via the bitcoind raw-tx
-  seam and returns the txid.
+  the API. `/treasury/psbt/broadcast` then broadcasts via the bitcoind PSBT
+  workflow seam (`walletprocesspsbt → finalizepsbt → sendpsbt`, the BIP174 path
+  hardware-wallet signatures feed) and returns the txid; watch-only hosts fall
+  back to the raw-tx seam (`sendrawtransaction`).
 
 ## Frontend → backend wiring (live dashboard)
 

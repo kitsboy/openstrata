@@ -181,9 +181,9 @@ BITCOIN_RPC_PASS=...
 ```
 
 Then `docker compose restart api`. The `/treasury/psbt/broadcast` endpoint will
-broadcast via the raw-tx seam and return the txid; the PSBT workflow seam
-(`walletprocesspsbt → finalizepsbt → sendpsbt`) is the next step when the host
-runs a wallet + signing key.
+broadcast via the PSBT workflow seam (`walletprocesspsbt → finalizepsbt →
+sendpsbt`) when the node has a signing wallet and return the txid; watch-only
+hosts (external signers) fall back to the raw-tx seam (`sendrawtransaction`).
 
 ---
 
@@ -241,7 +241,7 @@ cross-talk.
 - **bitcoind on a different tailnet host:** point `BITCOIN_NODE_URL` at that host's
   MagicDNS name + RPC port, with `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` matching
   the remote bitcoind's `rpcuser`/`rpcpassword` (or use a cookie file — both are
-  supported by the raw-tx seam).
+  supported by the broadcast seams).
 
 ## Checklist (run after onboarding)
 

@@ -175,16 +175,25 @@ Marks a **ready** PSBT plan (threshold met) as broadcasted and optionally posts
 the authorized spend to the trust ledger as a debit on the fund it was pulled
 from — so the on-chain leg reconciles into the same hash chain Ziggy uses for
  e-transfers / rail quotes / billing.The real node client (bitcoind RPC / LND) broadcasts the spend; this endpoint
-owns the *ledger side*. Today the on-chain broadcast seam is the bitcoind
-JSON-RPC **raw-tx path** (`sendrawtransaction` → txid) — it is the first real
-broadcast path (works with a watch-only node + an external signer), and the PSBT
-workflow seam (`walletprocesspsbt` → `finalizepsbt` → `sendpsbt`) is the next
-step when the host runs a wallet + signing key.
+owns the *ledger side*. When `BITCOIN_RAIL_ENABLED=true` and `BITCOIN_NODE_URL`
+is set (with `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` matching the remote
+bitcoind), the endpoint broadcasts for real and returns the `txid`. Two node
+seams run in order:
 
-When `BITCOIN_RAIL_ENABLED=true` and `BITCOIN_NODE_URL` is set (with
-`BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` matching the remote bitcoind), the
-endpoint broadcasts via the raw-tx seam and returns the real `txid`. Otherwise
-`txid` stays `null` (stub) until a node client is configured — see `.env`
+1. **PSBT workflow (Path A, preferred)** — `walletprocesspsbt` (sign) →
+   `finalizepsbt` (extract) → `sendpsbt` → txid. This is the BIP174 path the
+   council's hardware-wallet signatures feed: when the signing coordinator has
+   aggregated real signatures into the plan's `psbtB64`, that PSBT is what the
+   node processes. The seam *never fabricates* — it throws when the wallet is
+   missing or `finalizepsbt` is not complete (below threshold), and the
+   endpoint falls back to the raw seam.
+2. **Raw-tx path (Path B, fallback)** — `sendrawtransaction` of the plan's
+   unsigned raw-tx skeleton; works with a watch-only node + an external
+   signer. If the node is unreachable, it returns a deterministic placeholder
+   txid (`psbt:<planId>:<shortHash>`) so receipts/reconcile can iterate
+   offline; a real node overrides it the moment it is reachable.
+
+If neither seam yields a txid, `txid` stays `null` — see `.env`
 `BITCOIN_RAIL_ENABLED` + `BITCOIN_NODE_URL` + `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS`.
 
 Rejects (returns `broadcasted: false`) when the plan is not ready — never
