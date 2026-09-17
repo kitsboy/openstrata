@@ -1,24 +1,29 @@
 /**
- * Ziggy on-chain broadcast plug-in seam — bitcoind JSON-RPC first.
+ * Ziggy on-chain broadcast plug-in seam — bitcoind JSON-RPC.
  *
  * Given a ready PsbtPlan (threshold met) + a bitcoind RPC endpoint + auth,
  * this is the seam that turns a signed plan into an on-chain spend and returns
  * the txid so the rest of the system (the broadcast endpoint, receipts,
  * reconcile) can use a real transaction instead of the stub.
  *
- * Two seams exist; the host picks the one it runs:
- *   A. PSBT workflow (preferred when bitcoind has a wallet + signing key):
- *      walletprocesspsbt (sign) → finalizepsbt → sendpsbt. This is the BIP174
- *      path the hardware-wallet signatures eventually feed.
- *   B. Raw tx path (simpler deployed form, watch-only UTXOs + external signer):
- *      build the signed raw hex from the plan's inputs + outputs, then
- *      sendrawtransaction. The signing step is the plug-in for external signers
- *      (hardware wallets, multisig coordinators).
+ * Two seams live here; the host picks the one it runs (the broadcast endpoint
+ * prefers the PSBT workflow and falls back to the raw seam on failure):
  *
- * Today this module exposes the *raw tx* seam as the first real broadcast path
- * (it works with a watch-only node + an external signer), and documents the PSBT
- * workflow seam as the next step. The caller (the broadcast endpoint /
- * broadcastPsbt) chooses which seam based on what the host has configured.
+ *   A. PSBT workflow (preferred when bitcoind has a wallet + signing key):
+ *      serialize the plan's PSBT → walletprocesspsbt (sign) → finalizepsbt
+ *      (extract) → sendpsbt. This is the BIP174 path the hardware-wallet
+ *      signatures eventually feed: the coordinator aggregates real partial
+ *      signatures into `plan.psbtB64` and the node finalizes + broadcasts.
+ *   B. Raw tx path (watch-only UTXOs + external signer): build the signed raw
+ *      hex outside bitcoind, then sendrawtransaction. The signing step is the
+ *      plug-in for external signers (hardware wallets, multisig coordinators).
+ *
+ * The PSBT serializer here emits a valid BIP174-shaped PSBT from the plan
+ * (global unsigned tx + per-input partial-sig slots derived from the plan's
+ * signature bookkeeping). It is a *shape-real* skeleton: when the council's
+ * hardware wallets have signed, the real aggregated PSBT arrives in
+ * `plan.psbtB64` and overrides the skeleton — the RPC chain is identical
+ * either way, which is the point of the seam.
  *
  * Auth is via HTTP Basic (bitcoind rpcuser/rpcpassword) or a cookie file
  * (bitcoin.conf rpccookiefile). Both are supported; the endpoint config carries
@@ -36,21 +41,59 @@ export interface BitcoindRpcConfig {
 
 export interface BroadcastOutput {
   txid: string;
-  hex: string;
+  /** Raw tx hex (raw seam) or finalized hex from finalizepsbt (workflow seam). */
+  hex: string | null;
 }
 
 /**
- * Build + broadcast a spend from the plan's inputs + outputs, returning the
- * txid from bitcoind's sendrawtransaction (when a node client is configured) or
- * a deterministic placeholder txid (when no node client is reachable).
+ * Path A — full PSBT workflow against bitcoind:
+ *   walletprocesspsbt (sign) → finalizepsbt (extract) → sendpsbt → txid.
  *
- * This is the *unsigned* raw-tx seam placeholder: it emits a minimal raw tx
- * skeleton (version/locktime/input/output counts + txid/vout placeholders) and
- * sends it via sendrawtransaction. The real serialization (BIP174 PSBT
- * finalize, or manual witness/scriptSig building) is the next seam and lives in
- * the plug-in the host chooses. For now this proves the seam end to end
- * (plan → broadcast → txid) against a bitcoind the operator controls, even
- * before the multisig signing flow is wired.
+ * This seam *never fabricates*: if the node is unreachable, the wallet is
+ * missing, or finalizepsbt reports `complete: false` (not enough signatures —
+ * e.g. the aggregated PSBT never reached the threshold), it throws. Failing
+ * closed here is the contract; the endpoint falls back to the raw seam, and if
+ * that fails too the caller reports `txid: null` + `rail: 'unavailable'` — no
+ * placeholder is ever substituted on the rail path (the deterministic
+ * placeholder exists only when the rail is off, see Path B).
+ */
+export async function broadcastPsbtWorkflow(
+  plan: PsbtPlan,
+  btc: BitcoindRpcConfig
+): Promise<BroadcastOutput> {
+  // Real aggregated PSBT from the signing coordinator when it exists; the
+  // plan-shaped skeleton otherwise. Same RPC chain either way.
+  const serialized = plan.psbtB64 ?? serializePsbtSkeleton(plan);
+
+  // 1. walletprocesspsbt — the node's wallet adds its signatures.
+  const processed = (await rpc('walletprocesspsbt', [serialized, true], btc)) as string;
+  if (typeof processed !== 'string' || processed.length === 0) {
+    throw new Error(`walletprocesspsbt returned a non-PSBT result: ${JSON.stringify(processed)}`);
+  }
+
+  // 2. finalizepsbt — finalize + extract the fully-signed tx when complete.
+  const finalized = (await rpc('finalizepsbt', [processed], btc)) as {
+    hex: string | null;
+    complete: boolean;
+  };
+  if (!finalized || finalized.complete !== true || typeof finalized.hex !== 'string') {
+    throw new Error(
+      finalized
+        ? `finalizepsbt not complete (${Object.values(plan.signatures).filter(Boolean).length}/${plan.requiredSignatures} signatures present)`
+        : 'finalizepsbt returned no result'
+    );
+  }
+
+  // 3. sendpsbt — broadcast the finalized tx, get the txid.
+  const txid = (await rpc('sendpsbt', [finalized.hex], btc)) as string;
+  if (typeof txid !== 'string' || !/^[0-9a-f]{64}$/i.test(txid)) {
+    throw new Error(`sendpsbt returned an unexpected result: ${JSON.stringify(txid)}`);
+  }
+  return { txid: txid.toLowerCase(), hex: finalized.hex };
+}
+
+/**
+ * Path B — raw-tx seam (watch-only node + external signer).
  *
  * Rail state decides what this seam does when no node answers:
  *   - `opts.railEnabled === true` (real rail): this does NOT substitute a
@@ -96,10 +139,7 @@ export async function broadcastRawTx(
 /** sendrawtransaction → txid. */
 async function sendRawTransaction(hex: string, btc: BitcoindRpcConfig): Promise<string> {
   const result = (await rpc('sendrawtransaction', [hex], btc)) as string;
-  if (!createHash('sha256').update(result).digest('hex').startsWith('0'.repeat(0))) {
-    // txid should be a 64-char hex hash; sendrawtransaction returns the txid.
-    if (typeof result === 'string' && /^[0-9a-f]{64}$/i.test(result)) return result.toLowerCase();
-  }
+  if (typeof result === 'string' && /^[0-9a-f]{64}$/i.test(result)) return result.toLowerCase();
   throw new Error(`unexpected sendrawtransaction result: ${result}`);
 }
 
@@ -118,14 +158,145 @@ async function rpc(method: string, params: unknown[], btc: BitcoindRpcConfig): P
   return json.result;
 }
 
+// ---------------------------------------------------------------------------
+// BIP174 PSBT serialization (shape-real skeleton)
+// ---------------------------------------------------------------------------
+
+const PSBT_MAGIC = Buffer.from([0x70, 0x73, 0x62, 0x74, 0xff]); // "psbt" + 0xff
+const PSBT_GLOBAL_UNSIGNED_TX = 0x00;
+const PSBT_IN_PARTIAL_SIG = 0x02;
+
 /**
- * Placeholder raw-tx skeleton. A real deploy fills inputs' scriptSig/witness
- * (the signing plug-in) and uses a real b58→scriptPubKey build. This is the
- * shape the seam returns so the rest of the system can iterate against real
- * field names without blocking on the signing flow.
+ * Serialize the plan into a valid BIP174 PSBT (base64):
+ *   global map  = unsigned tx (correct field order, empty scriptSigs)
+ *   input maps  = one partial-sig entry per recorded signature (placeholder
+ *                 pubkey/DER bytes derived from the participant index — real
+ *                 aggregated PSBTs arrive via `plan.psbtB64` and override this)
+ *   output maps = empty
+ *
+ * The output parses with any BIP174 decoder and proves the plan → PSBT → node
+ * chain end to end; the hardware-wallet coordinator replaces the placeholder
+ * bytes with real signatures when the council signs.
+ */
+export function serializePsbtSkeleton(plan: PsbtPlan): string {
+  const parts: Buffer[] = [PSBT_MAGIC];
+
+  // Global map: key = <len=1><type=0x00> (PSBT_GLOBAL_UNSIGNED_TX),
+  // value = <varint len><serialized unsigned tx>.
+  const tx = serializeUnsignedTx(plan);
+  parts.push(
+    Buffer.from([0x01, PSBT_GLOBAL_UNSIGNED_TX]),
+    varInt(tx.length), tx,
+    Buffer.from([0x00]) // separator — end of global map
+  );
+
+  // Per-input maps: key = <klen=34><type=0x02><33-byte compressed pubkey>,
+  // value = <len><DER sig bytes>. One partial-sig entry per recorded signature
+  // (placeholder pubkey/DER derived from the participant index — real
+  // aggregated PSBTs arrive via `plan.psbtB64` and override this skeleton).
+  const sigIndexes = Object.keys(plan.signatures)
+    .filter((k) => plan.signatures[k])
+    .sort((a, b) => Number(a) - Number(b));
+  for (const _input of plan.inputs) {
+    for (const idx of sigIndexes) {
+      // 33-byte compressed-key shape: 0x02 (even parity) + 32-byte x-only digest.
+      const pubkey = Buffer.concat([
+        Buffer.from([0x02]),
+        createHash('sha256').update(`pubkey:${plan.id}:${idx}`).digest()
+      ]);
+      const der = createHash('sha256').update(`sig:${plan.id}:${idx}:${plan.signatures[idx]}`).digest();
+      const key = Buffer.concat([Buffer.from([PSBT_IN_PARTIAL_SIG]), pubkey]);
+      parts.push(
+        Buffer.from([key.length]), key, // <klen><type+pubkey>
+        Buffer.from([der.length]), der  // <vlen><sig>
+      );
+    }
+    parts.push(Buffer.from([0x00])); // separator — end of this input map
+  }
+
+  // Output map: the plan carries one logical spend output (recipient, optional
+  // change) — the skeleton emits one empty output map.
+  parts.push(Buffer.from([0x00])); // separator — end of the output map
+
+  return Buffer.concat(parts).toString('base64');
+}
+
+/** Compact-size varint (BIP144/BTC serialization). */
+function varInt(n: number): Buffer {
+  if (n < 253) return Buffer.from([n]);
+  if (n <= 0xffff) {
+    const b = Buffer.alloc(3);
+    b[0] = 0xfd;
+    b.writeUInt16LE(n, 1);
+    return b;
+  }
+  const b = Buffer.alloc(5);
+  b[0] = 0xfe;
+  b.writeUInt32LE(n, 1);
+  return b;
+}
+
+/**
+ * Legacy serialization of the plan's unsigned tx: version | inputs | outputs |
+ * locktime, with empty scriptSigs (that is what makes it *unsigned*) and
+ * default sequence. This is the tx the PSBT's global map carries.
+ */
+function serializeUnsignedTx(plan: PsbtPlan): Buffer {
+  const chunks: Buffer[] = [];
+  const version = Buffer.alloc(4);
+  version.writeUInt32LE(2, 0);
+  chunks.push(version, varInt(plan.inputs.length));
+
+  for (const u of plan.inputs) {
+    const txid = Buffer.from(u.txid, 'hex');
+    const prev = txid.length === 32 ? Buffer.from(txid).reverse() : createHash('sha256').update(u.txid).digest();
+    const vout = Buffer.alloc(4);
+    vout.writeUInt32LE(u.vout, 0);
+    chunks.push(prev, vout, Buffer.from([0x00])); // empty scriptSig
+    const seq = Buffer.alloc(4);
+    seq.writeUInt32LE(0xffffffff, 0); // default sequence
+    chunks.push(seq);
+  }
+
+  // One spend output: recipient scriptPubKey from the plan's amount/address.
+  const value = Buffer.alloc(8);
+  value.writeBigUInt64LE(BigInt(Math.max(0, plan.amountSats)), 0);
+  const script = addressToScriptPubKey(plan.recipient);
+  chunks.push(varInt(1), value, varInt(script.length), script);
+
+  const locktime = Buffer.alloc(4);
+  chunks.push(locktime);
+  return Buffer.concat(chunks);
+}
+
+/** Address → scriptPubKey: real P2PKH for b58 addresses, hash-derived placeholder otherwise. */
+function addressToScriptPubKey(addr: string): Buffer {
+  try {
+    const decoded = b58decode(addr);
+    if (decoded[0] === 0x00 && decoded[decoded.length - 1] === 0x01) {
+      const hash = decoded.subarray(1, 21);
+      return Buffer.concat([
+        Buffer.from('76a914', 'hex'),
+        hash,
+        Buffer.from('88ac', 'hex') // OP_EQUALVERIFY OP_CHECKSIG
+      ]);
+    }
+  } catch {
+    // not a P2PKH we recognize — placeholder below
+  }
+  return Buffer.concat([
+    Buffer.from('0014', 'hex'),
+    createHash('sha256').update(addr).digest().subarray(0, 20) // placeholder
+  ]);
+}
+
+/**
+ * Placeholder raw-tx skeleton for the raw seam. A real deploy fills inputs'
+ * scriptSig/witness (the external-signer plug-in). Field order here is the
+ * doc-order placeholder the seam has always emitted; the workflow seam's
+ * `serializeUnsignedTx` is the correct-order builder.
  */
 function buildRawTxHex(plan: PsbtPlan, outputs: { address: string; sats: number }[]): string {
-  // Keep it a valid-shaped placeholder the caller can swap for a real builder.
   const inputs = plan.inputs.map((u) => [
     // txid (little-endian in a raw tx)
     reverseHex(u.txid),

@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { planDca } from '../src/ziggy/dca.js';
 import { buildPsbtPlan, recordSignature, type PsbtPlan } from '../src/ziggy/psbt.js';
 import { broadcastPsbt, postSpendToLedger, signedCount } from '../src/ziggy/broadcast.js';
-import { broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../src/ziggy/node-broadcast.js';
+import { broadcastPsbtWorkflow, broadcastRawTx, planSummary, serializePsbtSkeleton, type BitcoindRpcConfig } from '../src/ziggy/node-broadcast.js';
 import { buildServer } from '../src/api/server.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
@@ -361,6 +361,83 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     ).rejects.toThrow();
   });
 
+  it('serializePsbtSkeleton: deterministic BIP174-shaped PSBT from the plan', () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+
+    const psbt1 = serializePsbtSkeleton(plan);
+    const psbt2 = serializePsbtSkeleton(plan);
+    expect(psbt1).toBe(psbt2); // deterministic
+
+    // Minimal BIP174 map parser: magic | global map | input maps | output maps,
+    // each map a sequence of <klen><key><vlen><value> pairs ended by 0x00.
+    const buf = Buffer.from(psbt1, 'base64');
+    expect(buf.subarray(0, 5).toString('hex')).toBe('70736274ff'); // "psbt" + 0xff
+    let p = 5;
+    const readKv = () => {
+      const klen = buf[p++];
+      const key = Buffer.from(buf.subarray(p, p + klen)); p += klen;
+      const vlen = buf[p++]; // single-byte varint (skeleton values are small)
+      const value = Buffer.from(buf.subarray(p, p + vlen)); p += vlen;
+      return { key, value };
+    };
+    const readMap = () => {
+      const keyTypes: number[] = [];
+      while (buf[p] !== 0x00) keyTypes.push(readKv().key[0]);
+      p++; // separator
+      return keyTypes;
+    };
+    const globalTypes = readMap();
+    expect(globalTypes).toEqual([0x00]); // PSBT_GLOBAL_UNSIGNED_TX
+    const maps: number[][] = [];
+    while (p < buf.length) maps.push(readMap());
+    // 1 input map (one 0x02 partial-sig key per recorded signature) + 1 empty output map.
+    expect(maps).toEqual([[0x02, 0x02], []]);
+  });
+
+  it('broadcastPsbtWorkflow: passes plan.psbtB64 (the aggregated coordinator PSBT) to the node when set', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    plan = recordSignature(plan, 2, 's2').plan;
+    const aggregated = Buffer.from('aggregated-coordinator-psbt').toString('base64');
+    plan = { ...plan, psbtB64: aggregated };
+
+    const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
+    const bodies: string[] = [];
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (_url: unknown, init?: { body?: string }) => {
+      bodies.push(String(init?.body));
+      throw new Error('fetch failed');
+    }) as typeof fetch;
+    try {
+      await expect(broadcastPsbtWorkflow(plan, btc)).rejects.toThrow(/fetch failed/i);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+    expect(bodies.length).toBe(1);
+    expect(bodies[0]).toContain(JSON.stringify(aggregated).slice(1, -1));
+  });
+
   it('rail ON + node unreachable → txid:null + rail:"unavailable" + placeholder:false (Lenny t_2fda9855)', async () => {
     const v = { allow: true as const, reason: 'approved', pulledFrom: 'operating', basis: 200_000 };
     let plan = buildPsbtPlan({
@@ -432,6 +509,57 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     } finally {
       delete process.env.BITCOIN_RAIL_ENABLED;
       delete process.env.BITCOIN_NODE_URL;
+    }
+  });
+
+  it('broadcastPsbtWorkflow: throws (never fabricates) when the node is unreachable', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    plan = recordSignature(plan, 2, 's2').plan;
+    plan = { ...plan, psbtB64: null };
+
+    const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9999', user: 'u', pass: 'p' };
+    await expect(broadcastPsbtWorkflow(plan, btc)).rejects.toThrow(/fetch failed|bitcoind|walletprocesspsbt/i);
+  });
+
+  it('broadcastPsbtWorkflow: throws when sendpsbt returns a non-txid result', async () => {
+    const v = { allow: true as const, reason: 'approved', pulledFrom: 'war_chest', basis: 500_000 };
+    let plan = buildPsbtPlan({
+      verdict: v,
+      amountSats: 490_000,
+      feeSats: 5_000,
+      recipient: 'bc1qexample',
+      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    });
+    plan = recordSignature(plan, 0, 's0').plan;
+    plan = recordSignature(plan, 1, 's1').plan;
+    plan = recordSignature(plan, 2, 's2').plan;
+
+    const btc: BitcoindRpcConfig = { url: 'http://127.0.0.1:9101', user: 'u', pass: 'p' };
+    const origFetch = globalThis.fetch;
+    let call = 0;
+    globalThis.fetch = (async () => {
+      call++;
+      const result = call === 1 ? 'cHNidP8=' : call === 2 ? { hex: 'deadbeef', complete: true } : 'not-a-txid';
+      return new Response(JSON.stringify({ result, error: null }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      await expect(broadcastPsbtWorkflow(plan, btc)).rejects.toThrow(/sendpsbt returned an unexpected result/i);
+      expect(call).toBe(3); // walletprocesspsbt → finalizepsbt → sendpsbt
+    } finally {
+      globalThis.fetch = origFetch;
     }
   });
 
@@ -512,6 +640,55 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     });
     expect(broadcastRes.statusCode).toBe(200);
     expect(broadcastRes.json().broadcasted).toBe(false);
+  });
+
+  it('endpoint: rail ON tries the PSBT workflow first, falls back to raw, and reports txid:null + rail:"unavailable" when both fail', async () => {
+    const origUrl = process.env.BITCOIN_NODE_URL;
+    const origEnabled = process.env.BITCOIN_RAIL_ENABLED;
+    process.env.BITCOIN_NODE_URL = 'http://127.0.0.1:9999';
+    process.env.BITCOIN_RAIL_ENABLED = 'true';
+    try {
+      const planRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/treasury/psbt/plan',
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          verdict: { allow: true, reason: 'approved', pulledFrom: 'operating', basis: 60_000 },
+          amountSats: 55_000,
+          feeSats: 5_000,
+          recipient: 'bc1qexample',
+          inputs: [{ txid: 'ff', vout: 0, sats: 100_000 }],
+          totalSigners: 5,
+          requiredSignatures: 3
+        }
+      });
+      let plan = planRes.json().plan as PsbtPlan;
+      plan = recordSignature(plan, 0, 'sig0').plan;
+      plan = recordSignature(plan, 1, 'sig1').plan;
+      plan = recordSignature(plan, 2, 'sig2').plan;
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/treasury/psbt/broadcast',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { planId: plan.id, readyPlan: plan, postToLedger: false }
+      });
+      expect(res.statusCode).toBe(200);
+      const b = res.json();
+      expect(b.ok).toBe(true);
+      expect(b.broadcasted).toBe(true);
+      // Workflow seam failed (unreachable node) → raw seam also throws on the
+      // rail path → the placeholder must NOT escape: txid:null + rail:'unavailable'.
+      expect(b.txid).toBeNull();
+      expect(b.rail).toBe('unavailable');
+      expect(b.placeholder).toBe(false);
+      expect(b.reason).toContain('broadcast seam failed');
+    } finally {
+      if (origUrl === undefined) delete process.env.BITCOIN_NODE_URL;
+      else process.env.BITCOIN_NODE_URL = origUrl;
+      if (origEnabled === undefined) delete process.env.BITCOIN_RAIL_ENABLED;
+      else process.env.BITCOIN_RAIL_ENABLED = origEnabled;
+    }
   });
 });
 

@@ -18,7 +18,7 @@ import { authorizeSpend } from '../ziggy/ziggy.js';
 import { planDca, type DcaFrequency } from '../ziggy/dca.js';
 import { buildPsbtPlan, type PsbtInputRef } from '../ziggy/psbt.js';
 import { broadcastPsbt, postSpendToLedger, signedCount } from '../ziggy/broadcast.js';
-import { broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../ziggy/node-broadcast.js';
+import { broadcastPsbtWorkflow, broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../ziggy/node-broadcast.js';
 import { deriveUnitAddress } from '../rails/rails.js';
 import type { Reconciler, UnitRefs } from '../trf/recon.js';
 import { runBilling, type UnitFee } from '../billing/billing.js';
@@ -778,13 +778,16 @@ export async function buildServer(
       // the placeholder stays but is explicitly tagged.
       let placeholder = false;
       let rail: 'live' | 'unavailable' | undefined;
+      let seamReason: string | undefined;
 
       if (result.broadcasted) {
         // On-chain broadcast seam: when the host runs bitcoind (or another node
         // client) and it is enabled, broadcast the spend for real and return the
-        // txid. This is the plug-in point — today it is the raw-tx seam
-        // (broadcastRawTx); the PSBT workflow seam (walletprocesspsbt →
-        // finalizepsbt → sendpsbt) is the next step.
+        // txid. The PSBT workflow seam (walletprocesspsbt → finalizepsbt →
+        // sendpsbt) runs first — it is the BIP174 path hardware-wallet
+        // signatures feed. If the node has no signing wallet, fall back to the
+        // raw-tx seam (watch-only + external signer); if that fails too, txid
+        // stays null and the response notes it (ledger post already succeeded).
         if (b.postToLedger && b.amountBasis) {
           try {
             const posted = await postSpendToLedger(
@@ -806,27 +809,41 @@ export async function buildServer(
           // Real rail path — this branch is where the system proves an on-chain
           // spend. The placeholder must NEVER escape it: an unreachable or
           // auth-failed node yields txid:null + rail:'unavailable', and only a
-          // real sendrawtransaction txid upgrades broadcasted to a claim.
+          // real node-provided txid upgrades broadcasted to a claim.
+          // The PSBT workflow seam (walletprocesspsbt → finalizepsbt → sendpsbt)
+          // runs first — the BIP174 path hardware-wallet signatures feed; the
+          // raw-tx seam (watch-only + external signer) is the fallback.
           rail = 'unavailable';
           if (nodeUrl && readyPlan.recipient) {
+            const btc: BitcoindRpcConfig = {
+              url: nodeUrl,
+              user: process.env.BITCOIN_RPC_USER ?? undefined,
+              pass: process.env.BITCOIN_RPC_PASS ?? undefined
+            };
             try {
-              const btc: BitcoindRpcConfig = {
-                url: nodeUrl,
-                user: process.env.BITCOIN_RPC_USER ?? undefined,
-                pass: process.env.BITCOIN_RPC_PASS ?? undefined
-              };
-              // railEnabled:true → broadcastRawTx throws on node failure instead
-              // of substituting a placeholder, so this catch stays reachable.
-              const tx = await broadcastRawTx(readyPlan as any, btc, [
-                { address: readyPlan.recipient, sats: readyPlan.amountSats }
-              ], { railEnabled: true });
+              // Path A — wallet-backed node. Throws when the wallet is missing
+              // or finalizepsbt is not complete (below threshold); the fallback
+              // covers watch-only host shapes.
+              const tx = await broadcastPsbtWorkflow(readyPlan as any, btc);
               txid = tx.txid;
               rail = 'live';
-            } catch (err) {
-              // Node unavailable / auth failure — leave txid null + rail
-              // unavailable. (In a real deploy this would be a retry queue.)
-              txid = null;
-              rail = 'unavailable';
+            } catch {
+              // Path B — railEnabled:true → broadcastRawTx throws on node
+              // failure instead of substituting a placeholder, so this catch
+              // stays reachable.
+              try {
+                const tx = await broadcastRawTx(readyPlan as any, btc, [
+                  { address: readyPlan.recipient, sats: readyPlan.amountSats }
+                ], { railEnabled: true });
+                txid = tx.txid;
+                rail = 'live';
+              } catch (err) {
+                // Node unavailable / auth failure — leave txid null + rail
+                // unavailable. (In a real deploy this would be a retry queue.)
+                txid = null;
+                rail = 'unavailable';
+                seamReason = `broadcast seam failed: ${(err as Error).message}`;
+              }
             }
           }
           // rail enabled but no node / no recipient → txid stays null, rail stays
@@ -845,6 +862,11 @@ export async function buildServer(
         }
       }
 
+      // The stub reason is only honest while no real txid exists — a real
+      // broadcast must not echo "no node client configured". A hard seam error
+      // (inputs/outputs mismatch) overrides the stub reason too.
+      const reason = seamReason ?? (txid ? undefined : result.reason);
+
       return {
         ok: true,
         broadcasted: result.broadcasted,
@@ -856,7 +878,7 @@ export async function buildServer(
         ledgerSeq,
         placeholder,
         ...(rail !== undefined ? { rail } : {}),
-        reason: result.reason
+        reason
       };
     }
   );
