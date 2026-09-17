@@ -184,6 +184,8 @@ Then `docker compose restart api`. The `/treasury/psbt/broadcast` endpoint will
 broadcast via the PSBT workflow seam (`walletprocesspsbt → finalizepsbt →
 sendpsbt`) when the node has a signing wallet and return the txid; watch-only
 hosts (external signers) fall back to the raw-tx seam (`sendrawtransaction`).
+On the rail path an unreachable node reports `txid: null` +
+`rail: 'unavailable'` — no placeholder is substituted for a real spend.
 
 ---
 

@@ -189,11 +189,16 @@ seams run in order:
    endpoint falls back to the raw seam.
 2. **Raw-tx path (Path B, fallback)** — `sendrawtransaction` of the plan's
    unsigned raw-tx skeleton; works with a watch-only node + an external
-   signer. If the node is unreachable, it returns a deterministic placeholder
-   txid (`psbt:<planId>:<shortHash>`) so receipts/reconcile can iterate
-   offline; a real node overrides it the moment it is reachable.
+   signer. On the rail path it **throws** on an unreachable or auth-failed
+   node — a placeholder never stands for an on-chain spend.
 
-If neither seam yields a txid, `txid` stays `null` — see `.env`
+**Broadcast honesty (tri-state):** on the real rail, the response carries
+`rail: 'live'` with the real node `txid`, or `txid: null` + `rail:
+'unavailable'` when the node could not be reached (a retry queue in a real
+deploy). Only in demo/bootstrap (`BITCOIN_RAIL_ENABLED != true`) does the
+endpoint return the deterministic placeholder txid (`psbt:<planId>:<shortHash>`)
+so receipts/reconcile can iterate — explicitly tagged `placeholder: true` so it
+can never be read as a spend that reached the chain. See `.env`
 `BITCOIN_RAIL_ENABLED` + `BITCOIN_NODE_URL` + `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS`.
 
 Rejects (returns `broadcasted: false`) when the plan is not ready — never

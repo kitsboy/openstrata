@@ -101,7 +101,10 @@ day is a single command, not a manual probe session.
   the API. `/treasury/psbt/broadcast` then broadcasts via the bitcoind PSBT
   workflow seam (`walletprocesspsbt → finalizepsbt → sendpsbt`, the BIP174 path
   hardware-wallet signatures feed) and returns the txid; watch-only hosts fall
-  back to the raw-tx seam (`sendrawtransaction`).
+  back to the raw-tx seam (`sendrawtransaction`). On the rail path a placeholder
+  never stands for an on-chain spend: node down → `txid: null` +
+  `rail: 'unavailable'` (the demo placeholder only exists when the rail is off,
+  tagged `placeholder: true`).
 
 ## Frontend → backend wiring (live dashboard)
 
