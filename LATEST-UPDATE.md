@@ -1,31 +1,57 @@
-# openstrata — Last Updated 2026-09-17 by Grok (M3)
+# openstrata — Last Updated 2026-09-18 by Buffy (M3)
 
-**Brief:** v0.3.14 — greeter popup card on `/` rebuilt with a video section for the 60-second OpenStrata intro Kimi will record (HyperFrames, Kimi voice/images), plus the Kimi handoff + 1-minute script in `docs/KIMI-HANDOFF.md` and `docs/VIDEO-SPECS.md`. Version bumped across root + backend manifests, lockfile, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status.
+**Brief:** v0.3.16 — design-system hardening pass. One branded header band for every tab (14 pages migrated off hand-rolled gradients, five of which painted a **white band across dark mode**), a new **`npm run audit:contrast`** that recomputes WCAG contrast for 60 token pairs in both themes and found **10 real failures** (all fixed), and a **"start here" three-leg journey strip** with localStorage-only progress. Plus the node/host inventory for the MVP rail: THOR's pruned node is the MVP rail, Cam's UMBREL full node is the correctness backstop.
 
-**Commits:** `e67c08a` (ui(popup): add greeter card with video section + Kimi intro-video handoff, v0.3.14). Pushed to origin/main 2026-09-17.
+**Commits:** `git log -1 --format=%h` (feat(ui): branded header bands, a real contrast audit, and the start-here journey strip, v0.3.16).
 
-- **What shipped:**
-  - First-run greeter popup card rebuilt into `src/lib/components/Tour.svelte` with a video section inside the greeting card: tease frame (play mark + subhead + fallback hint + CTA) collapses to a single trigger line when not expanded; expanded it holds either a real `<video>` once the asset lands, or the honest "Video coming soon — back in a few days." placeholder.
-  - New i18n keys: `tourVideoTitle`, `tourVideoSub`, `tourVideoCta`, `tourVideoFallback` — English for now.
-  - Kimi handoff: `docs/KIMI-HANDOFF.md` session section + `docs/VIDEO-SPECS.md` (specs + 1-minute script + delivery checklist).
-  - Version bump to v0.3.14 everywhere.
-- **What Kimi owns next:** record the 60-second intro with HyperFrames (Kimi images/video, young English woman accent), deliver the file + public URL, and either post the asset to the repo or send the URL back for the frontend src swap.
-- **Verified:** `npm run check` clean; `npm test` green; popup renders on `/` for signed-out fresh visitors; video section inside the greeting card, inline, does not break the 4-step tour.
+## What shipped (three batches, as asked)
 
-**Decisions:** the video lives inside the greeting card on purpose — hello + one-minute intro in one glance. i18n for the new keys is English-only until the video is live. The video section is a finished-looking tease with a CTA until the asset lands, not a broken embed. `broadcastPsbtWorkflow` now refuses below-threshold plans **before any RPC** (same fail-closed contract as `broadcastPsbt`), so no caller can route an unsigned plan to the node even if the endpoint's gate is bypassed. Version bumped across root + backend manifests, lockfiles, CHANGELOG, MISSION, EXECUTIVE-SUMMARY, WORKPLAN, current-status. Backend **191 tests**, typecheck clean.
+**Batch 1 — contrast, enforced by a script instead of by eye**
 
-**Commits (v0.3.13 increment):** `cd3b31b` (feat: PSBT workflow seam, rebased onto the family's tri-state ruling) + `71e00cf`/`e9bfc5b` (docs) + this improvement + v0.3.13 bump.
+- **`npm run audit:contrast`** (`scripts/audit-contrast.mjs`): recomputes WCAG 2.2 contrast for **60 text-on-surface token pairs** from `src/app.css` in light and dark. Reads `@theme` / `:root` / `.dark`, resolves `var()` references, and honours the repo's existing `.dark .text-<token>` text-only override convention so a deliberate fix is not reported as a failure. Wired into CI (`frontend verify`), the deployment checklist and `docs/SECURITY.md`.
+- **It found 10 real failures on the first run, and all 10 are fixed:**
+  - `--faint` sat at **2.42:1 on white** while driving every 9–10px uppercase eyebrow label → now 3.6:1, against a documented 3:1 floor for that decorative token.
+  - `--muted` was 4.41:1 on white and **3.9:1 on a surface-3 chip** → now `#5e6b75`, clearing AA on canvas, paper and chips.
+  - `text-brand-600` / `text-brand-700` were 3.27–3.68:1 in light and **2.67–3.29:1 in dark** → text usages now ride the ramp (`brand-700`/`brand-800` light, `brand-300`/`brand-200` dark), referencing palette variables so the green "brokerage" accent theme still swaps.
+  - **White on `--orange` measured 2.77:1** — the brand coral is a *glow* token, not a fill. Solid orange fills now use new `--orange-solid` / `--orange-solid-deep` (**5.02:1** with white); the coral stays for icons, rails and dots.
+  - The brand ramp's 600/700/800 steps were retuned: `--color-brand-600` is used as a fill 72 times, and white on the old `#0891b2` was only 3.68:1 → **now 5.88:1**.
+- Two mid-page `from-slate-50 to-white` bands (`/pitch`, `/about`) also painted white in dark mode → `to-transparent`.
 
-- **What shipped (v0.3.13 increment):**
-  - `broadcastPsbtWorkflow` readiness guard: throws `plan not ready: N-of-M required, K signed` before the first RPC; fetch-stub test asserts zero network calls for a 2-of-3 plan (bitcoin-modules 25→26).
-  - Version bump to 0.3.13 everywhere (root + backend `package.json`/lockfiles, CHANGELOG front-matter + release section, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md` — Phase 3 status now "complete (code; host deploy pending)", `.ai_docs/current-status.md`).
-- **What shipped (this session):**
-  - **PSBT workflow seam (Path A)** (`backend/src/ziggy/node-broadcast.ts`): `broadcastPsbtWorkflow(plan, btc) → { txid, hex }` — passes `plan.psbtB64` (the signing coordinator's aggregated PSBT) straight to `walletprocesspsbt` when set, otherwise serializes a deterministic BIP174-shaped skeleton from the plan (global unsigned-tx map + per-input partial-sig entries derived from the plan's signature bookkeeping). **Never fabricates:** throws when the node is unreachable, the wallet is missing, or `finalizepsbt` reports `complete: false` (below threshold). Real txid only from a real node.
-  - **Endpoint integration with the tri-state ruling (Lenny t_2fda9855)** (`backend/src/api/server.ts`): rail ON → workflow seam first, raw seam (with `railEnabled: true`, which throws on node failure) as fallback; failure of both reports `txid: null` + `rail: 'unavailable'` + `placeholder: false` — no placeholder escapes the rail path. Rail OFF (demo/bootstrap) → deterministic placeholder txid tagged `placeholder: true`. A hard seam error surfaces via `reason` (`broadcast seam failed: …`).
-  - **BIP174 serializer** (`serializePsbtSkeleton`, exported): magic + global map (`PSBT_GLOBAL_UNSIGNED_TX` → legacy-serialized unsigned tx, correct field order, empty scriptSigs) + per-input maps (0x02 partial-sig entries, 33-byte compressed-key shape) + empty output map. Placeholder pubkey/DER bytes derived deterministically from the participant index — real signatures override via `psbtB64`.
-  - **Parallel-work note:** while this session ran, the family (Lenny/Cam via Aider) independently fixed the same two pre-existing regressions (TS5076 in `ingest-vector.ts`, the stale `broadcastRawTx` throw test) and landed the tri-state ruling itself. This session rebased onto those commits and re-integrated: their tri-state semantics kept, the workflow seam layered in as the preferred rail path, both sides' tests retained (bitcoin-modules 22→25).
-  - **New tests this session:** BIP174 map-parser validation of the skeleton (magic, `[0x00]` global map, per-input `[0x02, 0x02]` partial-sig entries, empty output map), aggregated-`psbtB64` pass-through (fetch-stub asserts the coordinator PSBT is the RPC param), workflow never-fabricate contract on unreachable node, `sendpsbt` non-txid rejection (3-RPC-call walk), and an endpoint rail-ON fallback-order test (workflow fails → raw throws → `txid: null` + `rail: 'unavailable'`, placeholder never escapes).
-- **Docs updated:** `backend/API.md` (broadcast endpoint: two node seams in order + the tri-state response contract), `docs/DEPLOYMENT.md` + `docs/TAILSCALE-ONBOARDING.md` (workflow seam preferred, raw fallback, no placeholder on the rail path), `docs/WORKPLAN.md` + `docs/ROADMAP.md` (on-chain broadcast plug-in seam complete), `.ai_docs/current-status.md`, `docs/KIMI-HANDOFF.md`, `LATEST-UPDATE.md`.
-- **Verified:** `backend npm run typecheck` → clean; `backend npm test` → **191 tests** (was 182; bitcoin-modules 26), e2e smoke 6 skipped (no DB). Rebasing was verified green before continuing.
-- **Decisions:** the workflow seam fails closed (never fabricates) and the raw seam throws on the rail path — only the demo path (rail off) produces the tagged placeholder, per the family's broadcast-honesty ruling; the coordinator's aggregated `psbtB64` always wins over the skeleton, so hardware-wallet signatures flow through the identical RPC chain either way.
-- **Remaining (all host-infra-gated, no open Phase 3 code items):** deploy the stack on a Tailscale host, provision Rosa Ollama + `rosa index`, provision bitcoind/LND + enable rails so `/treasury/psbt/broadcast` returns a real txid.
+**Batch 2 — one branded header band for every tab**
+
+- New `.page-hero` in `src/app.css`: a brand wash, a fine drafting grid faded toward the edges, and a brand hairline along the top edge — mixed entirely from theme tokens, so it flips with the theme by construction.
+- All **14 top-level page headers** migrated off their hand-rolled Tailwind gradients (`scripts/migrate-page-hero.mjs`). Five of those gradients ended in `to-white` and painted a bright band straight across dark mode; that whole class of bug is now impossible.
+
+**Batch 3 — "start here" journey strip**
+
+- `StartHere.svelte` answers the question a first-time visitor actually has. Three legs: **Explore the modules → Configure your building → Register and go live.** Mounted under the header band on `/tools`, `/tools/wizard`, `/thank-you` and `/docs/manual/getting-started`; visited legs tick off, the current leg is highlighted, and a progress meter shows the whole path.
+- Progress is **localStorage-only** — no account, no network call. A marketing funnel nudge should not be the one thing that phones home.
+- Pure logic in `src/lib/journey.ts` with **10 unit tests**: malformed, partial or hostile storage degrades to "nothing reached" instead of throwing.
+- **10 new i18n keys × 9 locales.**
+
+## Node & host inventory (new — this unblocks Phase 3)
+
+Recorded in `docs/DEPLOYMENT.md` under "Nodes, hosts & the tailnet"; the questions for Kimi are in `docs/KIMI-HANDOFF.md`.
+
+| Machine | What it is | Node | Status |
+|---|---|---|---|
+| **THOR** (VPS) | Family VPS, runs HERMES | bitcoind **pruned** + **LND** | Running; LND reported reachable over Tailscale |
+| **UMBREL** (Cam's) | Personal full node | bitcoind **full/unpruned** | **Syncing — ~63% IBD, ETA weeks** |
+| **M3 / M4** | Cam's + Kimi's machines | none | Tailscale peers |
+
+**The decision:** **THOR's pruned node is the MVP rail.** Broadcast and confirm need no historical rescan — `sendrawtransaction`, the PSBT workflow, and watching UTXOs from now on all work on a pruned node. **UMBREL is the correctness backstop**, not the blocker: it is the only node that can answer "does this address have old history?", so until its IBD finishes watch-only xpub imports may show a *partial* history, and the UI must say so rather than present it as a complete ledger. Nothing waits on UMBREL — re-pointing is a config change (`BITCOIN_NODE_URL`) because the seams are address-agnostic.
+
+## Verified
+
+- `npm run check` → **0 errors, 0 warnings**.
+- `npm test` → **95 passed** (12 files; was 85 — +10 journey tests).
+- `npm run audit:i18n` → **passed, 820 keys** across 23 route components.
+- `npm run audit:contrast` → **passed, 60 token pairs**, both themes.
+- `npm run build` → green.
+- **Browser sweep: 17 pages × light + dark = 34 combinations, 0 contrast failures, 0 horizontal overflow.** Contrast was computed against the live DOM with a real WCAG alpha-composite (parsing `oklab()` and `color(srgb …)`), probing h1/h2/p/links/buttons/table cells at their actual rendered size and weight — not read off the stylesheet. `StartHere` renders 3 legs on all four journey pages; `.page-hero` is present on all 14 migrated pages.
+
+## Next
+
+- **Still blocked on Kimi's answers, not on code** — 9 questions covering LND reachability + macaroon, THOR's prune target and chain, whether THOR's bitcoind is wallet-enabled, UMBREL's sync ETA and tailnet name, THOR's Docker/Tailscale/Node toolchain, Ollama + `nomic-embed-text`, MagicDNS names, disk/RAM headroom, and Tailscale ACLs.
+- Then: `docker compose up -d` on THOR → `AUTH_SECRET` → `npm run migrate` → e2e smoke gate → point the frontend at the MagicDNS name → `BITCOIN_RAIL_ENABLED=true` so `/treasury/psbt/broadcast` returns a real txid, and `rosa index` so Rosa's search stops using the keyword fallback.
+- **Cam's remaining UI asks:** refine the user flow further, and the header *imagery* (the bands are now branded and consistent, but still vector/texture rather than real photography or illustration).

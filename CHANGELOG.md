@@ -1,6 +1,10 @@
 ---
 title: Changelog
 project: openstrataversion_history:
+-  version: 0.3.16
+-  summary: "Design-system hardening pass: one branded header band for every tab (14 pages migrated off hand-rolled gradients — five of which painted a white band across dark mode), a new `npm run audit:contrast` that recomputes WCAG contrast for 60 token pairs in both themes and found 10 real failures (all fixed: --faint 2.42->3.6:1, --muted 4.41->4.9:1, brand text steps, and white-on-orange 2.77->5.02:1 via new --orange-solid), and a 'start here' three-leg journey strip with localStorage-only progress + 10 unit tests. Browser-verified 17 pages x light/dark = 34 combos, 0 contrast failures, 0 overflow. 95 tests, 820 i18n keys."
+-  version: 0.3.15
+-  summary: "Kimi's 60-second OpenStrata intro video is LIVE in the first-run greeter popup (static/video/openstrata-intro.mp4): step 1 is now a wider two-column card — video on the left, 'What you get' (0% custody / BCFSA-aware / Bitcoin proof trail / portable history) and 'Where to start' on the right — so it fits one screen with zero scroll at 768px+ and 390px; all 4 steps browser-verified with 0 hidden overflow and 0 horizontal overflow. Also fixes a CI-breaking gap Kimi's v0.3.14 commit left: pl/uk/sw were missing the four video keys, so `npm run audit:i18n` was failing on main. 9 new catalog keys x 9 locales (813 keys), svelte-check 0/0, 85 tests, build green."
 -  version: 0.3.14
 -  summary: "First-run greeter popup card rebuilt with a video section (30-60s intro, Kimi handoff via HyperFrames); new i18n keys tourVideoTitle/tourVideoSub/tourVideoCta/tourVideoFallback; Kimi handoff in docs/KIMI-HANDOFF.md + docs/VIDEO-SPECS.md with a 1-minute intro script; version bumped to v0.3.14 everywhere."
 -  version: 0.3.13
@@ -71,6 +75,48 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.16] — 2026-09-18
+
+### Added
+- Frontend: **branded page header band** (`.page-hero` in `src/app.css`). Every top-level tab now renders the same header language — a brand wash, a fine drafting grid faded toward the edges, and a brand hairline along the top edge — mixed entirely from theme tokens. All 14 hand-rolled per-page gradients are replaced (`scripts/migrate-page-hero.mjs`). **Five of them ended in `to-white`** (`from-brand-50 via-white`, `from-amber-50/50 to-white`), which painted a bright band straight across dark mode; that class of bug is now impossible because the band cannot reference a fixed surface.
+- Frontend: **`StartHere.svelte`** — a three-leg journey strip (Explore the modules → Configure your building → Register and go live) mounted under the header band on `/tools`, `/tools/wizard`, `/thank-you` and `/docs/manual/getting-started`. Visited legs tick off, the current leg is highlighted, and a progress meter shows the whole path. Progress is **localStorage-only** — no account, no network call.
+- Frontend: `src/lib/journey.ts` — the pure progress logic behind the strip, with 10 unit tests (`src/lib/journey.test.ts`): malformed/partial/hostile storage degrades to "nothing reached" rather than throwing.
+- Tooling: **`npm run audit:contrast`** (`scripts/audit-contrast.mjs`) — recomputes WCAG 2.2 contrast for 60 text-on-surface token pairs from `src/app.css` in light *and* dark, and fails on regression. It reads `@theme`, `:root` and `.dark`, resolves `var()` references, and honours the repo's `.dark .text-<token>` text-only override convention so a deliberate fix is not reported as a failure. Added to CI (`frontend verify`) and the deployment checklist.
+
+### Changed
+- Frontend: brand ramp steps 600/700/800 retuned from the stock cyan (`#0891b2` / `#0e7490` / `#155e75`) to `#0f6d89` / `#0b5a72` / `#08485c`. `--color-brand-600` is used as a *fill* 72 times over, and white on the old #0891b2 measured only 3.68:1; it is now 5.88:1. `--color-brand-500` and below stay stock — those are the accent/glow steps.
+- Frontend: `--muted` `#6d7a82` → `#5e6b75` and `--faint` `#9ca8ae` → `#7d8890` in light mode.
+- Version bump to v0.3.16 across root + backend `package.json`, both lockfiles, `CHANGELOG.md`, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md`, `.ai_docs/current-status.md`, `LATEST-UPDATE.md`.
+
+### Fixed
+- **Ten real contrast failures found by the new audit, all fixed.** `--faint` measured **2.42:1 on white** while driving 9–10px uppercase eyebrow labels → now 3.6:1 against a documented 3:1 floor for that decorative token. `--muted` was 4.41:1 on white and **3.9:1 on a surface-3 chip** → now clears AA on canvas, paper and chips. `text-brand-600` / `text-brand-700` were 3.27–3.68:1 on light and **2.67–3.29:1 on dark** → text usages now ride the ramp (`brand-700`/`brand-800` light, `brand-300`/`brand-200` dark) via new `.text-brand-*` rules, referencing palette variables so the green "brokerage" accent theme swaps with them. **White on `--orange` measured 2.77:1** — the brand coral is a glow token, not a fill, so solid orange fills now use new `--orange-solid` / `--orange-solid-deep` (**5.02:1** with white), and the coral is kept for icons, rails and dots. Applied across `.primary-button`, `.signin-button`, `.mobile-nav .mobile-add`, `EmptyState`, `AuthModal` and `Tour`.
+- Frontend: two mid-page `bg-gradient-to-b from-slate-50 to-white` bands (`/pitch`, `/about`) also painted white in dark mode → `to-transparent`.
+
+### Verified
+- `npm run check` → 0 errors, 0 warnings; `npm test` → **95 passed** (12 files, +10 journey tests); `npm run audit:i18n` → passed, 820 keys; `npm run audit:contrast` → passed, 60 token pairs; `npm run build` → green.
+- **Browser sweep, 17 pages × light + dark = 34 combinations, 0 contrast failures and 0 horizontal overflow.** Contrast was computed against the live DOM with a real WCAG composite (alpha-blended ancestor surfaces, `oklab()` and `color(srgb …)` parsed), probing h1/h2/p/links/buttons/table cells at their actual font sizes and boldness — not from the stylesheet alone. `StartHere` renders 3 legs on all four journey pages; `.page-hero` is present on all 14 migrated pages.
+
+## [0.3.15] — 2026-09-18
+
+### Added
+- Frontend: the greeter popup on `/` now plays the delivered intro video. Step 1 of the first-run tour renders `/video/openstrata-intro.mp4` (Kimi's HyperFrames render, 57s, 1920×1080, committed at `static/video/openstrata-intro.mp4`) in a real `<video>` element with inline controls; if the asset ever fails to load the card falls back to the honest placeholder copy instead of a broken frame.
+- Frontend: **“What you get”** — four plain-language offer facts inside the popup (0% custody, BCFSA-aware compliance, a Bitcoin proof trail for every action, portable history) — and **“Where to start”** — a three-step instruction list. Both sit beside the video.
+- i18n: 9 new catalog keys — `tourFactsTitle`, `tourFact1`–`tourFact4`, `tourHowTitle`, `tourHow1`–`tourHow3` — translated across all 9 locales.
+- Docs: `scripts/inject-tour-offer-i18n.mjs` (one-off catalog injector, same pattern as `inject-recon-i18n.mjs`).
+
+### Changed
+- Frontend: step 1 of the tour is now a wider two-column card (video left; facts + start steps right) and steps 2–4 stay narrow. Previously the card was single-column and 934px tall, so a 738px viewport hid 255px of it — including the Next button. Now: 720×522 with zero hidden overflow at 768px+ and at 390px, verified in a real browser on all four steps.
+- Frontend: the video section and the offer copy appear on step 1 only, so steps 2–4 stay lean.
+- i18n: `tourVideoFallback` rewritten in all 9 locales — the old “Video coming soon — back in a few days.” line is no longer true.
+- Version bump to v0.3.15 across root + backend `package.json`, both lockfiles, `CHANGELOG.md`, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md`, `.ai_docs/current-status.md`, `LATEST-UPDATE.md`.
+
+### Fixed
+- i18n: `npm run audit:i18n` was **failing on `main`** — the v0.3.14 commit added the four video keys to English, French, Spanish, Chinese, Hindi and Filipino but never to Polish, Ukrainian or Swahili, and the locale-parity guard checks every locale against French. The missing keys are now translated, so the audit passes at 813 keys × 9 locales. This would have failed the `frontend verify` CI job.
+
+### Verified
+- `npm run check` → 0 errors, 0 warnings; `npm test` → 85 passed; `npm run audit:i18n` → passed, 813 keys; `npm run build` → green (the video is emitted to `build/video/openstrata-intro.mp4`).
+- Browser-verified (Chromium, production preview): all 4 tour steps, 0 hidden overflow and 0 horizontal page overflow at 1221×738, 768×900 and 390×844; step 1 resolves `/video/openstrata-intro.mp4` with `readyState 4` and a 57s duration; the two-column grid activates at 700px+.
 
 ## [0.3.14] — 2026-09-17
 
