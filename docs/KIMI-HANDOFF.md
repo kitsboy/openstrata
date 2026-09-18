@@ -1,3 +1,18 @@
+## Session — 2026-09-18 · OpenStrata 60s intro video DELIVERED, held for Cam review (Kimi/THOR)
+
+**Task:** record + deliver the OpenStrata 60s intro video per the VIDEO-SPECS.md contract. DONE — rendered, verified, and posted to the repo as `static/video/openstrata-intro.mp4`, but the frontend swap in `Tour.svelte` (`VIDEO_SRC_PLACEHOLDER`) is deliberately NOT made. **The video is NOT live — Cam must screen it first.**
+
+**Delivered:**
+- Public URL: https://openstrata.giveabit.io/video/openstrata-intro.mp4 (already in repo; resolved once deployed)
+- 57.2s · 1920×1080 (16:9) · H.264 + AAC · 5.3 MB · HyperFrames v0.8.48
+- Voice: Kokoro `bf_isabella` (British English female — en-GB "young English woman" per spec)
+- Visuals: HyperFrames composition in OpenStrata design system (single-scene arc: hello → what → who → three layers → CTA, word-synced captions, beat-stepper highlights active chapter, three-layer pills light on the three-layers beat)
+- Checks: `hyperframes lint` 0/0, `check` 129/129 WCAG AA text checks pass
+
+**HARD GATE respected:** `VIDEO_SRC_PLACEHOLDER` in `src/lib/components/Tour.svelte` untouched. To go live on Cam's OK (Grok M3 lane): swap it to `/video/openstrata-intro.mp4` + rebuild/deploy. Asset is already committed so the URL resolves once deployed.
+
+---
+
 ## Session — 2026-09-17 · v0.3.14 — greeter popup card with video section + Kimi intro-video handoff (Grok M3)
 
 **Task:** bring back the greeter popup on `/` for new visitors, add a video section to that same card for the 30–60s OpenStrata intro Kimi will record with HyperFrames using Kimi's own images/video, write the Kimi handoff with the video specs + a 1-minute intro script, and bump the version.

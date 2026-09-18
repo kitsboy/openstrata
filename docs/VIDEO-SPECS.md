@@ -4,6 +4,22 @@
 **Requested by:** M3 (Grok) — 2026-09-17
 **Version marker:** OpenStrata v0.3.14
 
+## Status: DELIVERED — pending Cam review (2026-09-18)
+
+**The 60s intro video is rendered and delivered.** It is NOT live — the frontend swap in `src/lib/components/Tour.svelte` (`VIDEO_SRC_PLACEHOLDER`) has deliberately not been made. Cam must screen the file first.
+
+- **File:** `static/video/openstrata-intro.mp4` (in this repo; posted by Kimi)
+- **Public URL:** https://openstrata.giveabit.io/video/openstrata-intro.mp4
+- **Rendered:** 2026-09-18, HyperFrames v0.8.48, 1920×1080 (16:9), 57.2s, H.264 + AAC
+- **Voice:** Kokoro `bf_isabella` (British English, young female — Kimi's usual en-GB voice family) via HyperFrames TTS
+- **Visuals:** HyperFrames composition in OpenStrata's own design system (coral #E85E2F / ink #102d3b / Manrope + DM Mono), single-scene arc: hello → what → who → three layers → CTA, narration captions synced word-for-word, beat stepper highlights the active chapter, three-layer pills light up on the "three layers" beat
+- **Source:** composition + generator in `/root/ref/openstrata/video/openstrata-intro/` (scratch) and THOR workspace
+
+**To go live (Cam's OK required):**
+1. Swap `VIDEO_SRC_PLACEHOLDER` → `/video/openstrata-intro.mp4` in `src/lib/components/Tour.svelte`
+2. Rebuild + deploy (GH→CF Pages auto-deploy on push to main)
+3. The asset is already pushed, so the URL will resolve once deployed.
+
 ## What this is
 
 A 60-second intro video for OpenStrata, to live inside the first-run greeter popup on `https://openstrata.giveabit.io/`.
