@@ -1,59 +1,99 @@
 # openstrata — Last Updated 2026-09-18 by Buffy (M3)
 
-**Brief:** v0.3.16 — design-system hardening pass. One branded header band for every tab (14 pages migrated off hand-rolled gradients, five of which painted a **white band across dark mode**), a new **`npm run audit:contrast`** that recomputes WCAG contrast for 60 token pairs in both themes and found **10 real failures** (all fixed), and a **"start here" three-leg journey strip** with localStorage-only progress. Plus the node/host inventory for the MVP rail: THOR's pruned node is the MVP rail, Cam's UMBREL full node is the correctness backstop.
+**Brief:** v0.3.17 — the three improvements Cam asked for, **plus the accessibility debt they exposed**. Per-tab **hero artwork** (six on-brand motifs across 14 pages), an in-app **setup checklist** on the dashboard (localStorage-only, 13 tests), and a **public `/changelog`** generated from the changelog we already write (7 tests). Then `audit:contrast` turned out to be **silently skipping 46 of its own checks** — closing that hole found `text-success` at **2.18:1**, `text-warning` at **1.99:1**, `text-danger` at **3.76:1**, `text-bitcoin` at **2.30:1** and white-on-Bitcoin-orange at **2.30:1**. All fixed.
 
-**Commits:** `a078d6e` (feat(ui): intro video live, WCAG contrast enforced, header bands, journey strip) · `2e59f58` (docs: node/tailnet inventory + THOR MVP-rail decision) · `dfa8de9` (release v0.3.16). Pushed to `origin/main`; Cloudflare Pages deployed.
+**Commits:** `_pending_` — pushed to `origin/main`; Cloudflare Pages deploys on push.
 
-**Live-verified after deploy:** version marker **0.3.16**; `/video/openstrata-intro.mp4` → 200 `video/mp4` 5.58 MB; the greeter popup plays it (`readyState 4`) inside the two-column card with 4 facts + 3 steps and **0 hidden overflow**; `/tools` renders the branded `.page-hero` band and the 3-leg journey strip with no horizontal overflow.
+**Live-verified after deploy:** _pending_
 
-## What shipped (three batches, as asked)
+---
 
-**Batch 1 — contrast, enforced by a script instead of by eye**
+## What shipped (three improvements, as asked)
 
-- **`npm run audit:contrast`** (`scripts/audit-contrast.mjs`): recomputes WCAG 2.2 contrast for **60 text-on-surface token pairs** from `src/app.css` in light and dark. Reads `@theme` / `:root` / `.dark`, resolves `var()` references, and honours the repo's existing `.dark .text-<token>` text-only override convention so a deliberate fix is not reported as a failure. Wired into CI (`frontend verify`), the deployment checklist and `docs/SECURITY.md`.
-- **It found 10 real failures on the first run, and all 10 are fixed:**
-  - `--faint` sat at **2.42:1 on white** while driving every 9–10px uppercase eyebrow label → now 3.6:1, against a documented 3:1 floor for that decorative token.
-  - `--muted` was 4.41:1 on white and **3.9:1 on a surface-3 chip** → now `#5e6b75`, clearing AA on canvas, paper and chips.
-  - `text-brand-600` / `text-brand-700` were 3.27–3.68:1 in light and **2.67–3.29:1 in dark** → text usages now ride the ramp (`brand-700`/`brand-800` light, `brand-300`/`brand-200` dark), referencing palette variables so the green "brokerage" accent theme still swaps.
-  - **White on `--orange` measured 2.77:1** — the brand coral is a *glow* token, not a fill. Solid orange fills now use new `--orange-solid` / `--orange-solid-deep` (**5.02:1** with white); the coral stays for icons, rails and dots.
-  - The brand ramp's 600/700/800 steps were retuned: `--color-brand-600` is used as a fill 72 times, and white on the old `#0891b2` was only 3.68:1 → **now 5.88:1**.
-- Two mid-page `from-slate-50 to-white` bands (`/pitch`, `/about`) also painted white in dark mode → `to-transparent`.
+### 1. Every tab got its own header artwork
 
-**Batch 2 — one branded header band for every tab**
+The `.page-hero` band from v0.3.16 gave every tab one consistent header language — but it left them looking like siblings. `src/lib/components/HeroArt.svelte` now draws a single on-brand motif behind each headline, chosen by what the section **is**, not by rotation:
 
-- New `.page-hero` in `src/app.css`: a brand wash, a fine drafting grid faded toward the edges, and a brand hairline along the top edge — mixed entirely from theme tokens, so it flips with the theme by construction.
-- All **14 top-level page headers** migrated off their hand-rolled Tailwind gradients (`scripts/migrate-page-hero.mjs`). Five of those gradients ended in `to-white` and painted a bright band straight across dark mode; that whole class of bug is now impossible.
+| Section | Motif |
+|---|---|
+| `/tools`, `/tools/wizard` | the module lattice |
+| `/roadmap`, `/spec` | blocks linked into a proof chain |
+| `/compliance`, `/legal` | statutes and a balance |
+| `/docs`, `/templates` | stacked, ruled documents |
+| `/about`, `/blog`, `/design` | the community graph |
+| `/faq`, `/rss`, `/thank-you` | answers radiating outward |
 
-**Batch 3 — "start here" journey strip**
+Constraints that stop it becoming decoration soup: drawn in `currentColor` **only** (so it inherits the band's brand tint and flips with the theme rather than needing a second dark palette), `aria-hidden` and `pointer-events:none` so it never carries or blocks anything, masked toward the edges so it cannot sit under a headline, and `display:none` below 900px. Mounted by `scripts/wire-hero-art.mjs`; idempotent, so re-running it is safe.
 
-- `StartHere.svelte` answers the question a first-time visitor actually has. Three legs: **Explore the modules → Configure your building → Register and go live.** Mounted under the header band on `/tools`, `/tools/wizard`, `/thank-you` and `/docs/manual/getting-started`; visited legs tick off, the current leg is highlighted, and a progress meter shows the whole path.
-- Progress is **localStorage-only** — no account, no network call. A marketing funnel nudge should not be the one thing that phones home.
-- Pure logic in `src/lib/journey.ts` with **10 unit tests**: malformed, partial or hostile storage degrades to "nothing reached" instead of throwing.
-- **10 new i18n keys × 9 locales.**
+### 2. An in-app setup checklist on the dashboard
 
-## Node & host inventory (new — this unblocks Phase 3)
+The public journey strip (v0.3.16) guides someone deciding whether to sign up. This is the other half: what a council must actually do **after** a workspace exists.
 
-Recorded in `docs/DEPLOYMENT.md` under "Nodes, hosts & the tailnet"; the questions for Kimi are in `docs/KIMI-HANDOFF.md`.
+`SetupChecklist.svelte` + `src/lib/setup.ts` sit under the dashboard welcome row and track four steps, each with a deep link:
 
-| Machine | What it is | Node | Status |
-|---|---|---|---|
-| **THOR** (VPS) | Family VPS, runs HERMES | bitcoind **pruned** + **LND** | Running; LND reported reachable over Tailscale |
-| **UMBREL** (Cam's) | Personal full node | bitcoind **full/unpruned** | **Syncing — ~63% IBD, ETA weeks** |
-| **M3 / M4** | Cam's + Kimi's machines | none | Tailscale peers |
+1. **Add your units** — every unit, so fees, ballots and Form K track correctly
+2. **Open the two funds** — operating and reserve, kept separate; trust money may not be co-mingled
+3. **Load your bylaws** — the standard set or your filed set, so enforcement has a basis
+4. **Close your first month** — bill, reconcile, publish one real month to the ledger
 
-**The decision:** **THOR's pruned node is the MVP rail.** Broadcast and confirm need no historical rescan — `sendrawtransaction`, the PSBT workflow, and watching UTXOs from now on all work on a pruned node. **UMBREL is the correctness backstop**, not the blocker: it is the only node that can answer "does this address have old history?", so until its IBD finishes watch-only xpub imports may show a *partial* history, and the UI must say so rather than present it as a complete ledger. Nothing waits on UMBREL — re-pointing is a config change (`BITCOIN_NODE_URL`) because the seams are address-agnostic.
+Design decisions worth keeping: progress is **localStorage-only** (the workspace is the record of truth; the panel is only a nudge, and clearing storage costs clicks, not data), malformed/partial/**hostile** storage degrades to "nothing done" rather than throwing, and dismissal lives under its own key so an older build cannot resurrect a panel someone dismissed. The first-run tour still renders first; the checklist sits behind it, and a restore button brings it back.
+
+### 3. A public `/changelog` page
+
+The project ships several times a week and writes an honest changelog every time — so it now publishes that. `scripts/generate-changelog.mjs` parses `CHANGELOG.md` into `src/lib/changelog.generated.ts` and the page renders it:
+
+- **20 releases with full notes, 5 summary-only, 119 bullet items.** Parses the markdown body (`## [x.y.z] — date` plus its `Added` / `Changed` / `Fixed` / `Verified` / `Known issues` groups), and carries the five releases that only ever existed in the front-matter version history through as summary-only rows instead of dropping or inventing them.
+- **Nothing is reworded for marketing**, and the `Verified` group is shown rather than hidden — how a release was checked is part of the claim. Inline markdown (emphasis, code ticks, link targets) is stripped so the page never renders raw source syntax.
+- Change-type filter, per-release expand/collapse (2 items per group until expanded), newest-first timeline, a hero metric strip (latest version / releases / total changes) and an RSS call to action.
+- Wired into the nav, the dashboard footer, `static/sitemap.xml` and `static/llms.txt`.
+
+**7 tests**, including a freshness guard and the assertion that the newest published release equals the `package.json` version — so the page cannot silently go stale.
+
+## And then it turned into a real accessibility sweep
+
+Cam's own words were "some text can still be hard to see, we are not perfect yet." He was right, and worse: **the audit was not looking.**
+
+`scripts/audit-contrast.mjs` **silently skipped any token with no value in `src/app.css`** (`if (!fg) continue;`). The light-mode slate ramp and every semantic status colour come from Tailwind's stock palette rather than from us — so `--color-slate-400`, `--color-slate-500` and all of `success` / `warning` / `danger` / `bitcoin` were **never checked in light mode**. Closing that hole (an unresolvable token is now a hard failure) took the audit from **60 → 106 token pairs**, and the failures were real:
+
+| Element | Was | Now |
+|---|---|---|
+| `text-success` chips | **2.18:1** | 6.53:1 |
+| `text-warning` chips | **1.99:1** | 6.38:1 |
+| `text-danger` — arrears amounts, enforcement chips | **3.76:1** | 6.54:1 |
+| `text-bitcoin` — balances, donate links | **2.30:1** | 5.62:1 |
+| white on a solid `#f7931a` Bitcoin button | **2.30:1** | **6.96:1** — dark ink |
+| light-mode `text-slate-400` — dates, source notes, captions | **2.90:1** | 5.54:1 |
+
+**How it was fixed** — the same split the orange already had, applied properly:
+
+- Text usages ride new documented steps: `--success-text`, `--warning-text`, `--danger-text`, `--bitcoin-text`, plus `.text-slate-400` / `.text-slate-500` overrides in both themes, following the repo's established text-only-override convention so solid fills and 10%-tint chips are untouched.
+- Solid danger buttons use new `--color-danger-solid` (**5.46:1** with white); decorative danger dots keep the bright coral glow, because a dot carries no text.
+- A solid Bitcoin fill now takes **dark ink** via `--on-bitcoin` (**6.96:1**) instead of white on `#f7931a`. This is the better fix than darkening the token: the Bitcoin orange stays brand-bright, which is the whole point of the accent.
+- The light-mode slate ramp is now **stated in `src/app.css`** at values identical to stock. Nothing moves visually — but an undefined token cannot be audited, and this is exactly what was hiding.
 
 ## Verified
 
-- `npm run check` → **0 errors, 0 warnings**.
-- `npm test` → **95 passed** (12 files; was 85 — +10 journey tests).
-- `npm run audit:i18n` → **passed, 820 keys** across 23 route components.
-- `npm run audit:contrast` → **passed, 60 token pairs**, both themes.
-- `npm run build` → green.
-- **Browser sweep: 17 pages × light + dark = 34 combinations, 0 contrast failures, 0 horizontal overflow.** Contrast was computed against the live DOM with a real WCAG alpha-composite (parsing `oklab()` and `color(srgb …)`), probing h1/h2/p/links/buttons/table cells at their actual rendered size and weight — not read off the stylesheet. `StartHere` renders 3 legs on all four journey pages; `.page-hero` is present on all 14 migrated pages.
+- `npm run check` → **0 errors, 0 warnings**
+- `npm test` → **115 passed** (14 files, +13 setup and +7 changelog tests)
+- `npm run audit:i18n` → passed, **860 keys × 9 locales** (40 new keys)
+- `npm run audit:contrast` → passed, **106 token pairs**, both themes, at or above floor
+- `npm run build` → green
 
-## Next
+**Browser sweep (Chromium, production preview):**
 
-- **Still blocked on Kimi's answers, not on code** — 9 questions covering LND reachability + macaroon, THOR's prune target and chain, whether THOR's bitcoind is wallet-enabled, UMBREL's sync ETA and tailnet name, THOR's Docker/Tailscale/Node toolchain, Ollama + `nomic-embed-text`, MagicDNS names, disk/RAM headroom, and Tailscale ACLs.
-- Then: `docker compose up -d` on THOR → `AUTH_SECRET` → `npm run migrate` → e2e smoke gate → point the frontend at the MagicDNS name → `BITCOIN_RAIL_ENABLED=true` so `/treasury/psbt/broadcast` returns a real txid, and `rosa index` so Rosa's search stops using the keyword fallback.
-- **Cam's remaining UI asks:** refine the user flow further, and the header *imagery* (the bands are now branded and consistent, but still vector/texture rather than real photography or illustration).
+- 16 pages × light + dark = **32 combinations: 0 horizontal overflow, 0 contrast failures** attributable to the changed tokens. Hero art present on all 13 hero pages, with the dashboard correctly having none (it is the app shell, not a marketing hero).
+- **24 combinations at 390×844, 768×900 and 1221×738: 0 page overflow and 0 checklist overflow.** The header artwork is `display:none` at 390 and 768 as designed, and visible at 1221.
+- **Interaction-verified, not just rendered:** `/changelog` filter narrows **74 → 17** entries and reports the active type; expanding the latest release goes **74 → 77** entries and the control flips to "Show less"; 5 summary-only earlier releases render; the setup checklist ticks **0% → 25%**, writes `{"done":["units"],"hidden":false}`, survives a reload at 25% with 1 box ticked, then dismisses to a restore button with `openstrata-setup-hidden=1`.
+
+**One trap found while testing, now documented in `docs/DEPLOYMENT.md`:** the site is an installable PWA with a service worker, so a **stale worker serves the previous build** — a correct deploy looks broken (wrong version marker, new components missing). It cost a full false-negative sweep before it was spotted. Any browser verification against `npm run preview` must unregister the worker and drop origin caches first, then check the version marker.
+
+## Pushed in batches
+
+_Commit list to be filled in by the verification record._
+
+## What is still not done — honestly
+
+- **Nothing is deployed.** Phase 3 is still blocked on the host, not on code. The backend has never run on a real server.
+- **Still waiting on Kimi** for the node/host answers in `docs/KIMI-HANDOFF.md`: THOR's prune target, which chain, whether bitcoind is wallet-enabled, UMBREL's sync percentage, MagicDNS names, and THOR's disk/RAM headroom. THOR's pruned node remains the chosen MVP rail; UMBREL remains the correctness backstop and is **not** a blocker.
+- **Live rails are not connected.** Bitcoin, Lightning, Satohash stamping and Nostr identity are prepared seams, not running services.
+- **Machine-drafted locales** (pl, uk, sw and the newer keys) still need professional human review before they are treated as reviewed.

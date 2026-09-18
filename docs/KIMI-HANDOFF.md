@@ -1,3 +1,36 @@
+## Session — 2026-09-18 · v0.3.17 — per-tab hero art, an in-app setup checklist, a public changelog, and a real accessibility sweep (Buffy on M3)
+
+**Task from Cam:** "complete all 3 suggestions you gave me… be creative and YOLO… then all docs, hand-offs and maps." Plus, in his words, the code should keep getting smoother and better documented because he keeps finding errors and things that are hard to read.
+
+**All three improvements shipped:**
+
+1. **Per-tab header artwork** — `src/lib/components/HeroArt.svelte` draws one of six motifs inside the shared `.page-hero` band, mounted on 14 pages by `scripts/wire-hero-art.mjs`. The motif is chosen by what the section *is*: `/tools` gets the module lattice, `/roadmap` + `/spec` get linked proof-chain blocks, `/compliance` + `/legal` get statutes and a balance, `/docs` + `/templates` get ruled documents, `/about` + `/blog` + `/design` get the community graph, `/faq` + `/rss` + `/thank-you` get answers radiating outward. Drawn in `currentColor` **only**, so it inherits the band's brand tint and flips with the theme instead of needing a second palette; `aria-hidden`, masked toward the edges, and `display:none` below 900px so it can never sit under a headline or add phone overflow.
+2. **In-app setup checklist** — `src/lib/components/SetupChecklist.svelte` + `src/lib/setup.ts`, mounted under the dashboard welcome row. Four steps between a new workspace and a building that actually runs: **add your units → open the two funds → load your bylaws → close your first month**, each with a deep link, a progress meter, a dismiss control and a restore button. Progress is **localStorage-only** on purpose (the workspace is the record of truth; the panel is a nudge), corrupt or hostile storage degrades to "nothing done" rather than throwing, and the dismissal is stored under its own key so an older build cannot resurrect a dismissed panel. The first-run tour still comes first, with the checklist behind it. 13 unit tests.
+3. **Public `/changelog`** — the changelog we already write is now published. `scripts/generate-changelog.mjs` parses `CHANGELOG.md` into `src/lib/changelog.generated.ts` (20 releases with notes, 5 summary-only, 119 items), and `src/routes/changelog/+page.svelte` renders it with a change-type filter, per-release expand/collapse, a newest-first timeline, a hero metric strip and an RSS call to action. Five releases only ever existed in the front-matter version history — those are carried through as summary-only rows rather than dropped or invented. Inline markdown is stripped so the page never shows raw source syntax. Added to the nav, the dashboard footer, `static/sitemap.xml` and `static/llms.txt`. 7 tests, including a freshness guard and "newest published release == package.json version".
+
+**And then it turned into an accessibility sweep, because the audit was lying to us.**
+
+`scripts/audit-contrast.mjs` **silently skipped any token with no value in `src/app.css`.** The light-mode slate ramp and every semantic status colour come from Tailwind's stock palette rather than from us, so they were never checked. Closing that hole (an unresolvable token is now a hard failure) took the audit from **60 to 106 token pairs** and immediately surfaced real failures:
+
+| Element | Measured | Now |
+|---|---|---|
+| `text-success` chips | **2.18:1** | 6.53:1 |
+| `text-warning` chips | **1.99:1** | 6.38:1 |
+| `text-danger` (arrears amounts) | **3.76:1** | 6.54:1 |
+| `text-bitcoin` (balances, donate) | **2.30:1** | 5.62:1 |
+| white on a solid `#f7931a` Bitcoin button | **2.30:1** | **6.96:1** (dark ink) |
+| light-mode `text-slate-400` meta text | **2.90:1** | 5.54:1 |
+
+This is the same split the orange already had. Text usages ride new documented steps (`--success-text`, `--warning-text`, `--danger-text`, `--bitcoin-text`, plus `.text-slate-400/500` overrides in both themes); solid danger buttons use `--color-danger-solid`; and a Bitcoin fill now takes **dark ink** via `--on-bitcoin` rather than white, which keeps the orange brand-bright while making the label readable. The light slate ramp is now stated in `src/app.css` at identical values — nothing moves visually, but an undefined token cannot be audited.
+
+**One trap worth recording for you: the site is an installable PWA.** A stale service worker serves the **previous** build, so a correct deploy looks broken — wrong version marker, new components missing. Unregister the worker and drop origin caches before measuring anything in a browser, then check the version marker first. It cost me a full false-negative sweep before I spotted it; it is now written into `docs/DEPLOYMENT.md`.
+
+**Verified:** `npm run check` → 0/0; `npm test` → **115 passed** (was 95); `audit:i18n` → **860 keys × 9 locales**; `audit:contrast` → **106 pairs**, all at or above floor; build green. Browser sweep: 16 pages × light/dark = **32 combos, 0 overflow, 0 failures** from the changed tokens; **24 combos at 390×844 / 768×900 / 1221×738 with 0 overflow** (artwork hidden at 390 + 768, visible at 1221); and interaction-verified — the changelog filter narrows 74 entries to 17, expand goes 74 → 77 and flips to "Show less", and the checklist ticks 0% → 25%, writes `{"done":["units"],"hidden":false}`, survives a reload at 25% with 1 box ticked, then dismisses to a restore button.
+
+**Nothing is blocked on you this round** — the outstanding items are still the node/host questions in the section below (THOR's prune target, chain, wallet-enabled bitcoind, UMBREL's sync %, MagicDNS names, THOR headroom). Those are unchanged and still the gate on Phase 3 deployment.
+
+---
+
 ## Session — 2026-09-18 · v0.3.15 — your intro video is LIVE, popup rebuilt around it; 7 questions for you about THOR (Buffy on M3)
 
 **Task from Cam:** "add the video to the pop up, it should have a short text section with some instructions and facts about what we are offering" + keep hardening and documenting.

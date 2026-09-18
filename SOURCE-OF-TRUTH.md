@@ -1,8 +1,13 @@
 # SOURCE-OF-TRUTH — OpenStrata / Hermes Strata
 
-**Generated:** July 2026  
+**Generated:** July 2026 — **latest revision 2026-09-18 at v0.3.17 (Buffy, M3)**  
 **Machine:** M3 (dev) <-> M4 HERMES / Obsidian via Tailscale  
 **GitHub:** https://github.com/kitsboy/openstrata
+
+> **Version note.** This document was assembled in July 2026 and is deliberately
+> high-level; it is *not* a file-by-file index (that is `DIRECTORY-MAP.md`) and
+> it is not the current status (that is `.ai_docs/current-status.md` and
+> `LATEST-UPDATE.md`). Where it disagrees with those, **they win.**
 
 ---
 

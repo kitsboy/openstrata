@@ -50,8 +50,32 @@
 | src/lib/strata-tool.ts | 30+ tool modules, domains, stats | Product |
 | src/lib/marketing.ts | Savings math, BCFSA positioning | Marketing |
 | src/lib/data.ts | Mock units, treasury, RSS, API endpoints | Data |
-| src/lib/nav.ts | Navigation items | UI |
+| src/lib/nav.ts | Navigation items (drives the top nav, footer product list, breadcrumbs AND the Cmd-K search index) | UI |
 | src/lib/icons.ts | SVG icon set | UI |
+| src/lib/journey.ts | Pure state for the public "start here" journey strip (localStorage-only) + `journey.test.ts` | UI |
+| src/lib/setup.ts | Pure state for the dashboard setup checklist (localStorage-only) + `setup.test.ts` | UI |
+| src/lib/changelog.generated.ts | **Generated** from `CHANGELOG.md` by `scripts/generate-changelog.mjs` — do not edit by hand. `changelog.test.ts` fails if it drifts | Docs |
+
+### Code — UI Components (the ones worth knowing about)
+
+| File | Purpose |
+|------|---------|
+| src/lib/components/HeroArt.svelte | Per-section header artwork — six on-brand motifs, drawn in `currentColor`, hidden below 900px |
+| src/lib/components/SetupChecklist.svelte | Dashboard "finish setting up" panel — 4 steps, deep links, progress, dismiss/restore |
+| src/lib/components/StartHere.svelte | Public three-leg journey strip mounted under the hero band |
+| src/lib/components/Tour.svelte | First-run greeter popup (step 1 hosts the intro video + offer facts) |
+| src/lib/components/Card.svelte | Shared card, variants: content / compact / hero |
+
+### Tooling — Gates & Generators (`scripts/`)
+
+| Script | What it does | Wired into |
+|--------|--------------|------------|
+| `audit-i18n.mjs` | Locale parity (every locale vs French) + hard-coded-copy scan | CI + deploy checklist |
+| `audit-contrast.mjs` | Recomputes WCAG 2.2 contrast for **106 token pairs** in both themes from `src/app.css`. An unresolvable token is a **failure**, not a skip | CI + deploy checklist |
+| `generate-changelog.mjs` | `CHANGELOG.md` → `src/lib/changelog.generated.ts` for the public `/changelog` page | Run by hand; `changelog.test.ts` guards drift |
+| `wire-hero-art.mjs` | Mounts `HeroArt` motifs on the 14 hero pages (idempotent) | One-off codemod |
+| `migrate-page-hero.mjs` | Migrated 14 hand-rolled header gradients onto `.page-hero` | One-off codemod |
+| `inject-*-i18n.mjs` | Catalog injectors (journey, tour offer, setup + changelog) — the pattern for adding keys across all 9 locales | One-off |
 
 ### Code — Phase 3 Backend (`backend/`)
 
@@ -86,6 +110,12 @@
 | /rss.xml | src/routes/rss.xml/+server.ts | Prerendered RSS 2.0 feed |
 | /spec | src/routes/spec/+page.svelte | OpenStrata protocol spec |
 | /blog | src/routes/blog/+page.svelte | Announcements |
+| /changelog | src/routes/changelog/+page.svelte | **Public changelog** — generated from `CHANGELOG.md`; filter, expand/collapse, newest-first timeline |
+| /pitch | src/routes/pitch/+page.svelte | Investor deck (charts from `marketing.ts`) |
+| /design | src/routes/design/+page.svelte | Design-system reference — tokens, type, components, states |
+| /docs/manual | src/routes/docs/manual/ | User manual (hub, welcome, quick start) |
+| /privacy · /terms | src/routes/privacy/ · src/routes/terms/ | Privacy policy and terms of service |
+| /thank-you | src/routes/thank-you/+page.svelte | Post-wizard confirmation + what happens next |
 
 ---
 
@@ -93,9 +123,9 @@
 
 1. **Extend, don't rebuild.** SvelteKit site was built by Grok; add to it, don't replace.
 2. **Do not delete** compliance.ts, strata-tool.ts, or data.ts — source of truth.
-3. **Light theme only.** No dark theme without Cam approval.
+3. **Both themes are live and audited.** Light and dark both ship; any colour change must keep `npm run audit:contrast` green (106 token pairs, both themes). Never paint a fixed light surface into the dark theme — mix from theme tokens instead (this bug class has recurred twice).
 4. **Hermes = software, not brokerage.** Never claim unlicensed management services.
-5. **Run npm run build before every commit.** Fix all errors.
+5. **Run the gates before every commit:** `npm run check` (0 errors, 0 warnings), `npm test`, `npm run audit:i18n`, `npm run audit:contrast`, `npm run build`. Fix all errors.
 6. **Satohash integration deferred** until Cam says API is ready.
 
 ---
@@ -125,11 +155,23 @@
 cd /Users/cam/projects/openstrata
 npm install
 npm run dev       # localhost:5173
-npm run build     # build/ folder
+npm run check     # svelte-check — must be 0 errors, 0 warnings
+npm test          # 115 tests, incl. changelog freshness + newest==package.json version
+npm run audit:i18n
+npm run audit:contrast
+npm run build     # build/ folder (static: one .html per route)
 git add -A && git commit -m "what and why" && git push
 ```
 
 Deployed via Cloudflare Pages (adapter-static, build/ folder).
+
+**After editing `CHANGELOG.md`:** run `node scripts/generate-changelog.mjs` and
+re-run `npm test`, or the public `/changelog` page keeps serving the old list.
+
+**Verifying in a browser:** the site is an installable PWA, so a stale service
+worker serves the *previous* build and makes a correct deploy look broken.
+Unregister the worker and drop origin caches before measuring, then check the
+version marker first. See `docs/DEPLOYMENT.md`.
 
 ---
 
@@ -143,4 +185,4 @@ Deployed via Cloudflare Pages (adapter-static, build/ folder).
 
 ---
 
-*Give A Bit — Bitcoin sovereignty first. Updated July 2026 by Hermes (M4).*
+*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.17**. Originally assembled July 2026 by Hermes (M4).*

@@ -21,10 +21,38 @@ Deploys are triggered by pushes to `main`. The live site version marker
 ## Verification checklist
 
 1. `npm run check` reports 0 errors and 0 warnings
-2. `npm run build` completes cleanly
-3. `npm run audit:i18n` passes (0 missing keys, 0 hard-coded-copy warnings)
-4. `npm run audit:contrast` passes (60 token pairs, both themes, at or above floor)
-5. Live site serves the expected version marker after deploy
+2. `npm test` passes (the suite includes `changelog.test.ts`, which fails if
+   `src/lib/changelog.generated.ts` drifts from `CHANGELOG.md`, and asserts the
+   newest published release equals the `package.json` version — so the public
+   `/changelog` page cannot silently go stale)
+3. `npm run build` completes cleanly
+4. `npm run audit:i18n` passes (0 missing keys, 0 hard-coded-copy warnings)
+5. `npm run audit:contrast` passes (106 token pairs, both themes, at or above floor)
+6. Live site serves the expected version marker after deploy
+
+### Regenerating the changelog
+
+`src/lib/changelog.generated.ts` is built from `CHANGELOG.md`. After editing the
+changelog, run:
+
+```bash
+node scripts/generate-changelog.mjs
+npm test        # changelog.test.ts fails if you forget
+```
+
+### Verifying a deploy in a browser
+
+The site is an installable PWA with a service worker, so a stale worker will
+serve the **previous** build and make a correct deploy look broken (wrong
+version marker, missing new components). Before measuring anything in a browser
+against `npm run preview`, unregister it and drop the origin caches:
+
+```js
+for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+for (const k of await caches.keys()) await caches.delete(k);
+```
+
+Then reload, and check the version marker before trusting any other reading.
 
 ## Phase 3 backend (`backend/`)
 
