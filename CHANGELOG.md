@@ -1,6 +1,8 @@
 ---
 title: Changelog
 project: openstrataversion_history:
+-  version: 0.3.17
+-  summary: "Three shipped improvements and a real accessibility sweep: per-tab hero artwork (6 on-brand SVG motifs on 14 pages), an in-app setup checklist on the dashboard with localStorage-only progress (13 unit tests), and a public /changelog page generated from this file (7 sync tests). Closing a silent-skip hole in audit:contrast exposed 106 token pairs instead of 60 and found four unaudited failures — success 1.99:1–2.18:1, warning 1.99:1, danger 3.76:1 and bitcoin 2.30:1 as text, plus white-on-#f7931a at 2.30:1 — all now fixed with documented text steps and a dark-ink Bitcoin fill. 115 tests, 860 i18n keys x 9 locales, 106 contrast pairs, 24 page/theme/viewport browser combos with 0 overflow."
 -  version: 0.3.16
 -  summary: "Design-system hardening pass: one branded header band for every tab (14 pages migrated off hand-rolled gradients — five of which painted a white band across dark mode), a new `npm run audit:contrast` that recomputes WCAG contrast for 60 token pairs in both themes and found 10 real failures (all fixed: --faint 2.42->3.6:1, --muted 4.41->4.9:1, brand text steps, and white-on-orange 2.77->5.02:1 via new --orange-solid), and a 'start here' three-leg journey strip with localStorage-only progress + 10 unit tests. Browser-verified 17 pages x light/dark = 34 combos, 0 contrast failures, 0 overflow. 95 tests, 820 i18n keys."
 -  version: 0.3.15
@@ -70,11 +72,36 @@ project: openstrataversion_history:
     date: 2026-06-22
     summary: Initial project scaffold
 audience: devs
-last_updated: 2026-09-17
+last_updated: 2026-09-18
 owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.17] — 2026-09-18
+
+### Added
+- Frontend: **per-tab hero artwork** — `src/lib/components/HeroArt.svelte` draws one of six on-brand motifs (modules, chain, scales, ledger, network, signal) inside the shared `.page-hero` band, mounted on 14 pages via `scripts/wire-hero-art.mjs`. The motif is chosen by what the section *is*, not by rotation: `/tools` gets the module lattice, `/roadmap` and `/spec` get linked proof blocks, `/compliance` and `/legal` get statutes and a balance, `/docs` and `/templates` get rules documents, `/about`, `/blog` and `/design` get the community graph, `/faq`, `/rss` and `/thank-you` get answers radiating out. Drawn in `currentColor` only, so it inherits the band's brand tint and flips with the theme; decorative (`aria-hidden`), masked toward the edges, and hidden below 900px so it can never sit under a headline or add phone overflow.
+- Frontend: **in-app setup checklist** on the dashboard (`src/lib/components/SetupChecklist.svelte` + `src/lib/setup.ts`). Four steps between a new workspace and a building that actually runs — add your units, open the two funds, load your bylaws, close your first month — each with a deep link, a progress meter, a dismiss control and a restore button. Progress is **localStorage-only**: the workspace is the record of truth, the panel is only a nudge. Corrupt, partial or hostile storage degrades to "nothing done" rather than throwing, and the dismissal is stored under its own key so an older build cannot resurrect a dismissed panel.
+- Frontend: **public `/changelog` page**, generated from this file by `scripts/generate-changelog.mjs` → `src/lib/changelog.generated.ts`. Parses the markdown body (`## [x.y.z] — date` sections and their `Added` / `Changed` / `Fixed` / `Verified` / `Known issues` groups), carries the five releases that only ever existed in the front-matter version history through as summary-only entries rather than dropping or inventing them, and strips inline markdown (emphasis, code ticks and link targets) so the page never renders raw source syntax. Includes a change-type filter, per-release expand/collapse, a Newest-first timeline, and an RSS call to action. Wired into the nav, the dashboard footer, `static/sitemap.xml` and `static/llms.txt`.
+- Frontend: `src/lib/setup.test.ts` (13 tests — hostile-storage parsing, canonical ordering, idempotent ticking, percent and completion) and `src/lib/changelog.test.ts` (7 tests — every CHANGELOG heading published, freshest-generation guard, newest-first ordering, no raw markdown).
+- Tooling: `npm run audit:contrast` now checks **106 token pairs instead of 60**, and an unresolvable token is a **failure rather than a silent skip** (the hole that hid all of the above).
+
+### Changed
+- Frontend: light-mode state colours get the same split the orange already had. Text usages ride new documented steps — `--success-text` `#0b6b49`, `--warning-text` `#8a5209`, `--danger-text` `#b3261e`, `--bitcoin-text` `#9a5700` — plus `.text-*` overrides for `success`, `warning`, `danger`, `bitcoin`, `slate-400` and `slate-500` in both themes, following the repo's established text-only-override convention so solid fills and tinted chips are untouched.
+- Frontend: light-mode slate ramp is now stated in `src/app.css` instead of inherited from Tailwind's stock palette. The values are identical to stock, so nothing moves visually — but an undefined token cannot be audited, and these were exactly the steps the audit was silently skipping.
+- Frontend: `--color-danger-solid` (`#c92a2a`, 5.46:1 with white) for solid danger buttons; decorative danger dots keep the bright `--color-danger` glow. A solid Bitcoin fill now takes dark ink via `--on-bitcoin` (6.96:1) instead of white on `#f7931a` (2.30:1) — the Bitcoin orange stays brand-bright, which is the point of the accent.
+- Frontend: `SetupChecklist` sits directly under the dashboard welcome row; the first-run tour still comes first, and the checklist is behind it as intended.
+- Version bump to v0.3.17 across root + backend `package.json`, both lockfiles, `CHANGELOG.md`, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md`, `.ai_docs/current-status.md`, `LATEST-UPDATE.md`.
+
+### Fixed
+- **`scripts/audit-contrast.mjs` silently skipped any token with no value in `src/app.css`.** Because the light-mode slate ramp and every semantic status step live in Tailwind's stock palette rather than ours, `--color-slate-400` was never audited in light mode — where it was rendering meta text at **2.90:1 on paper** (and `--color-slate-500` at 4.04:1 on a surface-3 chip). Measured in a real browser, `text-success` chips sat at **2.18:1**, `text-warning` at **1.99:1**, `text-danger` at **3.76:1**, `text-bitcoin` at **2.30:1**, and white on a solid `#f7931a` Bitcoin fill at **2.30:1**. All fixed above; the audit now fails loudly if a token cannot be resolved.
+- Frontend: two `bg-bitcoin text-white` buttons (QR pay, 3-of-5 broadcast) and one `bg-danger` fine button were relying on that unreadable pairing — the Bitcoin fills now take dark ink and the danger button uses `--color-danger-solid`.
+
+### Verified
+- `npm run check` → 0 errors, 0 warnings; `npm test` → **115 passed** (14 files, +13 setup and +7 changelog tests); `npm run audit:i18n` → passed, **860 keys** × 9 locales; `npm run audit:contrast` → passed, **106 token pairs**; `npm run build` → green.
+- **Browser sweep (Chromium, production preview):** 16 pages × light + dark = **32 combinations, 0 horizontal overflow and 0 contrast failures** attributable to the changed tokens; hero art present on all 13 hero pages. Then 3 viewports × 2 themes × 4 pages = **24 combinations at 390×844, 768×900 and 1221×738 with 0 page overflow and 0 checklist overflow**; the header artwork is `display:none` at 390 and 768 as designed and visible at 1221.
+- Interaction-verified, not just rendered: `/changelog` filter narrows 74 entries to 17 and reports the active type, the latest release expands 74 → 77 entries and flips to "Show less", 5 summary-only earlier releases render, and the setup checklist ticks to 25%, writes `{"done":["units"],"hidden":false}`, survives a reload at 25% with 1 ticked box, then dismisses to a restore button with `openstrata-setup-hidden=1`. One caveat found while testing: the site is a PWA, so a stale service worker serves the previous build — the sweep unregisters it and clears origin caches before measuring.
 
 ## [0.3.16] — 2026-09-18
 
