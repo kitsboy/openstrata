@@ -65,8 +65,14 @@ Cam asked for three front-end improvements, so all three are in:
 **Verified end to end:** `npm run check` 0/0 · `npm test` **95 passed** (was 85) · `npm run audit:i18n` 820 keys · `npm run audit:contrast` 60 pairs · build green · **browser sweep over 17 pages × light/dark = 34 combos with 0 contrast failures and 0 horizontal overflow**, measured with a real WCAG composite over the live DOM (including `oklab()` and `color(srgb …)` surfaces).
 
 **Git State:**
-- SHA: `git log -1 --format=%H`
-- Unpushed: `git log --oneline origin/main..HEAD` (pushed once green)
+- Pushed to `origin/main` in three batches: `a078d6e` (code — video, contrast audit, header bands, journey strip), `2e59f58` (node/tailnet docs), `dfa8de9` (v0.3.16 release). Base was `2bbc2af`.
+- Working tree clean; nothing unpushed after the final docs commit.
+
+**Live verification against production** (`https://openstrata.giveabit.io`, after the Cloudflare Pages deploy):
+- Version marker `openstrata-version` = **0.3.16** ✅
+- `GET /video/openstrata-intro.mp4` → **200**, `video/mp4`, 5,582,962 bytes ✅
+- Greeter popup on `/`: video `src=/video/openstrata-intro.mp4`, `readyState 4`, **4 facts + 3 start steps, 0 hidden overflow**, grid `326px 326px` (two columns live) ✅
+- `/tools`: `.page-hero` band rendering its radial gradient, **3 journey legs** reading "Explore the modules / Configure your building / Register and go live", 0 horizontal overflow ✅
 
 ---
 

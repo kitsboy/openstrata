@@ -2,7 +2,9 @@
 
 **Brief:** v0.3.16 — design-system hardening pass. One branded header band for every tab (14 pages migrated off hand-rolled gradients, five of which painted a **white band across dark mode**), a new **`npm run audit:contrast`** that recomputes WCAG contrast for 60 token pairs in both themes and found **10 real failures** (all fixed), and a **"start here" three-leg journey strip** with localStorage-only progress. Plus the node/host inventory for the MVP rail: THOR's pruned node is the MVP rail, Cam's UMBREL full node is the correctness backstop.
 
-**Commits:** `git log -1 --format=%h` (feat(ui): branded header bands, a real contrast audit, and the start-here journey strip, v0.3.16).
+**Commits:** `a078d6e` (feat(ui): intro video live, WCAG contrast enforced, header bands, journey strip) · `2e59f58` (docs: node/tailnet inventory + THOR MVP-rail decision) · `dfa8de9` (release v0.3.16). Pushed to `origin/main`; Cloudflare Pages deployed.
+
+**Live-verified after deploy:** version marker **0.3.16**; `/video/openstrata-intro.mp4` → 200 `video/mp4` 5.58 MB; the greeter popup plays it (`readyState 4`) inside the two-column card with 4 facts + 3 steps and **0 hidden overflow**; `/tools` renders the branded `.page-hero` band and the 3-leg journey strip with no horizontal overflow.
 
 ## What shipped (three batches, as asked)
 
