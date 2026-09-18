@@ -9,6 +9,7 @@
   import EmptyState from '$lib/components/EmptyState.svelte';
   import Glossary from '$lib/components/Glossary.svelte';
   import Illustrations from '$lib/components/Illustrations.svelte';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
   const palette = [
     ['brand-50', 'var(--color-brand-50)'], ['brand-100', 'var(--color-brand-100)'],
@@ -29,6 +30,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="signal" />
   <div class="mx-auto max-w-5xl px-6 py-14">
     <p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.themeBrand}</p>
     <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.designTitle}</h1>
@@ -80,8 +82,8 @@
         <div class="flex flex-wrap items-center gap-3">
           <button class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white">Primary</button>
           <button class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-bold text-slate-700">Secondary</button>
-          <button class="rounded-xl bg-bitcoin px-4 py-2 text-sm font-bold text-white">Bitcoin</button>
-          <button class="rounded-xl bg-danger px-4 py-2 text-sm font-bold text-white">Danger</button>
+          <button class="rounded-xl bg-bitcoin px-4 py-2 text-sm font-bold">Bitcoin</button>
+          <button class="rounded-xl bg-danger-solid px-4 py-2 text-sm font-bold text-white">Danger</button>
         </div>
       </div>
       <div class="rounded-2xl border border-border bg-surface-2 p-6">

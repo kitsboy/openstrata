@@ -11,6 +11,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import { copy, locale, formatCurrency } from '$lib/i18n';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	const paymentChart = costSavings.paymentMethods.map((p) => ({
 		label: p.method.split(' ')[0],
@@ -28,6 +29,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="network" />
 	<div class="mx-auto max-w-7xl px-6 py-20">
 		<h1 class="text-4xl font-bold text-slate-900 sm:text-5xl tracking-tight">
 			{$copy.aboutHeroTitle}<br />

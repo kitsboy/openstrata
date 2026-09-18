@@ -91,7 +91,7 @@
           <div class="flex items-center gap-2">
             {#if plan.ready}
               <span class="rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-bold text-success">{$copy.signingReady}</span>
-              <button class="rounded-lg bg-bitcoin px-3 py-1.5 text-xs font-bold text-white">{plan.requiredSignatures}-of-{REQUIRED} {$copy.signingBroadcast}</button>
+              <button class="rounded-lg bg-bitcoin px-3 py-1.5 text-xs font-bold">{plan.requiredSignatures}-of-{REQUIRED} {$copy.signingBroadcast}</button>
             {:else}
               <span class="rounded-full bg-warning/10 px-2.5 py-1 text-[10px] font-bold text-warning">{signed}/{REQUIRED} {$copy.signingRequired}</span>
             {/if}

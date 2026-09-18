@@ -3,6 +3,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import { copy } from '$lib/i18n';
 	import PageToc from '$lib/components/PageToc.svelte';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	const layers = [
 		{ name: 'Identity Layer', protocol: 'NIP-05 + OpenStrata Key', desc: 'Single sovereign keypair bridges Bitcoin, Lightning, and Nostr identity.' },
@@ -27,6 +28,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="chain" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.specTitle}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl">

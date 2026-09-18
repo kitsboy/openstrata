@@ -5,6 +5,7 @@
 	import PageToc from '$lib/components/PageToc.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import { manualSections } from '$lib/manual';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	const stats = getToolStats();
 
@@ -32,6 +33,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="ledger" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.documentationHub}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl">

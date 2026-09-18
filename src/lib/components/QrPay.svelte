@@ -58,7 +58,7 @@
   </div>
   <div class="flex w-full flex-wrap items-center justify-center gap-2">
     {#if walletLink && walletLink !== payload}
-      <a class="flex items-center gap-1.5 rounded-lg bg-bitcoin px-3 py-1.5 text-xs font-bold text-white no-underline" href={walletLink}><Icon name="lightning" class="h-3 w-3" /> {$copy.openInWallet}</a>
+      <a class="flex items-center gap-1.5 rounded-lg bg-bitcoin px-3 py-1.5 text-xs font-bold no-underline" href={walletLink}><Icon name="lightning" class="h-3 w-3" /> {$copy.openInWallet}</a>
     {/if}
     <button class="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-bold text-slate-700" onclick={copyPayload}><Icon name="file" class="h-3 w-3" /> {copied ? $copy.walletCopied : $copy.receiptCopy}</button>
   </div>

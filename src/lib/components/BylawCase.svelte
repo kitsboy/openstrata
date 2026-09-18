@@ -208,7 +208,7 @@
               </label>
             </div>
             <div class="mt-3 flex flex-wrap gap-2">
-              <button class="rounded-xl bg-danger px-4 py-2 text-sm font-bold text-white disabled:opacity-50" onclick={() => decide(true)} disabled={busy}>{$copy.bylawCaseFine}</button>
+              <button class="rounded-xl bg-danger-solid px-4 py-2 text-sm font-bold text-white disabled:opacity-50" onclick={() => decide(true)} disabled={busy}>{$copy.bylawCaseFine}</button>
               <button class="rounded-xl bg-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-50" onclick={() => decide(false)} disabled={busy}>{$copy.bylawCaseNoFine}</button>
             </div>
           {/if}

@@ -3,6 +3,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import { copy, locale, formatDate } from '$lib/i18n';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	const posts = blogPosts;
 </script>
@@ -10,6 +11,7 @@
 <svelte:head>
 	<title>{$copy.blogPageTitle}</title>
 </svelte:head>	<section class="page-hero">
+		<HeroArt variant="network" />
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.blogIntro}</p>
 			<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.blogTitle}</h1>

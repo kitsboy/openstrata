@@ -23,6 +23,13 @@
  *   - 3.0:1 — bold UI labels on solid brand fills, and the `--faint` micro-label
  *     token, which drives decorative 9–10px uppercase eyebrows only. Anything
  *     that carries meaning must clear 4.5.
+ *
+ * An unresolvable token is a FAILURE, not a skip. The first version of this
+ * script silently skipped any token with no value in `src/app.css` — which hid
+ * the whole light-mode slate ramp (those values come from Tailwind's stock
+ * palette, not from us) and every semantic `success` / `warning` / `danger` /
+ * `bitcoin` step. Measured in a browser, those were sitting at 1.99:1–3.76:1.
+ * A missing value now says so out loud.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -102,7 +109,11 @@ const TEXT_TOKENS = [
   ['--color-slate-900', 4.5, 'h1 / h2 ink'],
   ['--color-brand-600', 4.5, 'brand links, icons'],
   ['--color-brand-700', 4.5, 'brand links (darker step)'],
-  ['--color-bc-blue', 4.5, 'BCFSA / regulator accents']
+  ['--color-bc-blue', 4.5, 'BCFSA / regulator accents'],
+  ['--color-success', 4.5, 'success text and status chips'],
+  ['--color-warning', 4.5, 'warning text and deadline chips'],
+  ['--color-danger', 4.5, 'danger text, arrears amounts, enforcement chips'],
+  ['--color-bitcoin', 4.5, 'Bitcoin accent text, balances, donate links']
 ];
 
 // White text on a solid brand fill — bold UI labels. Held to 4.5 as well, since
@@ -111,7 +122,15 @@ const TEXT_TOKENS = [
 const SOLID_FILL_TOKENS = [
   ['--color-brand-600', 4.5, 'white label on a solid brand button'],
   ['--color-bc-blue', 4.5, 'white label on a solid navy badge'],
-  ['--orange-solid', 4.5, 'white label on a solid orange button']
+  ['--orange-solid', 4.5, 'white label on a solid orange button'],
+  ['--color-danger-solid', 4.5, 'white label on a solid danger button']
+];
+
+// Bright fills that carry DARK ink instead of white, because white on them is
+// unreadable (white on #f7931a measures 2.3:1). The label colour is a token of
+// its own, held to the same 4.5:1 floor.
+const INK_LABEL_FILL_TOKENS = [
+  ['--color-bitcoin', '--on-bitcoin', 4.5, 'dark ink label on a solid bitcoin fill']
 ];
 
 function resolve(vars, value) {
@@ -134,12 +153,11 @@ for (const [themeName, themeVars] of [
   ['light', base],
   ['dark', dark]
 ]) {
-  for (const [token, floor, why] of TEXT_TOKENS) {
-    const fg = themeValue(themeVars, token, themeName);
-    if (!fg) continue;
+  for (const [token, floor, why] of TEXT_TOKENS) {      const fg = themeValue(themeVars, token, themeName);
+    if (!fg) throw new Error(`${token} has no value in the ${themeName} theme — add it to src/app.css so it can be audited.`);
     for (const [surfaceName, surfaceToken] of SURFACES) {
       const bg = themeVars[surfaceToken];
-      if (!bg) continue;
+      if (!bg) throw new Error(`${surfaceToken} has no value in the ${themeName} theme.`);
       const ratio = contrast(fg, bg);
       const pass = ratio >= floor;
       if (!pass) failures += 1;
@@ -148,11 +166,27 @@ for (const [themeName, themeVars] of [
   }
   for (const [token, floor, why] of SOLID_FILL_TOKENS) {
     const bg = resolve(themeVars, themeVars[token]);
-    if (!bg) continue;
+    if (!bg) throw new Error(`${token} has no value in the ${themeName} theme.`);
     const ratio = contrast('#ffffff', bg);
     const pass = ratio >= floor;
     if (!pass) failures += 1;
     rows.push({ theme: themeName, pair: `#fff on ${token.replace('--color-', '')}`, ratio, floor, pass, why });
+  }
+  for (const [fillToken, inkToken, floor, why] of INK_LABEL_FILL_TOKENS) {
+    const bg = resolve(themeVars, themeVars[fillToken]);
+    const ink = resolve(themeVars, themeVars[inkToken]);
+    if (!bg || !ink) throw new Error(`${fillToken} / ${inkToken} has no value in the ${themeName} theme.`);
+    const ratio = contrast(ink, bg);
+    const pass = ratio >= floor;
+    if (!pass) failures += 1;
+    rows.push({
+      theme: themeName,
+      pair: `${inkToken.replace(/^--/, '')} on ${fillToken.replace('--color-', '')}`,
+      ratio,
+      floor,
+      pass,
+      why
+    });
   }
 }
 

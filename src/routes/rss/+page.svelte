@@ -3,6 +3,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import { copy } from '$lib/i18n';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	let selectedCategory = $state($copy.allLabel);
 	let apiTab = $state<'rest' | 'webhooks' | 'feeds'>('rest');
@@ -34,6 +35,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="signal" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="max-w-3xl">
 			<div class="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700 mb-4">

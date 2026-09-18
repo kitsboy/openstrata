@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import StartHere from '$lib/components/StartHere.svelte';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	// The real end of a OpenStrata flow. The wizard completion card and the
 	// donate modal both link here; `?from=` selects the honest variant so the
@@ -66,6 +67,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="signal" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<span class="inline-flex rounded-full bg-success/10 px-4 py-1.5 text-xs font-bold text-success">
 			{variants[source].kicker}

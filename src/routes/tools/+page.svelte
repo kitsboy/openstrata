@@ -42,6 +42,7 @@
 	import { fetchUnits, fetchUnitDetail, createUnit, deleteUnit, type ApiUnit, type UnitDetail } from '$lib/api/units';
 	import { onMount } from 'svelte';
 	import StartHere from '$lib/components/StartHere.svelte';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	let activeDomain = $state('all');
 	let sovereignMode = $state(false);
@@ -210,6 +211,7 @@
 
 <!-- Hero -->
 <section class="page-hero">
+		<HeroArt variant="modules" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="flex flex-wrap items-end justify-between gap-6">
 			<div>

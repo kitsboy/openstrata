@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { faqItems } from '$lib/data';
 	import { copy } from '$lib/i18n';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	const categories = [...new Set(faqItems.map((item) => item.category))];
 
@@ -37,6 +38,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="signal" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700">{$copy.helpCentre}</span>
 		<h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.faqTitle}</h1>

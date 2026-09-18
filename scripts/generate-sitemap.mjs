@@ -16,6 +16,7 @@ const routes = [
   '/',
   '/about',
   '/blog',
+  '/changelog',
   '/compliance',
   '/docs',
   '/docs/manual',

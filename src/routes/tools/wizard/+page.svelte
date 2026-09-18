@@ -5,6 +5,7 @@
 	import type { Translation } from '$lib/i18n';
 	import packageJson from '../../../../package.json';
 	import StartHere from '$lib/components/StartHere.svelte';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	// State
 	let step = $state(0);
@@ -212,6 +213,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="modules" />
 	<div class="mx-auto max-w-4xl px-6 py-12">
 		<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.onboardingPhase}</p>
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.wizardTitle}</h1>

@@ -4,6 +4,7 @@
   import Card from '$lib/components/Card.svelte';
   import { jurisdictions } from '$lib/data';
   import { legalSources } from '$lib/legal';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
   let sourceQuery = $state('');
 
@@ -23,6 +24,7 @@
 </svelte:head>
 
 <section class="page-hero">
+		<HeroArt variant="scales" />
   <div class="mx-auto max-w-7xl px-6 py-16">
     <span class="inline-flex rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue">{$copy.sourceLibrary}</span>
     <h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.legalLibrary}</h1>

@@ -71,6 +71,7 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
+  --color-danger-solid: #c92a2a;
   --color-bitcoin: #f7931a;
   --color-lightning: #fbbf24;
   --color-bc-blue: #0e4f6b;
@@ -127,6 +128,37 @@
      fills that carry a white label use the deeper steps below (5.0:1). */
   --orange-solid: #c0481b;
   --orange-solid-deep: #a33a13;
+  /* Status colours get the same split as the orange, for the same reason:
+     #10b981 / #f59e0b / #ef4444 / #f7931a are tuned to GLOW against a dark
+     surface or to tint a chip at 10% opacity. As TEXT they are not readable —
+     success measured 2.18:1, warning 1.99:1, danger 3.76:1 and bitcoin 2.30:1
+     on paper, all far under the 4.5:1 floor. Text usages ride the deeper
+     `*-text` steps; a solid fill that carries a white label uses
+     `--color-danger-solid` (5.5:1). The errors below are the text steps. See
+     scripts/audit-contrast.mjs, which now checks these instead of silently
+     skipping them. */
+  --success-text: #0b6b49;
+  --warning-text: #8a5209;
+  --danger-text: #b3261e;
+  --bitcoin-text: #9a5700;
+  /* The Bitcoin orange stays bright on purpose — it is the brand accent — so a
+     solid bitcoin fill carries dark ink instead of white (6.9:1 rather than
+     2.3:1). This token is fixed in both themes: the fill is bright either way. */
+  --on-bitcoin: #18232b;
+  /* State the light-mode slate ramp here instead of inheriting Tailwind's
+     stock palette. The values are identical to stock, so nothing moves — but
+     an undefined token cannot be audited, and these were the four steps the
+     audit silently skipped while `text-slate-400` sat at 2.90:1 on paper. */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
   --blue: #3f8efc;
   --purple: #8f76e8;
   --green: #36b989;
@@ -630,6 +662,33 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .text-brand-700 { color: var(--color-brand-800); }
 .dark .text-brand-600 { color: var(--color-brand-300); }
 .dark .text-brand-700 { color: var(--color-brand-200); }
+
+/* Status text steps — same convention as the brand steps above. The palette
+   values stay as they are (they are fills, tints and glows); only the text
+   usage moves to a legible step. Light steps clear 4.5:1 on paper, on the
+   canvas and on a surface-3 chip; dark steps clear it on dark paper. */
+.text-success { color: var(--success-text); }
+.text-warning { color: var(--warning-text); }
+.text-danger { color: var(--danger-text); }
+.text-bitcoin { color: var(--bitcoin-text); }
+.dark .text-success { color: #4fd1a0; }
+.dark .text-warning { color: #e3b04e; }
+.dark .text-danger { color: #f08a8a; }
+.dark .text-bitcoin { color: #f0a04b; }
+
+/* Slate 400/500 were only defined for dark mode, so light mode fell through to
+   Tailwind's stock steps: #94a3b8 measures 2.90:1 on paper and #64748b drops to
+   4.04:1 on a surface-3 chip. Both carry real meta text (dates, source notes,
+   captions), so light mode gets explicit text steps. Borders and icons keep the
+   stock value — these are text-only overrides. */
+.text-slate-400 { color: #5d6a77; }
+.text-slate-500 { color: #55616e; }
+.dark .text-slate-400 { color: #8ba0b0; }
+.dark .text-slate-500 { color: #a6b5c2; }
+
+/* A solid bitcoin fill takes dark ink, not white — white on #f7931a is 2.3:1.
+   Unlayered so it wins over a `text-white` utility on the same element. */
+.bg-bitcoin { color: var(--on-bitcoin); }
 
 /* Marketing mobile bottom dock — mirrors the dashboard's floating nav so every
    page has the same navigation on phones. Hidden on desktop. */

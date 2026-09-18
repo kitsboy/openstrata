@@ -9,7 +9,8 @@ export const navItems = [
 	{ href: '/faq', label: 'FAQ' },
 	{ href: '/roadmap', label: 'Roadmap' },
 	{ href: '/docs', label: 'Docs' },
-	{ href: '/rss', label: 'RSS & API' }
+	{ href: '/rss', label: 'RSS & API' },
+	{ href: '/changelog', label: 'Changelog' }
 ] as const;
 
 export const socialLinks = [

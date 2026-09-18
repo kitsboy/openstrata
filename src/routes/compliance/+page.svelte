@@ -14,6 +14,7 @@
 	import { copy } from '$lib/i18n';
 	import type { Translation } from '$lib/i18n';
 	import Card from '$lib/components/Card.svelte';
+	import HeroArt from '$lib/components/HeroArt.svelte';
 
 	let activeSection = $state('pillars');
 	let expandedDomain = $state<string | null>('financial');
@@ -43,6 +44,7 @@
 
 <!-- Header -->
 <section class="page-hero">
+		<HeroArt variant="scales" />
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="inline-flex items-center gap-2 rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue mb-4">
 			<span class="h-2 w-2 rounded-full bg-success live-dot"></span>
