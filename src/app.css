@@ -51,9 +51,16 @@
   --color-brand-300: #67e8f9;
   --color-brand-400: #22d3ee;
   --color-brand-500: #06b6d4;
-  --color-brand-600: #0891b2;
-  --color-brand-700: #0e7490;
-  --color-brand-800: #155e75;
+  /* 600/700/800 retuned from the stock cyan ramp (#0891b2 / #0e7490 / #155e75).
+     #0891b2 is a lovely glow but only carries a white label at 3.68:1, and
+     600 is overwhelmingly used as a FILL (bg-brand-600 chips and buttons, 72
+     call sites) rather than as text. Both usages now clear WCAG AA:
+       white on brand-600  5.89:1
+       brand-700 as text   7.71:1 on paper
+     --color-brand-500 and below stay stock — they are the accent/glow steps. */
+  --color-brand-600: #0f6d89;
+  --color-brand-700: #0b5a72;
+  --color-brand-800: #08485c;
   --color-brand-900: #164e63;
   --color-brand-950: #083344;
   --color-surface: #f6f8f9;
@@ -100,14 +107,26 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --ink: #18232b;
-  --muted: #6d7a82;
-  --faint: #9ca8ae;
+  /* Contrast floor (see scripts/audit-contrast.mjs): --muted carries body and
+     secondary copy and must clear WCAG AA 4.5:1 on canvas, paper AND the
+     surface-3 chip tint. --faint drives decorative micro-labels and is held to
+     a documented 3:1 floor instead. Bumping --muted from #6d7a82 (4.41:1 on
+     white, and only 3.9:1 on a surface-3 chip) and --faint from #9ca8ae
+     (2.42:1 on white) is what makes small text readable in light mode. */
+  --muted: #5e6b75;
+  --faint: #7d8890;
   --line: #e4e9eb;
   --paper: #ffffff;
   --canvas: #f6f8f9;
   --navy: #102d3b;
   --orange: #f97348;
   --orange-deep: #e85a32;
+  /* Split the orange in two. The brand coral (#f97348) is tuned to *glow* on
+     both themes — it is an accent for icons, rails, dots and hairline glows.
+     It is NOT legible as a button fill: white on it measures 2.77:1. Solid
+     fills that carry a white label use the deeper steps below (5.0:1). */
+  --orange-solid: #c0481b;
+  --orange-solid-deep: #a33a13;
   --blue: #3f8efc;
   --purple: #8f76e8;
   --green: #36b989;
@@ -208,7 +227,7 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .profile-button { gap: 8px; padding: 4px 4px 4px 0; }
 .profile-avatar { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 9px; color: #fff; background: #354e5a; font-size: 9px; font-weight: 800; }
 .profile-name { color: var(--ink); }
-.signin-button { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border: 0; border-radius: 10px; color: #fff; background: linear-gradient(135deg, var(--orange), var(--orange-deep)); box-shadow: 0 8px 18px rgba(249, 115, 72, .22); font-size: 11px; font-weight: 800; transition: all .18s ease; }
+.signin-button { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border: 0; border-radius: 10px; color: #fff; background: linear-gradient(135deg, var(--orange-solid), var(--orange-solid-deep)); box-shadow: 0 8px 18px rgba(249, 115, 72, .22); font-size: 11px; font-weight: 800; transition: all .18s ease; }
 .signin-button:hover { box-shadow: 0 10px 24px rgba(249, 115, 72, .32); transform: translateY(-1px); }
 .signin-button:active { transform: translateY(0); box-shadow: 0 4px 10px rgba(249, 115, 72, .18); }
 .auth-wrap { position: relative; }
@@ -234,8 +253,8 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 
 /* Primary CTA: the only strongly-coloured surface in the hero row. Kept
    flush-aligned to the h1 baseline so the row reads as one unit. */
-.primary-button { display: inline-flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 18px; border-radius: 11px; color: #fff; background: linear-gradient(135deg, var(--orange), var(--orange-deep)); box-shadow: 0 10px 22px rgba(249,115,72,.22); font-size: 11.5px; font-weight: 800; letter-spacing: .01em; transition: .2s ease; }
-.primary-button:hover { background: linear-gradient(135deg, var(--orange-deep), #d44a2c); box-shadow: 0 12px 26px rgba(249,115,72,.32); transform: translateY(-1px); }
+.primary-button { display: inline-flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 18px; border-radius: 11px; color: #fff; background: linear-gradient(135deg, var(--orange-solid), var(--orange-solid-deep)); box-shadow: 0 10px 22px rgba(249,115,72,.22); font-size: 11.5px; font-weight: 800; letter-spacing: .01em; transition: .2s ease; }
+.primary-button:hover { background: linear-gradient(135deg, var(--orange-solid-deep), #8f3210); box-shadow: 0 12px 26px rgba(249,115,72,.32); transform: translateY(-1px); }
 .primary-button:active { transform: translateY(0); box-shadow: 0 4px 10px rgba(249,115,72,.2); }
 .plus { font-size: 19px; font-weight: 400; line-height: 1; }
 .button-arrow { margin-left: 2px; font-size: 16px; }
@@ -486,7 +505,7 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
   .topbar { padding: 0 28px; }.content { padding-right: 28px; padding-left: 28px; }.site-footer { padding-right: 28px; padding-left: 28px; }.main-grid { grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr); gap: 24px; }.building-grid { grid-template-columns: 1fr; }.building-card { display: grid; grid-template-columns: auto 1fr; gap: 0 13px; }.building-top { grid-row: span 2; align-items: start; }.building-info { margin: 2px 0 13px; }.building-progress, .building-status { grid-column: 2; }.building-status { margin-top: 13px; }.more-button { position: absolute; }.building-card { position: relative; }.footer-top { gap: 30px; }
 }
 @media (max-width: 900px) {
-  .sidebar { transform: translateX(-100%); transition: transform .25s ease; box-shadow: 18px 0 40px rgba(10,27,36,.2); }.sidebar.mobile-open { transform: translateX(0); }.sidebar-close { display: inline-flex !important; margin-left: auto; color: #a5b7bd; font-size: 22px; }.main-column { margin-left: 0; }.mobile-brand { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; }.mobile-brand strong { font-weight: 800; letter-spacing: -.5px; }.menu-button { display: inline-flex; margin-right: 2px; color: var(--ink); font-size: 17px; }.breadcrumbs { display: none; }.topbar { padding: 0 21px; }.search-box { width: 170px; }.main-grid { grid-template-columns: 1fr; }.right-stack { display: grid; grid-template-columns: repeat(2, 1fr); align-items: start; }.footer-top { flex-direction: column; }.footer-links { grid-template-columns: repeat(3, 1fr); max-width: 500px; }.mobile-nav { position: fixed; right: 16px; bottom: 14px; left: 16px; z-index: 20; display: flex; align-items: center; justify-content: space-around; height: 63px; padding: 6px; border: 1px solid rgba(228,233,235,.9); border-radius: 18px; background: rgba(255,255,255,.91); box-shadow: 0 14px 36px rgba(24,35,43,.13); backdrop-filter: blur(18px); }.mobile-nav button { display: grid; place-items: center; gap: 2px; min-width: 53px; color: #9aa7ac; background: transparent; font-size: 8px; font-weight: 800; }.mobile-nav button span { font-size: 18px; font-weight: 400; }.mobile-nav button.active { color: var(--orange); }.mobile-nav .mobile-add { width: 43px; min-width: 43px; height: 43px; border-radius: 14px; color: #fff; background: var(--orange); box-shadow: 0 6px 15px rgba(249,115,72,.25); }.mobile-nav .mobile-add span { font-size: 25px; }
+  .sidebar { transform: translateX(-100%); transition: transform .25s ease; box-shadow: 18px 0 40px rgba(10,27,36,.2); }.sidebar.mobile-open { transform: translateX(0); }.sidebar-close { display: inline-flex !important; margin-left: auto; color: #a5b7bd; font-size: 22px; }.main-column { margin-left: 0; }.mobile-brand { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; }.mobile-brand strong { font-weight: 800; letter-spacing: -.5px; }.menu-button { display: inline-flex; margin-right: 2px; color: var(--ink); font-size: 17px; }.breadcrumbs { display: none; }.topbar { padding: 0 21px; }.search-box { width: 170px; }.main-grid { grid-template-columns: 1fr; }.right-stack { display: grid; grid-template-columns: repeat(2, 1fr); align-items: start; }.footer-top { flex-direction: column; }.footer-links { grid-template-columns: repeat(3, 1fr); max-width: 500px; }.mobile-nav { position: fixed; right: 16px; bottom: 14px; left: 16px; z-index: 20; display: flex; align-items: center; justify-content: space-around; height: 63px; padding: 6px; border: 1px solid rgba(228,233,235,.9); border-radius: 18px; background: rgba(255,255,255,.91); box-shadow: 0 14px 36px rgba(24,35,43,.13); backdrop-filter: blur(18px); }.mobile-nav button { display: grid; place-items: center; gap: 2px; min-width: 53px; color: #9aa7ac; background: transparent; font-size: 8px; font-weight: 800; }.mobile-nav button span { font-size: 18px; font-weight: 400; }.mobile-nav button.active { color: var(--orange); }.mobile-nav .mobile-add { width: 43px; min-width: 43px; height: 43px; border-radius: 14px; color: #fff; background: var(--orange-solid); box-shadow: 0 6px 15px rgba(249,115,72,.25); }.mobile-nav .mobile-add span { font-size: 25px; }
 }
 @media (max-width: 620px) {
   .topbar { min-height: 64px; padding: 0 15px; }.topbar-actions { gap: 4px; }.accent-toggle { display: none; }.search-box { width: 32px; padding: 0 7px; border-color: transparent; background: transparent; }.search-box input, .search-box kbd, .language-current, .language-button .chevron, .profile-name, .profile-button .chevron { display: none; }.search-box span { font-size: 22px; }.language-button { padding: 0 6px; }.notification-button { width: 31px; }.profile-button { padding-left: 4px; }.content { padding: 31px 15px 110px; }.welcome-row { align-items: flex-start; flex-direction: column; gap: 17px; margin-bottom: 24px; }.welcome-row h1 { font-size: 29px; }.primary-button { width: 100%; justify-content: center; }.metric-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 28px; }.metric-card { min-height: 132px; padding: 13px; }.metric-label { font-size: 8px; }.metric-card > strong { margin: 14px 0 10px; font-size: 22px; }.metric-icon { width: 23px; height: 23px; font-size: 13px; }.metric-foot { flex-direction: column; align-items: flex-start; gap: 3px; font-size: 8px; }.main-grid { gap: 34px; }.section-heading h2, .panel-heading h2 { font-size: 15px; }.building-grid { grid-template-columns: 1fr; }.building-card { display: block; }.building-top { align-items: center; }.building-info { margin: 15px 0; }.building-progress, .building-status { display: flex; }.building-progress { flex-direction: column; }.building-status { margin-top: 13px; }.action-grid { grid-template-columns: 1fr; }.right-stack { display: flex; }.site-footer { padding: 40px 20px 90px; }.footer-top { gap: 33px; }.footer-links { gap: 12px; }.footer-links h3 { font-size: 9px; }.footer-links a { font-size: 9px; }.footer-bottom { align-items: flex-start; flex-direction: column; gap: 10px; line-height: 1.5; }.toast { right: 15px; bottom: 91px; left: 15px; justify-content: center; }.modal { padding: 25px 20px; }.modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; justify-content: center; }
@@ -521,6 +540,54 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
   --color-slate-900: #f1f5f9;
 }
 
+/* Branded page header band — ONE visual language for every top-level tab.
+   Replaces the hand-rolled per-page Tailwind gradients, several of which ended
+   in `to-white` and so painted a bright band straight across dark mode. Every
+   colour here is mixed from theme tokens, so the band flips with the theme by
+   construction instead of by a second set of dark: overrides. */
+.page-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(115% 130% at 10% -10%, color-mix(in srgb, var(--color-brand-500) 16%, transparent) 0%, transparent 56%),
+    radial-gradient(85% 110% at 94% 4%, color-mix(in srgb, var(--orange) 13%, transparent) 0%, transparent 58%),
+    linear-gradient(180deg, color-mix(in srgb, var(--paper) 88%, var(--color-brand-50)) 0%, var(--canvas) 100%);
+}
+/* Fine drafting grid, faded out toward the edges so it reads as texture. */
+.page-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .55;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--line) 75%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--line) 75%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(115% 95% at 50% 0%, #000 0%, transparent 74%);
+  mask-image: radial-gradient(115% 95% at 50% 0%, #000 0%, transparent 74%);
+}
+/* Brand hairline along the top edge — the "expensive" detail. */
+.page-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--orange) 75%, transparent) 18%, color-mix(in srgb, var(--color-brand-500) 75%, transparent) 62%, transparent);
+}
+/* Dark mode: deepen the wash so the band separates from the canvas instead of
+   glowing. The brand tints stay, at lower strength. */
+.dark .page-hero {
+  background:
+    radial-gradient(115% 130% at 10% -10%, color-mix(in srgb, var(--color-brand-500) 22%, transparent) 0%, transparent 58%),
+    radial-gradient(85% 110% at 94% 4%, color-mix(in srgb, var(--orange) 14%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, #16262f 0%, var(--canvas) 100%);
+}
+
 .dark .topbar { background: rgba(14, 26, 35, .86); }
 .dark .search-box { background: rgba(21, 35, 46, .74); }
 .dark .building-card { background: var(--paper); }
@@ -552,6 +619,17 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
    ~2:1. Lighten text usages only (solid bg-bc-blue badges keep the navy so
    their white text stays legible). Unlayered, so it beats the utility. */
 .dark .text-bc-blue { color: #5fb4d9; }
+
+/* Brand text steps. The brand palette is tuned for FILLS (a white label on a
+   solid teal button), not for text on white: #0891b2 is only 3.68:1 on paper
+   and 3.27:1 on a surface-3 chip, and brand-700 is 2.99:1 on dark paper.
+   Step the ramp — down for light, up for dark — referencing the palette
+   variables so the green "brokerage" accent theme swaps with it. Solid fills
+   (bg-brand-600 and friends) are deliberately untouched. */
+.text-brand-600 { color: var(--color-brand-700); }
+.text-brand-700 { color: var(--color-brand-800); }
+.dark .text-brand-600 { color: var(--color-brand-300); }
+.dark .text-brand-700 { color: var(--color-brand-200); }
 
 /* Marketing mobile bottom dock — mirrors the dashboard's floating nav so every
    page has the same navigation on phones. Hidden on desktop. */

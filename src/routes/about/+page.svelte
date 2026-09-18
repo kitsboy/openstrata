@@ -27,7 +27,7 @@
 	<title>{$copy.aboutPageTitle}</title>
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-br from-brand-50 via-white to-amber-50/30">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-20">
 		<h1 class="text-4xl font-bold text-slate-900 sm:text-5xl tracking-tight">
 			{$copy.aboutHeroTitle}<br />
@@ -120,7 +120,7 @@
 </section>
 
 <!-- Product stack -->
-<section class="border-t border-border bg-gradient-to-b from-slate-50 to-white">
+<section class="border-t border-border bg-gradient-to-b from-slate-50 to-transparent">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">{$copy.layersTrust}</h2>
 		<div class="grid md:grid-cols-3 gap-6">

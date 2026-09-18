@@ -4,6 +4,7 @@
 	import { copy } from '$lib/i18n';
 	import type { Translation } from '$lib/i18n';
 	import packageJson from '../../../../package.json';
+	import StartHere from '$lib/components/StartHere.svelte';
 
 	// State
 	let step = $state(0);
@@ -210,7 +211,7 @@
 	<title>{$copy.wizardPageTitle}</title>
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-br from-brand-50/80 via-white to-amber-50/30">
+<section class="page-hero">
 	<div class="mx-auto max-w-4xl px-6 py-12">
 		<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.onboardingPhase}</p>
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.wizardTitle}</h1>
@@ -234,6 +235,8 @@
 		{/if}
 	</div>
 </section>
+
+<StartHere step={2} />
 
 <div class="mx-auto max-w-4xl px-6 py-10">
 	{#if completed}

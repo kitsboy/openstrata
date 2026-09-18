@@ -41,6 +41,7 @@
 	import { auth } from '$lib/api/auth';
 	import { fetchUnits, fetchUnitDetail, createUnit, deleteUnit, type ApiUnit, type UnitDetail } from '$lib/api/units';
 	import { onMount } from 'svelte';
+	import StartHere from '$lib/components/StartHere.svelte';
 
 	let activeDomain = $state('all');
 	let sovereignMode = $state(false);
@@ -208,7 +209,7 @@
 </svelte:head>
 
 <!-- Hero -->
-<section class="border-b border-border bg-gradient-to-br from-bc-green/5 via-brand-50/30 to-white">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="flex flex-wrap items-end justify-between gap-6">
 			<div>
@@ -249,6 +250,8 @@
 		</label>
 	</div>
 </section>
+
+<StartHere step={1} />
 
 <!-- Domain filter -->
 <div class="sticky top-[65px] z-40 border-b border-border bg-surface-2/90 backdrop-blur-md">

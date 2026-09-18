@@ -31,6 +31,9 @@ jobs:
       - name: i18n audit (keys + hard-coded copy scan)
         run: npm run audit:i18n
 
+      - name: Contrast audit (WCAG token pairs, both themes)
+        run: npm run audit:contrast
+
       - name: Unit and component tests
         run: npm test
 

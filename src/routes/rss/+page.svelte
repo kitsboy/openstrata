@@ -33,7 +33,7 @@
 	<title>{$copy.rssPageTitle}</title>
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="max-w-3xl">
 			<div class="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700 mb-4">

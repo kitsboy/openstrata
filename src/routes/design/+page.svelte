@@ -28,7 +28,7 @@
   <title>{$copy.designTitle} — OpenStrata</title>
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-br from-brand-50/40 via-surface-2 to-white">
+<section class="page-hero">
   <div class="mx-auto max-w-5xl px-6 py-14">
     <p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.themeBrand}</p>
     <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.designTitle}</h1>

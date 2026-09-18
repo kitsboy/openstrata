@@ -366,7 +366,7 @@
     border-radius: 50%; font-size: 10px; color: #8d9ba1; background: var(--surface-3, #eef2f2);
   }
   .auth-steps li.active { color: var(--ink, #18232b); }
-  .auth-steps li.active span { color: #fff; background: var(--orange); }
+  .auth-steps li.active span { color: #fff; background: var(--orange-solid); }
   .auth-steps li.done span { color: #fff; background: var(--green); }
 
   .auth-field { display: block; margin-top: 14px; }
@@ -412,11 +412,11 @@
   .auth-submit {
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     min-width: 170px; min-height: 44px; padding: 0 18px;
-    border-radius: 11px; color: #fff; background: var(--orange);
+    border-radius: 11px; color: #fff; background: var(--orange-solid);
     box-shadow: 0 10px 22px rgba(249, 115, 72, .26);
     font-size: 12px; font-weight: 800; transition: all .18s ease;
   }
-  .auth-submit:hover { background: var(--orange-deep); transform: translateY(-1px); }
+  .auth-submit:hover { background: var(--orange-solid-deep); transform: translateY(-1px); }
   .auth-submit:disabled { opacity: .5; box-shadow: none; transform: none; }
 
   .auth-spinner, .auth-spinner-inline {

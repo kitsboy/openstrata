@@ -36,7 +36,7 @@
 	<meta name="description" content={$copy.faqIntro} />
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700">{$copy.helpCentre}</span>
 		<h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.faqTitle}</h1>

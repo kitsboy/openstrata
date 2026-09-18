@@ -68,10 +68,10 @@
     padding: 7px 12px;
     border-radius: 8px;
     color: #fff;
-    background: var(--orange);
+    background: var(--orange-solid);
     font-size: 10px;
     font-weight: 800;
     transition: background .2s ease;
   }
-  .empty-action:hover { background: var(--orange-deep); }
+  .empty-action:hover { background: var(--orange-solid-deep); }
 </style>

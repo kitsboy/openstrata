@@ -22,7 +22,7 @@
   <title>{$copy.templatesTitle} — OpenStrata</title>	<meta name="description" content={$copy.templatesMetaDescription} />
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-br from-brand-50/50 via-white to-bc-blue/5">
+<section class="page-hero">
   <div class="mx-auto max-w-7xl px-6 py-16">
     <span class="inline-flex rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700">{$copy.templates}</span>
     <h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.templatesTitle}</h1>

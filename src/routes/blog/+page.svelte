@@ -9,7 +9,7 @@
 
 <svelte:head>
 	<title>{$copy.blogPageTitle}</title>
-</svelte:head>	<section class="border-b border-border bg-gradient-to-b from-amber-50/50 to-transparent">
+</svelte:head>	<section class="page-hero">
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<p class="text-sm font-bold text-brand-600 uppercase tracking-wide mb-2">{$copy.blogIntro}</p>
 			<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.blogTitle}</h1>

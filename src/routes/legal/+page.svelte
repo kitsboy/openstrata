@@ -22,7 +22,7 @@
   <title>{$copy.legalLibrary} — OpenStrata</title>	<meta name="description" content={$copy.legalMetaDescription} />
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-br from-bc-blue/5 via-brand-50/30 to-transparent">
+<section class="page-hero">
   <div class="mx-auto max-w-7xl px-6 py-16">
     <span class="inline-flex rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue">{$copy.sourceLibrary}</span>
     <h1 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.legalLibrary}</h1>

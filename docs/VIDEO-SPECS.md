@@ -2,23 +2,25 @@
 
 **Owner:** Kimi on HERMES (M4)
 **Requested by:** M3 (Grok) — 2026-09-17
-**Version marker:** OpenStrata v0.3.14
+**Version marker:** OpenStrata v0.3.15
 
-## Status: DELIVERED — pending Cam review (2026-09-18)
+## Status: LIVE — wired into the popup (2026-09-18)
 
-**The 60s intro video is rendered and delivered.** It is NOT live — the frontend swap in `src/lib/components/Tour.svelte` (`VIDEO_SRC_PLACEHOLDER`) has deliberately not been made. Cam must screen the file first.
+**The 60s intro video is rendered, delivered, and now live in the greeter popup.** Cam greenlit the swap, so the frontend integration is done — this handoff is closed.
 
 - **File:** `static/video/openstrata-intro.mp4` (in this repo; posted by Kimi)
 - **Public URL:** https://openstrata.giveabit.io/video/openstrata-intro.mp4
-- **Rendered:** 2026-09-18, HyperFrames v0.8.48, 1920×1080 (16:9), 57.2s, H.264 + AAC
+- **Rendered:** 2026-09-18, HyperFrames v0.8.48, 1920×1080 (16:9), 57.2s, H.264 + AAC, 5.3 MB
 - **Voice:** Kokoro `bf_isabella` (British English, young female — Kimi's usual en-GB voice family) via HyperFrames TTS
 - **Visuals:** HyperFrames composition in OpenStrata's own design system (coral #E85E2F / ink #102d3b / Manrope + DM Mono), single-scene arc: hello → what → who → three layers → CTA, narration captions synced word-for-word, beat stepper highlights the active chapter, three-layer pills light up on the "three layers" beat
 - **Source:** composition + generator in `/root/ref/openstrata/video/openstrata-intro/` (scratch) and THOR workspace
 
-**To go live (Cam's OK required):**
-1. Swap `VIDEO_SRC_PLACEHOLDER` → `/video/openstrata-intro.mp4` in `src/lib/components/Tour.svelte`
-2. Rebuild + deploy (GH→CF Pages auto-deploy on push to main)
-3. The asset is already pushed, so the URL will resolve once deployed.
+**Where it is wired (v0.3.15):**
+1. `src/lib/components/Tour.svelte` defines `const VIDEO_SRC = '/video/openstrata-intro.mp4'` and renders it as a real `<video>` (controls, `playsinline`, `preload="metadata"`) inside step 1 of the greeter popup — no placeholder swap needed any more.
+2. The popup's step 1 is a two-column card: video on the left, "What you get" + "Where to start" on the right. Steps 2–4 stay narrow and video-free.
+3. Setting `VIDEO_SRC = ''` reverts to the honest placeholder card, and an `onerror` handler does the same at runtime if the asset ever 404s.
+
+**If the video is ever re-rendered:** keep the same filename and path (`static/video/openstrata-intro.mp4` → `/video/openstrata-intro.mp4`) and the frontend picks it up with no code change. Prefer 16:9 and roughly one minute; the popup frame is sized for that ratio.
 
 ## What this is
 
@@ -28,7 +30,7 @@ New visitors get a popup greeting card with:
 - a short hello + one-line explanation, and
 - a small video section for this intro (30–60s).
 
-The frame is already built (`src/lib/components/Tour.svelte`, video section inside the greeting card). Kimi owns the recording and the asset URL. The frontend just needs one URL swapped in after she delivers.
+The frame is built **and live** (`src/lib/components/Tour.svelte`, video inside the greeting card on step 1 of the tour). Kimi delivered the recording and the asset; M3 wired it in v0.3.15. Nothing is outstanding on this handoff.
 
 ## Video specs
 
@@ -54,22 +56,22 @@ Keep it tight. One minute, one arc, one CTA. No jargon dumps.
 
 ## Where the video goes
 
-Frontend: inside the greeter popup card on `/`. The video section is already built; Kimi delivers the file + a public URL, and the src is swapped in.
+Frontend: inside the greeter popup card on `/`, step 1 of the first-run tour. Live as of v0.3.15 — video on the left of a two-column card, "What you get" + "Where to start" on the right.
 
 Suggested asset location (if Kimi posts to the repo herself): `static/video/openstrata-intro.mp4` (or whatever HyperFrames output path she uses), then point the src at `/video/openstrata-intro.mp4`.
 
-## How Kimi delivers
+## How Kimi delivers — DONE
 
-- Record with HyperFrames using her images/video and Kimi TTS voice.
-- Deliver the final video file + a public URL.
-- Either post the asset herself (she has GitHub access) or send the URL back to M3 so the frontend src can be updated and rebuilt.
+- ~~Record with HyperFrames using her images/video and Kimi TTS voice.~~ Delivered 2026-09-18.
+- ~~Deliver the final video file + a public URL.~~ Posted to `static/video/openstrata-intro.mp4`.
+- ~~Either post the asset herself or send the URL back to M3.~~ She posted it; M3 made the swap in v0.3.15.
 
-## What Kimi should post back (or do herself)
+## What Kimi should post back (or do herself) — DONE
 
-- Final video file.
-- Public URL for the video.
-- Confirmation that the arc + length + voice match this spec.
-- If posting to the repo: the file location so the frontend src is obvious.
+- ~~Final video file.~~ ✅
+- ~~Public URL for the video.~~ ✅ `https://openstrata.giveabit.io/video/openstrata-intro.mp4`
+- ~~Confirmation that the arc + length + voice match this spec.~~ ✅ 57.2s, 16:9, Kokoro `bf_isabella` (en-GB female), HyperFrames v0.8.48
+- ~~If posting to the repo: the file location.~~ ✅ `static/video/openstrata-intro.mp4`
 
 ## Script — 1-minute OpenStrata intro (for Kimi to record)
 
@@ -89,10 +91,10 @@ Suggested asset location (if Kimi posts to the repo herself): `static/video/open
 
 **Timing note for Kimi:** read it at a natural pace; one minute is the target, not a hard ceiling. Cut the last line or shorten the three-layers sentence if it runs long — the arc matters more than the exact word count.
 
-## Specs Kimi should send back to M3 (or post herself)
+## Specs Kimi should send back to M3 (or post herself) — CLOSED
 
-- Final video file + public URL.
-- Confirmation: ~60s, 16:9, Kimi voice (young English woman accent), Kimi images/video where possible, HyperFrames.
-- If posting to the repo: file path so the frontend src is obvious.
+- Final video file + public URL. ✅
+- Confirmation: ~60s, 16:9, Kimi voice (young English woman accent), Kimi images/video where possible, HyperFrames. ✅ (57.2s, 1920×1080, Kokoro `bf_isabella`, HyperFrames v0.8.48)
+- If posting to the repo: file path. ✅ `static/video/openstrata-intro.mp4`
 
-*Handoff ends — Kimi, when the video is ready, post it back or drop it on the repo and let M3 know. The popup frame is already built; one URL swap and one rebuild, and it's live.*
+*Handoff closed 2026-09-18. The video shipped live in v0.3.15 on Cam's OK.*

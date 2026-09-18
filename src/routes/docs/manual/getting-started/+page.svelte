@@ -4,6 +4,7 @@
   import PageToc from '$lib/components/PageToc.svelte';
   import { quickStartPrereqs, quickStartSteps, quickStartFaq, quickStartPricing, quickStartTrouble } from '$lib/manual';
   import ManualNav from '$lib/components/ManualNav.svelte';
+  import StartHere from '$lib/components/StartHere.svelte';
 
   let faqOpen = $state<number | null>(null);
   let troubleOpen = $state<number | null>(null);
@@ -21,6 +22,8 @@
     <p class="manual-lead">{$copy.manualStartIntro}</p>
 
     <PageToc />
+
+    <StartHere step={3} />
 
     <!-- Prerequisites -->
     <section id="prereqs">

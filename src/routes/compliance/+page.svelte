@@ -42,7 +42,7 @@
 </svelte:head>
 
 <!-- Header -->
-<section class="border-b border-border bg-gradient-to-b from-bc-blue/5 via-brand-50/30 to-transparent">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<div class="inline-flex items-center gap-2 rounded-full bg-surface-2 border border-border px-4 py-1.5 text-xs font-bold text-bc-blue mb-4">
 			<span class="h-2 w-2 rounded-full bg-success live-dot"></span>

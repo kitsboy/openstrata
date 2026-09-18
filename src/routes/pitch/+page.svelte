@@ -331,7 +331,7 @@
 	</section>
 
 	<!-- Slide 6: Revenue + Roadmap -->
-	<section class="pitch-slide bg-gradient-to-b from-slate-50 to-white border-t border-border">
+	<section class="pitch-slide bg-gradient-to-b from-slate-50 to-transparent border-t border-border">
 		<div class="mx-auto max-w-7xl px-6 py-16">
 			<div class="grid lg:grid-cols-2 gap-12">
 				<div>

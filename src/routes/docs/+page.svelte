@@ -31,7 +31,7 @@
 	<title>{$copy.docsPageTitle}</title>
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.documentationHub}</h1>
 		<p class="mt-4 text-lg text-slate-600 max-w-3xl">

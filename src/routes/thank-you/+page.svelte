@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import StartHere from '$lib/components/StartHere.svelte';
 
 	// The real end of a OpenStrata flow. The wizard completion card and the
 	// donate modal both link here; `?from=` selects the honest variant so the
@@ -64,7 +65,7 @@
 	<meta name="robots" content="noindex, follow" />
 </svelte:head>
 
-<section class="border-b border-border bg-gradient-to-b from-brand-50/50 to-transparent">
+<section class="page-hero">
 	<div class="mx-auto max-w-7xl px-6 py-16">
 		<span class="inline-flex rounded-full bg-success/10 px-4 py-1.5 text-xs font-bold text-success">
 			{variants[source].kicker}
@@ -85,6 +86,8 @@
 		</div>
 	</div>
 </section>
+
+<StartHere step={3} />
 
 <div class="mx-auto max-w-4xl px-6 py-12">
 	<h2 class="text-2xl font-bold text-slate-900">What happens next</h2>
