@@ -2,9 +2,9 @@
 
 **Brief:** v0.3.17 — the three improvements Cam asked for, **plus the accessibility debt they exposed**. Per-tab **hero artwork** (six on-brand motifs across 14 pages), an in-app **setup checklist** on the dashboard (localStorage-only, 13 tests), and a **public `/changelog`** generated from the changelog we already write (7 tests). Then `audit:contrast` turned out to be **silently skipping 46 of its own checks** — closing that hole found `text-success` at **2.18:1**, `text-warning` at **1.99:1**, `text-danger` at **3.76:1**, `text-bitcoin` at **2.30:1** and white-on-Bitcoin-orange at **2.30:1**. All fixed.
 
-**Commits:** `_pending_` — pushed to `origin/main`; Cloudflare Pages deploys on push.
+**Commits:** `a74f67c` (feature code) · `bf7e29c` (release v0.3.17) · `831dd80` (docs, maps, handoffs) — pushed to `origin/main`; Cloudflare Pages deploys on push.
 
-**Live-verified after deploy:** _pending_
+**Live-verified after deploy:** yes, against production at **https://openstrata.giveabit.io** — `openstrata-version` reads **0.3.17** on the live root, `/changelog` serves with its hero artwork and **19 release entries**, the change-type filter narrows the page (**23,455 → 8,319** characters of text and reports the filtered view), the dashboard renders the whole setup checklist (`Finish setting up`, `Add your units`, `Open the two funds`), and `sitemap.xml` lists `/changelog`. Note the canonical host is `openstrata.giveabit.io` — `openstrata.org` does not resolve and `openstrata.ca` is a separate 200.
 
 ---
 
@@ -89,11 +89,19 @@ Cam's own words were "some text can still be hard to see, we are not perfect yet
 
 ## Pushed in batches
 
-_Commit list to be filled in by the verification record._
+Three commits, then verified on the live site rather than only on the preview build:
+
+| Commit | Batch |
+|---|---|
+| `a74f67c` | Feature code — hero artwork, setup checklist, changelog page, the contrast-audit fix |
+| `bf7e29c` | Release v0.3.17 across the manifests, `CHANGELOG.md` and the changelog sync test |
+| `831dd80` | Docs, maps, handoffs and the node/tailnet inventory |
+
+Base before this session: `9c91af0`.
 
 ## What is still not done — honestly
 
-- **Nothing is deployed.** Phase 3 is still blocked on the host, not on code. The backend has never run on a real server.
+- **The backend is not deployed.** The static frontend is live on Cloudflare Pages, but Phase 3 is still blocked on the host, not on code — the backend has never run on a real server.
 - **Still waiting on Kimi** for the node/host answers in `docs/KIMI-HANDOFF.md`: THOR's prune target, which chain, whether bitcoind is wallet-enabled, UMBREL's sync percentage, MagicDNS names, and THOR's disk/RAM headroom. THOR's pruned node remains the chosen MVP rail; UMBREL remains the correctness backstop and is **not** a blocker.
 - **Live rails are not connected.** Bitcoin, Lightning, Satohash stamping and Nostr identity are prepared seams, not running services.
 - **Machine-drafted locales** (pl, uk, sw and the newer keys) still need professional human review before they are treated as reviewed.

@@ -27,6 +27,10 @@ This is the same split the orange already had. Text usages ride new documented s
 
 **Verified:** `npm run check` → 0/0; `npm test` → **115 passed** (was 95); `audit:i18n` → **860 keys × 9 locales**; `audit:contrast` → **106 pairs**, all at or above floor; build green. Browser sweep: 16 pages × light/dark = **32 combos, 0 overflow, 0 failures** from the changed tokens; **24 combos at 390×844 / 768×900 / 1221×738 with 0 overflow** (artwork hidden at 390 + 768, visible at 1221); and interaction-verified — the changelog filter narrows 74 entries to 17, expand goes 74 → 77 and flips to "Show less", and the checklist ticks 0% → 25%, writes `{"done":["units"],"hidden":false}`, survives a reload at 25% with 1 box ticked, then dismisses to a restore button.
 
+**Pushed in three batches and then verified on the live site** (not just on the local preview): `a74f67c` feature code → `bf7e29c` release v0.3.17 → `831dd80` docs, maps and handoffs, base `9c91af0`. Against **https://openstrata.giveabit.io** the version marker reads **0.3.17**, `/changelog` serves with its hero artwork and **19 release entries** and the filter narrows it (23,455 → 8,319 characters, filtered-view notice shown), the dashboard renders the full setup checklist, and `sitemap.xml` lists `/changelog`.
+
+**Canonical host note for you:** the live site is `openstrata.giveabit.io`. `openstrata.org` does **not resolve** (I tried it first and got nothing), and `openstrata.ca` answers 200 as a separate host. The sitemap, `llms.txt` and every doc should keep using `openstrata.giveabit.io`.
+
 **Nothing is blocked on you this round** — the outstanding items are still the node/host questions in the section below (THOR's prune target, chain, wallet-enabled bitcoind, UMBREL's sync %, MagicDNS names, THOR headroom). Those are unchanged and still the gate on Phase 3 deployment.
 
 ---
