@@ -8,9 +8,10 @@
 
 ```bash
 npm ci
-npm run audit:i18n    # translation + hard-coded-copy audit
-npm run build         # writes static output to build/
-git push origin main  # Cloudflare Pages auto-deploys from main
+npm run audit:i18n     # translation + hard-coded-copy audit
+npm run audit:contrast # WCAG contrast across the design tokens, both themes
+npm run build          # writes static output to build/
+git push origin main   # Cloudflare Pages auto-deploys from main
 ```
 
 Deploys are triggered by pushes to `main`. The live site version marker
@@ -22,7 +23,8 @@ Deploys are triggered by pushes to `main`. The live site version marker
 1. `npm run check` reports 0 errors and 0 warnings
 2. `npm run build` completes cleanly
 3. `npm run audit:i18n` passes (0 missing keys, 0 hard-coded-copy warnings)
-4. Live site serves the expected version marker after deploy
+4. `npm run audit:contrast` passes (60 token pairs, both themes, at or above floor)
+5. Live site serves the expected version marker after deploy
 
 ## Phase 3 backend (`backend/`)
 
@@ -38,6 +40,62 @@ npm run migrate           # apply ledger + pgvector migrations
 npm run seed              # idempotent demo community (Cedar Point)
 npm run dev               # Fastify API on 8080
 ```
+
+### Nodes, hosts & the tailnet (reported 2026-09-18 — NOT yet verified)
+
+The Bitcoin rail and the host deploy are both blocked on infrastructure that
+**already exists in the family**, so the remaining Phase 3 work is mostly
+*pointing* code at machines rather than building them. Treat every line below as
+reported-but-unverified until Kimi confirms it.
+
+**Hosts and nodes in play**
+
+| Machine | What it is | Crypto node | Status |
+|---------|-----------|-------------|--------|
+| **THOR** (VPS) | Family VPS, runs the HERMES agent (Kimi's machine-side home) | **bitcoind — PRUNED** + **LND** | Running; LND reported reachable over Tailscale. M3 must not assume an unpruned node |
+| **UMBREL** (Cam's own) | Cam's personal Umbrel full node | **bitcoind — FULL/UNPRUNED** | **Still syncing — ~63% through IBD, ETA a few weeks** |
+| **M3** (Cam / this agent) | Local coding machine | none | Tailscale peer |
+| **M4** (Kimi / HERMES) | Master Brain, Obsidian vault | none | Tailscale peer |
+
+**Tailnet topology (intended):** M3, M4, THOR and UMBREL all join **one tailnet**,
+so the operator path is unchanged from `docs/TAILSCALE-ONBOARDING.md` — each host
+is reachable by its MagicDNS name and nothing is exposed publicly. The
+per-user-tailnet model still holds for *customers*; this is the family's own
+tailnet for the reference deployment.
+
+**Which node to point the rail at — decided:**
+
+- **THOR's pruned node is the MVP rail.** The MVP does not need historical
+  rescans; it needs *broadcast + confirm*. `sendrawtransaction`,
+  `walletprocesspsbt → finalizepsbt → sendpsbt`, and watching a UTXO from now
+  onward all work fine on a pruned node.
+- **UMBREL is the correctness backstop, not the MVP blocker.** It is the node
+  that can answer "does this address have old history?" — which a pruned node
+  cannot. Until it finishes its IBD, **watch-only xpub address imports may show
+  a partial history**, and that must be surfaced honestly in the UI rather than
+  presented as a complete ledger.
+- **Nothing waits on UMBREL.** Cam is building it anyway; the MVP ships on THOR.
+  When UMBREL reaches 100%, the same seams can be re-pointed at it with a config
+  change (`BITCOIN_NODE_URL`), because the seams are address-agnostic.
+
+**What THOR unlocks once confirmed:** the Phase 3 backend stack (Fastify API +
+Postgres/pgvector + Ollama) runs on THOR behind Tailscale, which turns
+`/api/v1/treasury/psbt/broadcast` from a code-complete seam into a real txid, and
+lets `rosa index` give Rosa real vector search instead of the keyword fallback.
+
+**Open questions for Kimi — full list in `docs/KIMI-HANDOFF.md` (2026-09-18):**
+
+| # | Question | Why it matters |
+|---|----------|----------------|
+| 1 | LND on THOR: reachable over the tailnet — MagicDNS name + port? REST or gRPC? Is there a macaroon M3 can mount, and is it read-only or admin? | The rail needs a node client; the seams are written but unpointed |
+| 2 | bitcoind on THOR: what is the **prune target**, and which **chain** (mainnet / testnet / signet / regtest)? | We must not enable the rail against real funds by accident, and the prune target tells us how far back history is answerable |
+| 3 | Is THOR's bitcoind **wallet-enabled** (`-disablewallet` off, a wallet loaded)? | `walletprocesspsbt` and `sendpsbt` need a node-side wallet — LND's wallet is separate |
+| 4 | UMBREL: what is the sync percentage and ETA, and what is its tailnet name? | Decides when address-history lookups become trustworthy |
+| 5 | Does THOR have Docker, Tailscale and Node 22? | The backend ships as a `docker compose` stack (api + Postgres/pgvector + Ollama) |
+| 6 | Is Ollama installed on THOR, with `nomic-embed-text` (768 dim) pulled, reachable as `OLLAMA_BASE_URL` over the tailnet? | `rosa index` and the pgvector retriever both need it |
+| 7 | Stable MagicDNS names for THOR and UMBREL? | Go into `PUBLIC_API_BASE_URL` and the node-URL config |
+| 8 | Disk / RAM headroom on THOR for Postgres + Ollama next to bitcoind? | Embedding the corpus is the tightest resource ask on the VPS |
+| 9 | Do the M3 and M4 tailnet peers have ACLs that allow the API port and the node RPC ports? | Access is Tailscale-only by design; the ACLs are what enforce it |
 
 Bring the stack up with Docker Compose (Postgres + pgvector + API):
 

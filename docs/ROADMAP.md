@@ -37,6 +37,12 @@ Docker stack (Rosa + Ziggy + Postgres/pgvector) scaffolded in `backend/`, immuta
 
 **Remaining:** deploy the stack on a Tailscale host (`docker compose up -d`, `AUTH_SECRET`, migrate, e2e smoke gate — see `docs/TAILSCALE-ONBOARDING.md`), provision Rosa Ollama + run `rosa index` to populate `corpus_chunk`, provision Bitcoin rails daemons (bitcoind/LND/Liquid/PayNym/Nostr) and enable them in `.env` so `/treasury/psbt/broadcast` returns a real txid and `payments/confirm` → real broadcast.
 
+**The infrastructure already exists (2026-09-18):** THOR, the family VPS that runs the HERMES agent, carries a **pruned Bitcoin node + LND reachable over Tailscale**; Cam separately owns an **UMBREL full node still syncing (~63% IBD, ETA weeks)**; M3, M4, THOR and UMBREL are all Tailscale peers. So the bitcoind/LND half of the remaining work is a matter of *pointing the seams*, not building nodes.
+
+**Decision:** **THOR's pruned node is the MVP rail** — broadcast and confirm need no historical rescan, so `sendrawtransaction`, the PSBT workflow seam and UTXO watching all work. **UMBREL is the correctness backstop**, not a blocker: it is the only node that can answer "does this address have old history?". Until its IBD finishes, watch-only xpub imports may show a **partial** history, which the UI must label honestly rather than present as a complete ledger. Nothing waits on UMBREL — re-pointing at it later is a config change (`BITCOIN_NODE_URL`), because the seams are address-agnostic.
+
+Still open: LND reachability + macaroon (read-only vs admin), THOR's prune target and chain, whether THOR's bitcoind is **wallet-enabled** (the PSBT workflow needs a node-side wallet; LND's is separate), THOR's Docker/Tailscale/Node toolchain, Ollama + `nomic-embed-text`, stable MagicDNS names, disk/RAM headroom, and Tailscale ACLs for the API and RPC ports. Questions recorded in `docs/KIMI-HANDOFF.md` and tabulated in `docs/DEPLOYMENT.md` ("Nodes, hosts & the tailnet").
+
 ### Phase 4 — Sovereign (Q4 2026)
 Satohash integration, Lightning, Nostr identity, multisig watch, CRT export
 

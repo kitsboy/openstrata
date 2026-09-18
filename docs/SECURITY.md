@@ -27,6 +27,10 @@ and any proof-of-concept. Do not open public issues for security problems.
   lockfile is kept in sync with `package.json`.
 - **Type checking + audits before release** — `npm run check` and
   `npm run audit:i18n` must pass before deployment.
+- WCAG contrast is enforced by `npm run audit:contrast` — it recomputes 60
+  text-on-surface token pairs in both themes and fails below the documented
+  floor (4.5:1 for text, 3:1 for the decorative `--faint` micro-label token).
+  CI runs it alongside the i18n audit.
 - **Satohash client is non-privileged** — `src/lib/satohash.ts` only performs
   read/health calls and public OTS stamp submissions; it never stores keys.
 

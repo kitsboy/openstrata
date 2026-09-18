@@ -1,3 +1,75 @@
+## Session — 2026-09-18 · v0.3.15 — your intro video is LIVE, popup rebuilt around it; 7 questions for you about THOR (Buffy on M3)
+
+**Task from Cam:** "add the video to the pop up, it should have a short text section with some instructions and facts about what we are offering" + keep hardening and documenting.
+
+**Your video shipped.** Cam greenlit the swap, so the hard gate is lifted and the placeholder is gone. `src/lib/components/Tour.svelte` now defines `const VIDEO_SRC = '/video/openstrata-intro.mp4'` and renders your file in a real `<video>` (controls, `playsinline`, `preload="metadata"`). No docs still say "pending review" — `docs/VIDEO-SPECS.md` is closed out and marked LIVE.
+
+**Done:**
+- **Intro video live in the greeter popup** on `/`, step 1 of the first-run tour. An `onerror` handler reverts to the honest placeholder card if the asset ever 404s, and clearing `VIDEO_SRC` reverts it deliberately.
+- **Popup rebuilt as a two-column card** (720px on step 1, 400px on steps 2–4) because the old single-column card was 934px tall and hid 255px — including the Next button — in a 738px viewport. Now: video on the left; **"What you get"** (0% custody / BCFSA-aware compliance / a Bitcoin proof trail for every action / portable history) and **"Where to start"** (three numbered steps) on the right. Video + offer copy appear on step 1 only; steps 2–4 stay lean.
+- **9 new catalog keys × 9 locales:** `tourFactsTitle`, `tourFact1`–`tourFact4`, `tourHowTitle`, `tourHow1`–`tourHow3`. `tourVideoFallback` was also rewritten in all 9 locales — "Video coming soon — back in a few days." is no longer true now that it is live.
+- **Fixed a CI-breaking gap your v0.3.14 commit left:** the four video keys landed in English, French, Spanish, Chinese, Hindi and Filipino but never in **Polish, Ukrainian or Swahili**, and `npm run audit:i18n` checks every locale against French. The audit was **failing on `main`**, which would have failed the `frontend verify` CI job. All three are now translated; audit passes at 813 keys.
+- **Version bumped to v0.3.15** everywhere (root + backend `package.json`/lockfiles, `CHANGELOG.md`, `docs/MISSION.md`, `docs/EXECUTIVE-SUMMARY.md`, `docs/WORKPLAN.md`, `.ai_docs/current-status.md`, `LATEST-UPDATE.md`, this handoff).
+
+**Verified:**
+- `npm run check` → 0 errors, 0 warnings. `npm test` → 85 passed. `npm run audit:i18n` → passed, 813 keys / 23 route components. `npm run build` green; the video is emitted to `build/video/openstrata-intro.mp4`.
+- **Browser-verified against the production preview** (Chromium): all four tour steps, **0 hidden overflow and 0 horizontal page overflow** at 1221×738, 768×900 and 390×844. Step 1 resolves `/video/openstrata-intro.mp4` with `readyState 4` and a 57s duration; the two-column grid activates at 700px+.
+
+---
+
+### 9 questions for you, Kimi — nodes, hosts and the tailnet (please answer in your next handoff)
+
+Cam's full picture, as given to me:
+
+- **THOR (VPS)** runs HERMES and has a **pruned bitcoind + LND**, and LND **is reachable over Tailscale**.
+- **Cam's own UMBREL full node** is **still syncing — about 63% through IBD, ETA a few weeks**. He is building it regardless, so it is *not* an MVP blocker.
+- **M3 mac, M4 mac, THOR and UMBREL are all Tailscale peers.**
+
+That is the missing Phase 3 infrastructure — all of it already exists. Recorded in `docs/DEPLOYMENT.md` under "Nodes, hosts & the tailnet". Please confirm or correct each point so M3 can point the seams at it.
+
+**The decision M3 has already made (tell me if it is wrong):**
+
+- **THOR's pruned node is the MVP rail.** The MVP needs broadcast + confirm, not historical rescans — `sendrawtransaction`, `walletprocesspsbt → finalizepsbt → sendpsbt`, and watching UTXOs from now on all work on a pruned node.
+- **UMBREL is the correctness backstop, not the blocker.** It is the only node that can answer "does this address have old history?". Until its IBD finishes, watch-only xpub address imports can show a **partial** history, and I will label that honestly in the UI rather than presenting a partial view as a complete ledger.
+- Nothing waits on UMBREL. When it hits 100%, re-pointing at it is a config change (`BITCOIN_NODE_URL`), because the seams are address-agnostic.
+
+**Questions:**
+
+1. **LND on THOR** — what is the MagicDNS name + port? REST or gRPC? Is there a macaroon M3 can mount, and is it **read-only or admin**?
+2. **bitcoind on THOR** — what is the **prune target**, and which **chain** is it on (mainnet / testnet / signet / regtest)? I must not flip `BITCOIN_RAIL_ENABLED=true` against real funds by accident.
+3. **Is THOR's bitcoind wallet-enabled** (`-disablewallet` off, a wallet actually loaded)? `walletprocesspsbt` and `sendpsbt` need a node-side wallet — LND's own wallet does not satisfy them.
+4. **UMBREL** — current sync percentage and ETA, and its tailnet name. This decides when address-history lookups become trustworthy.
+5. **THOR's toolchain** — Docker, Tailscale and Node 22 present? The backend ships as `docker compose` (api + Postgres/pgvector + Ollama + migrations).
+6. **Ollama** — installed, with `nomic-embed-text` (768 dim) pulled? Reachable as `OLLAMA_BASE_URL` over the tailnet? Until it exists, Rosa answers on the keyword fallback — which works, but is the weak tier.
+7. **Stable MagicDNS names** for THOR and UMBREL. They go into `PUBLIC_API_BASE_URL` and the node-URL config (and the frontend's runtime `localStorage['openstrata-api-base']` override).
+8. **Headroom on THOR** — disk and RAM left for a Postgres container plus embeddings, next to bitcoind. This is the tightest resource ask on a VPS.
+9. **Tailscale ACLs** — do the M3 and M4 peers allow the API port and the node RPC ports? Access is Tailscale-only by design, so the ACLs are what actually enforce it.
+
+**Once those are answered, M3's next move is:** `docker compose up -d` on THOR → set `AUTH_SECRET` → `npm run migrate` → run the e2e smoke gate → point the frontend at the MagicDNS name → enable the rail so `/treasury/psbt/broadcast` returns a real txid.
+
+---
+
+### What else shipped in this session (v0.3.15 → v0.3.16)
+
+Cam asked for three front-end improvements, so all three are in:
+
+- **Branded header bands (`.page-hero`)** — all 14 top-level page headers previously hand-rolled their own Tailwind gradient, and five of them ended in `to-white`, which painted a **bright band straight across dark mode**. One token-mixed class in `src/app.css` now gives every tab the same header language (brand wash + fine drafting grid + a brand hairline along the top edge) and flips with the theme by construction. Codemod: `scripts/migrate-page-hero.mjs`.
+- **A real contrast audit (`npm run audit:contrast`)** — `scripts/audit-contrast.mjs` recomputes WCAG contrast for 60 text-on-surface token pairs in both themes and fails the build on a regression. It understands the repo's `.dark .text-<token>` convention so a deliberate fix is not reported as a failure. **It found 10 real failures on first run** and all 10 are fixed:
+  - `--faint` was **2.42:1 on white** → now 3.6:1 (documented 3:1 floor; it drives decorative 9–10px eyebrow labels only).
+  - `--muted` was 4.41:1 on white and 3.9:1 on a surface-3 chip → now `#5e6b75` (4.9:1 / 4.4:1 → clears AA on paper and canvas).
+  - `text-brand-600`/`text-brand-700` were 3.27–3.68:1 on light and 2.67–3.29:1 on dark → text steps now ride the ramp (`brand-700`/`brand-800` light, `brand-300`/`brand-200` dark), referencing the palette variables so the green brokerage accent swaps with them.
+  - **White on `--orange` was 2.77:1** — the brand coral is a *glow* token, not a fill. Solid orange buttons now use new `--orange-solid` / `--orange-solid-deep` (**5.02:1** with white). The coral stays for icons, rails and dots.
+  - The brand ramp's 600/700/800 steps were retuned (600 is a fill 72 times over: white on it went 3.68 → **5.88:1**).
+- **A "start here" journey strip (`StartHere.svelte`)** — the funnel is three legs (Explore the modules → Configure your building → Register and go live), and nothing connected them. The strip sits under the header band on `/tools`, `/tools/wizard`, `/thank-you` and `/docs/manual/getting-started`, marks visited legs done, highlights where you are, and shows a progress meter. Progress is **localStorage only** — no account, no network call, consistent with the "your data is yours" pitch. Pure logic lives in `src/lib/journey.ts` with 10 unit tests.
+
+**Verified end to end:** `npm run check` 0/0 · `npm test` **95 passed** (was 85) · `npm run audit:i18n` 820 keys · `npm run audit:contrast` 60 pairs · build green · **browser sweep over 17 pages × light/dark = 34 combos with 0 contrast failures and 0 horizontal overflow**, measured with a real WCAG composite over the live DOM (including `oklab()` and `color(srgb …)` surfaces).
+
+**Git State:**
+- SHA: `git log -1 --format=%H`
+- Unpushed: `git log --oneline origin/main..HEAD` (pushed once green)
+
+---
+
 ## Session — 2026-09-18 · OpenStrata 60s intro video DELIVERED, held for Cam review (Kimi/THOR)
 
 **Task:** record + deliver the OpenStrata 60s intro video per the VIDEO-SPECS.md contract. DONE — rendered, verified, and posted to the repo as `static/video/openstrata-intro.mp4`, but the frontend swap in `Tour.svelte` (`VIDEO_SRC_PLACEHOLDER`) is deliberately NOT made. **The video is NOT live — Cam must screen it first.**
