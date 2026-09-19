@@ -54,8 +54,10 @@
 | src/lib/icons.ts | SVG icon set | UI |
 | src/lib/journey.ts | Pure state for the public "start here" journey strip (localStorage-only) + `journey.test.ts` | UI |
 | src/lib/setup.ts | Pure state for the dashboard setup checklist (localStorage-only) + `setup.test.ts` | UI |
+| src/lib/brand-assets.test.ts | Guards the mark: the inline `BrandMark.svelte` must match `static/icon.svg` path-for-path, the favicon must stay a square simplified rendition, no shipping source may reference the retired `logo.png`, `og.png` must be 1200×630, the manifest must point at rasters, `app.html` must declare the browser-facing icons | Brand |
 | src/lib/changelog.generated.ts | **Generated** from `CHANGELOG.md` by `scripts/generate-changelog.mjs` — do not edit by hand. `changelog.test.ts` fails if it drifts | Docs |
 | src/lib/nav.ts | **The one authoring home for navigation.** Four inline destinations + two grouped menus; `navItems` (footer + breadcrumbs) is *derived* from it, so the two can never disagree | UI |
+| src/lib/custody.ts | The `/custody` body prose (English by decision — see the note in the file; `documents.ts` and `manual.ts` follow the same rule) + `custody.test.ts` | Docs |
 | src/lib/documents.ts | The print-ready document set (notice, minutes, Form B, Form F) + pure helpers (`docReference`, `addDays`, `daysBetween`, `applyNoticeParams`) + `documents.test.ts` | Docs |
 
 ### Code — UI Components (the ones worth knowing about)
@@ -79,7 +81,7 @@
 | `audit-contrast.mjs` | Recomputes WCAG 2.2 contrast for **106 token pairs** in both themes from `src/app.css`. An unresolvable token is a **failure**, not a skip | CI + deploy checklist |
 | `generate-changelog.mjs` | `CHANGELOG.md` → `src/lib/changelog.generated.ts` for the public `/changelog` page | Run by hand; `changelog.test.ts` guards drift |
 | `wire-hero-art.mjs` | Mounts `HeroArt` motifs on the 14 hero pages (idempotent) | One-off codemod |
-| `generate-icons.mjs` | `npm run icons` — rasterises `static/icon.svg` + `favicon.svg` into `favicon.ico`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`. Committed output; rerun after editing either vector | Run after icon art changes |
+| `generate-icons.mjs` | `npm run icons` — rasterises `static/icon.svg` + `favicon.svg` into `favicon.ico`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, and the 1200×630 `og.png` link-preview card (mark + wordmark + URL on the brand navy). Committed output; rerun after editing either vector | Run after icon art changes |
 | `migrate-page-hero.mjs` | Migrated 14 hand-rolled header gradients onto `.page-hero` | One-off codemod |
 | `inject-*-i18n.mjs` | Catalog injectors (journey, tour offer, setup + changelog) — the pattern for adding keys across all 9 locales | One-off |
 
@@ -93,12 +95,14 @@
 | backend/src/ziggy/ | Treasury state machine — CRF cap, authorize, reconcile |
 | backend/src/billing/ | Automated fee billing + late notices (posts charges to ledger) |
 | backend/src/enforcement/ | Bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps) |
-| backend/src/rails/ | Sovereign payment rails — onchain/LN/Liquid/PayNym (BIP-47)/Nostr validation + quoting |
+| backend/src/rails/ | Sovereign payment rails — onchain/LN/Liquid/PayNym (BIP-47)/Nostr validation + quoting. `receive-label.ts` builds the per-site label every invoice carries (`OST northgate U302 pay-9142`): pure, deterministic, derived from keys the payment request already persists, with `assertReceiveLabelFor` refusing a foreign label at the rail seam. 21 tests |
 | backend/src/trf/recon.ts | No-guess reconciliation (mirrors front-end reconcile.ts) |
 | backend/src/api/server.ts | Fastify wire-up — /health + /api/v1/* |
 | backend/tests/ | Vitest — ledger, Rosa, Ziggy, billing, enforcement, rails, API routes (66 tests) |
 
 ### Code — Routes
+
+`/custody` states where community money sits at each step, what the software cannot do, what a council can check, and what is not live yet. Chrome comes from the i18n catalog (12 keys × 9 locales); the body prose is English in `src/lib/custody.ts`. It is deliberately **not** in the header nav — the bar stays short — and is reached from the home page's 0% custody proof card, the site footer, and site search.
 
 `/documents` is the print-ready document set (notice, minutes, Form B, Form F) — see `src/routes/documents/+page.svelte`. It is also the print target for the dashboard's notice builder (`?doc=notice&print=1…`).
 
@@ -195,4 +199,4 @@ version marker first. See `docs/DEPLOYMENT.md`.
 
 ---
 
-*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.19**. Originally assembled July 2026 by Hermes (M4).*
+*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.20**. Originally assembled July 2026 by Hermes (M4).*
