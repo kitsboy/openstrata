@@ -30,6 +30,7 @@ const routes = [
   '/rss.xml',
   '/spec',
   '/templates',
+  '/documents',
   '/tools',
   '/tools/wizard',
   '/privacy',

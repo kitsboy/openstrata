@@ -21,6 +21,7 @@
   import { copy } from '$lib/i18n';
   import { passwordStrength, passwordMeetsMinimum, isEmailLike } from '$lib/auth-strength';
   import Icon from './Icon.svelte';
+  import BrandMark from './BrandMark.svelte';
   import Illustrations from './Illustrations.svelte';
 
   let { close }: { close: () => void } = $props();
@@ -153,7 +154,7 @@
         <!-- Brand panel (desktop) -->
         <aside class="auth-brand" aria-hidden="true">
           <div class="auth-brand-lockup">
-            <div class="brand-mark auth-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+            <BrandMark size={34} />
             <div>
               <div class="brand-name">open<span>strata</span></div>
               <div class="brand-subtitle">community operations</div>
@@ -318,7 +319,6 @@
   }
   .auth-brand-lockup { display: flex; align-items: center; gap: 10px; }
   .auth-brand-lockup .brand-name { color: #fff; }
-  .auth-brand-mark { background: var(--orange); box-shadow: 0 6px 18px rgba(249, 115, 72, .28); }
   .auth-brand-art { color: rgba(234, 243, 245, .85); margin: 6px 0 2px; }
   .auth-brand-title { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.45; letter-spacing: -.2px; color: #fff; }
   .auth-trust { display: flex; flex-direction: column; gap: 13px; margin: 4px 0 0; padding: 0; list-style: none; }

@@ -38,6 +38,19 @@
     <p class="mt-2 text-sm leading-relaxed text-slate-600">{$copy.templateNotice}</p>
   </div>
 
+  <!-- The templates list tells you what exists; this points at the same
+       documents already laid out for paper, which is what a council actually
+       hands over. -->
+  <div class="mb-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-border bg-surface-2 p-6">
+    <div class="min-w-0">
+      <h2 class="text-lg font-bold text-slate-800">{$copy.documentsTitle}</h2>
+      <p class="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-600">{$copy.documentsIntro}</p>
+    </div>
+    <a href="/documents" class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-700">
+      {$copy.documentsBadge} →
+    </a>
+  </div>
+
   <section>
     <div class="mb-6">
       <div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-2xl font-bold text-slate-900">{$copy.templateLibrary}</h2><p class="mt-1 text-slate-500">{$copy.templateLibraryHint}</p></div>

@@ -25,14 +25,28 @@
 }
 .glossary-text { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--muted, #6d7a82); }
 
-/* Print polish (#8): when a page is printed from the browser, drop the app
-   chrome (topbar/sidebar/footers/modals/nav) and ink the content on white.
-   Certificates + CRT bundles open in their own print-ready windows. */
+/* Print. Two jobs, and both matter:
+     1. strip the chrome, so a printed page is a document and not a screenshot
+        of a website;
+     2. give `PrintDoc` real page furniture — Letter page size, sane margins,
+        a page break between documents, and no shadow, radius or theme colour.
+   `@page` sits outside the media query (it only applies while printing) and is
+   set to Letter because the first market is British Columbia. */
+@page {
+  size: letter;
+  margin: 16mm 14mm 18mm;
+}
+
 @media print {
-  .topbar, .sidebar, .site-footer, .mobile-nav, .modal-backdrop,
-  .notifications-panel, .language-menu, .auth-menu, .tooltip-bubble,
+  html { color-scheme: light; }
+  html, body { background: #fff !important; color: #111; }
+
+  /* `.marketing-mobile-nav` was missing from this list, so on a phone the
+     floating bottom dock printed across the foot of every page. */
+  .topbar, .sidebar, .site-footer, .mobile-nav, .marketing-mobile-nav,
+  .modal-backdrop, .notifications-panel, .language-menu, .auth-menu,
+  .tooltip-bubble, .toast, .page-breadcrumbs, .page-hero,
   .no-print { display: none !important; }
-  body { background: #fff !important; color: #111; }
   .app-shell, .main-column, .content { display: block !important; }
   .glass-card, .panel, .metric-card {
     box-shadow: none !important;
@@ -40,6 +54,44 @@
     break-inside: avoid;
   }
   a { color: #111 !important; text-decoration: underline; }
+
+  /* The sheet. On screen it is a card with a shadow; on paper it is the page.
+     Every declaration here needs !important: the component's own styles are
+     SCOPED (`.print-doc.svelte-abc123`), which outranks any plain `.print-doc`
+     rule no matter how late it appears — otherwise the printed sheet keeps its
+     screen padding, radius and drop shadow. */
+  .print-doc {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #14181c !important;
+  }
+  .print-page { margin: 0 !important; }
+  .print-page + .print-page { break-before: page; page-break-before: always; }
+  .print-doc table, .print-doc tr, .print-doc .print-note,
+  .print-doc .print-signatures, .print-doc .print-table-wrap {
+    break-inside: avoid;
+  }
+  .print-doc h1, .print-doc h2 { break-after: avoid; }
+  .print-doc li { break-inside: avoid; }
+
+  /* A dark-mode screen must not darken the paper. The component already uses
+     paper values; these !important rules win regardless of stylesheet order. */
+  .print-doc .print-org-line, .print-doc .print-ref dt, .print-doc .print-subtitle,
+  .print-doc .print-purpose, .print-doc .print-basis, .print-doc .print-note,
+  .print-doc .print-table-note, .print-doc .print-signature-role,
+  .print-doc .print-foot, .print-doc thead th, .print-doc tbody th {
+    color: #3f4a55 !important;
+  }
+  .print-doc .print-foot-sample { color: #a8672a !important; }
+  /* The letterhead rule reads as a grey rule in monochrome printing. */
+  .print-rule { background: #c9cfd4 !important; }
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -122,6 +174,10 @@
   --navy: #102d3b;
   --orange: #f97348;
   --orange-deep: #e85a32;
+  /* The brush mark is the brand's own orange, distinct from both the coral
+     accent and the Bitcoin amber. It is the one colour that must match the
+     raster favicons exactly, so it is declared here rather than re-typed. */
+  --mark-orange: #f0801a;
   /* Split the orange in two. The brand coral (#f97348) is tuned to *glow* on
      both themes — it is an accent for icons, rails, dots and hairline glows.
      It is NOT legible as a button fill: white on it measures 2.77:1. Solid
@@ -186,16 +242,15 @@ body { margin: 0; min-width: 320px; min-height: 100vh; }
 .app-shell { display: flex; min-height: 100vh; background: var(--canvas); }
 .sidebar { position: fixed; top: 0; left: 0; z-index: 30; display: flex; flex-direction: column; width: 252px; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; padding: 26px 16px 18px; color: #b7c6cc; background: var(--navy); }
 .brand-lockup { display: flex; align-items: center; gap: 10px; padding: 0 10px; }
-.brand-mark { display: flex; align-items: flex-end; gap: 3px; width: 26px; height: 26px; padding: 4px; border-radius: 8px; background: var(--orange); box-shadow: 0 6px 18px rgba(249, 115, 72, .22); }
-.brand-mark span { display: block; width: 4px; border-radius: 3px; background: #fff5ed; }
-.brand-mark span:nth-child(1) { height: 8px; opacity: .66; }
-.brand-mark span:nth-child(2) { height: 14px; }
-.brand-mark span:nth-child(3) { height: 18px; opacity: .82; }
-.brand-mark.small { width: 22px; height: 22px; padding: 3px; border-radius: 6px; }
-.brand-mark.small span { width: 3px; }
-.brand-mark.small span:nth-child(1) { height: 7px; }
-.brand-mark.small span:nth-child(2) { height: 12px; }
-.brand-mark.small span:nth-child(3) { height: 15px; }
+/* The brand mark is inline SVG (src/lib/components/BrandMark.svelte), drawn in
+   currentColor so one component serves the light header, the dark app sidebar,
+   the footer and the auth card. The earlier version was three CSS bars inside
+   an orange plate, which meant the favicon, the in-app mark and the printed
+   letterhead were all different artwork. */
+.brand-mark { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: var(--mark-size, 26px); height: var(--mark-size, 26px); color: var(--mark-orange); }
+.brand-mark svg { display: block; height: 100%; width: auto; }
+.brand-mark.small { width: var(--mark-size, 20px); height: var(--mark-size, 20px); }
+.dark .brand-mark { color: var(--mark-orange); }
 .brand-name { color: #f7fafb; font-size: 18px; font-weight: 800; letter-spacing: -.7px; line-height: 1; }
 .brand-name span, .mobile-brand strong span { color: var(--orange); }
 .brand-subtitle { margin-top: 4px; color: #728892; font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: .07em; line-height: 1; text-transform: uppercase; }
@@ -570,6 +625,24 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
   --color-slate-700: #cfd9e1;
   --color-slate-800: #e2e8f0;
   --color-slate-900: #f1f5f9;
+  /* `bg-brand-50` / `bg-brand-100` are TINTS, and they are used ~25 times as a
+     selected-state plate — chosen jurisdiction, chosen bylaw pack, active
+     decision pill — normally paired with a brand or slate label. Neither step
+     was ever remapped for dark mode, so those plates stayed near-white
+     (#ecfeff) while their labels stepped UP to brand-200 (#a5f3fc, 1.2:1) or
+     slate-800 (#e2e8f0) — an invisible "this one is selected". Remapping the
+     variables here fixes every usage at once, which is the same mechanism the
+     slate ramp above already uses. */
+  --color-brand-50: #113441;
+  --color-brand-100: #16414f;
+}
+
+/* The BC-green "brokerage" accent declares its own brand ramp, so it needs its
+   own dark tints rather than inheriting the teal ones. Higher specificity than
+   both `.dark` and `[data-accent='green']` so it wins on the combination. */
+.dark[data-accent='green'] {
+  --color-brand-50: #16302a;
+  --color-brand-100: #1c3d33;
 }
 
 /* Branded page header band — ONE visual language for every top-level tab.
@@ -645,7 +718,6 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .dark .chart-bar { opacity: .9; }
 .dark .satohash-pill.online { color: #4fd1a0; background: #12301f; }
 .dark .satohash-pill.offline { color: #e3b04e; background: #2a2110; }
-.dark .brand-mark { box-shadow: 0 6px 18px rgba(249, 115, 72, .3); }
 
 /* bc-blue is a dark navy tuned for light surfaces — on dark cards it drops to
    ~2:1. Lighten text usages only (solid bg-bc-blue badges keep the navy so
@@ -662,6 +734,9 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .text-brand-700 { color: var(--color-brand-800); }
 .dark .text-brand-600 { color: var(--color-brand-300); }
 .dark .text-brand-700 { color: var(--color-brand-200); }
+/* brand-800 is only used as a label on a brand tint, so it needs the same step
+   treatment in dark mode as 600 and 700 above. */
+.dark .text-brand-800 { color: var(--color-brand-200); }
 
 /* Status text steps — same convention as the brand steps above. The palette
    values stay as they are (they are fills, tints and glows); only the text
@@ -725,11 +800,6 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
   .marketing-mobile-nav { display: flex; }
   .marketing-mobile-nav + footer { padding-bottom: 90px; }
 }
-
-/* Marketing header nav strip: scrolls internally instead of pushing the page wide. */
-.nav-scroll { scrollbar-width: none; -ms-overflow-style: none; }
-.nav-scroll::-webkit-scrollbar { display: none; }
-.nav-scroll > a { flex: 0 0 auto; white-space: nowrap; }
 
 /* ---------------------------------------------------------------------------
  * Unified surface language — one card/button token set across the hand-rolled

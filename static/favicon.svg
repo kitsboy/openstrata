@@ -1,7 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0891b2"/>
-  <rect x="14" y="18" width="36" height="28" rx="3" fill="#f6f8f9"/>
-  <path d="M14 24h36" stroke="#0891b2" stroke-width="3"/>
-  <circle cx="28" cy="38" r="3" fill="#0891b2"/>
-  <circle cx="37" cy="38" r="3" fill="#0891b2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="OpenStrata">
+  <!-- Small-size rendition of the brush mark. The full mark is very tall and
+       thin (283x448), so at 16px its strokes fall below one device pixel and
+       turn to mush. The favicon keeps the three strata layers that make the
+       mark recognisable, drawn bold on the brand navy so it reads on both
+       light and dark browser chrome. -->
+  <rect width="64" height="64" rx="14" fill="#102d3b"/>
+  <g fill="#f0801a">
+    <path d="M12.5 16.6C25 15.5 39 15.7 51.2 17.1C53.2 17.4 53.4 21.2 51.4 21.6C39 23.3 25 23.5 12.7 23C10.6 22.9 10.6 16.9 12.5 16.6Z"/>
+    <path d="M12.5 29.6C24 28.6 35 28.8 45.2 30.1C47.2 30.4 47.4 34.1 45.4 34.5C35 36.1 24 36.3 12.7 35.8C10.6 35.7 10.6 29.9 12.5 29.6Z"/>
+    <path d="M12.5 41.6C25 40.5 39 40.7 51.2 42.1C53.2 42.4 53.4 46.2 51.4 46.6C39 48.3 25 48.5 12.7 48C10.6 47.9 10.6 41.9 12.5 41.6Z"/>
+  </g>
 </svg>

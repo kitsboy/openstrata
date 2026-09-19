@@ -1,14 +1,16 @@
 <script lang="ts">
   import '../app.css';
-  import { navItems, socialLinks } from '$lib/nav';
+  import { navGroups, navItems, socialLinks, isNavGroup } from '$lib/nav';
   import { page } from '$app/stores';
   import { jurisdictions } from '$lib/data';
   import Icon from '$lib/components/Icon.svelte';
+  import BrandMark from '$lib/components/BrandMark.svelte';
   import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
   import JobsDropdown from '$lib/components/JobsDropdown.svelte';
   import DonateModal from '$lib/components/DonateModal.svelte';
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
   import SearchModal from '$lib/components/SearchModal.svelte';
+  import NavMenu from '$lib/components/NavMenu.svelte';
   import PwaChrome from '$lib/components/PwaChrome.svelte';
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
@@ -50,6 +52,12 @@
 
   const currentYear = new Date().getFullYear();
   const appVersion = packageJson.version;
+
+  /** Active state for a top-level link, including its nested routes. */
+  function isCurrent(href: string) {
+    const path = $page.url.pathname;
+    return href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+  }
   let donateOpen = $state(false);
   let mobileNavOpen = $state(false);
   let selectedJurisdiction = $state('BC');
@@ -84,21 +92,30 @@
   {@render children()}
 {:else}
 <div class="flex min-h-screen flex-col mesh-bg">
-  <header class="sticky top-0 z-50 border-b border-border bg-surface-2/80 backdrop-blur-md">
+  <header class="no-print sticky top-0 z-50 border-b border-border bg-surface-2/80 backdrop-blur-md">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
       <a href="/" class="flex items-center gap-3 no-underline group shrink-0">
-        <div class="brand-mark layout-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <BrandMark size={28} />
         <div>
           <span class="block text-lg font-bold tracking-tight text-slate-800 group-hover:text-brand-700 transition-colors">OpenStrata</span>
           <span class="block text-[10px] font-medium uppercase tracking-widest text-brand-600/70">Community operations · v{appVersion}</span>
         </div>
       </a>
 
-      <!-- 11 nav items + the actions cluster need more than 1280px; scroll the
-           nav strip internally instead of pushing the page wider. -->
-      <div class="hidden lg:flex flex-1 min-w-0 items-center justify-center gap-1 overflow-x-auto nav-scroll">
-        {#each navItems as item}
-          <a href={item.href} class="rounded-lg px-3.5 py-2 text-sm font-medium no-underline transition-colors {$page.url.pathname === item.href ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600'}">{item.label}</a>
+      <!-- Four inline destinations plus two grouped menus. Twelve flat links
+           plus the actions cluster need ~1490px inside a 1232px bar, so the
+           strip scrolled internally on every ordinary laptop and hid half the
+           site behind a scrollbar nobody notices. Grouping brings the six
+           top-level items down to ~500px; the strip starts at `xl` (1280px),
+           below which the grouped drawer and the floating bottom dock carry
+           navigation instead of a bar that clips its own edges. -->
+      <div class="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-0.5">
+        {#each navGroups as entry (isNavGroup(entry) ? entry.label : entry.href)}
+          {#if isNavGroup(entry)}
+            <NavMenu label={entry.label} items={entry.items} align={entry.align ?? 'left'} />
+          {:else}
+            <a href={entry.href} class="rounded-lg px-2.5 py-2 text-[13px] font-semibold no-underline whitespace-nowrap transition-colors {isCurrent(entry.href) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600'}">{entry.label}</a>
+          {/if}
         {/each}
       </div>
 
@@ -109,7 +126,7 @@
         <button class="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>
           {#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}
         </button>
-        <select bind:value={selectedJurisdiction} class="hidden lg:block rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-300" aria-label={$copy.jurisdiction}>
+        <select bind:value={selectedJurisdiction} class="hidden xl:block rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-300" aria-label={$copy.jurisdiction}>
           {#each jurisdictions as j}
             <option value={j.code} disabled={!j.active}>{j.flag} {j.code}{!j.active ? ' (soon)' : ''}</option>
           {/each}
@@ -118,18 +135,28 @@
         <button class="hidden sm:flex items-center gap-1.5 rounded-lg bg-bitcoin/10 px-3.5 py-2 text-sm font-semibold text-bitcoin hover:bg-bitcoin/20 transition-colors" onclick={() => (donateOpen = true)}>
           <Icon name="lightning" class="h-4 w-4" /> {$copy.donate}
         </button>
-        <button class="lg:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100" onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}>
+        <button class="xl:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100" onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}>
           {#if mobileNavOpen}<Icon name="close" class="h-4 w-4" />{:else}<Icon name="menu" class="h-4 w-4" />{/if}
         </button>
       </div>
     </nav>
 
     {#if mobileNavOpen}
-      <div class="lg:hidden border-t border-border bg-surface-2 px-6 py-4 space-y-1">
-        {#each navItems as item}
-          <a href={item.href} class="block rounded-lg px-4 py-2.5 text-sm font-medium no-underline {$page.url.pathname === item.href ? 'bg-brand-50 text-brand-700' : 'text-slate-600'}" onclick={() => (mobileNavOpen = false)}>{item.label}</a>
+      <!-- Mirrors the desktop grouping so the two never teach different
+           structures, and scrolls internally because it is now taller than a
+           short phone viewport. -->
+      <div class="xl:hidden max-h-[calc(100vh-4.5rem)] overflow-y-auto border-t border-border bg-surface-2 px-6 py-4 space-y-1">
+        {#each navGroups as entry (isNavGroup(entry) ? entry.label : entry.href)}
+          {#if isNavGroup(entry)}
+            <p class="pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">{entry.label}</p>
+            {#each entry.items as item (item.href)}
+              <a href={item.href} class="block rounded-lg px-4 py-2.5 text-sm font-medium no-underline {isCurrent(item.href) ? 'bg-brand-50 text-brand-700' : 'text-slate-600'}" onclick={() => (mobileNavOpen = false)}>{item.label}</a>
+            {/each}
+          {:else}
+            <a href={entry.href} class="block rounded-lg px-4 py-2.5 text-sm font-medium no-underline {isCurrent(entry.href) ? 'bg-brand-50 text-brand-700' : 'text-slate-600'}" onclick={() => (mobileNavOpen = false)}>{entry.label}</a>
+          {/if}
         {/each}
-        <div class="mt-2"><LanguageSwitcher /></div>
+        <div class="mt-4"><LanguageSwitcher /></div>
         <button class="w-full mt-2 flex items-center justify-center gap-2 rounded-lg bg-bitcoin/10 px-4 py-2.5 text-sm font-semibold text-bitcoin" onclick={() => { donateOpen = true; mobileNavOpen = false; }}><Icon name="lightning" class="h-4 w-4" /> {$copy.donate} BTC/LN</button>
       </div>
     {/if}
@@ -149,11 +176,11 @@
     <button onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}><Icon name="menu" class="h-4 w-4" /><span>{$copy.menu}</span></button>
   </nav>
 
-  <footer class="border-t border-border bg-surface-2">
+  <footer class="no-print border-t border-border bg-surface-2">
     <div class="mx-auto max-w-7xl px-6 py-14">
       <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div class="lg:col-span-1">
-          <div class="flex items-center gap-3 mb-4"><div class="brand-mark layout-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><span class="font-bold text-slate-800">OpenStrata</span></div>
+          <div class="flex items-center gap-3 mb-4"><BrandMark size={24} /><span class="font-bold text-slate-800">OpenStrata</span></div>
           <p class="text-sm text-slate-500 leading-relaxed">{$copy.footerTag}</p>
           <div class="mt-5 flex items-center gap-3">{#each socialLinks as link}<a href={link.href} class="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-slate-500 no-underline hover:border-brand-300 hover:text-brand-600 hover:bg-brand-50 transition-all" target={link.href.startsWith('http') ? '_blank' : undefined} rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined} aria-label={link.label} title={link.label}><Icon name={link.icon} class="h-4 w-4" /></a>{/each}</div>
         </div>
@@ -170,6 +197,3 @@
 <DonateModal bind:open={donateOpen} />
 <SearchModal bind:open={searchOpen} />
 
-<style>
-  .layout-brand-mark { flex: 0 0 auto; }
-</style>

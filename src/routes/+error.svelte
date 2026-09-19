@@ -2,6 +2,7 @@
   import { page } from '$app/stores';
   import { copy } from '$lib/i18n';
   import { browser } from '$app/environment';
+  import BrandMark from '$lib/components/BrandMark.svelte';
 
   const status = $derived($page.status);
   const notFound = $derived(status === 404);
@@ -14,7 +15,7 @@
 </svelte:head>
 
 <div class="mx-auto flex max-w-3xl flex-col items-center px-6 py-24 text-center">
-  <div class="brand-mark layout-brand-mark mb-8" aria-hidden="true"><span></span><span></span><span></span></div>
+  <BrandMark size={40} class="mb-8" />
   <p class="mb-3 rounded-full bg-brand-50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-brand-600">
     {status || 'Error'}
   </p>
@@ -43,5 +44,4 @@
 </div>
 
 <style>
-  .layout-brand-mark { flex: 0 0 auto; }
 </style>

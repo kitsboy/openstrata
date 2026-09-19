@@ -133,6 +133,21 @@ const INK_LABEL_FILL_TOKENS = [
   ['--color-bitcoin', '--on-bitcoin', 4.5, 'dark ink label on a solid bitcoin fill']
 ];
 
+// Text sitting on a BRAND TINT rather than a neutral surface — the
+// selected-state plates (`bg-brand-50`, `bg-brand-100`) that appear ~25 times
+// across the wizard, the tools page and the decision pills. These were never
+// checked, and in dark mode they measured about 1.2:1 because the plate was a
+// light tint while the label stepped up to brand-200. Background is read raw
+// (a tint is a tint); foreground goes through the same text-override resolution
+// as TEXT_TOKENS, because that is exactly how these labels behave.
+const TINT_PAIRS = [
+  ['--color-brand-50', '--color-brand-700', 4.5, 'selected plate: brand tint + brand label'],
+  ['--color-brand-50', '--color-brand-800', 4.5, 'selected plate: brand tint + strong brand label'],
+  ['--color-brand-50', '--color-slate-800', 4.5, 'selected wizard card: brand tint + heading'],
+  ['--color-brand-50', '--color-slate-600', 4.5, 'selected plate: brand tint + body copy'],
+  ['--color-brand-100', '--color-brand-700', 4.5, 'badge chip: brand-100 tint + brand label']
+];
+
 function resolve(vars, value) {
   if (!value) return undefined;
   const reference = /^var\((--[\w-]+)\)$/.exec(value);
@@ -171,6 +186,22 @@ for (const [themeName, themeVars] of [
     const pass = ratio >= floor;
     if (!pass) failures += 1;
     rows.push({ theme: themeName, pair: `#fff on ${token.replace('--color-', '')}`, ratio, floor, pass, why });
+  }
+  for (const [bgToken, fgToken, floor, why] of TINT_PAIRS) {
+    const bg = resolve(themeVars, themeVars[bgToken]);
+    const fg = themeValue(themeVars, fgToken, themeName);
+    if (!bg || !fg) throw new Error(`${bgToken} / ${fgToken} has no value in the ${themeName} theme.`);
+    const ratio = contrast(fg, bg);
+    const pass = ratio >= floor;
+    if (!pass) failures += 1;
+    rows.push({
+      theme: themeName,
+      pair: `${fgToken.replace('--color-', '')} on ${bgToken.replace('--color-', '')}`,
+      ratio,
+      floor,
+      pass,
+      why
+    });
   }
   for (const [fillToken, inkToken, floor, why] of INK_LABEL_FILL_TOKENS) {
     const bg = resolve(themeVars, themeVars[fillToken]);

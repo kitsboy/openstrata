@@ -52,6 +52,7 @@
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
   import AuthModal from '$lib/components/AuthModal.svelte';
   import Icon from '$lib/components/Icon.svelte';
+  import BrandMark from '$lib/components/BrandMark.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import Sparkline from '$lib/components/Sparkline.svelte';
@@ -213,7 +214,7 @@
 <div class="app-shell">
   <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label={$copy.primaryNavigation}>
     <div class="brand-lockup">
-      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <BrandMark size={30} />
       <div>
         <div class="brand-name">open<span>strata</span></div>
         <div class="brand-subtitle">community operations</div>
@@ -255,7 +256,7 @@
   <div class="main-column">
     <div class="host-connect-row"><HostConnect /></div>
     <header class="topbar">
-      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><div class="brand-mark small" aria-hidden="true"><span></span><span></span><span></span></div><strong>open<span>strata</span></strong></div>
+      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><BrandMark size={22} /><strong>open<span>strata</span></strong></div>
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
         <label class="search-box"><Icon name="search" class="h-4 w-4" /><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
@@ -368,7 +369,7 @@
     </main>
 
     <footer class="site-footer">
-      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">No cookies. We use self-hosted, cookie-less analytics. Nothing to consent to.</span></div>
+      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><BrandMark size={28} /><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">No cookies. We use self-hosted, cookie-less analytics. Nothing to consent to.</span></div>
     </footer>
   </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/tools" class:active={isActive('/tools')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><Icon name="plus" class="h-4 w-4" /></button><a href="/tools" class:active={isActive('/tools')}><Icon name="wrench" class="h-4 w-4" />{$copy.operations}</a><button onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
 </div>

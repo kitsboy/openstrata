@@ -1,6 +1,15 @@
 /* OpenStrata service worker — cache-first for hashed assets, network-first for navigations. */
-const CACHE = 'openstrata-v1';
-const CORE = ['/', '/manifest.webmanifest', '/logo.png'];
+/* Bump the cache name whenever the app shell changes shape — `activate` drops
+   every cache that is not the current one, which is what stops an old worker
+   from serving a previous build (see docs/DEPLOYMENT.md). */
+const CACHE = 'openstrata-v2';
+const CORE = [
+  '/',
+  '/manifest.webmanifest',
+  '/favicon.svg',
+  '/icon-192.png',
+  '/apple-touch-icon.png'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
