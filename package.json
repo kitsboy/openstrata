@@ -1,6 +1,6 @@
 {
   "name": "openstrata",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:security": "node scripts/check-secret-hygiene.mjs",
-    "audit:contrast": "node scripts/audit-contrast.mjs"
+    "audit:contrast": "node scripts/audit-contrast.mjs",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^7.0.0",

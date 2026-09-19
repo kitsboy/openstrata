@@ -1,7 +1,7 @@
 ---
 title: Changelog
 project: openstrataversion_history:
--  version: 0.3.17
+-  version: 0.3.18
 -  summary: "Three shipped improvements and a real accessibility sweep: per-tab hero artwork (6 on-brand SVG motifs on 14 pages), an in-app setup checklist on the dashboard with localStorage-only progress (13 unit tests), and a public /changelog page generated from this file (7 sync tests). Closing a silent-skip hole in audit:contrast exposed 106 token pairs instead of 60 and found four unaudited failures — success 1.99:1–2.18:1, warning 1.99:1, danger 3.76:1 and bitcoin 2.30:1 as text, plus white-on-#f7931a at 2.30:1 — all now fixed with documented text steps and a dark-ink Bitcoin fill. 115 tests, 860 i18n keys x 9 locales, 106 contrast pairs, 24 page/theme/viewport browser combos with 0 overflow."
 -  version: 0.3.16
 -  summary: "Design-system hardening pass: one branded header band for every tab (14 pages migrated off hand-rolled gradients — five of which painted a white band across dark mode), a new `npm run audit:contrast` that recomputes WCAG contrast for 60 token pairs in both themes and found 10 real failures (all fixed: --faint 2.42->3.6:1, --muted 4.41->4.9:1, brand text steps, and white-on-orange 2.77->5.02:1 via new --orange-solid), and a 'start here' three-leg journey strip with localStorage-only progress + 10 unit tests. Browser-verified 17 pages x light/dark = 34 combos, 0 contrast failures, 0 overflow. 95 tests, 820 i18n keys."
@@ -77,6 +77,96 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.18] — 2026-09-18
+
+### Added
+
+- **The new brush mark is the site's icon now.** One master vector
+  (`static/icon.svg`) plus a small-size rendition (`static/favicon.svg`), and
+  `scripts/generate-icons.mjs` (`npm run icons`) rasterises the rest:
+  `favicon.ico`, `icon-192.png`, `icon-512.png` and `apple-touch-icon.png`. The
+  same mark is drawn inline by `BrandMark.svelte` in `currentColor`, so the
+  header, the app sidebar, the footer, the auth card and the error page all
+  carry the real logo instead of three CSS bars in an orange plate.
+- **`/documents` — print-ready documents.** Meeting notice, meeting minutes,
+  Form B (Information Certificate) and Form F (Certificate of Payment), each
+  rendered as a white paper sheet with a letterhead, a reference code, a meta
+  table, disclosure tables and signature lines. One printable document per
+  page when the whole set is printed.
+- `src/lib/documents.ts` — the document set and its pure helpers
+  (`docReference`, `addDays`, `daysBetween`, `applyNoticeParams`), with 28 tests.
+- `scripts/inject-documents-i18n.mjs` — 11 page-chrome keys × 9 locales.
+
+### Changed
+
+- **The header navigation is grouped.** Twelve flat links needed ~1490px inside
+  a 1232px bar, so the strip scrolled internally on every ordinary laptop and
+  hid half the site behind an invisible scrollbar. Four inline destinations
+  (Dashboard, Strata Tool, Compliance, Docs) plus two menus (`Library`,
+  `Company`) bring the top level down to ~500px. `src/lib/nav.ts` is now the one
+  authoring home: the flat list the footer and breadcrumbs read is derived from
+  the grouped structure. The mobile drawer mirrors the same grouping.
+- **The desktop nav starts at 1280px, not 1024px.** Between 1024 and 1280 the
+  bar still could not fit six items alongside the actions cluster, so below
+  `xl` the grouped drawer and the floating bottom dock carry navigation instead
+  of a bar that clipped its own edges.
+- **The dashboard's notice builder no longer writes its own print page.** It
+  used to assemble inline HTML into a popup with its own fonts and colours; it
+  now hands the council's date, time, place and agenda to `/documents` through
+  the query string, so there is exactly one printable notice.
+- `static/sw.js` cache name bumped to `openstrata-v2` — which is what evicts the
+  previous build's shell from an installed PWA.
+
+### Fixed
+
+- **Dark mode's selected states were invisible.** `bg-brand-50` / `bg-brand-100`
+  are tints used ~25 times as a selected-state plate (chosen jurisdiction,
+  chosen bylaw pack, active decision pill), normally paired with a brand or
+  slate label. Neither step was ever remapped for dark mode, so the plate stayed
+  near-white (#ecfeff) while its label stepped up to brand-200 (#a5f3fc) or
+  slate-800 — about **1.2:1**. Both steps now have dark values, and the green
+  “brokerage” accent gets its own pair. `audit:contrast` gained a tint-pair
+  section so this cannot come back.
+- **`.marketing-mobile-nav` was missing from the print hide list,** so on a
+  phone the floating bottom dock printed across the foot of every page.
+- **The printed sheet kept its screen styling.** The print overrides lost to the
+  component's scoped `.print-doc.svelte-hash` rules, leaving screen padding, a
+  14px radius and a drop shadow on paper.
+- **A hover-then-click on a grouped menu closed it.** The pointer opened the
+  menu and the click toggled it shut; a click on a hover-opened menu now pins it
+  open, and the next click closes it.
+- `@page` is now Letter with real margins, because the first market is BC.
+
+### Verified
+
+- `npm run check` → 0 errors, 0 warnings. `npm test` → **143 passed** (was 115).
+- `npm run audit:i18n` → **872 keys** across 9 locales.
+  `npm run audit:contrast` → **116 pairs**, all at or above floor.
+- Build green; `/documents` prerenders, and `sitemap.xml` lists it.
+- Browser-verified against the production preview with the service worker
+  unregistered first: **114 page/theme/viewport combos** (19 pages × 2 themes ×
+  1440 / 1024 / 390) with **0 horizontal overflow** and **0 text below floor on
+  a brand tint**. Nav measured at 1023 / 1024 / 1279 / 1280 / 1440 / 1920px —
+  the grouped bar renders from 1280 with **0 strip overflow**, and below that
+  the grouped drawer opens with its headings and scrolls internally. Menu
+  behaviour verified: hover opens, click pins, second click closes, Escape
+  closes, outside-click closes. Print media emulation confirms the chrome is
+  hidden and the sheet has no padding, radius or shadow. The full set prints
+  **4 sheets** with the right titles and refs, and the notice handoff renders
+  `Notice of Annual General Meeting` with the council's own date, place and
+  agenda.
+
+### Known issues
+
+- The backend is still **not deployed**. The website is live; the money-handling
+  server has never run on a real host. That remains the gate on Phase 3.
+- THOR's bitcoind has **no wallet loaded** (`listwallets` = `[]`) — Cam has
+  greenlit `createwallet`, but it has not been created yet.
+- Ollama is deliberately **not** on THOR (RAM). Rosa answers on the keyword
+  fallback until it runs somewhere else on the tailnet.
+- `static/logo.png` (used by `/pitch`) is still the pre-rebrand artwork and was
+  left untouched so the pitch deck's layout does not shift.
 
 ## [0.3.17] — 2026-09-18
 
