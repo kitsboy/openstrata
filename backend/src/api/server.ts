@@ -31,6 +31,7 @@ import {
 } from '../enforcement/enforcement.js';
 import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rails/rails.js';
 import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-request.js';
+import { SITE_SLUG, receiveLabelFor } from '../rails/receive-label.js';
 import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
@@ -1053,6 +1054,15 @@ export async function buildServer(
         );
         const invoice = {
           rail: request.rail,
+          // Per-site receive label. Returned to the caller so the council can put
+          // it on the transfer, and read by the rail seam as the node memo — one
+          // string, so a payment can never be traced to the wrong project.
+          receiveLabel: receiveLabelFor({
+            site: SITE_SLUG,
+            communityId,
+            unitRef,
+            refId: b.refId
+          }),
           referenceCode: request.referenceCode,
           recipient: request.recipient,
           invoice: request.invoice || undefined,

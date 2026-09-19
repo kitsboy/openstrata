@@ -58,6 +58,18 @@
     'Operating Fund — Interac'
   );
 
+  /**
+   * The label this payment is filed under.
+   *
+   * A live quote carries the backend's own per-site label untouched — the whole
+   * point of it is that the wallet and the node record the same string, so the
+   * client must never compose one. The demo builds the same *shape* locally so a
+   * visitor still sees how a payment is named; the site prefix is the backend's
+   * (`backend/src/rails/receive-label.ts`).
+   */
+  const demoLabel = $derived(`OST demo U${unitRef.replace(/^(unit|u)[-_]?/i, '') || 'x'} demo`);
+  const receiveLabel = $derived(quote?.receiveLabel ?? demoLabel);
+
   async function requestQuote() {
     error = '';
     busy = true;
@@ -78,6 +90,7 @@
           ? `lnurl1dp68gurn8ghj7urp0yh8getnw3hx2un9ve5k7mn9wf5k2um0vd5k2mn0wd5k2mm`
           : rail === 'onchain' ? recipient : undefined,
         amountSat: Math.round((amountBasis / cadPerBtc) * 100_000_000),
+        receiveLabel: demoLabel,
         status: 'demo',
         expiresAt: new Date(Date.now() + 15 * 60_000).toISOString()
       };
@@ -178,6 +191,11 @@
           <div>
             <p class="text-[10px] font-bold text-brand-600 uppercase">{quote.rail} · {quote.status}</p>
             <code class="mt-1 block max-w-full truncate rounded-lg bg-surface-2 px-2 py-1 text-xs text-slate-700">{quote.invoice ?? quote.referenceCode}</code>
+            <div class="mt-2">
+              <span class="text-[10px] font-bold uppercase text-brand-600">{$copy.checkoutLabelTitle}</span>
+              <code class="mt-0.5 block max-w-full truncate rounded-lg border border-brand-100 bg-surface-2 px-2 py-1 font-mono text-xs font-semibold text-slate-800">{receiveLabel}</code>
+              <p class="mt-1 text-[11px] leading-snug text-slate-500">{$copy.checkoutLabelHint}</p>
+            </div>
             <p class="mt-1 text-xs text-slate-500">{quote.fiatLockedBasis ? formatCurrency(quote.fiatLockedBasis / 100, $locale) : ''} · {$copy.receiptSats}: {sats.toLocaleString()} · {$copy.checkoutQuoteHint}</p>
           </div>
           <div class="flex gap-2">

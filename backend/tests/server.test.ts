@@ -272,6 +272,9 @@ describe('fastify API', () => {
     const body = res.json();
     expect(body.ok).toBe(true);
     expect(body.invoice.referenceCode).toBe('pay-a9f-302'); // unitRef normalized at the boundary
+    // Per-site receive label: the string the council writes on the transfer and
+    // the string the node records. Site code first, then council, unit, request.
+    expect(body.invoice.receiveLabel).toMatch(/^OST \S+ U302 A9F$/);
     expect(body.invoice.amountSat).toBe(1_000_000); // $500 @ $50k/BTC
     expect(body.invoice.fiatLockedBasis).toBe(50_000);
     expect(body.invoice.expiresAt).toBeTruthy();

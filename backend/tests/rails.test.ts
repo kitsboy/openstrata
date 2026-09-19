@@ -15,8 +15,10 @@ import {
   StaticRateProvider,
   deriveUnitAddress,
   unitChildIndex,
-  type RailRegistry
+  type RailRegistry,
+  type Rail
 } from '../src/rails/rails.js';
+import { SITE_SLUG, isReceiveLabelFor } from '../src/rails/receive-label.js';
 
 const LNURL = bech32Encode('lnurl', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
@@ -116,6 +118,28 @@ describe('quoting + reconciliation reference', () => {
     expect(() => quotePayment(seed, 'garbage', new Date(), 50_000)).toThrow(
       /expected an LNURL or BOLT-11 invoice|not a valid/
     );
+  });
+
+  it('carries a per-site receive label instead of the rail name', () => {
+    // The rail name is identical in every Give A Bit project, so as an invoice
+    // label it could not tell whose money had arrived. The label is per site.
+    const inv = quotePayment(seed, LNURL, new Date(), 50_000);
+    expect(inv.label).toBe('OST cedar-point U302 A9F');
+    expect(isReceiveLabelFor(inv.label, SITE_SLUG)).toBe(true);
+    expect(inv.railName).toBe('Lightning Network');
+  });
+
+  it('labels every rail, so no rail can arrive unlabelled', () => {
+    const label = (rail: Rail, recipient: string) =>
+      quotePayment({ ...seed, rail }, recipient, new Date(), 50_000).label;
+    const labels = [
+      label('fiat', 'Operating Fund — Interac'),
+      label('onchain', bech32Encode('bc', [0, 1, 2, 3, 4, 5, 20, 30, 7])),
+      label('lightning', LNURL),
+      label('nostr', 'a'.repeat(64))
+    ];
+    for (const value of labels) expect(isReceiveLabelFor(value, SITE_SLUG)).toBe(true);
+    expect(new Set(labels).size).toBe(1); // same payment → same label on any rail
   });
 
   it('computes sats from CAD basis', () => {

@@ -12,7 +12,15 @@
  * the trust ledger can reconcile the same way e-transfers do), and enforces
  * the LNURL 15-minute CAD rate-lock window. Network calls (LND/Liquid/Nostr
  * relays) are behind seams the operator wires when those daemons exist.
+ *
+ * The `label` on every invoice is a **per-site receive label**
+ * (`receive-label.ts`) rather than the rail's own name: the rail name is the
+ * same string in every Give A Bit project, so it left a node operator or a
+ * council unable to tell whose money had arrived. The rail's display name still
+ * travels alongside it as `railName`.
  */
+
+import { SITE_SLUG, receiveLabelFor } from './receive-label.js';
 
 export type Rail = 'fiat' | 'onchain' | 'lightning' | 'liquid' | 'paynym_bip47' | 'nostr';
 export type RailNetwork = 'mainnet' | 'testnet';
@@ -170,7 +178,10 @@ export function validateRailRecipient(rail: Rail, recipient: string): ValidateRe
 
 export interface RailInvoice {
   rail: Rail;
+  /** Per-site receive label, e.g. `OST northgate U302 pay-9142`. */
   label: string;
+  /** The rail's own display name, e.g. `Lightning Network`. */
+  railName: string;
   referenceCode: string;
   recipient: string;
   network?: RailNetwork;
@@ -211,7 +222,15 @@ export function quotePayment(
   const referenceCode = referenceCodeFor(seed);
   const base: RailInvoice = {
     rail: seed.rail,
-    label: RAIL_NAMES[seed.rail],
+    // Per-site, derived from the same keys the payment request persists, so the
+    // label on the node, on the invoice and on the stored row can never drift.
+    label: receiveLabelFor({
+      site: SITE_SLUG,
+      communityId: seed.communityId,
+      unitRef: seed.unitRef,
+      refId: seed.refId
+    }),
+    railName: RAIL_NAMES[seed.rail],
     referenceCode,
     recipient,
     note: seed.note

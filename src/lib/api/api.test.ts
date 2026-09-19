@@ -423,7 +423,7 @@ describe('new 20-item endpoint helpers', () => {
     stubFetch((url, init) => {
       if (url.endsWith('/api/v1/payments/quote')) {
         seen = init;
-        return { ok: true, created: true, invoice: { rail: 'lightning', referenceCode: 'REF-1', recipient: 'lnurl…', invoice: 'lnbc…', fiatLockedBasis: 35_000, amountSat: 36_269, expiresAt: '2026-08-26T12:15:00Z', status: 'quoted' } };
+        return { ok: true, created: true, invoice: { rail: 'lightning', receiveLabel: 'OST cedar-point U302 fees-1', referenceCode: 'REF-1', recipient: 'lnurl…', invoice: 'lnbc…', fiatLockedBasis: 35_000, amountSat: 36_269, expiresAt: '2026-08-26T12:15:00Z', status: 'quoted' } };
       }
       return { ok: true };
     });
@@ -432,6 +432,9 @@ describe('new 20-item endpoint helpers', () => {
     expect(res.created).toBe(true);
     expect(res.invoice.referenceCode).toBe('REF-1');
     expect(res.invoice.amountSat).toBeGreaterThan(0);
+    // The label is the backend's, carried through untouched — the client must
+    // never recompose it, or the wallet and the node would disagree.
+    expect(res.invoice.receiveLabel).toBe('OST cedar-point U302 fees-1');
   });
 
   it('confirmPayment marks a reference code paid', async () => {

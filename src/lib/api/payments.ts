@@ -3,6 +3,11 @@
  * it once paid (`POST /api/v1/payments/quote` + `/confirm`). The quote locks a
  * reference code + (for BTC rails) a CAD rate; confirm posts the credit to the
  * unit's AR ledger and returns the chain seq for the receipt.
+ *
+ * `receiveLabel` is the per-site label the payment carries at the node and in
+ * the payer's wallet (`OST northgate U302 pay-9142`). It is issued by the
+ * backend's `receive-label.ts`, never composed on the client, so the string a
+ * council writes on a transfer is the string the node records.
  */
 
 import { apiFetch } from './client';
@@ -22,6 +27,8 @@ export interface PaymentQuoteInput {
 
 export interface PaymentQuote {
   rail: Rail;
+  /** Per-site receive label issued by the backend. */
+  receiveLabel: string;
   referenceCode: string;
   recipient: string;
   invoice?: string;

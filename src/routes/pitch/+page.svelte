@@ -13,6 +13,7 @@
 	} from '$lib/marketing';
 	import { treasuryHistory, rentalTrend } from '$lib/data';
 	import BarChart from '$lib/components/BarChart.svelte';
+	import BrandMark from '$lib/components/BrandMark.svelte';
 	import LineChart from '$lib/components/LineChart.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import Card from '$lib/components/Card.svelte';
@@ -131,11 +132,7 @@
 			<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
 				<div>
 					<div class="flex items-center gap-4 mb-8">
-						<img
-							src="/logo.png"
-							alt="OpenStrata"
-							class="h-16 w-16 rounded-xl object-cover shadow-lg shadow-brand-500/20"
-						/>
+						<span class="mark-lockup"><BrandMark size={54} /></span>
 						<div>
 							<p class="text-xs font-bold uppercase tracking-widest text-brand-600">
 								Give A Bit · OpenStrata
@@ -383,11 +380,7 @@
 	<!-- Slide 7: CTA -->
 	<section class="pitch-slide pitch-slide-cta">
 		<div class="mx-auto max-w-7xl px-6 py-20 text-center">
-			<img
-				src="/logo.png"
-				alt="OpenStrata"
-				class="h-20 w-20 rounded-2xl object-cover shadow-xl shadow-brand-500/25 mx-auto mb-6"
-			/>
+			<span class="mark-lockup mark-lockup-lg mx-auto mb-6"><BrandMark size={64} /></span>
 			<h2 class="text-3xl sm:text-4xl font-bold text-slate-900">
 				{$copy.buildSovereign}
 			</h2>
@@ -433,6 +426,26 @@
 </div>
 
 <style>
+	/* The brand plate: the same mark-on-navy pairing the favicon, the PWA icons
+	   and the printed letterhead all use, so the deck's logo matches the browser
+	   tab instead of being a fourth version of the mark. It replaces the retired
+	   pre-rebrand raster logo that used to ship on this page. */
+	.mark-lockup {
+		display: grid;
+		place-items: center;
+		width: 80px;
+		height: 80px;
+		border-radius: 18px;
+		background: #102d3b;
+		box-shadow: 0 14px 30px -16px rgba(16, 45, 59, 0.6);
+	}
+
+	.mark-lockup-lg {
+		width: 96px;
+		height: 96px;
+		border-radius: 22px;
+	}
+
 	@media print {
 		:global(header), :global(footer), :global(.search-backdrop) { display: none !important; }
 		.pitch-deck { scroll-snap-type: none; }

@@ -20,13 +20,22 @@ function norm(value: string): string {
 }
 
 /** Build the searchable index. Pass the active translation object so localized titles resolve. */
-export function buildSearchIndex(t: Translation): SearchEntry[] {
-	const pages: SearchEntry[] = navItems.map((item) => ({
-		group: 'pages',
-		title: item.label,
-		description: t.subtitle,
-		href: item.href
-	}));
+export function buildSearchIndex(t: Translation): SearchEntry[] {  const pages: SearchEntry[] = navItems.map((item) => ({
+    group: 'pages',
+    title: item.label,
+    description: t.subtitle,
+    href: item.href
+  }));
+
+  // Pages deliberately outside the header nav: the bar stays short, but search
+  // still reaches them. `How your money is held` is the one a treasurer hunts
+  // for by name, so it is indexed even though it has no menu entry.
+  pages.push({
+    group: 'pages',
+    title: t.custodyLink,
+    description: t.custodyMetaDescription,
+    href: '/custody'
+  });
 
 	const posts: SearchEntry[] = blogPosts.map((post) => ({
 		group: 'posts',

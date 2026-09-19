@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283 448" role="img" aria-labelledby="ost-title">
   <title id="ost-title">OpenStrata</title>
   <!-- Brush-drawn strata mark: a dab, three stacked layers, a settling drop.
-       One flat fill (--mark-orange) so it inherits cleanly on light and dark. -->
+       One flat fill, the brand orange, so it reads on light and on dark.
+       No double hyphens in here: the rasteriser parses this as XML, where a
+       double hyphen inside a comment is a hard error. -->
   <g fill="#f0801a">
     <path d="M146.5 22C155 5.5 174 2.5 181.5 13.5L196.5 55.5C198.5 62.5 194 68.5 187 68.5H161.5C154.5 68.5 150.5 62.5 149.5 56Z"/>
     <path d="M26 96.5C90 86 190 80 271 86.5C279.5 87.2 280.5 93.5 274.5 96C190 105.5 92 113.5 26.5 120C17.5 121 14.5 114.5 16.5 106.5C18 99 21 96 26 96.5Z"/>

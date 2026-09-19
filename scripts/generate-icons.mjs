@@ -11,6 +11,11 @@
  *   static/icon-192.png        PWA / Android (maskable-safe: mark inside the safe zone)
  *   static/icon-512.png        PWA / store listing
  *   static/apple-touch-icon.png 180x180, fully opaque (iOS ignores transparency)
+ *   static/og.png              1200x630 link-preview card (og:image / twitter:image)
+ *
+ * `og.png` replaces the retired `static/logo.png`, which was pre-rebrand art and
+ * was still the link preview on every share. It has to be a raster file: social
+ * crawlers will not render an SVG.
  *
  * Run with `npm run icons` after editing either SVG.
  */
@@ -66,7 +71,43 @@ async function main() {
     fs.writeFileSync(path.join(staticDir, 'favicon.ico'), Buffer.concat([header, entry, png]));
   }
 
-  const written = ['favicon.ico', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+  // Link-preview card. Social crawlers want a raster image, so this is
+  // rendered here rather than shipped as an SVG. Copy is drawn as text in the
+  // SVG overlay: if a host has no font for it the card still reads as the mark
+  // on the brand plate, which is why nothing essential lives in the text.
+  {
+    const MARK_HEIGHT = 250;
+    const mark = await sharp(Buffer.from(read('icon.svg')))
+      .resize({ height: MARK_HEIGHT })
+      .png()
+      .toBuffer();
+    const markWidth = Math.round((MARK_HEIGHT * 283) / 448);
+    const overlay = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
+      <text x="600" y="404" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="66" font-weight="bold" fill="#ffffff" letter-spacing="-1">OpenStrata</text>
+      <text x="600" y="452" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="26" fill="#9fd3e3">Community operations, beautifully organized</text>
+      <rect x="480" y="492" width="240" height="3" rx="1.5" fill="#f0801a"/>
+      <text x="600" y="546" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="22" fill="#8fb4c2">openstrata.giveabit.io</text>
+      <rect x="0" y="0" width="1200" height="6" fill="#f0801a"/>
+    </svg>`);
+    await sharp({ create: { width: 1200, height: 630, channels: 4, background: '#102d3b' } })
+      .composite([
+        { input: mark, top: 74, left: Math.round((1200 - markWidth) / 2) },
+        { input: overlay, top: 0, left: 0 }
+      ])
+      .png({ compressionLevel: 9 })
+      .toFile(path.join(staticDir, 'og.png'));
+  }
+
+  const written = [
+    'favicon.ico',
+    'icon-192.png',
+    'icon-512.png',
+    'apple-touch-icon.png',
+    'og.png'
+  ];
   for (const name of written) {
     const { size } = fs.statSync(path.join(staticDir, name));
     console.log(`  ${name.padEnd(24)} ${(size / 1024).toFixed(1)} kB`);
