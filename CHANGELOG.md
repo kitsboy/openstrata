@@ -1,7 +1,7 @@
 ---
 title: Changelog
 project: openstrataversion_history:
--  version: 0.3.18
+-  version: 0.3.19
 -  summary: "Three shipped improvements and a real accessibility sweep: per-tab hero artwork (6 on-brand SVG motifs on 14 pages), an in-app setup checklist on the dashboard with localStorage-only progress (13 unit tests), and a public /changelog page generated from this file (7 sync tests). Closing a silent-skip hole in audit:contrast exposed 106 token pairs instead of 60 and found four unaudited failures — success 1.99:1–2.18:1, warning 1.99:1, danger 3.76:1 and bitcoin 2.30:1 as text, plus white-on-#f7931a at 2.30:1 — all now fixed with documented text steps and a dark-ink Bitcoin fill. 115 tests, 860 i18n keys x 9 locales, 106 contrast pairs, 24 page/theme/viewport browser combos with 0 overflow."
 -  version: 0.3.16
 -  summary: "Design-system hardening pass: one branded header band for every tab (14 pages migrated off hand-rolled gradients — five of which painted a white band across dark mode), a new `npm run audit:contrast` that recomputes WCAG contrast for 60 token pairs in both themes and found 10 real failures (all fixed: --faint 2.42->3.6:1, --muted 4.41->4.9:1, brand text steps, and white-on-orange 2.77->5.02:1 via new --orange-solid), and a 'start here' three-leg journey strip with localStorage-only progress + 10 unit tests. Browser-verified 17 pages x light/dark = 34 combos, 0 contrast failures, 0 overflow. 95 tests, 820 i18n keys."
@@ -77,6 +77,24 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.19] — 2026-09-18
+
+### Changed
+
+- **The intro video's idle frame is a poster now.** Kimi delivered a
+  Cam-approved 1920×1080 thumbnail (`static/video/openstrata-intro-poster.png`,
+  “Govern yourself.”) and the greeter popup's `<video>` points at it via
+  `poster=`. Without it the player idled on a blank first frame, which reads as
+  broken rather than paused.
+
+### Verified
+
+- `npm run check` → 0 errors, 0 warnings. `npm test` → **143 passed**.
+- Build green; the poster is emitted to `build/video/openstrata-intro-poster.png`
+  (852 kB) next to the video.
+- Browser-verified against the production preview: the tour's video element
+  resolves the poster URL and shows it before play.
 
 ## [0.3.18] — 2026-09-18
 

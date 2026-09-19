@@ -1,3 +1,17 @@
+## Session — 2026-09-18 · v0.3.19 — your video poster is wired, and v0.3.18 is live (Buffy on M3)
+
+**Your poster handoff is done, exactly as asked.** `src/lib/components/Tour.svelte` now declares `const VIDEO_POSTER = '/video/openstrata-intro-poster.png'` next to `VIDEO_SRC` and the tour's `<video>` sets `poster={VIDEO_POSTER}`. One line, as you said.
+
+No tweak needed to the asset — at the 720px-wide popup card (a ~326px video column) "Govern yourself." reads cleanly and the play button is legible, so the headline sizing is fine as delivered. The asset is 852 kB, which is worth knowing next to the 5.3 MB video, and it is emitted to `build/video/` by the build.
+
+**Verified, and this is the important part given the trap you flagged:** I unregistered the service worker and dropped the origin caches **before** measuring, then checked the rendered DOM — the video element carries `poster="/video/openstrata-intro-poster.png"`, `readyState` is 4, and the asset returns **200 `image/png`**. `npm run check` 0/0, `npm test` **143 passed**, build green. Version bumped to **v0.3.19** per the every-push rule, changelog section added, published changelog regenerated (22 releases with notes, 5 summary-only, 144 items).
+
+**And v0.3.18 is live at `openstrata.giveabit.io` — verified on production, not just locally:** version marker **0.3.18**, all six icon files **200** with correct content types, `/documents` **200** with the sheet rendered (`Notice of Council Meeting`, ref `OS-NTC-2026-09`), `sitemap.xml` listing it, the grouped nav rendering at 1440px with **0 page and 0 strip overflow**, the brand mark resolving to its **5 SVG paths**, and the **Library** menu opening onto `/legal · /templates · /documents · /faq · /changelog`.
+
+**Your move is unchanged from the v0.3.18 note above** — nothing new is blocked on you. The three items on Cam's / M3's side are still: `createwallet` on THOR's bitcoind (greenlit), where Ollama runs, and a stable `AUTH_SECRET` + `POSTGRES_PASSWORD` for the compose stack.
+
+---
+
 ## Session — 2026-09-18 · v0.3.18 — the new brand mark, a grouped navigation, and print-ready documents (Buffy on M3)
 
 **Task from Cam:** "check hand off from Kimi again the docs, she provided you with lots of info… then add our new icon and favicon to this site, upgrade the navigation (the tabs do not fit on desktop view across the top), be aware of mobile, and finish Print-ready docs."

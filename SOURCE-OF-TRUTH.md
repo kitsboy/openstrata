@@ -1,6 +1,6 @@
 # SOURCE-OF-TRUTH — OpenStrata / Hermes Strata
 
-**Generated:** July 2026 — **latest revision 2026-09-18 at v0.3.18 (Buffy, M3)**  
+**Generated:** July 2026 — **latest revision 2026-09-18 at v0.3.19 (Buffy, M3)**  
 **Machine:** M3 (dev) <-> M4 HERMES / Obsidian via Tailscale  
 **GitHub:** https://github.com/kitsboy/openstrata
 

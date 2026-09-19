@@ -57,6 +57,11 @@
   // /video/openstrata-intro.mp4. Clear the constant and the card falls back to
   // the honest "watch it in the tools" placeholder instead.
   const VIDEO_SRC = '/video/openstrata-intro.mp4';
+  // Kimi's Cam-approved poster (1920×1080, "Govern yourself."). Without it the
+  // player idles on a blank first frame, which reads as broken rather than
+  // paused. It is the same asset path pattern as the video, so both move
+  // together.
+  const VIDEO_POSTER = '/video/openstrata-intro-poster.png';
 
   let videoBroken = $state(false);
   const videoReady = $derived(VIDEO_SRC.length > 0 && !videoBroken);
@@ -101,6 +106,7 @@
                 <video
                   class="tour-video-el"
                   src={VIDEO_SRC}
+                  poster={VIDEO_POSTER}
                   preload="metadata"
                   controls
                   playsinline

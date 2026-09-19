@@ -195,4 +195,4 @@ version marker first. See `docs/DEPLOYMENT.md`.
 
 ---
 
-*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.18**. Originally assembled July 2026 by Hermes (M4).*
+*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.19**. Originally assembled July 2026 by Hermes (M4).*

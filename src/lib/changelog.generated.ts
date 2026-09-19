@@ -14,6 +14,26 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.19",
+    "date": "2026-09-18",
+    "groups": [
+      {
+        "label": "Changed",
+        "items": [
+          "The intro video's idle frame is a poster now. Kimi delivered a Cam-approved 1920×1080 thumbnail (static/video/openstrata-intro-poster.png, “Govern yourself.”) and the greeter popup's <video> points at it via poster=. Without it the player idled on a blank first frame, which reads as broken rather than paused."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "npm run check → 0 errors, 0 warnings. npm test → 143 passed.",
+          "Build green; the poster is emitted to build/video/openstrata-intro-poster.png (852 kB) next to the video.",
+          "Browser-verified against the production preview: the tour's video element resolves the poster URL and shows it before play."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.18",
     "date": "2026-09-18",
     "groups": [
