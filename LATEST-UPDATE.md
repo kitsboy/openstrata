@@ -6,7 +6,9 @@
 
 **Commits:** pushed to `origin/main` in batches; Cloudflare Pages deploys on push.
 
-**Live-verified after deploy:** see the verification record at the end of this file.
+**Commits:** `9f15445` (feature code) · `1b9d41b` (release v0.3.18) · `4cfe03d` (docs, maps, handoffs) — pushed to `origin/main`; Cloudflare Pages deploys on push.
+
+**Live-verified after deploy:** **yes**, against production at **https://openstrata.giveabit.io**. `openstrata-version` reads **0.3.18**; all six icon files return **200** with the right content types (`/favicon.ico` `image/vnd.microsoft.icon`, `/favicon.svg` `image/svg+xml`, `/icon-192.png` `image/png`, …) and `app.html` declares ico + svg + 192 + apple-touch; `/documents` returns **200** with the sheet rendered (`Notice of Council Meeting`, ref `OS-NTC-2026-09`); `sitemap.xml` lists it. In a real browser against production, with the service worker unregistered and origin caches dropped first: the grouped nav renders at 1440px with **0 page overflow** and **0 strip overflow**, the brand mark resolves to its **5 SVG paths**, the **Library** menu opens onto `/legal · /templates · /documents · /faq · /changelog`, and `/documents` lays out with **0 horizontal overflow**.
 
 ---
 
