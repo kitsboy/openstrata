@@ -58,13 +58,19 @@
   import Sparkline from '$lib/components/Sparkline.svelte';
   import Tour from '$lib/components/Tour.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-  import DeadlinesPanel from '$lib/components/DeadlinesPanel.svelte';
+  import TaskList from '$lib/components/TaskList.svelte';
   import RailsStatus from '$lib/components/RailsStatus.svelte';
   import HealthScore from '$lib/components/HealthScore.svelte';
   import RateSparkline from '$lib/components/RateSparkline.svelte';
   import ChainViz from '$lib/components/ChainViz.svelte';
   import NotificationsFeed from '$lib/components/NotificationsFeed.svelte';
-  import SetupChecklist from '$lib/components/SetupChecklist.svelte';
+  import StartChoice from '$lib/components/StartChoice.svelte';
+  import {
+    clearStartPending,
+    isStartPending,
+    rememberStartChoice,
+    type StartChoiceId
+  } from '$lib/start';
   import { accent, cycleAccent } from '$lib/theme';
   import { onMount } from 'svelte';
 
@@ -75,6 +81,8 @@
   let toast = $state('');
   let toastType = $state<'ok' | 'error'>('ok');
   let showTour = $state(false);
+  /** True while the first-visit question is unanswered and hiding the dashboard. */
+  let startPending = $state(false);
   let showSignOutConfirm = $state(false);
   let newStrataName = $state('');
   let newStrataError = $state('');
@@ -83,6 +91,29 @@
   let showNotifications = $state(false);
   let showAuth = $state(false);
   let showAuthMenu = $state(false);
+
+  /**
+   * Answer the first-visit question. `exploring` reveals the dashboard in place;
+   * `setup` goes straight to the wizard. Either answer is remembered on this
+   * device only, and the class hiding the dashboard comes off immediately, so
+   * the swap has no flash and no navigation.
+   */
+  function chooseStart(choice: StartChoiceId) {
+    rememberStartChoice(choice);
+    clearStartPending();
+    startPending = false;
+    if (choice === 'setup') {
+      goto('/tools/wizard');
+      return;
+    }
+    // "Just looking" reveals the dashboard, so the tour can now point at it.
+    try {
+      showTour =
+        localStorage.getItem('openstrata-tour-seen') !== '1' && !liveMode;
+    } catch {
+      /* storage unavailable — no tour */
+    }
+  }
   let crfBalance = $state<number | null>(null);
   let operatingBalance = $state<number | null>(null);
   let balancesLoading = $state(false);
@@ -102,9 +133,16 @@
       /* corrupt storage — start fresh */
     }
     // First-run tour: show the 4-step overlay to signed-out visitors who have
-    // never dismissed it. A live session skips it entirely.
+    // never dismissed it. A live session skips it entirely, and so does a
+    // visitor who has not answered the start question yet — one first-run
+    // experience at a time. Answering it (chooseStart) then opens the tour over
+    // the dashboard they just asked to see.
+    startPending = isStartPending();
     try {
-      showTour = localStorage.getItem('openstrata-tour-seen') !== '1' && get(auth).status !== 'signed-in';
+      showTour =
+        !startPending &&
+        localStorage.getItem('openstrata-tour-seen') !== '1' &&
+        get(auth).status !== 'signed-in';
     } catch {
       /* storage unavailable — no tour */
     }
@@ -296,12 +334,17 @@
     </header>
 
     <main class="content">
+      <!-- First-visit question. Hidden unless `<html>` carries `start-pending`,
+           which the inline script in app.html sets before the first paint. -->
+      <StartChoice onChoose={chooseStart} onSignIn={() => (showAuth = true)} />
+
+      <div class="dashboard-body">
       <section class="welcome-row">
         <div><div class="date-kicker">{formatDate(new Date(), $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{greeting}</h1><p>{$copy.subtitle}</p></div>
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>
       </section>
 
-      <SetupChecklist />
+      <TaskList />
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
         <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
@@ -338,7 +381,6 @@
         <aside class="right-stack">
           <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>
           <RailsStatus />
-          <DeadlinesPanel />
           <HealthScore />
           <RateSparkline />
           <ChainViz />
@@ -365,7 +407,7 @@
           <a href="/docs" class="proof-cta">{$copy.status} <span>→</span></a>
         </div>
       </div>
-
+      </div>
     </main>
 
     <footer class="site-footer">

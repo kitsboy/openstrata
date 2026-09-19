@@ -885,6 +885,24 @@ main h1 { letter-spacing: -.028em; }
    keep their own scale. */
 .mesh-bg .glass-card h2, .mesh-bg .glass-card h3 { font-weight: 800; }
 
+/* ---------------------------------------------------------------------------
+   First visit: ask one question instead of showing a dashboard full of someone
+   else's numbers.
+
+   The `start-pending` class is set *before the first paint* by the inline script
+   in src/app.html (the same trick the theme switch uses, so there is no flash),
+   and the rule itself — who gets asked — lives in src/lib/start.ts. Visibility
+   is CSS rather than a conditional render on purpose: the prerendered HTML still
+   contains the whole dashboard, so a crawler reads the real page while a person
+   sees the question.
+
+   `!important` because the component's own scoped `display: none` has the same
+   specificity and can win on source order. This is a hard state toggle, not a
+   styling preference, and the two rules are asserted in src/lib/start.test.ts.
+   --------------------------------------------------------------------------- */
+html.start-pending .dashboard-body { display: none !important; }
+html.start-pending .start-choice { display: block !important; }
+
 /* Subtle mesh backdrop used by the shared layout (was referenced but never defined). */
 .mesh-bg {
   background-color: var(--canvas);

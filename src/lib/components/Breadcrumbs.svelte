@@ -2,7 +2,7 @@
   // Consistent breadcrumb/eyebrow trail on every marketing page — one voice
   // with the dashboard's own topbar breadcrumbs.
   import { page } from '$app/stores';
-  import { navItems } from '$lib/nav';
+  import { navParentFor } from '$lib/nav';
   import { copy, type Translation } from '$lib/i18n';
   import Icon from '$lib/components/Icon.svelte';
 
@@ -14,7 +14,7 @@
   const trail = $derived.by(() => {
     const pathname = $page.url.pathname;
     const crumbs: Array<{ href?: string; label: string }> = [{ href: '/', label: $copy.overview }];
-    const parent = navItems.find((item) => item.href !== '/' && pathname.startsWith(item.href));
+    const parent = navParentFor(pathname);
     if (parent) crumbs.push({ href: parent.href, label: parent.label });
     const leafKey = Object.keys(leafLabels).find((route) => pathname === route);
     if (leafKey) crumbs.push({ label: $copy[leafLabels[leafKey]!] });

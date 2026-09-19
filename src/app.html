@@ -35,6 +35,15 @@
         var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (dark) document.documentElement.classList.add('dark');
       } catch (e) {}
+      // First visit? Ask the one question before showing a dashboard full of
+      // someone else's numbers. Same class-before-paint trick as the theme: the
+      // rule lives in src/lib/start.ts and the two CSS rules that act on this
+      // class are in src/app.css.
+      try {
+        if (!localStorage.getItem('openstrata-start') && !localStorage.getItem('openstrata-token')) {
+          document.documentElement.classList.add('start-pending');
+        }
+      } catch (e) {}
     </script>
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebSite","name":"OpenStrata","url":"https://openstrata.giveabit.io","description":"Modern operations for strata and condominium communities.","publisher":{"@type":"Organization","name":"Give A Bit","url":"https://giveabit.io"}}
