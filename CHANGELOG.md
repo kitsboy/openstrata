@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.21
+-  summary: "A simplification pass on the parts a person actually meets. The header went from six things to four (Compliance and Docs left the bar for the Library menu, where they belong — nothing became unreachable). A first-time visitor no longer meets a dashboard of someone else's numbers: they get one question with three ways in, decided before the first paint by the same class-before-paint trick the theme switch uses, with the choice remembered on the device only and the tour now waiting its turn. Four dashboard panels (setup checklist, deadlines, forms windows, month-end) merged into one ordered list — overdue, urgent, soon, routine, setup last — where a deadline inside two weeks is urgent whatever the API called it. Also fixed: breadcrumbs mislabelled /documents as Docs (because /documents starts with /docs) with a link to the wrong page. 196 frontend tests, 909 i18n keys x 9 locales, 116 contrast pairs."
 -  version: 0.3.20
 -  summary: "Three improvements and two real defects found while making them: the pre-rebrand raster logo is gone everywhere (the pitch deck shows the vector mark on its navy plate, link previews get a new 1200x630 og.png that `npm run icons` now renders, and a guard test fails if the old file ever comes back), every payment carries a per-site receive label (OST · council · unit · request) so money can never be confused between projects — a pure deterministic backend module with 21 tests, returned by the quote API and shown in the checkout panel — and a new /custody page stating where community money sits at each step, what the software cannot do, what a council can check, and what is not live yet. Fixed on the way: static/icon.svg contained a double hyphen in an XML comment so the rasteriser refused the file, and a malformed changelog front-matter line had swallowed the project name. 214 backend tests, 164 frontend tests, 886 i18n keys x 9 locales, 116 contrast pairs."
 -  version: 0.3.19
@@ -80,6 +82,68 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.21] — 2026-09-18
+
+### Changed
+
+- **The header is four things instead of six.** Compliance and Docs left the bar
+  and joined the Library menu, beside the legal sources, the templates and the
+  printable documents — which is what they are. A council reads compliance
+  material; it does not “go to compliance” the way it goes to its own dashboard.
+  Nothing became unreachable: both are one click away, still in the footer, still
+  in site search.
+- **The first visit is a question, not a wall.** A brand-new visitor used to land
+  on a full dashboard — four metric cards, a building list, an activity feed, four
+  panels — for a building that is not theirs, with numbers that are not real.
+  They now get one plain question with three ways in: look around, set a building
+  up, or sign in. The dashboard appears the moment they choose, and the choice is
+  remembered on the device only.
+  - Visibility is decided **before the first paint** by the same
+    class-before-paint trick the theme switch already uses, so there is no flash
+    — and because it is CSS rather than a conditional render, the prerendered
+    markup still contains the whole dashboard for a crawler.
+  - **The first-run tour now waits its turn.** One first-run experience at a
+    time; answering the question opens the tour over the dashboard the visitor
+    just asked to see.
+- **Four panels became one list.** The setup checklist, the statutory deadlines,
+  the Forms tracker's windows and the month-end close each answered part of
+  “what needs doing?” — and together they were a scavenger hunt. The dashboard now
+  shows one ordered list: overdue, then urgent, then soon, then routine, then the
+  setup steps **last**, because real work outranks finishing your profile.
+  - A deadline inside two weeks is urgent **whatever the API called it**: the
+    date is the fact, the severity label is an opinion.
+  - Steps tick off in place, the list can be hidden, and it says how many rows
+    are left in the full list.
+  - `SetupChecklist.svelte` is deleted; the aggregation lives in `src/lib/tasks.ts`
+    with 16 tests.
+
+### Fixed
+
+- **Breadcrumbs mislabelled `/documents` as `Docs`.** `/documents`.startsWith
+  (`/docs`) is true, and the trail took the *first* match — so the printable
+  documents page carried a crumb that linked to the wrong page. Resolution now
+  happens on a segment boundary and prefers the deepest href, which also keeps
+  `/docs/manual` landing on `Docs`.
+
+### Verified
+
+- `npm run check` → 0 errors, 0 warnings. `npm test` → **196 passed** (was 164).
+  `audit:i18n` → 909 keys × 9 locales, parity green. `audit:contrast` → 116
+  pairs. Build green.
+- Browser-verified on the production preview with the service worker
+  unregistered: a first visit shows the question with the dashboard hidden and
+  **no tour overlay**; choosing “just looking” reveals the dashboard in place,
+  stores the choice, and opens the tour over it; the header renders **four**
+  items with no Compliance link in the bar, while the Library menu holds
+  Compliance, Docs, legal library, templates, print-ready documents, FAQ and
+  changelog; the merged list renders six rows in urgency order (urgent Form B →
+  EPR → AGM, then the setup steps) with its overflow count; the breadcrumb on
+  `/documents` reads “Print-ready documents”; and there is **0 horizontal
+  overflow** at 390px and 1440px in light and dark.
+- The urgency chip was rewritten from amber text on an amber tint to a neutral
+  plate with a coloured dot. The tint pairing was not covered by
+  `audit:contrast`, and “probably 4.5:1, on this machine” is not a measurement.
 
 ## [0.3.20] — 2026-09-18
 
