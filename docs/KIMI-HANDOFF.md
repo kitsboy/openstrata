@@ -1,3 +1,27 @@
+## Session — 2026-09-18 · v0.3.20 — one mark everywhere, payment labels that name the site, and a custody page (Buffy on M3)
+
+**Done:**
+
+- **The pre-rebrand logo is gone.** `static/logo.png` and `public/logo.png` are deleted. `/pitch` was the last page still shipping the old artwork — it now uses the same mark-on-navy plate as the favicon, the PWA icons and the printed letterhead. Link previews point at a **new 1200×630 `/og.png`** (`npm run icons` renders it: the mark, the wordmark, the URL and the orange rule on the brand navy), and `twitter:card` is now `summary_large_image`. The retired file was 237×377 and every crawler upscaled and cropped it.
+- **Every payment now carries a per-site label:** `OST northgate U302 pay-9142` — site code, council, unit, request. New `backend/src/rails/receive-label.ts` (pure, deterministic, **21 tests**), returned by `POST /api/v1/payments/quote` as `receiveLabel`, and shown in the checkout panel as **Payment name** with a one-line explanation. This is Cam's per-site labelling mandate, done while the rail is still off — a code change now, a migration on real money later.
+- **`/custody` — how your money is held.** Where the money sits at each step, what the software cannot do, what a council can check, and what is not live yet. Reached from the home page's 0% custody card (which used to link to `/tools`) and the footer; listed in the sitemap, `llms.txt` and site search. **Deliberately not in the header nav** — the bar stays short.
+- **Two real defects fixed on the way.** `static/icon.svg` had a double hyphen inside an XML comment, which is a hard XML error, so the rasteriser refused the file — the master mark had never actually been rendered from its own source until `og.png` needed it. And `CHANGELOG.md`'s front-matter had a malformed line (`project: openstrataversion_history:`) that had swallowed the project name.
+- **New guards, because all of this is the kind of thing that silently regresses:** `src/lib/brand-assets.test.ts` (**10 tests** — the inline mark must match `icon.svg` path-for-path, no shipping source may reference the retired logo, `og.png` must be 1200×630, the manifest must point at rasters) and `src/lib/custody.test.ts` (**11 tests** — including that every catalog key the page references exists, because a mistyped key renders as a blank line).
+
+**Decisions:**
+
+- **The custody page's body prose is English-only, on purpose.** Chrome (12 keys) is in all 9 locales; the prose lives in `src/lib/custody.ts`. A machine translation of “we never hold your money” is a materially false statement, and custody wording is the last place to accept a loose translation. Same rule `documents.ts` and `manual.ts` already follow. A reviewed translation would move through the catalog like any other page chrome.
+- **`/custody` is not in the header nav.** Cam asked for a simpler, easier-to-navigate UI, so a new top-level item was the wrong instinct. It is hooked to the two places people actually ask the question (the 0% custody card, the footer) and indexed for search instead.
+- **The label is derived, never stored.** It is a pure function of `communityId` + `unitRef` + `refId`, all of which the payment request already persists — so it cannot drift between the wallet, the node and the stored row, and it needed no migration.
+- **Your verified answer changed a known issue, not the code.** `listwallets` on THOR returned `[]`: bitcoind has **no wallet loaded**, so the PSBT workflow seam stays blocked until `createwallet` runs. That is now written down as step one of deploying the rail rather than as an open question.
+
+**Git State:**
+
+- SHA: `893d995` (docs) on top of `459e5c0` (release) and `9bc8c03` (code)
+- Unpushed: none — pushed to `origin/main`, then live-verified
+
+---
+
 ## Session — 2026-09-18 · v0.3.19 — your video poster is wired, and v0.3.18 is live (Buffy on M3)
 
 **Your poster handoff is done, exactly as asked.** `src/lib/components/Tour.svelte` now declares `const VIDEO_POSTER = '/video/openstrata-intro-poster.png'` next to `VIDEO_SRC` and the tour's `<video>` sets `poster={VIDEO_POSTER}`. One line, as you said.

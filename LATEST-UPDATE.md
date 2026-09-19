@@ -1,102 +1,77 @@
 # openstrata — Last Updated 2026-09-18 by Buffy (M3)
 
-> **Follow-up, same day — v0.3.19.** Kimi delivered a Cam-approved poster for the intro video (`static/video/openstrata-intro-poster.png`, 1920×1080, “Govern yourself.”) and handed the wiring to the code lane. `Tour.svelte` now sets `poster=` on the tour's `<video>`, so the popup shows the thumbnail instead of a blank idle frame. `check` 0/0 · **143 tests** · build emits the poster beside the video · browser-verified that the element carries the poster URL and the asset returns 200. Everything below is the v0.3.18 work.
+**Brief:** v0.3.20 — three improvements and two real defects found making them. **(1)** The **pre-rebrand logo is retired everywhere** — `/pitch` was the last page still showing it, and the link preview on every share was a 237×377 image every crawler upscaled and cropped; there is now a 1200×630 `/og.png` that `npm run icons` renders. **(2)** **Every payment carries a per-site label** (`OST northgate U302 pay-9142`) so money can never be confused between projects — Cam's mandate, done while the rail is still off. **(3)** **`/custody`** — a plain-language page for the question behind “0% custody”: where the money sits at each step, what the software cannot do, what a council can check, and what is not live yet.
 
-**Brief:** v0.3.18 — three things Cam asked for, plus the dark-mode defect the second one exposed. **(1)** The new **brand mark is live** everywhere: one master vector, a bold small-size favicon, and a generator (`npm run icons`) that produces `favicon.ico` + PWA + apple-touch PNGs. **(2)** The **header navigation is grouped** — twelve flat links needed ~1490px inside a 1232px bar, so the strip scrolled internally on every laptop and hid half the site. **(3)** **`/documents` — print-ready documents**: meeting notice, minutes, Form B and Form F, laid out as real paper with a letterhead, reference codes and signature lines.
-
-**And then the navigation work exposed a real dark-mode bug.** `bg-brand-50` / `bg-brand-100` are tints used ~25 times as a *selected-state plate*, and neither step was ever remapped for dark mode: the plate stayed near-white while its label stepped up to brand-200 or slate-800 — **about 1.2:1**. Every "this one is selected" state on the wizard and the tools page was effectively invisible in dark mode. Fixed at the token, and `audit:contrast` gained a tint-pair section so it cannot return.
-
-**Commits:** pushed to `origin/main` in batches; Cloudflare Pages deploys on push.
-
-**Commits:** `9f15445` (feature code) · `1b9d41b` (release v0.3.18) · `4cfe03d` (docs, maps, handoffs) — pushed to `origin/main`; Cloudflare Pages deploys on push.
-
-**Live-verified after deploy:** **yes**, against production at **https://openstrata.giveabit.io**. `openstrata-version` reads **0.3.18**; all six icon files return **200** with the right content types (`/favicon.ico` `image/vnd.microsoft.icon`, `/favicon.svg` `image/svg+xml`, `/icon-192.png` `image/png`, …) and `app.html` declares ico + svg + 192 + apple-touch; `/documents` returns **200** with the sheet rendered (`Notice of Council Meeting`, ref `OS-NTC-2026-09`); `sitemap.xml` lists it. In a real browser against production, with the service worker unregistered and origin caches dropped first: the grouped nav renders at 1440px with **0 page overflow** and **0 strip overflow**, the brand mark resolves to its **5 SVG paths**, the **Library** menu opens onto `/legal · /templates · /documents · /faq · /changelog`, and `/documents` lays out with **0 horizontal overflow**.
+**Commit:** `893d995` (docs) · `459e5c0` (release) · `9bc8c03` (code) — all pushed, then live-verified.
 
 ---
 
-## What shipped
+## 1. One mark everywhere
 
-### 1. The new icon is the site's icon
+The mark had quietly become four pieces of artwork. The header, sidebar, footer and printed letterhead used the vector `BrandMark`; the browser tab used a simplified favicon rendition (necessary — the full mark is 283×448 and at 16px its strokes fall under one device pixel); the PWA icons were rendered from the favicon art; and **`/pitch` still shipped `static/logo.png`, the pre-rebrand raster**, which was also the `og:image` and `twitter:image` on every page of the site.
 
-The attached mark is a brush drawing — a dab, three stacked layers, a settling drop. It is now one piece of artwork used everywhere instead of three different ones:
+All four now agree:
 
-| File | What it is |
-|---|---|
-| `static/icon.svg` | The master vector (283×448), transparent, orange `#f0801a` |
-| `static/favicon.svg` | A **bold small-size rendition**. The full mark is very tall and thin; at 16px its strokes fall below one device pixel and turn to mush. The favicon keeps the three strata layers that make the mark recognisable, drawn bold on the brand navy so it reads on light *and* dark browser chrome |
-| `static/favicon.ico` | 32×32, PNG payload in an ICO container |
-| `static/icon-192.png` / `icon-512.png` | PWA / Android, mark inside the maskable safe zone |
-| `static/apple-touch-icon.png` | 180×180, fully opaque (iOS composites transparency onto black) |
+- `/pitch` uses the same **mark-on-navy plate** as everything else (`#102d3b` plate, the orange mark, the same radius family as the favicon and the PWA icons).
+- Link previews point at a new **1200×630 `/og.png`** — the size Facebook, LinkedIn and X all crop against — with `twitter:card` upgraded to `summary_large_image`.
+- `npm run icons` renders it from `icon.svg` plus an SVG text overlay, so the card updates when the art does.
+- `static/logo.png` and `public/logo.png` are **deleted**, and `src/lib/brand-assets.test.ts` fails if either ever comes back or if the inline mark drifts from the vector it is drawn from.
 
-`scripts/generate-icons.mjs` (`npm run icons`) produces every raster from the two vectors — the PNGs are committed so a build never depends on it having run. `src/lib/components/BrandMark.svelte` draws the same paths inline in `currentColor`, and it has **replaced the old three-CSS-bars-in-an-orange-plate mark** in the header, the app sidebar, the landing footer, the auth card and the error page. The favicon, the in-app logo and the printed letterhead are now the same drawing.
+**Because nothing should break silently, the new tests are the point:** the inline `BrandMark.svelte` must match `static/icon.svg` path-for-path, the favicon must stay a strictly simpler square rendition, `og.png` must be 1200×630, the manifest must point at rasters, and `app.html` must declare every browser-facing icon.
 
-`static/sw.js`'s cache name went `openstrata-v1` → **`openstrata-v2`**, which is what evicts the previous build's shell from an installed PWA.
+## 2. Payment labels that name the site
 
-### 2. The navigation finally fits
+A rail invoice used to be labelled with **the rail's own name** — `Lightning Network`, `Bitcoin (on-chain)`. That string is identical in every Give A Bit project, so a node operator, a council treasurer or anyone reading a wallet history could not tell whose money had arrived. On a family of sites that all handle money, that is the wrong default.
 
-Twelve flat links plus the actions cluster need roughly **1490px inside a 1232px bar** (`max-w-7xl`). The old strip compensated by scrolling internally — which means every ordinary laptop hid half the site behind a scrollbar nobody notices.
+Every quote now carries a label shaped like this:
 
-The header now carries **four inline destinations** and **two grouped menus**:
+```
+OST  northgate  U302  pay-9142
+^^^  ^^^^^^^^^  ^^^^  ^^^^^^^^^
+site  council   unit   request
+```
 
-- Inline: **Dashboard · Strata Tool · Compliance · Docs** (~500px total)
-- **Library** ▾ — Legal library · Templates · Print-ready documents · FAQ · Changelog
-- **Company** ▾ — About · Pitch · Roadmap · Blog · RSS & API
+`backend/src/rails/receive-label.ts` builds it as a **pure function of keys the payment request already persists** (`communityId` + `unitRef` + `refId`) — so there is no migration, and the label on the node, in the wallet and on the stored row cannot drift apart. **21 tests** cover it. Details worth keeping:
 
-Each menu item carries a one-line description, because a menu that only repeats link names is a menu that wastes the space.
+- **The site code table is explicit** (OST / SATO / TAD / MOTO / SHER / STRA / KATO / LIND / CAMD / BTCM / GAB) so two projects colliding on the same three letters is a visible edit rather than a coincidence of spelling.
+- **`assertReceiveLabelFor` refuses a foreign label loudly** at the rail seam — a SATO label arriving at an OpenStrata node throws rather than being accepted quietly.
+- **The label is sanitized and length-capped** before it is joined: wallets truncate, and a label that ends in an ellipsis failed at its one job.
+- **The API returns `receiveLabel`** and the checkout panel shows it as **Payment name**, next to the payment instructions, so the string a council writes on an e-transfer is the string the node records.
 
-Design decisions worth keeping:
+## 3. `/custody` — how your money is held
 
-- **`src/lib/nav.ts` is the one authoring home.** The flat `navItems` list that the footer column and the breadcrumb trail read is now *derived* from the grouped structure, so a link added to the header cannot go missing from either.
-- **The desktop bar starts at `xl` (1280px), not `lg`.** Between 1024 and 1280 six items still could not fit alongside the actions cluster, so below `xl` the **grouped drawer** and the floating bottom dock carry navigation — instead of a bar that clips its own edges.
-- **The mobile drawer mirrors the same grouping**, with `Library` and `Company` headings, and scrolls internally because it is now taller than a short phone viewport.
-- **Menu behaviour is explicit and tested:** hovering opens, clicking a hover-opened menu *pins* it (it does not toggle shut — that was a real bug, see below), the next click closes, and Escape / outside-click / navigation all close it.
+`0% custody` was four words inside a popup: the strongest promise the product makes, and the hardest one for a council to check. `/custody` is that promise made readable and testable, in four sections in the order a skeptical treasurer asks:
 
-### 3. Print-ready documents
+1. **Where the money sits** — an owner pays → the council holds it → OpenStrata writes it down. In none of the three does the money pass through us.
+2. **What OpenStrata cannot do** — stated as impossibilities: move money, change a posted ledger entry, act as custodian or escrow, see private keys, take a cut. Each line is something no employee, bug or court order can make the software do.
+3. **What a council can check, any time** — verify the chain, export everything as JSON and CSV, read the exact Form B the software would issue, run the whole thing on its own server. Every line is a button, not a request to us.
+4. **Where this stands today** — honestly: the rails ship switched off, no money has moved through OpenStrata yet, and the payment server has not run on a public host.
 
-Councils hand each other paper. This was the half of the product that had never been designed for it.
+It is hooked to the **home page's 0% custody proof card** (which used to link to `/tools`, the wrong destination for that claim) and the footer, and it is indexed for site search — but it is **not** in the header nav. Cam asked for a simpler UI, so a new top-level item was the wrong instinct.
 
-`/documents` renders four documents — **Notice of Council Meeting**, **Minutes of Council Meeting**, **Form B (Information Certificate)** and **Form F (Certificate of Payment)** — as a white sheet: letterhead with the mark, a reference code, a meta table, disclosure tables, and signature lines.
+**One deliberate rule:** the page's body prose stays **English**, in `src/lib/custody.ts`, while its chrome (12 keys) is in all 9 locales. A machine translation of “we never hold your money” is a materially false statement, and custody wording is the last place to accept one. `documents.ts` and `manual.ts` already follow this rule.
 
-- **One printable document, not two.** The dashboard's notice builder used to assemble *its own* print page as a string, in a popup, with its own inline fonts and colours — so the printed notice had no letterhead and drifted from the template the moment either changed. It now hands the council's date, time, place and agenda to `/documents` through the query string (the same pattern the templates page uses to prefill the wizard). There is exactly one printable notice in the codebase.
-- **On-screen preview is a paper sheet**, not a themed web page — so a council sees the page it is about to sign, and dark mode cannot change what a printed Form B looks like.
-- **`@page { size: letter }`** with real margins, because the first market is BC. Printing hides the chrome, drops the sheet's padding, radius and shadow, and puts each document of a full-set print on its own page.
-- **The documents carry their own honesty.** Every one says it is a template preview with sample data and is not a filed record. Form F shows the **withheld** state and says plainly that a balance above zero blocks a sale — matching the backend rule, so the paper cannot contradict the software. Form B's 7-day delivery window matches `FORM_B_DAYS` in the backend. The notice windows (AGM 14 days, council 7 days) are the ones the site already asserts.
+## 4. Two defects found on the way
 
-Content lives in `src/lib/documents.ts` with pure helpers — `docReference`, `addDays`, `daysBetween`, `applyNoticeParams` — and **28 tests**.
-
-### 4. The bug the navigation work exposed
-
-`bg-brand-50` / `bg-brand-100` are used ~25 times as a selected-state plate — chosen jurisdiction, chosen bylaw pack, active decision pill — normally paired with a brand or slate label. **Neither step was ever remapped for dark mode.** So the plate stayed near-white (`#ecfeff`) while its label stepped *up* to brand-200 (`#a5f3fc`) or slate-800 (`#e2e8f0`) — around **1.2:1**. Every "this one is selected" state in the wizard and the tools page was invisible in dark mode.
-
-Both steps now have dark values (`#113441` / `#16414f`), with a separate pair for the green "brokerage" accent, which declares its own ramp. `audit:contrast` gained a **tint-pair** section, taking it from 106 to **116 pairs**.
-
-Three smaller real bugs went with it:
-
-- **`.marketing-mobile-nav` was missing from the print hide list** — on a phone, the floating bottom dock printed across the foot of every page.
-- **The printed sheet kept its screen styling**: the print overrides lost to the component's *scoped* `.print-doc.svelte-hash` rules, leaving 44px padding, a 14px radius and a drop shadow on paper.
-- **A hover-then-click on a grouped menu closed it** — the pointer opened it and the click toggled it shut.
+- **`static/icon.svg` could not be rasterised at all.** Its comment contained a double hyphen (`--mark-orange`), which is a hard XML error — so the rasteriser refused the file. The master mark had **never** actually been rendered from its own source until `og.png` needed it. Fixed the comment; the art is unchanged.
+- **The changelog's front-matter was malformed** (`project: openstrataversion_history:` — a missing newline that swallowed the project name). Fixed, with the v0.3.20 history entry written the way the other entries are.
 
 ---
 
 ## Verified
 
-`npm run check` → **0 errors, 0 warnings** · `npm test` → **143 passed** (was 115) · `npm run audit:i18n` → **872 keys × 9 locales** · `npm run audit:contrast` → **116 pairs**, all at or above floor · build green · `/documents` prerenders and `sitemap.xml` lists it.
+`npm run check` → **0 errors, 0 warnings** · `npm test` → **164 passed** (was 143) · backend typecheck clean, **214 passed** (was 191) · `npm run audit:i18n` → **886 keys × 9 locales**, parity green · `npm run audit:contrast` → **116 pairs**, all at or above floor · build green, `/custody` prerenders, sitemap lists it.
 
 Browser verification against the production preview, with the service worker unregistered first:
 
-- **114 page/theme/viewport combos** — 19 pages × light/dark × 1440 / 1024 / 390px — with **0 horizontal overflow** and **0 text below floor on a brand tint**.
-- **Nav measured at 1023 / 1024 / 1279 / 1280 / 1440 / 1920px**: the grouped bar renders from 1280 with **0 strip overflow**; below that the grouped drawer opens with its headings and scrolls internally.
-- **Menu behaviour**: hover → open · click → pins · second click → closes · Escape → closes · outside click → closes.
-- **Icons**: `/favicon.ico`, `/favicon.svg`, `/icon.svg`, `/icon-192.png`, `/icon-512.png`, `/apple-touch-icon.png` all **200**; `app.html` declares ico + svg + 192 + apple-touch; the manifest points at the PNGs.
-- **Print media emulation**: chrome hidden, sheet at `padding: 0`, `border-radius: 0`, `box-shadow: none`; the full set prints **4 sheets** with the right titles and refs; the notice handoff renders `Notice of Annual General Meeting` with the council's own date, place and agenda, and flags the window correctly.
+- **`/custody`** renders its 4 sections, 3 steps, 5 limits, 4 checks and 3 honesty lines with **0 horizontal overflow** at 1440px and in dark mode; the dark-mode heading resolves to the light ink.
+- **`/pitch`** serves **0 raster logos** and 4 vector marks, each on the navy plate (`rgb(16, 45, 59)`) with the mark in the brand orange (`rgb(240, 128, 26)`).
+- **`/og.png`** returns **200**; the retired **`/logo.png` returns 404**.
+- **The checkout** shows `OST demo U101 demo` with its **Payment name** label and explanation in light and dark, at 0 overflow.
 
 ## Known issues
 
-- **The backend is still not deployed.** The website is live; the money-handling server has never run on a real host. That remains the one thing between "demo" and "product", and it is waiting on THOR.
-- **THOR's bitcoind has no wallet loaded** (`listwallets` = `[]`). Cam greenlit `createwallet` on 2026-09-18; it has not been created yet. The preferred PSBT workflow seam needs it; the raw `sendrawtransaction` seam does not.
-- **Ollama is deliberately not on THOR** (RAM is the tightest resource). Rosa answers on the keyword fallback until it runs on UMBREL or M3/M4 and `OLLAMA_BASE_URL` points there.
-- **`static/logo.png` is still the pre-rebrand artwork** and is used by `/pitch`. Left untouched so the pitch deck's layout does not shift; it should be replaced with the new mark in a follow-up.
-
-## The mark is a vector redraw — one honest caveat
-
-Cam attached the icon as an image, not as a source file. The vectors here are a faithful hand-redrawn interpretation of that artwork, which is why the favicon needed a simplified small-size version. If there is an original SVG or a high-resolution PNG, dropping it in and re-running `npm run icons` will make the match exact — everything else already reads from those two files.
+- **The backend still has not run on a public host.** The website is live; the money-handling server is not. That remains the one thing between demo and product, and it waits on THOR.
+- **THOR's bitcoind has no wallet loaded** (`listwallets` = `[]`, verified by Kimi on the box). Cam greenlit `createwallet` on 2026-09-18; it has not been created yet. The PSBT workflow seam needs it.
+- **`/custody` body prose is English-only by decision** — do not machine-translate it.
+- **The mark is a vector redraw of Cam's attached image, not the original file.** If the source SVG or a high-resolution PNG ever appears, dropping it into `static/icon.svg` plus `npm run icons` updates the whole set in one command.
