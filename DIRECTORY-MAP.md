@@ -56,7 +56,9 @@
 | src/lib/setup.ts | Pure state for the dashboard setup checklist (localStorage-only) + `setup.test.ts` | UI |
 | src/lib/brand-assets.test.ts | Guards the mark: the inline `BrandMark.svelte` must match `static/icon.svg` path-for-path, the favicon must stay a square simplified rendition, no shipping source may reference the retired `logo.png`, `og.png` must be 1200×630, the manifest must point at rasters, `app.html` must declare the browser-facing icons | Brand |
 | src/lib/changelog.generated.ts | **Generated** from `CHANGELOG.md` by `scripts/generate-changelog.mjs` — do not edit by hand. `changelog.test.ts` fails if it drifts | Docs |
-| src/lib/nav.ts | **The one authoring home for navigation.** Four inline destinations + two grouped menus; `navItems` (footer + breadcrumbs) is *derived* from it, so the two can never disagree | UI |
+| src/lib/nav.ts | **The one authoring home for navigation.** Two inline destinations (Dashboard, Strata Tool) + two grouped menus (Library, Company); `navItems` (footer + breadcrumbs) is *derived* from it, so the two can never disagree. `navParentFor()` resolves a pathname to its deepest nav item, on a segment boundary — the fix for `/documents` being labelled `Docs` | UI |
+| src/lib/tasks.ts | Pure aggregation behind the dashboard's **one** ordered list: deadlines + setup steps → overdue / urgent / soon / routine / setup, with `taskCounts` and the demo rows. 16 tests in `tasks.test.ts` | UI |
+| src/lib/start.ts | The first-visit question: `parseStartChoice`, `shouldShowStart`, the storage key and the `start-pending` class shared with the inline script in `app.html` and the two rules in `app.css`. 7 tests, including that the three-file contract still agrees | UI |
 | src/lib/custody.ts | The `/custody` body prose (English by decision — see the note in the file; `documents.ts` and `manual.ts` follow the same rule) + `custody.test.ts` | Docs |
 | src/lib/documents.ts | The print-ready document set (notice, minutes, Form B, Form F) + pure helpers (`docReference`, `addDays`, `daysBetween`, `applyNoticeParams`) + `documents.test.ts` | Docs |
 
@@ -68,7 +70,8 @@
 | src/lib/components/BrandMark.svelte | The brush brand mark, inline SVG in `currentColor` — the same art as the favicons. Used in the header, sidebar, footer, auth card, error page and printable letterhead |
 | src/lib/components/NavMenu.svelte | One grouped header menu: hover-intent open, click-to-pin, Escape / outside-click / navigation to close |
 | src/lib/components/PrintDoc.svelte | The printable sheet — letterhead, reference, meta, body blocks, signature lines. Paper values, not theme tokens |
-| src/lib/components/SetupChecklist.svelte | Dashboard "finish setting up" panel — 4 steps, deep links, progress, dismiss/restore |
+| src/lib/components/TaskList.svelte | The dashboard's single "what needs doing" list — merged deadlines + setup steps, tick-in-place, hide/restore, demo-labelled when signed out |
+| src/lib/components/StartChoice.svelte | The first-visit question: three ways in. Visible only under `html.start-pending`, so the prerendered dashboard stays in the markup for crawlers |
 | src/lib/components/StartHere.svelte | Public three-leg journey strip mounted under the hero band |
 | src/lib/components/Tour.svelte | First-run greeter popup (step 1 hosts the intro video + offer facts) |
 | src/lib/components/Card.svelte | Shared card, variants: content / compact / hero |
@@ -199,4 +202,4 @@ version marker first. See `docs/DEPLOYMENT.md`.
 
 ---
 
-*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.20**. Originally assembled July 2026 by Hermes (M4).*
+*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.21**. Originally assembled July 2026 by Hermes (M4).*
