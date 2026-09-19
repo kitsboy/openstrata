@@ -69,27 +69,61 @@ npm run seed              # idempotent demo community (Cedar Point)
 npm run dev               # Fastify API on 8080
 ```
 
-### Nodes, hosts & the tailnet (reported 2026-09-18 — NOT yet verified)
+### Nodes, hosts & the tailnet — **VERIFIED on THOR 2026-09-18 (Kimi)**
 
 The Bitcoin rail and the host deploy are both blocked on infrastructure that
 **already exists in the family**, so the remaining Phase 3 work is mostly
-*pointing* code at machines rather than building them. Treat every line below as
-reported-but-unverified until Kimi confirms it.
+*pointing* code at machines rather than building them. Everything in this section
+was read off the live THOR box by Kimi on 2026-09-18, not relayed.
 
 **Hosts and nodes in play**
 
-| Machine | What it is | Crypto node | Status |
-|---------|-----------|-------------|--------|
-| **THOR** (VPS) | Family VPS, runs the HERMES agent (Kimi's machine-side home) | **bitcoind — PRUNED** + **LND** | Running; LND reported reachable over Tailscale. M3 must not assume an unpruned node |
-| **UMBREL** (Cam's own) | Cam's personal Umbrel full node | **bitcoind — FULL/UNPRUNED** | **Still syncing — ~63% through IBD, ETA a few weeks** |
-| **M3** (Cam / this agent) | Local coding machine | none | Tailscale peer |
-| **M4** (Kimi / HERMES) | Master Brain, Obsidian vault | none | Tailscale peer |
+| Machine | What it is | Crypto node | Verified status |
+|---------|-----------|-------------|-----------------|
+| **THOR** `vmi3446772` (100.77.139.2) | Family VPS, runs the HERMES agent (Kimi's machine-side home) | **bitcoind v28.1 — mainnet, pruned to 10 GB** (`prune=10000`, tip 967,633) + **LND v0.18.3 — mainnet, neutrino** | Running. **This is real funds** |
+| **UMBREL** `umbrel-1` (100.98.32.75) | Cam's personal Umbrel full node | **bitcoind — FULL/UNPRUNED** | Online on the tailnet; **still syncing — ~63% through IBD, ETA a few weeks** |
+| **M3** `cams-laptop` (100.74.126.62) | Local coding machine | none | Tailscale peer |
+| **M4** `cams-macbook-air-1` (100.71.46.84) | Master Brain, Obsidian vault | none | Tailscale peer |
+| `pixel-10-pro` | Cam's phone | none | Tailscale peer |
 
-**Tailnet topology (intended):** M3, M4, THOR and UMBREL all join **one tailnet**,
-so the operator path is unchanged from `docs/TAILSCALE-ONBOARDING.md` — each host
-is reachable by its MagicDNS name and nothing is exposed publicly. The
+MagicDNS suffix: **`tailb672ac.ts.net`**. Five peers, no custom ACL
+restrictions — the default allows all peers, and THOR publishes its API/REST
+ports on the tailnet IP only.
+
+**Tailnet topology:** M3, M4, THOR and UMBREL all sit on **one tailnet**, so the
+operator path is unchanged from `docs/TAILSCALE-ONBOARDING.md` — each host is
+reachable by its MagicDNS name and nothing is exposed publicly. The
 per-user-tailnet model still holds for *customers*; this is the family's own
 tailnet for the reference deployment.
+
+**The one real gap in the rail (and it is closed):** THOR's bitcoind has **no
+wallet loaded** (`listwallets` returns `[]`). The preferred PSBT workflow seam
+(`walletprocesspsbt → finalizepsbt → sendpsbt`) needs a node-side wallet, and
+LND's own wallet is a separate thing that does not satisfy it. **Cam greenlit
+`createwallet` on THOR's bitcoind on 2026-09-18** — it is offline-capable and
+holds zero funds until the rail is switched on. The raw `sendrawtransaction`
+seam remains a valid fallback and needs no wallet.
+
+**LND access:** REST only, published **tailnet-only** at
+`vmi3446772.tailb672ac.ts.net:8080` (binds 100.77.139.2). gRPC 10009 is
+container-internal and not host-published. Admin macaroon at
+`/root/MASTER-BRAIN/secrets/admin.macaroon`; a read-only macaroon also exists in
+the lnd volume. **Use read-only unless a write is genuinely required** — the
+admin macaroon controls the family wallet.
+
+**Toolchain on THOR:** Docker 29.6.2 ✅ · Node v22.23.1 ✅ · Tailscale ✅ ·
+Postgres 16 already running (`lnbits-postgres`, separate from ours).
+Disk: 294 GB free of 387 GB. RAM: 7.8 GB total, ~4.8 GB available.
+
+**Deliberate non-installs:** **Ollama is NOT on THOR, and should not be yet** —
+RAM is the tightest resource (Postgres + API + bitcoind already sit there). Run
+Ollama on UMBREL or M3/M4 and point `OLLAMA_BASE_URL` at that MagicDNS name;
+the seam is address-agnostic. Until then Rosa answers on the keyword fallback,
+which works but is the weak tier.
+
+**Firewall caveat:** `ufw` is active on THOR. Port `8332` is allowed only from
+the docker bridge (`172.19.0.0/16`), and `4096` is tailnet-only. If the API needs
+a host port, add a **tailnet-scoped ufw rule** — never open it to the world.
 
 **Which node to point the rail at — decided:**
 
@@ -111,19 +145,27 @@ Postgres/pgvector + Ollama) runs on THOR behind Tailscale, which turns
 `/api/v1/treasury/psbt/broadcast` from a code-complete seam into a real txid, and
 lets `rosa index` give Rosa real vector search instead of the keyword fallback.
 
-**Open questions for Kimi — full list in `docs/KIMI-HANDOFF.md` (2026-09-18):**
+**The nine questions, answered (all nine are resolved — see
+`docs/KIMI-HANDOFF.md` for the full reply):**
 
-| # | Question | Why it matters |
-|---|----------|----------------|
-| 1 | LND on THOR: reachable over the tailnet — MagicDNS name + port? REST or gRPC? Is there a macaroon M3 can mount, and is it read-only or admin? | The rail needs a node client; the seams are written but unpointed |
-| 2 | bitcoind on THOR: what is the **prune target**, and which **chain** (mainnet / testnet / signet / regtest)? | We must not enable the rail against real funds by accident, and the prune target tells us how far back history is answerable |
-| 3 | Is THOR's bitcoind **wallet-enabled** (`-disablewallet` off, a wallet loaded)? | `walletprocesspsbt` and `sendpsbt` need a node-side wallet — LND's wallet is separate |
-| 4 | UMBREL: what is the sync percentage and ETA, and what is its tailnet name? | Decides when address-history lookups become trustworthy |
-| 5 | Does THOR have Docker, Tailscale and Node 22? | The backend ships as a `docker compose` stack (api + Postgres/pgvector + Ollama) |
-| 6 | Is Ollama installed on THOR, with `nomic-embed-text` (768 dim) pulled, reachable as `OLLAMA_BASE_URL` over the tailnet? | `rosa index` and the pgvector retriever both need it |
-| 7 | Stable MagicDNS names for THOR and UMBREL? | Go into `PUBLIC_API_BASE_URL` and the node-URL config |
-| 8 | Disk / RAM headroom on THOR for Postgres + Ollama next to bitcoind? | Embedding the corpus is the tightest resource ask on the VPS |
-| 9 | Do the M3 and M4 tailnet peers have ACLs that allow the API port and the node RPC ports? | Access is Tailscale-only by design; the ACLs are what enforce it |
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | LND on THOR: MagicDNS + port, REST or gRPC, macaroon scope? | **REST**, tailnet-only at `vmi3446772.tailb672ac.ts.net:8080`. Admin macaroon at `/root/MASTER-BRAIN/secrets/admin.macaroon`; read-only available too. **Use read-only** |
+| 2 | bitcoind prune target and chain? | **Mainnet, pruned to 10 GB** (`prune=10000`), tip 967,633. **Real funds** |
+| 3 | Is THOR's bitcoind wallet-enabled? | **No wallet loaded** — the one real gap. **Cam greenlit `createwallet` (2026-09-18)** |
+| 4 | UMBREL sync % and tailnet name? | `umbrel-1.tailb672ac.ts.net` (100.98.32.75), online. Sync % is Cam's box (~63%) |
+| 5 | THOR toolchain? | Docker 29.6.2 ✅ Node v22.23.1 ✅ Tailscale ✅ **Postgres 16 already running** |
+| 6 | Ollama + `nomic-embed-text` on THOR? | **Not installed — and deliberately not recommended there.** Run it on UMBREL or M3/M4 and point `OLLAMA_BASE_URL` at it |
+| 7 | Stable MagicDNS names? | THOR `vmi3446772.tailb672ac.ts.net` · UMBREL `umbrel-1.tailb672ac.ts.net` |
+| 8 | Disk / RAM headroom on THOR? | Disk 294 GB free of 387 GB; RAM 7.8 GB total, ~4.8 GB available |
+| 9 | Tailnet ACLs allow the API and node ports? | No custom ACL restrictions; default allows all peers. **ufw caveat:** 8332 is docker-bridge-only, 4096 is tailnet-only — add a tailnet-scoped rule if the API needs a host port |
+
+**Cam's standing mandate on payment labelling (2026-09-18):** if the family ever
+receives BTC or Lightning, **every payment carries a unique per-site label**, both
+on-chain and in the ledger, so money can never be confused between OpenStrata,
+MotoPass, Satohash, Stranded, Tadbuy and the rest. Bake per-site reference codes
+/ receive labels into the rails and ledger now, and keep the honesty rule: a
+labelled **demo** payment and a **real** payment must never look the same.
 
 Bring the stack up with Docker Compose (Postgres + pgvector + API):
 

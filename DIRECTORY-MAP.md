@@ -55,12 +55,17 @@
 | src/lib/journey.ts | Pure state for the public "start here" journey strip (localStorage-only) + `journey.test.ts` | UI |
 | src/lib/setup.ts | Pure state for the dashboard setup checklist (localStorage-only) + `setup.test.ts` | UI |
 | src/lib/changelog.generated.ts | **Generated** from `CHANGELOG.md` by `scripts/generate-changelog.mjs` — do not edit by hand. `changelog.test.ts` fails if it drifts | Docs |
+| src/lib/nav.ts | **The one authoring home for navigation.** Four inline destinations + two grouped menus; `navItems` (footer + breadcrumbs) is *derived* from it, so the two can never disagree | UI |
+| src/lib/documents.ts | The print-ready document set (notice, minutes, Form B, Form F) + pure helpers (`docReference`, `addDays`, `daysBetween`, `applyNoticeParams`) + `documents.test.ts` | Docs |
 
 ### Code — UI Components (the ones worth knowing about)
 
 | File | Purpose |
 |------|---------|
 | src/lib/components/HeroArt.svelte | Per-section header artwork — six on-brand motifs, drawn in `currentColor`, hidden below 900px |
+| src/lib/components/BrandMark.svelte | The brush brand mark, inline SVG in `currentColor` — the same art as the favicons. Used in the header, sidebar, footer, auth card, error page and printable letterhead |
+| src/lib/components/NavMenu.svelte | One grouped header menu: hover-intent open, click-to-pin, Escape / outside-click / navigation to close |
+| src/lib/components/PrintDoc.svelte | The printable sheet — letterhead, reference, meta, body blocks, signature lines. Paper values, not theme tokens |
 | src/lib/components/SetupChecklist.svelte | Dashboard "finish setting up" panel — 4 steps, deep links, progress, dismiss/restore |
 | src/lib/components/StartHere.svelte | Public three-leg journey strip mounted under the hero band |
 | src/lib/components/Tour.svelte | First-run greeter popup (step 1 hosts the intro video + offer facts) |
@@ -74,6 +79,7 @@
 | `audit-contrast.mjs` | Recomputes WCAG 2.2 contrast for **106 token pairs** in both themes from `src/app.css`. An unresolvable token is a **failure**, not a skip | CI + deploy checklist |
 | `generate-changelog.mjs` | `CHANGELOG.md` → `src/lib/changelog.generated.ts` for the public `/changelog` page | Run by hand; `changelog.test.ts` guards drift |
 | `wire-hero-art.mjs` | Mounts `HeroArt` motifs on the 14 hero pages (idempotent) | One-off codemod |
+| `generate-icons.mjs` | `npm run icons` — rasterises `static/icon.svg` + `favicon.svg` into `favicon.ico`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`. Committed output; rerun after editing either vector | Run after icon art changes |
 | `migrate-page-hero.mjs` | Migrated 14 hand-rolled header gradients onto `.page-hero` | One-off codemod |
 | `inject-*-i18n.mjs` | Catalog injectors (journey, tour offer, setup + changelog) — the pattern for adding keys across all 9 locales | One-off |
 
@@ -93,6 +99,10 @@
 | backend/tests/ | Vitest — ledger, Rosa, Ziggy, billing, enforcement, rails, API routes (66 tests) |
 
 ### Code — Routes
+
+`/documents` is the print-ready document set (notice, minutes, Form B, Form F) — see `src/routes/documents/+page.svelte`. It is also the print target for the dashboard's notice builder (`?doc=notice&print=1…`).
+
+
 
 | Route | File | Description |
 |-------|------|-------------|
@@ -185,4 +195,4 @@ version marker first. See `docs/DEPLOYMENT.md`.
 
 ---
 
-*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.17**. Originally assembled July 2026 by Hermes (M4).*
+*Give A Bit — Bitcoin sovereignty first. Latest revision 2026-09-18 by Buffy (M3) at **v0.3.18**. Originally assembled July 2026 by Hermes (M4).*

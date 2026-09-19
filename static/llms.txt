@@ -12,6 +12,7 @@ Sovereign strata corporation operations — strata governance, treasury, and pro
 - [Compliance Knowledge Base](https://openstrata.giveabit.io/compliance) — SPA + BCFSA compliance reference
 - [Legal Library](https://openstrata.giveabit.io/legal) — primary BC legal sources
 - [Templates](https://openstrata.giveabit.io/templates) — governance, finance, and conveyancing workflows
+- [Print-ready documents](https://openstrata.giveabit.io/documents) — meeting notice, minutes, Form B and Form F, laid out to print on real paper (template preview with sample data)
 - [FAQ](https://openstrata.giveabit.io/faq) — plain-language BC strata answers
 - [Roadmap](https://openstrata.giveabit.io/roadmap) — go-to-market paths and phases
 - [Docs](https://openstrata.giveabit.io/docs) — architecture and documentation hub

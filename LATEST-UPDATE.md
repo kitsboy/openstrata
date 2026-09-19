@@ -1,107 +1,98 @@
 # openstrata — Last Updated 2026-09-18 by Buffy (M3)
 
-**Brief:** v0.3.17 — the three improvements Cam asked for, **plus the accessibility debt they exposed**. Per-tab **hero artwork** (six on-brand motifs across 14 pages), an in-app **setup checklist** on the dashboard (localStorage-only, 13 tests), and a **public `/changelog`** generated from the changelog we already write (7 tests). Then `audit:contrast` turned out to be **silently skipping 46 of its own checks** — closing that hole found `text-success` at **2.18:1**, `text-warning` at **1.99:1**, `text-danger` at **3.76:1**, `text-bitcoin` at **2.30:1** and white-on-Bitcoin-orange at **2.30:1**. All fixed.
+**Brief:** v0.3.18 — three things Cam asked for, plus the dark-mode defect the second one exposed. **(1)** The new **brand mark is live** everywhere: one master vector, a bold small-size favicon, and a generator (`npm run icons`) that produces `favicon.ico` + PWA + apple-touch PNGs. **(2)** The **header navigation is grouped** — twelve flat links needed ~1490px inside a 1232px bar, so the strip scrolled internally on every laptop and hid half the site. **(3)** **`/documents` — print-ready documents**: meeting notice, minutes, Form B and Form F, laid out as real paper with a letterhead, reference codes and signature lines.
 
-**Commits:** `a74f67c` (feature code) · `bf7e29c` (release v0.3.17) · `831dd80` (docs, maps, handoffs) — pushed to `origin/main`; Cloudflare Pages deploys on push.
+**And then the navigation work exposed a real dark-mode bug.** `bg-brand-50` / `bg-brand-100` are tints used ~25 times as a *selected-state plate*, and neither step was ever remapped for dark mode: the plate stayed near-white while its label stepped up to brand-200 or slate-800 — **about 1.2:1**. Every "this one is selected" state on the wizard and the tools page was effectively invisible in dark mode. Fixed at the token, and `audit:contrast` gained a tint-pair section so it cannot return.
 
-**Live-verified after deploy:** yes, against production at **https://openstrata.giveabit.io** — `openstrata-version` reads **0.3.17** on the live root, `/changelog` serves with its hero artwork and **19 release entries**, the change-type filter narrows the page (**23,455 → 8,319** characters of text and reports the filtered view), the dashboard renders the whole setup checklist (`Finish setting up`, `Add your units`, `Open the two funds`), and `sitemap.xml` lists `/changelog`. Note the canonical host is `openstrata.giveabit.io` — `openstrata.org` does not resolve and `openstrata.ca` is a separate 200.
+**Commits:** pushed to `origin/main` in batches; Cloudflare Pages deploys on push.
+
+**Live-verified after deploy:** see the verification record at the end of this file.
 
 ---
 
-## What shipped (three improvements, as asked)
+## What shipped
 
-### 1. Every tab got its own header artwork
+### 1. The new icon is the site's icon
 
-The `.page-hero` band from v0.3.16 gave every tab one consistent header language — but it left them looking like siblings. `src/lib/components/HeroArt.svelte` now draws a single on-brand motif behind each headline, chosen by what the section **is**, not by rotation:
+The attached mark is a brush drawing — a dab, three stacked layers, a settling drop. It is now one piece of artwork used everywhere instead of three different ones:
 
-| Section | Motif |
+| File | What it is |
 |---|---|
-| `/tools`, `/tools/wizard` | the module lattice |
-| `/roadmap`, `/spec` | blocks linked into a proof chain |
-| `/compliance`, `/legal` | statutes and a balance |
-| `/docs`, `/templates` | stacked, ruled documents |
-| `/about`, `/blog`, `/design` | the community graph |
-| `/faq`, `/rss`, `/thank-you` | answers radiating outward |
+| `static/icon.svg` | The master vector (283×448), transparent, orange `#f0801a` |
+| `static/favicon.svg` | A **bold small-size rendition**. The full mark is very tall and thin; at 16px its strokes fall below one device pixel and turn to mush. The favicon keeps the three strata layers that make the mark recognisable, drawn bold on the brand navy so it reads on light *and* dark browser chrome |
+| `static/favicon.ico` | 32×32, PNG payload in an ICO container |
+| `static/icon-192.png` / `icon-512.png` | PWA / Android, mark inside the maskable safe zone |
+| `static/apple-touch-icon.png` | 180×180, fully opaque (iOS composites transparency onto black) |
 
-Constraints that stop it becoming decoration soup: drawn in `currentColor` **only** (so it inherits the band's brand tint and flips with the theme rather than needing a second dark palette), `aria-hidden` and `pointer-events:none` so it never carries or blocks anything, masked toward the edges so it cannot sit under a headline, and `display:none` below 900px. Mounted by `scripts/wire-hero-art.mjs`; idempotent, so re-running it is safe.
+`scripts/generate-icons.mjs` (`npm run icons`) produces every raster from the two vectors — the PNGs are committed so a build never depends on it having run. `src/lib/components/BrandMark.svelte` draws the same paths inline in `currentColor`, and it has **replaced the old three-CSS-bars-in-an-orange-plate mark** in the header, the app sidebar, the landing footer, the auth card and the error page. The favicon, the in-app logo and the printed letterhead are now the same drawing.
 
-### 2. An in-app setup checklist on the dashboard
+`static/sw.js`'s cache name went `openstrata-v1` → **`openstrata-v2`**, which is what evicts the previous build's shell from an installed PWA.
 
-The public journey strip (v0.3.16) guides someone deciding whether to sign up. This is the other half: what a council must actually do **after** a workspace exists.
+### 2. The navigation finally fits
 
-`SetupChecklist.svelte` + `src/lib/setup.ts` sit under the dashboard welcome row and track four steps, each with a deep link:
+Twelve flat links plus the actions cluster need roughly **1490px inside a 1232px bar** (`max-w-7xl`). The old strip compensated by scrolling internally — which means every ordinary laptop hid half the site behind a scrollbar nobody notices.
 
-1. **Add your units** — every unit, so fees, ballots and Form K track correctly
-2. **Open the two funds** — operating and reserve, kept separate; trust money may not be co-mingled
-3. **Load your bylaws** — the standard set or your filed set, so enforcement has a basis
-4. **Close your first month** — bill, reconcile, publish one real month to the ledger
+The header now carries **four inline destinations** and **two grouped menus**:
 
-Design decisions worth keeping: progress is **localStorage-only** (the workspace is the record of truth; the panel is only a nudge, and clearing storage costs clicks, not data), malformed/partial/**hostile** storage degrades to "nothing done" rather than throwing, and dismissal lives under its own key so an older build cannot resurrect a panel someone dismissed. The first-run tour still renders first; the checklist sits behind it, and a restore button brings it back.
+- Inline: **Dashboard · Strata Tool · Compliance · Docs** (~500px total)
+- **Library** ▾ — Legal library · Templates · Print-ready documents · FAQ · Changelog
+- **Company** ▾ — About · Pitch · Roadmap · Blog · RSS & API
 
-### 3. A public `/changelog` page
+Each menu item carries a one-line description, because a menu that only repeats link names is a menu that wastes the space.
 
-The project ships several times a week and writes an honest changelog every time — so it now publishes that. `scripts/generate-changelog.mjs` parses `CHANGELOG.md` into `src/lib/changelog.generated.ts` and the page renders it:
+Design decisions worth keeping:
 
-- **20 releases with full notes, 5 summary-only, 119 bullet items.** Parses the markdown body (`## [x.y.z] — date` plus its `Added` / `Changed` / `Fixed` / `Verified` / `Known issues` groups), and carries the five releases that only ever existed in the front-matter version history through as summary-only rows instead of dropping or inventing them.
-- **Nothing is reworded for marketing**, and the `Verified` group is shown rather than hidden — how a release was checked is part of the claim. Inline markdown (emphasis, code ticks, link targets) is stripped so the page never renders raw source syntax.
-- Change-type filter, per-release expand/collapse (2 items per group until expanded), newest-first timeline, a hero metric strip (latest version / releases / total changes) and an RSS call to action.
-- Wired into the nav, the dashboard footer, `static/sitemap.xml` and `static/llms.txt`.
+- **`src/lib/nav.ts` is the one authoring home.** The flat `navItems` list that the footer column and the breadcrumb trail read is now *derived* from the grouped structure, so a link added to the header cannot go missing from either.
+- **The desktop bar starts at `xl` (1280px), not `lg`.** Between 1024 and 1280 six items still could not fit alongside the actions cluster, so below `xl` the **grouped drawer** and the floating bottom dock carry navigation — instead of a bar that clips its own edges.
+- **The mobile drawer mirrors the same grouping**, with `Library` and `Company` headings, and scrolls internally because it is now taller than a short phone viewport.
+- **Menu behaviour is explicit and tested:** hovering opens, clicking a hover-opened menu *pins* it (it does not toggle shut — that was a real bug, see below), the next click closes, and Escape / outside-click / navigation all close it.
 
-**7 tests**, including a freshness guard and the assertion that the newest published release equals the `package.json` version — so the page cannot silently go stale.
+### 3. Print-ready documents
 
-## And then it turned into a real accessibility sweep
+Councils hand each other paper. This was the half of the product that had never been designed for it.
 
-Cam's own words were "some text can still be hard to see, we are not perfect yet." He was right, and worse: **the audit was not looking.**
+`/documents` renders four documents — **Notice of Council Meeting**, **Minutes of Council Meeting**, **Form B (Information Certificate)** and **Form F (Certificate of Payment)** — as a white sheet: letterhead with the mark, a reference code, a meta table, disclosure tables, and signature lines.
 
-`scripts/audit-contrast.mjs` **silently skipped any token with no value in `src/app.css`** (`if (!fg) continue;`). The light-mode slate ramp and every semantic status colour come from Tailwind's stock palette rather than from us — so `--color-slate-400`, `--color-slate-500` and all of `success` / `warning` / `danger` / `bitcoin` were **never checked in light mode**. Closing that hole (an unresolvable token is now a hard failure) took the audit from **60 → 106 token pairs**, and the failures were real:
+- **One printable document, not two.** The dashboard's notice builder used to assemble *its own* print page as a string, in a popup, with its own inline fonts and colours — so the printed notice had no letterhead and drifted from the template the moment either changed. It now hands the council's date, time, place and agenda to `/documents` through the query string (the same pattern the templates page uses to prefill the wizard). There is exactly one printable notice in the codebase.
+- **On-screen preview is a paper sheet**, not a themed web page — so a council sees the page it is about to sign, and dark mode cannot change what a printed Form B looks like.
+- **`@page { size: letter }`** with real margins, because the first market is BC. Printing hides the chrome, drops the sheet's padding, radius and shadow, and puts each document of a full-set print on its own page.
+- **The documents carry their own honesty.** Every one says it is a template preview with sample data and is not a filed record. Form F shows the **withheld** state and says plainly that a balance above zero blocks a sale — matching the backend rule, so the paper cannot contradict the software. Form B's 7-day delivery window matches `FORM_B_DAYS` in the backend. The notice windows (AGM 14 days, council 7 days) are the ones the site already asserts.
 
-| Element | Was | Now |
-|---|---|---|
-| `text-success` chips | **2.18:1** | 6.53:1 |
-| `text-warning` chips | **1.99:1** | 6.38:1 |
-| `text-danger` — arrears amounts, enforcement chips | **3.76:1** | 6.54:1 |
-| `text-bitcoin` — balances, donate links | **2.30:1** | 5.62:1 |
-| white on a solid `#f7931a` Bitcoin button | **2.30:1** | **6.96:1** — dark ink |
-| light-mode `text-slate-400` — dates, source notes, captions | **2.90:1** | 5.54:1 |
+Content lives in `src/lib/documents.ts` with pure helpers — `docReference`, `addDays`, `daysBetween`, `applyNoticeParams` — and **28 tests**.
 
-**How it was fixed** — the same split the orange already had, applied properly:
+### 4. The bug the navigation work exposed
 
-- Text usages ride new documented steps: `--success-text`, `--warning-text`, `--danger-text`, `--bitcoin-text`, plus `.text-slate-400` / `.text-slate-500` overrides in both themes, following the repo's established text-only-override convention so solid fills and 10%-tint chips are untouched.
-- Solid danger buttons use new `--color-danger-solid` (**5.46:1** with white); decorative danger dots keep the bright coral glow, because a dot carries no text.
-- A solid Bitcoin fill now takes **dark ink** via `--on-bitcoin` (**6.96:1**) instead of white on `#f7931a`. This is the better fix than darkening the token: the Bitcoin orange stays brand-bright, which is the whole point of the accent.
-- The light-mode slate ramp is now **stated in `src/app.css`** at values identical to stock. Nothing moves visually — but an undefined token cannot be audited, and this is exactly what was hiding.
+`bg-brand-50` / `bg-brand-100` are used ~25 times as a selected-state plate — chosen jurisdiction, chosen bylaw pack, active decision pill — normally paired with a brand or slate label. **Neither step was ever remapped for dark mode.** So the plate stayed near-white (`#ecfeff`) while its label stepped *up* to brand-200 (`#a5f3fc`) or slate-800 (`#e2e8f0`) — around **1.2:1**. Every "this one is selected" state in the wizard and the tools page was invisible in dark mode.
+
+Both steps now have dark values (`#113441` / `#16414f`), with a separate pair for the green "brokerage" accent, which declares its own ramp. `audit:contrast` gained a **tint-pair** section, taking it from 106 to **116 pairs**.
+
+Three smaller real bugs went with it:
+
+- **`.marketing-mobile-nav` was missing from the print hide list** — on a phone, the floating bottom dock printed across the foot of every page.
+- **The printed sheet kept its screen styling**: the print overrides lost to the component's *scoped* `.print-doc.svelte-hash` rules, leaving 44px padding, a 14px radius and a drop shadow on paper.
+- **A hover-then-click on a grouped menu closed it** — the pointer opened it and the click toggled it shut.
+
+---
 
 ## Verified
 
-- `npm run check` → **0 errors, 0 warnings**
-- `npm test` → **115 passed** (14 files, +13 setup and +7 changelog tests)
-- `npm run audit:i18n` → passed, **860 keys × 9 locales** (40 new keys)
-- `npm run audit:contrast` → passed, **106 token pairs**, both themes, at or above floor
-- `npm run build` → green
+`npm run check` → **0 errors, 0 warnings** · `npm test` → **143 passed** (was 115) · `npm run audit:i18n` → **872 keys × 9 locales** · `npm run audit:contrast` → **116 pairs**, all at or above floor · build green · `/documents` prerenders and `sitemap.xml` lists it.
 
-**Browser sweep (Chromium, production preview):**
+Browser verification against the production preview, with the service worker unregistered first:
 
-- 16 pages × light + dark = **32 combinations: 0 horizontal overflow, 0 contrast failures** attributable to the changed tokens. Hero art present on all 13 hero pages, with the dashboard correctly having none (it is the app shell, not a marketing hero).
-- **24 combinations at 390×844, 768×900 and 1221×738: 0 page overflow and 0 checklist overflow.** The header artwork is `display:none` at 390 and 768 as designed, and visible at 1221.
-- **Interaction-verified, not just rendered:** `/changelog` filter narrows **74 → 17** entries and reports the active type; expanding the latest release goes **74 → 77** entries and the control flips to "Show less"; 5 summary-only earlier releases render; the setup checklist ticks **0% → 25%**, writes `{"done":["units"],"hidden":false}`, survives a reload at 25% with 1 box ticked, then dismisses to a restore button with `openstrata-setup-hidden=1`.
+- **114 page/theme/viewport combos** — 19 pages × light/dark × 1440 / 1024 / 390px — with **0 horizontal overflow** and **0 text below floor on a brand tint**.
+- **Nav measured at 1023 / 1024 / 1279 / 1280 / 1440 / 1920px**: the grouped bar renders from 1280 with **0 strip overflow**; below that the grouped drawer opens with its headings and scrolls internally.
+- **Menu behaviour**: hover → open · click → pins · second click → closes · Escape → closes · outside click → closes.
+- **Icons**: `/favicon.ico`, `/favicon.svg`, `/icon.svg`, `/icon-192.png`, `/icon-512.png`, `/apple-touch-icon.png` all **200**; `app.html` declares ico + svg + 192 + apple-touch; the manifest points at the PNGs.
+- **Print media emulation**: chrome hidden, sheet at `padding: 0`, `border-radius: 0`, `box-shadow: none`; the full set prints **4 sheets** with the right titles and refs; the notice handoff renders `Notice of Annual General Meeting` with the council's own date, place and agenda, and flags the window correctly.
 
-**One trap found while testing, now documented in `docs/DEPLOYMENT.md`:** the site is an installable PWA with a service worker, so a **stale worker serves the previous build** — a correct deploy looks broken (wrong version marker, new components missing). It cost a full false-negative sweep before it was spotted. Any browser verification against `npm run preview` must unregister the worker and drop origin caches first, then check the version marker.
+## Known issues
 
-## Pushed in batches
+- **The backend is still not deployed.** The website is live; the money-handling server has never run on a real host. That remains the one thing between "demo" and "product", and it is waiting on THOR.
+- **THOR's bitcoind has no wallet loaded** (`listwallets` = `[]`). Cam greenlit `createwallet` on 2026-09-18; it has not been created yet. The preferred PSBT workflow seam needs it; the raw `sendrawtransaction` seam does not.
+- **Ollama is deliberately not on THOR** (RAM is the tightest resource). Rosa answers on the keyword fallback until it runs on UMBREL or M3/M4 and `OLLAMA_BASE_URL` points there.
+- **`static/logo.png` is still the pre-rebrand artwork** and is used by `/pitch`. Left untouched so the pitch deck's layout does not shift; it should be replaced with the new mark in a follow-up.
 
-Three commits, then verified on the live site rather than only on the preview build:
+## The mark is a vector redraw — one honest caveat
 
-| Commit | Batch |
-|---|---|
-| `a74f67c` | Feature code — hero artwork, setup checklist, changelog page, the contrast-audit fix |
-| `bf7e29c` | Release v0.3.17 across the manifests, `CHANGELOG.md` and the changelog sync test |
-| `831dd80` | Docs, maps, handoffs and the node/tailnet inventory |
-
-Base before this session: `9c91af0`.
-
-## What is still not done — honestly
-
-- **The backend is not deployed.** The static frontend is live on Cloudflare Pages, but Phase 3 is still blocked on the host, not on code — the backend has never run on a real server.
-- **Still waiting on Kimi** for the node/host answers in `docs/KIMI-HANDOFF.md`: THOR's prune target, which chain, whether bitcoind is wallet-enabled, UMBREL's sync percentage, MagicDNS names, and THOR's disk/RAM headroom. THOR's pruned node remains the chosen MVP rail; UMBREL remains the correctness backstop and is **not** a blocker.
-- **Live rails are not connected.** Bitcoin, Lightning, Satohash stamping and Nostr identity are prepared seams, not running services.
-- **Machine-drafted locales** (pl, uk, sw and the newer keys) still need professional human review before they are treated as reviewed.
+Cam attached the icon as an image, not as a source file. The vectors here are a faithful hand-redrawn interpretation of that artwork, which is why the favicon needed a simplified small-size version. If there is an original SVG or a high-resolution PNG, dropping it in and re-running `npm run icons` will make the match exact — everything else already reads from those two files.

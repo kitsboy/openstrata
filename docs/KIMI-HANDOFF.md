@@ -1,3 +1,37 @@
+## Session — 2026-09-18 · v0.3.18 — the new brand mark, a grouped navigation, and print-ready documents (Buffy on M3)
+
+**Task from Cam:** "check hand off from Kimi again the docs, she provided you with lots of info… then add our new icon and favicon to this site, upgrade the navigation (the tabs do not fit on desktop view across the top), be aware of mobile, and finish Print-ready docs."
+
+**Kimi's answers are in. Thank you — all nine, verified live on THOR, and they changed what M3 does next.** Recorded in `docs/DEPLOYMENT.md` under "Nodes, hosts & the tailnet — VERIFIED on THOR 2026-09-18". The three that matter most:
+
+1. **The rail is on mainnet with real funds, pruned to 10 GB.** So `BITCOIN_RAIL_ENABLED=true` is a deliberate act, never a default, and address-history lookups are honestly partial until UMBREL's IBD finishes.
+2. **THOR's bitcoind has no wallet loaded** (`listwallets` = `[]`) — the one real gap. Cam greenlit `createwallet` on 2026-09-18; **that is now the first step of the deploy**, because the preferred PSBT workflow seam (`walletprocesspsbt → finalizepsbt → sendpsbt`) needs a node-side wallet and LND's wallet does not satisfy it. The raw `sendrawtransaction` seam needs no wallet and stays as the fallback.
+3. **Ollama is not on THOR and should not be.** Your RAM reading (7.8 GB total, ~4.8 GB available) is the reason, and I agree: run it on UMBREL or M3/M4 and point `OLLAMA_BASE_URL` at that MagicDNS name. Rosa keeps answering on the keyword fallback until then — which works, but is the weak tier.
+
+Also recorded: LND REST is **tailnet-only** at `vmi3446772.tailb672ac.ts.net:8080` with **read-only by default** (the admin macaroon controls the family wallet, so it is not handed out casually), the `ufw` caveat (8332 is docker-bridge-only, 4096 tailnet-only — add a **tailnet-scoped** rule rather than opening a host port), and Cam's **standing payment-labelling mandate** (unique per-site BTC/LN labels, on-chain and in the ledger, with demo and real payments never looking alike).
+
+**What shipped (v0.3.18) — details in `LATEST-UPDATE.md` and `CHANGELOG.md`:**
+
+1. **The brand mark is live.** `static/icon.svg` (master) + `static/favicon.svg` (bold small-size rendition — the full mark is 283×448 and its strokes fall below one device pixel at 16px) + `npm run icons` (`scripts/generate-icons.mjs`) producing `favicon.ico`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`. `BrandMark.svelte` draws the same paths inline in `currentColor` and has replaced the old three-CSS-bars mark in the header, sidebar, footer, auth card and error page. `static/sw.js` cache name bumped to `openstrata-v2`, which is what evicts the old shell from an installed PWA.
+2. **The header navigation is grouped** — four inline destinations (Dashboard, Strata Tool, Compliance, Docs) plus `Library` and `Company` menus. Twelve flat links needed ~1490px inside a 1232px bar. The desktop bar now starts at `xl` (1280px); below that the grouped drawer and the floating bottom dock carry navigation. `src/lib/nav.ts` is the one authoring home and the flat list the footer and breadcrumbs read is derived from it.
+3. **`/documents` — print-ready documents.** Notice, minutes, Form B and Form F as white paper sheets with a letterhead, reference codes and signature lines, plus `@page { size: letter }` and a page break per document. The dashboard's notice builder now hands its date/time/place/agenda to `/documents` through the query string instead of assembling its own print page in a popup. Content in `src/lib/documents.ts`, **28 tests**.
+
+**And the bug the navigation work exposed, which is worth your attention too:** `bg-brand-50` / `bg-brand-100` are tints used ~25 times as a *selected-state plate*, and **neither was remapped for dark mode** — the plate stayed near-white while its label stepped up to brand-200 or slate-800, about **1.2:1**. Every "this one is selected" state in the wizard and the tools page was invisible in dark mode. Both steps now have dark values, the green brokerage accent has its own pair, and `audit:contrast` gained a tint-pair section (106 → **116 pairs**). If you have any tinted plates in your own surfaces, check them the same way.
+
+**Verified:** `check` 0/0 · `npm test` **143 passed** (was 115) · `audit:i18n` **872 keys × 9 locales** · `audit:contrast` **116 pairs** · build green. Browser: **114 page/theme/viewport combos** (19 pages × 2 themes × 1440/1024/390) with **0 overflow** and **0 sub-floor text on a tint**; nav measured at six widths; menu behaviour (hover→open, click→pin, second click→close, Escape→close, outside→close); print-media emulation; 4-sheet full-set print; notice handoff verified end to end.
+
+**Pushed in batches to `origin/main`; live-verified on `openstrata.giveabit.io`** (see the note at the end of this file).
+
+**Nothing is blocked on you this round.** The three things that remain are all Cam's or M3's call, not yours:
+
+1. **`createwallet` on THOR's bitcoind** — greenlit, not yet done. This is the first deploy step.
+2. **Where Ollama runs** — UMBREL or M3/M4, your call as the machine owner; M3 only needs the MagicDNS name.
+3. **A stable `AUTH_SECRET` and `POSTGRES_PASSWORD` for the compose stack on THOR**, plus a tailnet-scoped `ufw` rule if the API needs a host port.
+
+**One honest caveat for you to pass back if you can:** the icon arrived as an attached image, not a source file, so the vectors are a faithful **hand-redrawn interpretation** of it. If there is an original SVG somewhere, drop it into `static/icon.svg`, run `npm run icons`, and the match becomes exact — nothing else needs to change.
+
+---
+
 ## Session — 2026-09-18 · v0.3.17 — per-tab hero art, an in-app setup checklist, a public changelog, and a real accessibility sweep (Buffy on M3)
 
 **Task from Cam:** "complete all 3 suggestions you gave me… be creative and YOLO… then all docs, hand-offs and maps." Plus, in his words, the code should keep getting smoother and better documented because he keeps finding errors and things that are hard to read.

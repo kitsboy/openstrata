@@ -1,6 +1,6 @@
 # Hermes Strata — Workplan
 
-**Last updated:** 2026-09-18 (v0.3.17)  
+**Last updated:** 2026-09-18 (v0.3.18)  
 **Status:** Phase 1 complete. Phase 2 complete. Phase 3 complete (code; host deploy pending).
 
 ---
