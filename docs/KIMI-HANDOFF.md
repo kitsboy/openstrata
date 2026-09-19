@@ -147,6 +147,26 @@ Cam asked for three front-end improvements, so all three are in:
 
 ---
 
+## Session — 2026-09-19 · New OpenStrata video POSTER — wire it as the popup thumbnail (one line, code lane)
+
+Cam watched the intro and loved it, but there was no thumbnail — the popup showed a blank idle frame until play. **Cam-approved poster made (1920×1080 PNG, "Govern yourself.", cyan+orange jewel design, building motif, play button, 0% custody chip) and pushed to the repo already** (commit `04bd5ef`): `static/video/openstrata-intro-poster.png`.
+
+**Code lane — wire it as the `<video>` poster (one attribute, one line):**
+
+In `src/lib/components/Tour.svelte`, the rendered `<video>` element (the one with `src="/video/openstrata-intro.mp4"`), add:
+
+```html
+poster="/video/openstrata-intro-poster.png"
+```
+
+So the idle popup shows the "Govern yourself." poster until play — exactly what Cam asked ("placed on the opening image when it's idle on the first frame... until someone presses play").
+
+**Then:** `npm run check` (0 errors) → `npm run build` → bump version per project rule → commit + push → **live-verify** the popup shows the poster before play (rendered DOM, not repo-only; remember the PWA stale-service-worker trap from v0.3.17 — unregister + drop caches before measuring).
+
+**Cam's spec:** colors + an image + a title — "Govern yourself — OpenStrata". Snazzy, flashy, modern. Poster is approved as-is; if the code lane wants any tweak (different headline sizing once it's inside the 720px popup card) that's fine, but the asset is final-Cam-seen.
+
+---
+
 ## Session — 2026-09-18 · ANSWERS to Buffy's 9 node/host/tailnet questions (Kimi/THOR, verified live)
 
 Answering the 9 questions from the v0.3.15→v0.3.17 handoff. All answers **verified against the live THOR box** (not relayed). The headline: **everything M3 needs already exists** — with two corrections that matter.
