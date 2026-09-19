@@ -1,3 +1,29 @@
+## Session — 2026-09-18 · v0.3.21 — a simplification pass: four nav items, a first-visit question, one task list (Buffy on M3)
+
+**Done:**
+
+- **The header is four things instead of six.** Compliance and Docs left the bar and joined the `Library` menu. That is not a demotion: a council *reads* compliance material and documentation, it does not “go to compliance” the way it goes to its own dashboard. The bar is now Dashboard · Strata Tool · Library ▾ · Company ▾. Nothing became unreachable — both are one click away, in the footer, and in site search.
+- **The first visit is a question, not a wall.** A new visitor used to land on four metric cards, a building list, an activity feed and four panels of work — for a building that is not theirs. They now get one plain question with three ways in: *look around*, *set a building up*, *sign in*. The dashboard appears the instant they answer, and the answer is remembered on the device only.
+  - Decided **before the first paint** by the same class-before-paint trick the theme switch uses, so there is no flash — and because it is CSS rather than a conditional render, the prerendered HTML still contains the whole dashboard for a crawler.
+  - **Your tour popup now waits its turn.** A brand-new visitor was getting the tour modal *over* the question, which is two first-run experiences at once. The tour is gated on the question being answered, so it opens over the dashboard the visitor just asked to see.
+- **Four panels became one list.** The setup checklist, statutory deadlines, Forms-tracker windows and the month-end close merged into one ordered list: overdue → urgent → soon → routine → **setup last**. Ticks happen in place, the list can be hidden, and it says how many rows are left. `SetupChecklist.svelte` is deleted; the aggregation is pure and tested.
+- **Fixed a breadcrumb bug the nav work exposed:** `/documents` was labelled **Docs** (because `/documents`.startsWith('/docs')) with a crumb linking to the wrong page.
+- **Six new tests' worth of guards**, because all of this regresses silently: the merged-list ordering (`tasks.test.ts`, 16 tests), the nav grouping and parent resolution (`nav.test.ts`, 9), and the three-file first-visit contract (`start.test.ts`, 7 — it reads `app.html`, `app.css` and `start.ts` and fails if the class or key stops agreeing).
+
+**Decisions:**
+
+- **The dashboard is still prerendered in full, and hidden by CSS for a first timer.** A conditional render would have been simpler and would have hidden the real content from crawlers. “Simplify the first visit” is not worth losing the page an index reads.
+- **The question is asked once, then never again** (per device, no account). A software that asks the same question every visit is not simpler, it is nagging.
+- **Urgency is a coloured dot on a neutral plate, not amber text on an amber tint.** The tint pairing was not covered by `audit:contrast`, and “probably 4.5:1, on this machine” is not a measurement. The dot is decorative so it has no floor; the label sits on `surface-3` with `slate-700`, which the audit does check.
+- **`DeadlinesPanel.svelte` stays, on `/tools`.** The dashboard merged its *summary*; the tools page still needs the full statutory calendar in place.
+
+**Git State:**
+
+- SHA: see the release commit for v0.3.21 (code → release → docs → handoff, pushed together)
+- Unpushed: none — pushed to `origin/main`, then verified on the live site
+
+---
+
 ## Session — 2026-09-18 · v0.3.20 — one mark everywhere, payment labels that name the site, and a custody page (Buffy on M3)
 
 **Done:**

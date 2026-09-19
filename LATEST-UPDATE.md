@@ -1,5 +1,44 @@
 # openstrata — Last Updated 2026-09-18 by Buffy (M3)
 
+> **Same day — v0.3.21: a simplification pass.** Cam asked for a simpler, easier-to-navigate UI, so all three changes this round *remove* something rather than add it. The header is four things instead of six; a first-time visitor gets one question instead of a dashboard of someone else's numbers; and four dashboard panels became one ordered list. Details below, then everything from v0.3.20 onward.
+
+**Brief (v0.3.21):** **(1)** Compliance and Docs left the top bar for the `Library` menu — the bar is now Dashboard · Strata Tool · Library ▾ · Company ▾, and nothing became unreachable. **(2)** The first visit is a plain question with three ways in (look around / set up a building / sign in), decided *before the first paint* so there is no flash, remembered on the device, and with the first-run tour now waiting its turn instead of stacking on top. **(3)** The setup checklist, the deadlines panel, the Forms windows and the month-end close merged into **one ordered list**: overdue → urgent → soon → routine → setup last. Plus a real breadcrumb fix: `/documents` was mislabelled **Docs**.
+
+**Commit:** see `git log --oneline -6` — code → release → docs → handoff, pushed together.
+
+---
+
+## v0.3.21 in detail
+
+### The header is four things
+Compliance and Docs were bar items; they are now in `Library` beside the legal sources, the templates and the printable documents. A council reads compliance material — it does not “go to compliance” the way it goes to its own dashboard. Both are still one click away, still in the footer, still in site search.
+
+### The first visit is a question
+A brand-new visitor met four metric cards, a building list, an activity feed and four panels of work — for a building that is not theirs, with numbers that are not real. Now they meet one question:
+
+- **I am just looking** → the full working dashboard appears in place
+- **I am setting up a building** → straight to the wizard
+- **I have an account** → the sign-in card
+
+The answer is stored on the device only. Two details worth keeping:
+
+- **No flash, and no cost to the crawler.** The class that hides the dashboard is set by the inline script in `src/app.html` *before* the first paint (the same trick the theme switch uses), and the swap is CSS — so the prerendered HTML still contains the entire dashboard. A conditional render would have been simpler and would have hidden the page an index reads.
+- **The tour now waits.** A new visitor was getting the tour modal *over* the question: two first-run experiences at once. The tour is gated on the question being answered, and then opens over the dashboard they just asked to see.
+
+### Four panels, one list
+The setup checklist, the statutory deadlines, the Forms-tracker windows and the month-end close each answered part of “what needs doing?” — and together they were a scavenger hunt. The dashboard now shows one list: **overdue → urgent → soon → routine → setup last**, because real work outranks finishing your profile. Steps tick off in place, the list hides and restores, and it says how many rows are left.
+
+Two rules are encoded and tested, not stylistic:
+
+- **A deadline inside two weeks is urgent whatever the API called it.** The date is the fact; the severity label is an opinion.
+- **Setup steps never interleave with real deadlines.** A council with an overdue filing should not scroll past “add your units”.
+
+### Fixed: a breadcrumb that linked to the wrong page
+`/documents` starts with `/docs`, and the breadcrumb took the *first* match — so the printable-documents page carried a crumb reading **Docs** with a link to `/docs`. Resolution now happens on a segment boundary and prefers the deepest href; `/docs/manual` still lands on `Docs`.
+
+### Verified
+`npm run check` 0/0 · **196 frontend tests** (was 164) · `audit:i18n` **909 keys × 9 locales** · `audit:contrast` **116 pairs** · build green. Browser-verified on the production preview with the service worker unregistered: first visit shows the question, dashboard hidden, **no tour overlay**; choosing “just looking” reveals the dashboard in place, stores the choice and opens the tour over it; header shows four items with no Compliance link while the Library menu holds all seven; the merged list renders six rows in urgency order; `/documents` reads “Print-ready documents”; **0 horizontal overflow at 390px and 1440px, light and dark**.
+
 **Brief:** v0.3.20 — three improvements and two real defects found making them. **(1)** The **pre-rebrand logo is retired everywhere** — `/pitch` was the last page still showing it, and the link preview on every share was a 237×377 image every crawler upscaled and cropped; there is now a 1200×630 `/og.png` that `npm run icons` renders. **(2)** **Every payment carries a per-site label** (`OST northgate U302 pay-9142`) so money can never be confused between projects — Cam's mandate, done while the rail is still off. **(3)** **`/custody`** — a plain-language page for the question behind “0% custody”: where the money sits at each step, what the software cannot do, what a council can check, and what is not live yet.
 
 **Commit:** `893d995` (docs) · `459e5c0` (release) · `9bc8c03` (code) — all pushed, then live-verified.
