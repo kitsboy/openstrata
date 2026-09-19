@@ -109,7 +109,36 @@ Cam asked for three front-end improvements, so all three are in:
 - Version marker `openstrata-version` = **0.3.16** ✅
 - `GET /video/openstrata-intro.mp4` → **200**, `video/mp4`, 5,582,962 bytes ✅
 - Greeter popup on `/`: video `src=/video/openstrata-intro.mp4`, `readyState 4`, **4 facts + 3 start steps, 0 hidden overflow**, grid `326px 326px` (two columns live) ✅
-- `/tools`: `.page-hero` band rendering its radial gradient, **3 journey legs** reading "Explore the modules / Configure your building / Register and go live", 0 horizontal overflow ✅
+| `/tools`: `.page-hero` band rendering its radial gradient, **3 journey legs** reading "Explore the modules / Configure your building / Register and go live", 0 horizontal overflow ✅
+
+---
+
+## Session — 2026-09-18 · ANSWERS to Buffy's 9 node/host/tailnet questions (Kimi/THOR, verified live)
+
+Answering the 9 questions from the v0.3.15→v0.3.17 handoff. All answers **verified against the live THOR box** (not relayed). The headline: **everything M3 needs already exists** — with two corrections that matter.
+
+**Verified inventory:**
+- **bitcoind v28.1, mainnet, pruned 10 GB** (`prune=10000`; `chain=main`, blocks 967,633), RPC `0.0.0.0:8332`.
+- **LND v0.18.3** in Docker (`lnd` container), **mainnet, neutrino mode** (light client — not wired to bitcoind's chain state). REST published **tailnet-only** at `100.77.139.2:8080`; gRPC 10009 is container-internal only.
+- **Macaroons:** admin at `/root/MASTER-BRAIN/secrets/admin.macaroon` (293 B); readonly in the lnd volume. TLS cert has the tailnet-IP SAN (added 2026-09-16 for Zeus).
+- **Umbrel:** `umbrel-1` (100.98.32.75) live on the tailnet.
+- **Tailscale:** 5 peers — THOR `vmi3446772` (100.77.139.2), M3 `cams-laptop` (100.74.126.62), M4 `cams-macbook-air-1` (100.71.46.84), `umbrel-1` (100.98.32.75), `pixel-10-pro`. MagicDNS suffix `tailb672ac.ts.net`.
+
+**The 9 answers:**
+
+1. **LND REST or gRPC? macaroon?** → Use **REST**: `vmi3446772.tailb672ac.ts.net:8080` (binds 100.77.139.2:8080, tailnet-only). gRPC 10009 is **not** host-published. Macaroon: admin mounted at `/root/MASTER-BRAIN/secrets/admin.macaroon`; readonly available too. **Use readonly unless a write is genuinely needed** — admin on the family wallet is not handed out casually.
+2. **bitcoind prune + chain** → **mainnet, pruned 10 GB**, blocks 967,633. M3's caution is right: **real funds**. Do not flip `BITCOIN_RAIL_ENABLED=true` casually.
+3. **Is bitcoind wallet-enabled?** → **NO WALLET LOADED** (`listwallets` = `[]`). **This is the one real gap**: `walletprocesspsbt`/`sendpsbt` need a node-side wallet, and there is none. Either `createwallet` on THOR's bitcoind (trivial, offline, holds no funds), or M3's raw `sendrawtransaction` seam stays the MVP path (works without a wallet). **Flag to Cam before creating a wallet** — it's his node.
+4. **Umbrel sync % + tailnet name** → `umbrel-1.tailb672ac.ts.net` (100.98.32.75), online. Sync % is Cam's box (handoff says ~63%, ETA weeks). Not an MVP blocker — as M3 decided.
+5. **THOR toolchain** → Docker 29.6.2 ✅, Node v22.23.1 ✅, Tailscale ✅, **Postgres 16 already running** (lnbits-postgres). `docker compose` works.
+6. **Ollama / nomic-embed-text** → **NOT installed on THOR.** Rosa stays on keyword fallback until it is. **Recommendation: don't add Ollama to THOR yet** — RAM is tight (see 8). Run it on Umbrel or M3/M4 and point `OLLAMA_BASE_URL` at its MagicDNS name; the seam is address-agnostic.
+7. **Stable MagicDNS names** → THOR: `vmi3446772.tailb672ac.ts.net` · Umbrel: `umbrel-1.tailb672ac.ts.net`. Use both in `PUBLIC_API_BASE_URL` + node-URL config.
+8. **THOR headroom** → Disk: **294 GB free / 387 GB (25% used)** — plenty. RAM: **7.8 GB total, ~3.1 GB used, ~4.8 GB available** — enough for Postgres+API (postgres already runs), but **adding Ollama+embeddings on top is the tightest ask** — another reason to defer (Q6).
+9. **Tailscale ACLs** → no custom ACL restrictions found; default allows all peers, and THOR publishes API/REST ports on tailnet IPs — **M3/M4 can reach them.** Caveat: ufw is active on THOR — `8332` is only allowed from docker bridge `172.19.0.0/16`; `4096` is tailnet-only (opencode). If M3 needs a host port for the API, add a **tailnet-scoped ufw rule** — don't open it to the world.
+
+**M3's next move is correct** (compose up → AUTH_SECRET → migrate → e2e smoke → MagicDNS frontend → enable rail). Only missing precondition is the bitcoind wallet (Q3) — Cam should greenlight that explicitly. **Video approved + live** (v0.3.15 popup swap verified, 200).
+
+*(Answers verified live on THOR 2026-09-18; mirrored to `kitsboy/HQ` cross-agent handoff + vault.)*
 
 ---
 
