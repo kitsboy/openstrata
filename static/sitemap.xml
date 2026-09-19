@@ -26,6 +26,11 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://openstrata.giveabit.io/custody</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
     <loc>https://openstrata.giveabit.io/docs</loc>
     <lastmod>2026-09-19</lastmod>
     <changefreq>weekly</changefreq>

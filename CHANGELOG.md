@@ -1,6 +1,9 @@
 ---
 title: Changelog
-project: openstrataversion_history:
+project: openstrata
+version_history:
+-  version: 0.3.20
+-  summary: "Three improvements and two real defects found while making them: the pre-rebrand raster logo is gone everywhere (the pitch deck shows the vector mark on its navy plate, link previews get a new 1200x630 og.png that `npm run icons` now renders, and a guard test fails if the old file ever comes back), every payment carries a per-site receive label (OST · council · unit · request) so money can never be confused between projects — a pure deterministic backend module with 21 tests, returned by the quote API and shown in the checkout panel — and a new /custody page stating where community money sits at each step, what the software cannot do, what a council can check, and what is not live yet. Fixed on the way: static/icon.svg contained a double hyphen in an XML comment so the rasteriser refused the file, and a malformed changelog front-matter line had swallowed the project name. 214 backend tests, 164 frontend tests, 886 i18n keys x 9 locales, 116 contrast pairs."
 -  version: 0.3.19
 -  summary: "Three shipped improvements and a real accessibility sweep: per-tab hero artwork (6 on-brand SVG motifs on 14 pages), an in-app setup checklist on the dashboard with localStorage-only progress (13 unit tests), and a public /changelog page generated from this file (7 sync tests). Closing a silent-skip hole in audit:contrast exposed 106 token pairs instead of 60 and found four unaudited failures — success 1.99:1–2.18:1, warning 1.99:1, danger 3.76:1 and bitcoin 2.30:1 as text, plus white-on-#f7931a at 2.30:1 — all now fixed with documented text steps and a dark-ink Bitcoin fill. 115 tests, 860 i18n keys x 9 locales, 106 contrast pairs, 24 page/theme/viewport browser combos with 0 overflow."
 -  version: 0.3.16
@@ -77,6 +80,72 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.20] — 2026-09-18
+
+### Added
+
+- **A custody page anyone can read: /custody.** `0% custody` was four words
+  inside a popup — the strongest promise the product makes, and the hardest one
+  for a council to check. The page walks the money through three steps (an owner
+  pays → the council holds it → OpenStrata writes it down), lists what the
+  software cannot do as impossibilities, lists what a council can check as
+  buttons, and says plainly what is not live yet. Linked from the home page's
+  0% custody proof card and the footer, listed in the sitemap, llms.txt and site
+  search, with 11 tests — including a guard that every catalog key the page
+  references exists, because a mistyped key renders as a blank line.
+  - Body prose stays English in `src/lib/custody.ts`, the same rule the
+    print-ready documents and the user manual follow. A machine translation of
+    “we never hold your money” is a materially false statement.
+- **Per-site receive labels on every payment.** A rail invoice was labelled with
+  the rail's own name (`Lightning Network`) — a string identical in every
+  Give A Bit project, so a node operator or a council could not tell whose money
+  had arrived. Every quote now carries `OST northgate U302 pay-9142`: site code,
+  council, unit, request.
+  - `backend/src/rails/receive-label.ts` is pure and deterministic, derived from
+    keys the payment request already persists — so no migration, and no drift
+    between the wallet, the node and the stored row. 21 tests. An explicit
+    family site-code table (OST / SATO / TAD / MOTO …) makes a collision a
+    visible edit rather than a coincidence of spelling. `assertReceiveLabelFor`
+    refuses a foreign label loudly at the rail seam.
+  - The quote API returns `receiveLabel` and the checkout panel shows it beside
+    the payment instructions, so the string a council writes on a transfer is
+    the string the node records.
+
+### Changed
+
+- **The pre-rebrand raster logo is gone.** `/pitch` was the last page still
+  shipping the old artwork; it now uses the same mark-on-navy plate as the
+  favicon, the PWA icons and the printed letterhead.
+- Link previews point at a new **1200×630 `/og.png`** — the old 237×377 logo was
+  upscaled and cropped by every crawler — and `twitter:card` is now
+  `summary_large_image`. `npm run icons` emits it.
+
+### Fixed
+
+- **`static/icon.svg` could not be rasterised.** Its comment contained a double
+  hyphen, which is a hard XML error, so the rasteriser refused the file. The mark
+  had never actually been rendered from that source until `og.png` needed it.
+- **A malformed changelog front-matter line**
+  (`project: openstrataversion_history:`) had swallowed the project name.
+
+### Verified
+
+- `npm run check` → 0 errors, 0 warnings. `npm test` → **164 passed** (was 143).
+  Backend: typecheck clean, **214 passed** (was 191).
+- `audit:i18n` → 886 keys × 9 locales, parity green. `audit:contrast` → 116
+  pairs, all at or above floor. Build green; `/custody` prerenders and the
+  sitemap lists it.
+- Browser-verified on the production preview with the service worker
+  unregistered: `/custody` renders its 4 sections, 3 steps, 5 limits, 4 checks
+  and 3 honesty lines with 0 overflow at 1440 and in dark mode; `/pitch` serves
+  **0 raster logos** and 4 vector marks on the navy plate (rgb(16,45,59));
+  `/og.png` returns 200 and `/logo.png` returns **404**; the checkout's quote
+  panel shows `OST demo U101 demo` with its label and hint in light and dark.
+- Guarded by new tests: no shipping source may reference the retired logo, the
+  in-app mark must match `icon.svg` path-for-path, `og.png` must be 1200×630,
+  the manifest must point at rasters, and every catalog key the custody page and
+  the checkout reference must exist.
 
 ## [0.3.19] — 2026-09-18
 

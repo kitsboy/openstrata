@@ -18,6 +18,7 @@ const routes = [
   '/blog',
   '/changelog',
   '/compliance',
+  '/custody',
   '/docs',
   '/docs/manual',
   '/docs/manual/welcome',

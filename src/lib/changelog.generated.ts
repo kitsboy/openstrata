@@ -14,6 +14,42 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.20",
+    "date": "2026-09-18",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A custody page anyone can read: /custody. 0% custody was four words inside a popup — the strongest promise the product makes, and the hardest one for a council to check. The page walks the money through three steps (an owner pays → the council holds it → OpenStrata writes it down), lists what the software cannot do as impossibilities, lists what a council can check as buttons, and says plainly what is not live yet. Linked from the home page's 0% custody proof card and the footer, listed in the sitemap, llms.txt and site search, with 11 tests — including a guard that every catalog key the page references exists, because a mistyped key renders as a blank line. - Body prose stays English in src/lib/custody.ts, the same rule the print-ready documents and the user manual follow. A machine translation of “we never hold your money” is a materially false statement.",
+          "Per-site receive labels on every payment. A rail invoice was labelled with the rail's own name (Lightning Network) — a string identical in every Give A Bit project, so a node operator or a council could not tell whose money had arrived. Every quote now carries OST northgate U302 pay-9142: site code, council, unit, request. - backend/src/rails/receive-label.ts is pure and deterministic, derived from keys the payment request already persists — so no migration, and no drift between the wallet, the node and the stored row. 21 tests. An explicit family site-code table (OST / SATO / TAD / MOTO …) makes a collision a visible edit rather than a coincidence of spelling. assertReceiveLabelFor refuses a foreign label loudly at the rail seam. - The quote API returns receiveLabel and the checkout panel shows it beside the payment instructions, so the string a council writes on a transfer is the string the node records."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The pre-rebrand raster logo is gone. /pitch was the last page still shipping the old artwork; it now uses the same mark-on-navy plate as the favicon, the PWA icons and the printed letterhead.",
+          "Link previews point at a new 1200×630 /og.png — the old 237×377 logo was upscaled and cropped by every crawler — and twitter:card is now summary_large_image. npm run icons emits it."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "static/icon.svg could not be rasterised. Its comment contained a double hyphen, which is a hard XML error, so the rasteriser refused the file. The mark had never actually been rendered from that source until og.png needed it.",
+          "A malformed changelog front-matter line (project: openstrataversion_history:) had swallowed the project name."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "npm run check → 0 errors, 0 warnings. npm test → 164 passed (was 143). Backend: typecheck clean, 214 passed (was 191).",
+          "audit:i18n → 886 keys × 9 locales, parity green. audit:contrast → 116 pairs, all at or above floor. Build green; /custody prerenders and the sitemap lists it.",
+          "Browser-verified on the production preview with the service worker unregistered: /custody renders its 4 sections, 3 steps, 5 limits, 4 checks and 3 honesty lines with 0 overflow at 1440 and in dark mode; /pitch serves 0 raster logos and 4 vector marks on the navy plate (rgb(16,45,59)); /og.png returns 200 and /logo.png returns 404; the checkout's quote panel shows OST demo U101 demo with its label and hint in light and dark.",
+          "Guarded by new tests: no shipping source may reference the retired logo, the in-app mark must match icon.svg path-for-path, og.png must be 1200×630, the manifest must point at rasters, and every catalog key the custody page and the checkout reference must exist."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.19",
     "date": "2026-09-18",
     "groups": [
