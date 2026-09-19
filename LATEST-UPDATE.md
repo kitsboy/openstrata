@@ -69,6 +69,17 @@ Browser verification against the production preview, with the service worker unr
 - **`/og.png`** returns **200**; the retired **`/logo.png` returns 404**.
 - **The checkout** shows `OST demo U101 demo` with its **Payment name** label and explanation in light and dark, at 0 overflow.
 
+## Live verification (production, after deploy)
+
+Measured on `https://openstrata.giveabit.io`, not on the local build:
+
+- **Version marker reads 0.3.20**; `/custody`, `/`, `/pitch`, `/og.png`, `/favicon.ico` all return 200.
+- **`/custody` renders correctly live:** h1 “How your money is held”, its four sections, three steps, five limits, four checks and three honesty lines, with **0 horizontal overflow in light and dark**.
+- **`/pitch` serves 0 raster logos** and 4 vector marks on the navy plate (`rgb(16, 45, 59)`).
+- **`/og.png` is live (200)** and the home page's head references it.
+- **Nothing on the live site references the retired logo** — home, `/custody` and `/pitch` all return 0 matches for `logo.png`.
+- **One honest cache artifact:** `/logo.png` still answers **200** at the edge. That is Cloudflare's 4-hour asset cache (`cache-control: max-age=14400`, `cf-cache-status: REVALIDATED`) holding a URL that no longer exists in the deployment — a cache-busted request (`/logo.png?bust=1`) returns **404**, and the file is absent from `build/`. It expires on its own and no page links to it.
+
 ## Known issues
 
 - **The backend still has not run on a public host.** The website is live; the money-handling server is not. That remains the one thing between demo and product, and it waits on THOR.

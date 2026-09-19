@@ -18,7 +18,8 @@
 **Git State:**
 
 - SHA: `893d995` (docs) on top of `459e5c0` (release) and `9bc8c03` (code)
-- Unpushed: none — pushed to `origin/main`, then live-verified
+- Unpushed: none — pushed to `origin/main`, then verified on the live site at **v0.3.20**: `/custody` renders all four sections with 0 overflow in light and dark, `/pitch` serves 0 raster logos and 4 vector marks on the navy plate, `/og.png` is 200, and no live page references the retired logo.
+- **If you ever check `/logo.png` yourself and get a 200, that is the edge cache, not the file:** it has a 4-hour `max-age`, and a cache-busted request returns 404 because the file is gone from the deployment. Nothing links to it, so it expires on its own.
 
 ---
 
