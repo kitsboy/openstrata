@@ -20,7 +20,7 @@
 **Git State:**
 
 - SHA: see the release commit for v0.3.21 (code → release → docs → handoff, pushed together)
-- Unpushed: none — pushed to `origin/main`, then verified on the live site
+- Unpushed: none — pushed to `origin/main`, then verified on the live site at **v0.3.21**: a fresh visitor sees the question with the dashboard hidden and no tour overlay; answering “just looking” reveals the dashboard, stores the choice and opens your tour over it; the live header is Dashboard · Strata Tool · Library · Company with no Compliance link in the bar while the Library menu holds all seven destinations; the merged list renders six rows in urgency order; and the breadcrumb on `/documents` reads “Print-ready documents” instead of “Docs”.
 
 ---
 
