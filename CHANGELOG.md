@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.23
+-  summary: "The empty-state hint in the Cmd/Ctrl+K search modal said 'Search across pages, posts, FAQ, templates, and legal sources' — written when the index had five groups; v0.3.22 grew it to ten and the copy lagged. The hint now names every group the index serves (pages, posts, FAQ, templates, print-ready documents, the manual, legal sources, primary and official sources, the Strata Tool, and what needs doing) in all nine locales; the modal's group-label map moved into search.ts as searchGroupLabels() so eyebrows, hint and index share one home; two labels (primarySources, strataTool) that had silently fallen back to English in the other eight locales are now overridden everywhere; and three drift-guard tests in search.test.ts fail if the hint ever names fewer groups than the index serves, if any locale reverts to the stale English copy, or if any locale loses a group label. 217 tests, 921 i18n keys x 9 locales."
 -  version: 0.3.22
 -  summary: "Three UX improvements, all protecting work a visitor has already done: the 8-step wizard now persists a device-local draft (fields, toggles, step) and the dashboard offers a one-click resume chip — 'Harbour House — 4 of 8 · in progress' — which the wizard confirms with a restored notice and clears the moment a build is generated; Cmd/Ctrl+K search gained every print-ready document (Form B and F reachable by name for the first time), the eight manual sections, and the dashboard's 'What needs doing' list, taking the index from seven groups to ten; and an honest demo banner on sample-data dashboards states plainly that nothing typed is saved to an account, offers 'Save my building' straight to the wizard, dismisses for a week, and is rule-tested so it can never appear to a signed-in council on their own host. 214 tests (resume 8, banner 7, search 3 new), 921 i18n keys x 9 locales, 116 contrast pairs."
 -  version: 0.3.21
@@ -84,6 +86,29 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.23] — 2026-09-20
+
+### Fixed
+
+- **The ⌘K empty state names all ten groups, in every locale.** The search
+  modal's placeholder copy said “Search across pages, posts, FAQ, templates,
+  and legal sources” — written when the index had five groups. v0.3.22 grew
+  the index to ten and the copy lagged behind the product. The hint now names
+  every group the index serves, in all nine locales, and a drift-guard test
+  ties the canonical English hint to the group list out of `buildSearchIndex`:
+  an eleventh group now fails the suite until the hint is rewritten.
+
+### Changed
+
+- **One home for the group labels.** The modal's inline group-label map moved
+  into `search.ts` as `searchGroupLabels(t)`, so the per-result eyebrows, the
+  empty-state hint and the index itself are derived from the same source.
+- **Two labels were quietly English-only.** `primarySources` (“Primary and
+  official sources”) and `strataTool` (“Strata Tool”) had no non-English
+  catalog entries, so eight locales rendered them as English fallbacks. All
+  eight now carry them; “Strata Tool” stays as the product name in every
+  locale, matching the file's own convention (`openStrataToolsCta`).
 
 ## [0.3.22] — 2026-09-19
 

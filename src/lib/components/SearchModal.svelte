@@ -1,6 +1,6 @@
 <script lang="ts">
   import { copy, locale } from '$lib/i18n';
-  import { buildSearchIndex, searchIndex, type SearchEntry, type SearchGroup } from '$lib/search';
+  import { buildSearchIndex, searchIndex, searchGroupLabels, type SearchEntry } from '$lib/search';
   import Icon from '$lib/components/Icon.svelte';
   import { goto } from '$app/navigation';
 
@@ -13,21 +13,7 @@
 
   const index = $derived(buildSearchIndex($copy));
 
-  const groupLabel = $derived.by(() => {
-    const labels: Record<SearchGroup, string> = {
-      pages: $copy.searchPages,
-      posts: $copy.searchPosts,
-      faq: $copy.searchFaq,
-      templates: $copy.searchTemplates,
-      documents: $copy.searchDocuments,
-      manual: $copy.searchManual,
-      legal: $copy.searchLegal,
-      feeds: $copy.primarySources,
-      tools: $copy.strataTool,
-      tasks: $copy.tasksTitle
-    };
-    return labels;
-  });
+  const groupLabel = $derived(searchGroupLabels($copy));
 
   $effect(() => {
     if (open) {

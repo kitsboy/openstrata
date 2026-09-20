@@ -17,6 +17,24 @@ export type SearchEntry = {
 	href: string;
 };
 
+/** One home for the ten group eyebrows. The search modal renders these as the
+ * per-result chips, and the empty-state hint is tested against them, so the
+ * placeholder copy and the results always name the same things. */
+export function searchGroupLabels(t: Translation): Record<SearchGroup, string> {
+	return {
+		pages: t.searchPages,
+		posts: t.searchPosts,
+		faq: t.searchFaq,
+		templates: t.searchTemplates,
+		documents: t.searchDocuments,
+		manual: t.searchManual,
+		legal: t.searchLegal,
+		feeds: t.primarySources,
+		tools: t.strataTool,
+		tasks: t.tasksTitle
+	};
+}
+
 function norm(value: string): string {
 	return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }

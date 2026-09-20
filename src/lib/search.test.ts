@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildSearchIndex, searchIndex } from '$lib/search';
-import { english } from '$lib/i18n';
+import { buildSearchIndex, searchIndex, searchGroupLabels } from '$lib/search';
+import { english, translations } from '$lib/i18n';
 import { printDocuments } from '$lib/documents';
 import { manualSections } from '$lib/manual';
 
@@ -50,6 +50,44 @@ describe('search index', () => {
 		const index = buildSearchIndex(english);
 		const results = searchIndex(index, 'reconciliation');
 		expect(results.length).toBeGreaterThan(0);
+	});
+
+	it('the English empty-state hint names every group the index serves', () => {
+		// The stale-copy guard: this hint once named five of the ten groups and
+		// nothing failed. If a group is added to the index, this test fails until
+		// the canonical (English) hint is rewritten to match — English is written
+		// uninflected, so exact containment is possible here and only here.
+		const groups = [...new Set(buildSearchIndex(english).map((entry) => entry.group))];
+		const labels = searchGroupLabels(english);
+		expect(Object.keys(labels).sort()).toEqual([...groups].sort());
+		const hint = english.searchHint.toLowerCase();
+		for (const label of Object.values(labels)) {
+			expect(hint).toContain(label.toLowerCase());
+		}
+	});
+
+	it('every locale carries its own localized hint, never the stale copy', () => {
+		for (const [code, t] of Object.entries(translations)) {
+			expect(t.searchHint.trim().length, code).toBeGreaterThan(0);
+			expect(t.searchHint.toLowerCase(), code).not.toContain(
+				'search across pages, posts, faq, templates, and legal sources'
+			);
+			if (code !== 'en') {
+				expect(t.searchHint, `${code} hint must be localized, not the English string`).not.toBe(
+					english.searchHint
+				);
+			}
+		}
+	});
+
+	it('every locale resolves ten non-empty group labels', () => {
+		for (const [code, t] of Object.entries(translations)) {
+			const labels = searchGroupLabels(t);
+			expect(Object.keys(labels).length, code).toBe(10);
+			for (const [group, label] of Object.entries(labels)) {
+				expect(label.trim().length, `${code}:${group}`).toBeGreaterThan(0);
+			}
+		}
 	});
 
 	it('ranks exact title matches first', () => {

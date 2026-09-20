@@ -14,6 +14,25 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.23",
+    "date": "2026-09-20",
+    "groups": [
+      {
+        "label": "Fixed",
+        "items": [
+          "The ⌘K empty state names all ten groups, in every locale. The search modal's placeholder copy said “Search across pages, posts, FAQ, templates, and legal sources” — written when the index had five groups. v0.3.22 grew the index to ten and the copy lagged behind the product. The hint now names every group the index serves, in all nine locales, and a drift-guard test ties the canonical English hint to the group list out of buildSearchIndex: an eleventh group now fails the suite until the hint is rewritten."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "One home for the group labels. The modal's inline group-label map moved into search.ts as searchGroupLabels(t), so the per-result eyebrows, the empty-state hint and the index itself are derived from the same source.",
+          "Two labels were quietly English-only. primarySources (“Primary and official sources”) and strataTool (“Strata Tool”) had no non-English catalog entries, so eight locales rendered them as English fallbacks. All eight now carry them; “Strata Tool” stays as the product name in every locale, matching the file's own convention (openStrataToolsCta)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.22",
     "date": "2026-09-19",
     "groups": [
