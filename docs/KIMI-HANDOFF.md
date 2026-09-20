@@ -1,3 +1,34 @@
+## Session — 2026-09-20 · v0.3.23 — the ⌘K hint caught up with the index (Buffy on M3)
+
+**Task:** fix the one stale string queued by the v0.3.22 live verification — the empty search modal still said “Search across pages, posts, FAQ, templates, and legal sources”, written when the index had five groups; v0.3.22 grew it to ten.
+
+**Done:**
+
+- **The hint names all ten groups, in all 9 locales** — pages, posts, FAQ, templates, print-ready documents, the manual, legal sources, primary and official sources, the Strata Tool, and what needs doing. No new keys: the existing `searchHint` was rewritten in place, so the catalog stays at 921 keys.
+- **One home for the group labels.** The modal's inline label map moved into `src/lib/search.ts` as `searchGroupLabels(t)`; `SearchModal.svelte` consumes it, so the per-result eyebrows, the hint copy and the index are derived from the same source.
+- **Two labels were quietly English-only.** `primarySources` and `strataTool` had no non-English overrides, so eight locales rendered them as English fallbacks — visible in the ⌘K eyebrows, not just the hint. All eight now carry them (“Sources primaires et officielles”, “主要和官方来源”, …); “Strata Tool” stays untranslated in every locale, matching the file's own `openStrataToolsCta` convention.
+- **3 drift-guard tests** (`search.test.ts`, 10 tests total): the canonical English hint must contain every label for every group `buildSearchIndex` actually emits (English is uninflected, so containment works — an eleventh group now fails the suite until the hint is rewritten); no locale may carry the stale English sentence or the bare English string; every locale must resolve ten non-empty group labels.
+
+**Verified:** `check` 0/0 · **217 tests** (was 214) · `audit:i18n` **921 keys × 9 locales** · build green · changelog regenerated (26 releases, 168 items) · new copy confirmed present in the built chunks (English + French spot-checked).
+
+**Git State:**
+
+- Code + release bump: `d9efb2c`; docs and this handoff land in the docs commit on top of it.
+- Unpushed: none by the time you read this.
+
+**Questions for you, Kimi (please answer in your next handoff):**
+
+1. **Still open from 2026-09-19:** wizard draft lifetime, draft ↔ Saved-buildings clarity, demo banner placement on `/tools`, and locale search-ranking sanity. All four await your answers.
+2. **New:** the ten-group hint is honest but long — in some locales it is a mouthful. Should the placeholder become a short generic line (“Search everything”) with the groups enumerated only in the result eyebrows, or does the full enumeration earn its space? You test the locales; your call.
+
+**Three UI suggestions for the next run (standing rule):**
+
+1. **Recent searches in the empty ⌘K state** — device-local, consistent with the privacy pitch.
+2. **Group scoping inside the modal** — ten groups make a “narrow to Documents” affordance genuinely useful.
+3. **Shareable search** — a `/search?q=…` page so a council can bookmark or send a query; the modal is ephemeral today.
+
+---
+
 ## Session — 2026-09-19 · v0.3.22 — work-protection UX: wizard draft resume, full-site ⌘K, honest demo banner (Buffy on M3)
 
 **Task from Cam:** build all three UI improvements suggested last run (resume chip, ⌘K search everywhere, demo banner) and ship as v0.3.22. Standing rules now in force: ELI16, concise, questions for Kimi in every handoff, and 3 new UI suggestions after every run.

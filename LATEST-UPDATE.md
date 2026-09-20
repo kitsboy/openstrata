@@ -1,20 +1,39 @@
 # openstrata — Last Updated 2026-09-20 by Buffy (M3)
 
-> **v0.3.22: nothing you started gets lost.** Cam's standing rule is that the UX must keep getting easier without losing a single thing a visitor has already done. All three changes this round protect exactly that: the wizard keeps your draft and the dashboard offers it back; ⌘K finds every document and page by name; and demo mode now says out loud what it is, with a one-click way to save your work.
+> **v0.3.23: the words agree with the product.** Cam's standing rule is that the UX must keep getting easier without losing a single thing a visitor has already done — and the words must keep up with the features, because a placeholder that undersells the index is the same lost-work problem in miniature: a visitor is told the tool finds less than it does. The ⌘K empty state now names every group the index actually serves, in all nine locales, and a test makes the next drift impossible.
 
-**Brief (v0.3.22):** **(1) Resume chip** — the 8-step wizard persists a device-local draft (every field, every toggle, the step you were on) and the dashboard shows *Continue where you left off — {building} — step N of 8 · in progress*; one click lands back exactly there, dismissing discards it, generating the config clears it. **(2) ⌘K everywhere** — site search now indexes all four print-ready documents (Form B / Form F reachable **by name** for the first time), the eight manual sections, and the “What needs doing” task list; seven groups became ten. **(3) Honest demo banner** — on a sample-data dashboard it says plainly that nothing typed is saved to an account, offers **Save my building** → the wizard, dismisses for a week, and is rule-tested so it can **never** appear to a signed-in council whose books are real.
+**Brief (v0.3.23):** **(1) Search hint catch-up** — the empty ⌘K modal said "Search across pages, posts, FAQ, templates, and legal sources", written when there were five groups; there are ten now. The hint names them all, in all 9 locales, and a drift guard test ties the copy to the index's group list — the same class of guard that protects the nav, the task list and the first-visit contract. **(2) Group labels from one home** — the modal's inline group-label map moved into `search.ts` as `searchGroupLabels()`, so the eyebrows, the hint and the index are derived from the same source. **(3) Two labels were quietly English-only** — `primarySources` ("Primary and official sources") and `strataTool` ("Strata Tool") had no locale overrides, so they rendered as English fallbacks in the other eight languages; all eight now carry them.
 
-**Commit:** `d05e0fb` — code, release bump, docs and handoff in a single commit, pushed.
+**Commit:** _recorded in the docs commit that lands with this file._
 
 ---
 
-## v0.3.22 in detail
+## v0.3.23 in detail
+
+### The empty state that lagged the product
+Ten groups went into the index in v0.3.22; the empty-modal copy stayed at five because nothing connected the string to the index. Fixed two ways: the copy now lists all ten, and a test reads the group list out of `buildSearchIndex` and fails if `searchHint` ever names fewer. If a future session adds an eleventh group, the test fails until the hint is rewritten — the drift can never ship silently again.
+
+### One home for the group labels
+`searchGroupLabels(t)` in `search.ts` returns the ten eyebrow labels; `SearchModal.svelte` consumes it instead of carrying its own map. The hint copy is written to echo the same labels, so a council reads the same words in the placeholder as in the results.
+
+### Two labels that were never localized
+`primarySources` and `strataTool` existed in the English catalog only — the other eight locales silently fell back to English for two of the ten group eyebrows. Now overridden everywhere; "Strata Tool" stays as the product name in every locale, matching the file's own convention (`openStrataToolsCta` keeps it in all nine).
+
+---
+
+## Live verification (production, 2026-09-20)
+
+_Pending deploy._
+
+---
+
+## v0.3.22 (2026-09-20) — nothing you started gets lost
 
 ### Continue where you left off
-The wizard held everything in component state — a phone call or a closed tab meant the whole building came back blank. It now writes a draft (`src/lib/resume.ts`, localStorage `openstrata-wizard-draft`, 8 tests) on every step move, `ResumeChip.svelte` offers it back on the dashboard, the wizard restores fields before the template prefill runs and says “Draft restored”. Corrupt storage degrades to “no draft”; a finished build clears the draft because done is not pending.
+The wizard held everything in component state — a phone call or a closed tab meant the whole building came back blank. It now writes a draft (`src/lib/resume.ts`, localStorage `openstrata-wizard-draft`, 8 tests) on every step move, `ResumeChip.svelte` offers it back on the dashboard, the wizard restores fields before the template prefill runs and says "Draft restored". Corrupt storage degrades to "no draft"; a finished build clears the draft because done is not pending.
 
 ### Search that knows the site
-`buildSearchIndex` gained `documents` (deep links to `/documents?doc=<slug>`), `manual`, and a `tasks` row for the dashboard's list. A council that types “Form B” now finds the certificate itself, not a page that mentions it.
+`buildSearchIndex` gained `documents` (deep links to `/documents?doc=<slug>`), `manual`, and a `tasks` row for the dashboard's list. A council that types "Form B" now finds the certificate itself, not a page that mentions it.
 
 ### The demo banner
 `shouldShowDemoBanner` (`src/lib/demo-banner.ts`, 7 tests) is the whole rule: only unsigned + sample-data + settled, never a configured host, dismissal is a UTC day-stamp with a 7-day TTL. The banner's CTA protects work in progress; its visibility rule protects the truth.
@@ -26,129 +45,7 @@ The wizard held everything in component state — a phone call or a closed tab m
 Measured on `https://openstrata.giveabit.io`, not on the local build, with the **service worker unregistered and origin caches dropped first**:
 
 - **Version marker reads 0.3.22** (`openstrata-version` meta and the page title).
-- **Demo banner:** on a sample-data dashboard it reads *“You are in demo mode — everything here is sample data, and nothing you type is saved to an account. Your building draft is kept on this device only.”* with **Save my building →** linking to the wizard. Dismissing stores the UTC day-stamp (`20716`) and the banner stays gone across a reload; the tour does not repeat over it.
-- **Resume chip:** a draft created in the wizard shows *Continue where you left off — Harbour House — 3 of 8 · in progress* with **Continue →** and a discard button; one click lands on the wizard's units step with the **“Draft restored”** notice; a fresh visit restores the name field (“Harbour House”) and jurisdiction (BC) exactly.
-- **⌘K search:** all ten group eyebrows observed live — Pages, Posts, FAQ, Templates, **Print-ready documents**, Manual, Legal, **Primary and official sources** (feeds), Strata tool, **What needs doing** (tasks). “Form B” returns the certificate itself first and clicking it lands on `/documents?doc=form-b`.
-- **One stale string found:** the empty search modal still says “Search across pages, posts, FAQ, templates, and legal sources” — written when there were five groups. Copy-only fix, queued for the next push.
-
----
-
-## v0.3.21 (2026-09-18) — a simplification pass
-
-### The header is four things
-Compliance and Docs were bar items; they are now in `Library` beside the legal sources, the templates and the printable documents. A council reads compliance material — it does not “go to compliance” the way it goes to its own dashboard. Both are still one click away, still in the footer, still in site search.
-
-### The first visit is a question
-A brand-new visitor met four metric cards, a building list, an activity feed and four panels of work — for a building that is not theirs, with numbers that are not real. Now they meet one question:
-
-- **I am just looking** → the full working dashboard appears in place
-- **I am setting up a building** → straight to the wizard
-- **I have an account** → the sign-in card
-
-The answer is stored on the device only. Two details worth keeping:
-
-- **No flash, and no cost to the crawler.** The class that hides the dashboard is set by the inline script in `src/app.html` *before* the first paint (the same trick the theme switch uses), and the swap is CSS — so the prerendered HTML still contains the entire dashboard. A conditional render would have been simpler and would have hidden the page an index reads.
-- **The tour now waits.** A new visitor was getting the tour modal *over* the question: two first-run experiences at once. The tour is gated on the question being answered, and then opens over the dashboard they just asked to see.
-
-### Four panels, one list
-The setup checklist, the statutory deadlines, the Forms-tracker windows and the month-end close each answered part of “what needs doing?” — and together they were a scavenger hunt. The dashboard now shows one list: **overdue → urgent → soon → routine → setup last**, because real work outranks finishing your profile. Steps tick off in place, the list hides and restores, and it says how many rows are left.
-
-Two rules are encoded and tested, not stylistic:
-
-- **A deadline inside two weeks is urgent whatever the API called it.** The date is the fact; the severity label is an opinion.
-- **Setup steps never interleave with real deadlines.** A council with an overdue filing should not scroll past “add your units”.
-
-### Fixed: a breadcrumb that linked to the wrong page
-`/documents` starts with `/docs`, and the breadcrumb took the *first* match — so the printable-documents page carried a crumb reading **Docs** with a link to `/docs`. Resolution now happens on a segment boundary and prefers the deepest href; `/docs/manual` still lands on `Docs`.
-
-### Verified — live, after deploy
-Measured on `https://openstrata.giveabit.io`, not on the local build: version marker reads **0.3.21**; a fresh visitor gets the question with the dashboard hidden, **no tour overlay**, and **0 horizontal overflow**; answering “just looking” stores `exploring`, reveals the dashboard in place, renders the six rows in urgency order (urgent Form B → EPR → AGM, then the setup steps), and opens the tour over it; the live header renders **Dashboard · Strata Tool · Library · Company** with **no Compliance link in the bar**, and the Library menu holds Compliance, Docs, Legal library, Print-ready documents, FAQ and Changelog; the breadcrumb on `/documents` reads **Print-ready documents**.
-
-Local gates: `npm run check` 0/0 · **196 frontend tests** (was 164) · `audit:i18n` **909 keys × 9 locales** · `audit:contrast` **116 pairs** · build green. Browser-verified on the production preview with the service worker unregistered: first visit shows the question, dashboard hidden, **no tour overlay**; choosing “just looking” reveals the dashboard in place, stores the choice and opens the tour over it; header shows four items with no Compliance link while the Library menu holds all seven; the merged list renders six rows in urgency order; `/documents` reads “Print-ready documents”; **0 horizontal overflow at 390px and 1440px, light and dark**.
-
-**Brief:** v0.3.20 — three improvements and two real defects found making them. **(1)** The **pre-rebrand logo is retired everywhere** — `/pitch` was the last page still showing it, and the link preview on every share was a 237×377 image every crawler upscaled and cropped; there is now a 1200×630 `/og.png` that `npm run icons` renders. **(2)** **Every payment carries a per-site label** (`OST northgate U302 pay-9142`) so money can never be confused between projects — Cam's mandate, done while the rail is still off. **(3)** **`/custody`** — a plain-language page for the question behind “0% custody”: where the money sits at each step, what the software cannot do, what a council can check, and what is not live yet.
-
-**Commit:** `893d995` (docs) · `459e5c0` (release) · `9bc8c03` (code) — all pushed, then live-verified.
-
----
-
-## 1. One mark everywhere
-
-The mark had quietly become four pieces of artwork. The header, sidebar, footer and printed letterhead used the vector `BrandMark`; the browser tab used a simplified favicon rendition (necessary — the full mark is 283×448 and at 16px its strokes fall under one device pixel); the PWA icons were rendered from the favicon art; and **`/pitch` still shipped `static/logo.png`, the pre-rebrand raster**, which was also the `og:image` and `twitter:image` on every page of the site.
-
-All four now agree:
-
-- `/pitch` uses the same **mark-on-navy plate** as everything else (`#102d3b` plate, the orange mark, the same radius family as the favicon and the PWA icons).
-- Link previews point at a new **1200×630 `/og.png`** — the size Facebook, LinkedIn and X all crop against — with `twitter:card` upgraded to `summary_large_image`.
-- `npm run icons` renders it from `icon.svg` plus an SVG text overlay, so the card updates when the art does.
-- `static/logo.png` and `public/logo.png` are **deleted**, and `src/lib/brand-assets.test.ts` fails if either ever comes back or if the inline mark drifts from the vector it is drawn from.
-
-**Because nothing should break silently, the new tests are the point:** the inline `BrandMark.svelte` must match `static/icon.svg` path-for-path, the favicon must stay a strictly simpler square rendition, `og.png` must be 1200×630, the manifest must point at rasters, and `app.html` must declare every browser-facing icon.
-
-## 2. Payment labels that name the site
-
-A rail invoice used to be labelled with **the rail's own name** — `Lightning Network`, `Bitcoin (on-chain)`. That string is identical in every Give A Bit project, so a node operator, a council treasurer or anyone reading a wallet history could not tell whose money had arrived. On a family of sites that all handle money, that is the wrong default.
-
-Every quote now carries a label shaped like this:
-
-```
-OST  northgate  U302  pay-9142
-^^^  ^^^^^^^^^  ^^^^  ^^^^^^^^^
-site  council   unit   request
-```
-
-`backend/src/rails/receive-label.ts` builds it as a **pure function of keys the payment request already persists** (`communityId` + `unitRef` + `refId`) — so there is no migration, and the label on the node, in the wallet and on the stored row cannot drift apart. **21 tests** cover it. Details worth keeping:
-
-- **The site code table is explicit** (OST / SATO / TAD / MOTO / SHER / STRA / KATO / LIND / CAMD / BTCM / GAB) so two projects colliding on the same three letters is a visible edit rather than a coincidence of spelling.
-- **`assertReceiveLabelFor` refuses a foreign label loudly** at the rail seam — a SATO label arriving at an OpenStrata node throws rather than being accepted quietly.
-- **The label is sanitized and length-capped** before it is joined: wallets truncate, and a label that ends in an ellipsis failed at its one job.
-- **The API returns `receiveLabel`** and the checkout panel shows it as **Payment name**, next to the payment instructions, so the string a council writes on an e-transfer is the string the node records.
-
-## 3. `/custody` — how your money is held
-
-`0% custody` was four words inside a popup: the strongest promise the product makes, and the hardest one for a council to check. `/custody` is that promise made readable and testable, in four sections in the order a skeptical treasurer asks:
-
-1. **Where the money sits** — an owner pays → the council holds it → OpenStrata writes it down. In none of the three does the money pass through us.
-2. **What OpenStrata cannot do** — stated as impossibilities: move money, change a posted ledger entry, act as custodian or escrow, see private keys, take a cut. Each line is something no employee, bug or court order can make the software do.
-3. **What a council can check, any time** — verify the chain, export everything as JSON and CSV, read the exact Form B the software would issue, run the whole thing on its own server. Every line is a button, not a request to us.
-4. **Where this stands today** — honestly: the rails ship switched off, no money has moved through OpenStrata yet, and the payment server has not run on a public host.
-
-It is hooked to the **home page's 0% custody proof card** (which used to link to `/tools`, the wrong destination for that claim) and the footer, and it is indexed for site search — but it is **not** in the header nav. Cam asked for a simpler UI, so a new top-level item was the wrong instinct.
-
-**One deliberate rule:** the page's body prose stays **English**, in `src/lib/custody.ts`, while its chrome (12 keys) is in all 9 locales. A machine translation of “we never hold your money” is a materially false statement, and custody wording is the last place to accept one. `documents.ts` and `manual.ts` already follow this rule.
-
-## 4. Two defects found on the way
-
-- **`static/icon.svg` could not be rasterised at all.** Its comment contained a double hyphen (`--mark-orange`), which is a hard XML error — so the rasteriser refused the file. The master mark had **never** actually been rendered from its own source until `og.png` needed it. Fixed the comment; the art is unchanged.
-- **The changelog's front-matter was malformed** (`project: openstrataversion_history:` — a missing newline that swallowed the project name). Fixed, with the v0.3.20 history entry written the way the other entries are.
-
----
-
-## Verified
-
-`npm run check` → **0 errors, 0 warnings** · `npm test` → **164 passed** (was 143) · backend typecheck clean, **214 passed** (was 191) · `npm run audit:i18n` → **886 keys × 9 locales**, parity green · `npm run audit:contrast` → **116 pairs**, all at or above floor · build green, `/custody` prerenders, sitemap lists it.
-
-Browser verification against the production preview, with the service worker unregistered first:
-
-- **`/custody`** renders its 4 sections, 3 steps, 5 limits, 4 checks and 3 honesty lines with **0 horizontal overflow** at 1440px and in dark mode; the dark-mode heading resolves to the light ink.
-- **`/pitch`** serves **0 raster logos** and 4 vector marks, each on the navy plate (`rgb(16, 45, 59)`) with the mark in the brand orange (`rgb(240, 128, 26)`).
-- **`/og.png`** returns **200**; the retired **`/logo.png` returns 404**.
-- **The checkout** shows `OST demo U101 demo` with its **Payment name** label and explanation in light and dark, at 0 overflow.
-
-## Live verification (production, after deploy)
-
-Measured on `https://openstrata.giveabit.io`, not on the local build:
-
-- **Version marker reads 0.3.20**; `/custody`, `/`, `/pitch`, `/og.png`, `/favicon.ico` all return 200.
-- **`/custody` renders correctly live:** h1 “How your money is held”, its four sections, three steps, five limits, four checks and three honesty lines, with **0 horizontal overflow in light and dark**.
-- **`/pitch` serves 0 raster logos** and 4 vector marks on the navy plate (`rgb(16, 45, 59)`).
-- **`/og.png` is live (200)** and the home page's head references it.
-- **Nothing on the live site references the retired logo** — home, `/custody` and `/pitch` all return 0 matches for `logo.png`.
-- **One honest cache artifact:** `/logo.png` still answers **200** at the edge. That is Cloudflare's 4-hour asset cache (`cache-control: max-age=14400`, `cf-cache-status: REVALIDATED`) holding a URL that no longer exists in the deployment — a cache-busted request (`/logo.png?bust=1`) returns **404**, and the file is absent from `build/`. It expires on its own and no page links to it.
-
-## Known issues
-
-- **The backend still has not run on a public host.** The website is live; the money-handling server is not. That remains the one thing between demo and product, and it waits on THOR.
-- **THOR's bitcoind has no wallet loaded** (`listwallets` = `[]`, verified by Kimi on the box). Cam greenlit `createwallet` on 2026-09-18; it has not been created yet. The PSBT workflow seam needs it.
-- **`/custody` body prose is English-only by decision** — do not machine-translate it.
-- **The mark is a vector redraw of Cam's attached image, not the original file.** If the source SVG or a high-resolution PNG ever appears, dropping it into `static/icon.svg` plus `npm run icons` updates the whole set in one command.
+- **Demo banner:** on a sample-data dashboard it reads _"You are in demo mode — everything here is sample data, and nothing you type is saved to an account. Your building draft is kept on this device only."_ with **Save my building →** linking to the wizard. Dismissing stores the UTC day-stamp (`20716`) and the banner stays gone across a reload; the tour does not repeat over it.
+- **Resume chip:** a draft created in the wizard shows _Continue where you left off — Harbour House — 3 of 8 · in progress_ with **Continue →** and a discard button; one click lands on the wizard's units step with the **"Draft restored"** notice; a fresh visit restores the name field ("Harbour House") and jurisdiction (BC) exactly.
+- **⌘K search:** all ten group eyebrows observed live — Pages, Posts, FAQ, Templates, **Print-ready documents**, Manual, Legal, **Primary and official sources** (feeds), Strata tool, **What needs doing** (tasks). "Form B" returns the certificate itself first and clicking it lands on `/documents?doc=form-b`.
+- ~~**One stale string found:** the empty search modal still says "Search across pages, posts, FAQ, templates, and legal sources" — written when there were five groups.~~ **Fixed in v0.3.23.**
