@@ -1,10 +1,10 @@
-# openstrata — Last Updated 2026-09-19 by Buffy (M3)
+# openstrata — Last Updated 2026-09-20 by Buffy (M3)
 
 > **v0.3.22: nothing you started gets lost.** Cam's standing rule is that the UX must keep getting easier without losing a single thing a visitor has already done. All three changes this round protect exactly that: the wizard keeps your draft and the dashboard offers it back; ⌘K finds every document and page by name; and demo mode now says out loud what it is, with a one-click way to save your work.
 
 **Brief (v0.3.22):** **(1) Resume chip** — the 8-step wizard persists a device-local draft (every field, every toggle, the step you were on) and the dashboard shows *Continue where you left off — {building} — step N of 8 · in progress*; one click lands back exactly there, dismissing discards it, generating the config clears it. **(2) ⌘K everywhere** — site search now indexes all four print-ready documents (Form B / Form F reachable **by name** for the first time), the eight manual sections, and the “What needs doing” task list; seven groups became ten. **(3) Honest demo banner** — on a sample-data dashboard it says plainly that nothing typed is saved to an account, offers **Save my building** → the wizard, dismisses for a week, and is rule-tested so it can **never** appear to a signed-in council whose books are real.
 
-**Commit:** see `git log --oneline -6` — code → release → docs → handoff, pushed together.
+**Commit:** `d05e0fb` — code, release bump, docs and handoff in a single commit, pushed.
 
 ---
 
@@ -18,6 +18,18 @@ The wizard held everything in component state — a phone call or a closed tab m
 
 ### The demo banner
 `shouldShowDemoBanner` (`src/lib/demo-banner.ts`, 7 tests) is the whole rule: only unsigned + sample-data + settled, never a configured host, dismissal is a UTC day-stamp with a 7-day TTL. The banner's CTA protects work in progress; its visibility rule protects the truth.
+
+---
+
+## Live verification (production, 2026-09-20)
+
+Measured on `https://openstrata.giveabit.io`, not on the local build, with the **service worker unregistered and origin caches dropped first**:
+
+- **Version marker reads 0.3.22** (`openstrata-version` meta and the page title).
+- **Demo banner:** on a sample-data dashboard it reads *“You are in demo mode — everything here is sample data, and nothing you type is saved to an account. Your building draft is kept on this device only.”* with **Save my building →** linking to the wizard. Dismissing stores the UTC day-stamp (`20716`) and the banner stays gone across a reload; the tour does not repeat over it.
+- **Resume chip:** a draft created in the wizard shows *Continue where you left off — Harbour House — 3 of 8 · in progress* with **Continue →** and a discard button; one click lands on the wizard's units step with the **“Draft restored”** notice; a fresh visit restores the name field (“Harbour House”) and jurisdiction (BC) exactly.
+- **⌘K search:** all ten group eyebrows observed live — Pages, Posts, FAQ, Templates, **Print-ready documents**, Manual, Legal, **Primary and official sources** (feeds), Strata tool, **What needs doing** (tasks). “Form B” returns the certificate itself first and clicking it lands on `/documents?doc=form-b`.
+- **One stale string found:** the empty search modal still says “Search across pages, posts, FAQ, templates, and legal sources” — written when there were five groups. Copy-only fix, queued for the next push.
 
 ---
 

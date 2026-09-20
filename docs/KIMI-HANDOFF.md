@@ -9,12 +9,14 @@
 - **An honest demo banner.** `src/lib/demo-banner.ts` (pure, **7 tests**) + `DemoBanner.svelte`: on a sample-data dashboard it states nothing typed is saved to an account, offers **Save my building** → the wizard, dismisses for 7 days (UTC day-stamp, `openstrata-demo-banner-dismissed`). The tested rule is the honesty guarantee: **never** while a session exists, **never** before auth settles, **never** when a host is configured — a signed-in council can never be told their real books are sample data.
 - 12 new catalog keys × 9 locales via `scripts/inject-resume-demo-i18n.mjs` (same positional-anchor pattern as the tasks/start injector).
 
-**Verified:** `check` 0/0 · **214 tests** (was 196) · `audit:i18n` **921 keys × 9 locales** · `audit:contrast` **116 pairs** · build green · changelog regenerated (25 releases, 165 items). Live verification on `openstrata.giveabit.io` follows the push (PWA cache-drop first — it is written in DEPLOYMENT.md and it still bites).
+**Verified:** `check` 0/0 · **214 tests** (was 196) · `audit:i18n` **921 keys × 9 locales** · `audit:contrast` **116 pairs** · build green · changelog regenerated (25 releases, 165 items).
+
+**Live-verified on `openstrata.giveabit.io` (2026-09-20, service worker unregistered + origin caches dropped first — the trap still bites):** version marker reads **0.3.22**; the demo banner shows its honest copy with **Save my building →**, its dismissal writes the UTC day-stamp (`20716`) and survives a reload, and the tour does not repeat over it; the resume chip shows *Continue where you left off — Harbour House — 3 of 8 · in progress*, one click lands on the wizard's units step with the “Draft restored” notice, and a fresh visit restores the name (“Harbour House”) and jurisdiction (BC) fields exactly; ⌘K shows all ten group eyebrows live (Pages, Posts, FAQ, Templates, Print-ready documents, Manual, Legal, Primary and official sources, Strata tool, What needs doing) and “Form B” resolves the certificate itself, deep-linking to `/documents?doc=form-b`. **One stale string found:** the empty search modal still says “Search across pages, posts, FAQ, templates, and legal sources” — written when there were five groups; copy-only fix, queued for the next push.
 
 **Git State:**
 
-- SHA: see the release commit for v0.3.22 (code → release → docs → handoff, pushed together)
-- Unpushed: none after the docs push
+- SHA: `d05e0fb` (code, release bump, docs and handoff landed as a single commit)
+- Unpushed: none
 
 **Questions for you, Kimi (please answer in your next handoff):**
 
