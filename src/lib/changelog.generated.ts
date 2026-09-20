@@ -14,6 +14,26 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.22",
+    "date": "2026-09-19",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "“Continue where you left off” — the wizard keeps your draft. The 8-step Building Template Wizard held everything in component state: stop halfway — a phone call, lunch, a closed tab — and the whole building came back blank. It now persists a device-local draft (src/lib/resume.ts, localStorage, same convention as the setup ticks and the first-visit choice) on every step change, and the dashboard answers with one chip above the greeting: *Continue where you left off — Harbour House — 4 of 8 · in progress*. One click lands back on the exact step with every field as typed — name, address, unit count, banks, enabled sub-accounts, services, rails, bylaw choice — and the wizard confirms the restoration with a quiet “Draft restored” notice. Dismissing the chip discards the draft; generating the config clears it, because a finished build is not unfinished work. Parse degrades to “no draft” on corrupt or hostile storage, and a draft is only offered when it has a name and the visitor got past step 1. 8 tests.",
+          "⌘K reaches the whole site. Site search now indexes the four print-ready documents — Form B and Form F are reachable by name for the first time, deep-linked to /documents?doc=… — the eight manual sections, and the dashboard's “What needs doing” task list. The index goes from seven groups to ten, so nothing a council can name is more than one keystroke away.",
+          "An honest demo banner. On a sample-data dashboard (no host configured, no session) a banner now states plainly: *You are in demo mode — everything here is sample data, and nothing you type is saved to an account. Your building draft is kept on this device only.* One CTA — Save my building — goes straight to the wizard, whose draft now survives a refresh. It dismisses for a week (a day-stamp, not a forever flag) and the visibility rule (src/lib/demo-banner.ts, 7 tests) makes the important failure impossible: a signed-in council on their own host can never be told their real books are sample data."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "npm run check 0/0 · 214 tests (was 196: +8 resume, +7 banner, +3 search) · audit:i18n 921 keys × 9 locales · audit:contrast 116 pairs · build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.21",
     "date": "2026-09-18",
     "groups": [

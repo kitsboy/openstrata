@@ -19,9 +19,12 @@
       posts: $copy.searchPosts,
       faq: $copy.searchFaq,
       templates: $copy.searchTemplates,
+      documents: $copy.searchDocuments,
+      manual: $copy.searchManual,
       legal: $copy.searchLegal,
       feeds: $copy.primarySources,
-      tools: $copy.strataTool
+      tools: $copy.strataTool,
+      tasks: $copy.tasksTitle
     };
     return labels;
   });

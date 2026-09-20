@@ -6,6 +6,13 @@
 	import packageJson from '../../../../package.json';
 	import StartHere from '$lib/components/StartHere.svelte';
 	import HeroArt from '$lib/components/HeroArt.svelte';
+	import {
+		RESUME_KEY,
+		clearWizardDraft,
+		parseWizardDraft,
+		readWizardDraft,
+		writeWizardDraft
+	} from '$lib/resume';
 
 	// State
 	let step = $state(0);
@@ -122,6 +129,9 @@
 		};
 		configJson = JSON.stringify(config, null, 2);
 		completed = true;
+		// The build is finished and the JSON is in hand — the draft served its
+		// purpose, so the dashboard must not offer to resume a done thing.
+		clearWizardDraft();
 	};
 
 	const totalSteps = 8;
@@ -135,6 +145,8 @@
 	let myBuildings = $state<SavedBuilding[]>([]);
 	let nameError = $state('');
 	let savedToast = $state('');
+	/** True when this visit started by restoring a saved draft. */
+	let resumedFromDraft = $state(false);
 
 	function loadBuildings(): SavedBuilding[] {
 		try {
@@ -147,6 +159,29 @@
 
 	$effect(() => {
 		myBuildings = loadBuildings();
+		// Resume: put a saved draft back on the form before anything else can
+		// overwrite it. Step first, then the fields, so the visitor lands where
+		// they left off with everything as they typed it.
+		const draft = readWizardDraft();
+		if (draft) {
+			resumedFromDraft = true;
+			step = draft.step;
+			jurisdiction = draft.jurisdiction;
+			corpName = draft.name;
+			address = draft.address;
+			fiscalYearStart = draft.fiscalYearStart;
+			bcfsaLicense = draft.bcfsaLicense;
+			isSelfManaged = draft.isSelfManaged;
+			unitCount = draft.unitCount;
+			defaultSqft = draft.defaultSqft;
+			operatingBank = draft.operatingBank;
+			crfBank = draft.crfBank;
+			crfPct = draft.crfPct;
+			subAccounts = subAccounts.map((s) => ({ ...s, enabled: draft.subAccounts.includes(s.name) }));
+			selectedServices = draft.selectedServices;
+			paymentRails = paymentRails.map((r) => ({ ...r, enabled: draft.paymentRails.includes(r.id) }));
+			bylawChoice = draft.bylawChoice;
+		}
 		// Template prefill: templates page stores a name before navigating here.
 		try {
 			const prefill = localStorage.getItem(PREFILL_KEY);
@@ -194,6 +229,29 @@
 		URL.revokeObjectURL(url);
 	};
 
+	// The one nextStep is allowed to skip persisting: nothing new was entered.
+	const persistDraft = () => {
+		if (completed) return;
+		writeWizardDraft({
+			step,
+			name: corpName,
+			jurisdiction,
+			address,
+			fiscalYearStart,
+			bcfsaLicense,
+			isSelfManaged,
+			unitCount,
+			defaultSqft,
+			operatingBank,
+			crfBank,
+			crfPct,
+			subAccounts: subAccounts.filter((s) => s.enabled).map((s) => s.name),
+			selectedServices,
+			paymentRails: paymentRails.filter((r) => r.enabled).map((r) => r.id),
+			bylawChoice
+		});
+	};
+
 	const nextStep = () => {
 		if (step === 1 && !corpName.trim()) {
 			nameError = $copy.nameRequired;
@@ -201,9 +259,10 @@
 		}
 		nameError = '';
 		if (step < totalSteps - 1) step++;
+		persistDraft();
 	};
-	const prevStep = () => { if (step > 0) step--; };
-	const goToStep = (s: number) => { if (s >= 0 && s < totalSteps) step = s; };
+	const prevStep = () => { if (step > 0) step--; persistDraft(); };
+	const goToStep = (s: number) => { if (s >= 0 && s < totalSteps) { step = s; persistDraft(); } };
 
 	const progress = $derived(((step + 1) / totalSteps) * 100);
 </script>
@@ -219,9 +278,13 @@
 		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.wizardTitle}</h1>
 		<p class="mt-3 text-slate-600 max-w-2xl">
 			{$copy.wizardIntro}
-		</p>
-		{#if !completed}
-			<div class="mt-8">
+		</p>			{#if !completed}
+				<div class="mt-8">
+					{#if resumedFromDraft}
+						<p class="wizard-resumed inline-flex items-center gap-2 rounded-xl border border-border bg-surface-3 px-4 py-2.5 text-xs font-bold text-slate-700" role="status">
+							{$copy.resumedFromDraft}
+						</p>
+					{/if}
 				<div class="flex items-center gap-0.5 mb-3 overflow-x-auto pb-1">
 					{#each stepLabels as label, i}
 						<button
@@ -250,7 +313,7 @@
 				<a class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-all"
 					href="/thank-you?from=wizard">What happens next →</a>
 				<button class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500 transition-all"
-					onclick={() => { completed = false; step = 0; }}>{$copy.startNew}</button>
+					onclick={() => { completed = false; step = 0; clearWizardDraft(); }}>{$copy.startNew}</button>
 				<button class="rounded-xl bg-success/10 px-6 py-3 text-sm font-semibold text-success hover:bg-success/20 transition-all" onclick={saveBuilding}>{'\u{1F4BE}'} {$copy.saveBuilding}</button>
 				<button class="rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-all" onclick={downloadConfig}>{'\u{2B07}'} {$copy.downloadConfig}</button>
 			</div>

@@ -59,6 +59,8 @@
   import Tour from '$lib/components/Tour.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import TaskList from '$lib/components/TaskList.svelte';
+  import ResumeChip from '$lib/components/ResumeChip.svelte';
+  import DemoBanner from '$lib/components/DemoBanner.svelte';
   import RailsStatus from '$lib/components/RailsStatus.svelte';
   import HealthScore from '$lib/components/HealthScore.svelte';
   import RateSparkline from '$lib/components/RateSparkline.svelte';
@@ -339,6 +341,8 @@
       <StartChoice onChoose={chooseStart} onSignIn={() => (showAuth = true)} />
 
       <div class="dashboard-body">
+      <DemoBanner />
+      <ResumeChip />
       <section class="welcome-row">
         <div><div class="date-kicker">{formatDate(new Date(), $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{greeting}</h1><p>{$copy.subtitle}</p></div>
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>

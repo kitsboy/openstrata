@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.22
+-  summary: "Three UX improvements, all protecting work a visitor has already done: the 8-step wizard now persists a device-local draft (fields, toggles, step) and the dashboard offers a one-click resume chip — 'Harbour House — 4 of 8 · in progress' — which the wizard confirms with a restored notice and clears the moment a build is generated; Cmd/Ctrl+K search gained every print-ready document (Form B and F reachable by name for the first time), the eight manual sections, and the dashboard's 'What needs doing' list, taking the index from seven groups to ten; and an honest demo banner on sample-data dashboards states plainly that nothing typed is saved to an account, offers 'Save my building' straight to the wizard, dismisses for a week, and is rule-tested so it can never appear to a signed-in council on their own host. 214 tests (resume 8, banner 7, search 3 new), 921 i18n keys x 9 locales, 116 contrast pairs."
 -  version: 0.3.21
 -  summary: "A simplification pass on the parts a person actually meets. The header went from six things to four (Compliance and Docs left the bar for the Library menu, where they belong — nothing became unreachable). A first-time visitor no longer meets a dashboard of someone else's numbers: they get one question with three ways in, decided before the first paint by the same class-before-paint trick the theme switch uses, with the choice remembered on the device only and the tour now waiting its turn. Four dashboard panels (setup checklist, deadlines, forms windows, month-end) merged into one ordered list — overdue, urgent, soon, routine, setup last — where a deadline inside two weeks is urgent whatever the API called it. Also fixed: breadcrumbs mislabelled /documents as Docs (because /documents starts with /docs) with a link to the wrong page. 196 frontend tests, 909 i18n keys x 9 locales, 116 contrast pairs."
 -  version: 0.3.20
@@ -77,11 +79,50 @@ version_history:
     date: 2026-06-22
     summary: Initial project scaffold
 audience: devs
-last_updated: 2026-09-18
+last_updated: 2026-09-19
 owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.22] — 2026-09-19
+
+### Added
+
+- **“Continue where you left off” — the wizard keeps your draft.** The 8-step
+  Building Template Wizard held everything in component state: stop halfway —
+  a phone call, lunch, a closed tab — and the whole building came back blank.
+  It now persists a device-local draft (`src/lib/resume.ts`, localStorage,
+  same convention as the setup ticks and the first-visit choice) on every
+  step change, and the dashboard answers with one chip above the greeting:
+  *Continue where you left off — Harbour House — 4 of 8 · in progress*.
+  One click lands back on the exact step with every field as typed — name,
+  address, unit count, banks, enabled sub-accounts, services, rails, bylaw
+  choice — and the wizard confirms the restoration with a quiet
+  “Draft restored” notice. Dismissing the chip discards the draft; generating
+  the config clears it, because a finished build is not unfinished work.
+  Parse degrades to “no draft” on corrupt or hostile storage, and a draft is
+  only offered when it has a name and the visitor got past step 1. 8 tests.
+- **⌘K reaches the whole site.** Site search now indexes the four print-ready
+  documents — Form B and Form F are reachable by name for the first time,
+  deep-linked to `/documents?doc=…` — the eight manual sections, and the
+  dashboard's “What needs doing” task list. The index goes from seven groups
+  to ten, so nothing a council can name is more than one keystroke away.
+- **An honest demo banner.** On a sample-data dashboard (no host configured,
+  no session) a banner now states plainly: *You are in demo mode — everything
+  here is sample data, and nothing you type is saved to an account. Your
+  building draft is kept on this device only.* One CTA — **Save my building**
+  — goes straight to the wizard, whose draft now survives a refresh. It
+  dismisses for a week (a day-stamp, not a forever flag) and the visibility
+  rule (`src/lib/demo-banner.ts`, 7 tests) makes the important failure
+  impossible: **a signed-in council on their own host can never be told their
+  real books are sample data.**
+
+### Verified
+
+- `npm run check` 0/0 · **214 tests** (was 196: +8 resume, +7 banner, +3
+  search) · `audit:i18n` **921 keys × 9 locales** · `audit:contrast` 116 pairs
+  · build green.
 
 ## [0.3.21] — 2026-09-18
 

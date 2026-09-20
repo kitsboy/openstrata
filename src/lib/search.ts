@@ -2,11 +2,13 @@ import { navItems } from '$lib/nav';
 import { blogPosts } from '$lib/blog';
 import { faqItems, rssFeeds } from '$lib/data';
 import { legalSources } from '$lib/legal';
+import { printDocuments } from '$lib/documents';
+import { manualSections } from '$lib/manual';
 import { templates } from '$lib/templates';
 import { strataToolModules } from '$lib/strata-tool';
 import type { Translation } from '$lib/i18n';
 
-export type SearchGroup = 'pages' | 'posts' | 'faq' | 'templates' | 'legal' | 'feeds' | 'tools';
+export type SearchGroup = 'pages' | 'posts' | 'faq' | 'templates' | 'documents' | 'manual' | 'legal' | 'feeds' | 'tools' | 'tasks';
 
 export type SearchEntry = {
 	group: SearchGroup;
@@ -56,6 +58,24 @@ export function buildSearchIndex(t: Translation): SearchEntry[] {  const pages: 
 		href: '/templates'
 	}));
 
+	// Print-ready documents. These are the pages a council hunts for by name
+	// ("Form B"), and before this they were only reachable if you already knew
+	// the /documents page existed.
+	const docs: SearchEntry[] = printDocuments.map((doc) => ({
+		group: 'documents',
+		title: doc.title,
+		description: doc.purpose,
+		href: `/documents?doc=${doc.slug}`
+	}));
+
+	// The manual hub — the long-form answers a new council asks for.
+	const manual: SearchEntry[] = manualSections.map((section) => ({
+		group: 'manual',
+		title: section.title,
+		description: section.desc,
+		href: section.href
+	}));
+
 	const legal: SearchEntry[] = legalSources.map((source) => ({
 		group: 'legal',
 		title: source.title,
@@ -77,7 +97,18 @@ export function buildSearchIndex(t: Translation): SearchEntry[] {  const pages: 
 		href: mod.href ?? '/tools'
 	}));
 
-	return [...pages, ...posts, ...faq, ...tpls, ...legal, ...feeds, ...tools];
+	// The dashboard's one task list — the thing a returning council opens first.
+	// Same destination the task rows link to, so search and the list agree.
+	const tasks: SearchEntry[] = [
+		{
+			group: 'tasks',
+			title: t.tasksTitle,
+			description: t.tasksHint,
+			href: '/'
+		}
+	];
+
+	return [...pages, ...docs, ...manual, ...posts, ...faq, ...tpls, ...legal, ...feeds, ...tools, ...tasks];
 }
 
 /** Rank entries by title/exact-prefix matches first, then description matches. */

@@ -1,14 +1,27 @@
-# openstrata — Last Updated 2026-09-18 by Buffy (M3)
+# openstrata — Last Updated 2026-09-19 by Buffy (M3)
 
-> **Same day — v0.3.21: a simplification pass.** Cam asked for a simpler, easier-to-navigate UI, so all three changes this round *remove* something rather than add it. The header is four things instead of six; a first-time visitor gets one question instead of a dashboard of someone else's numbers; and four dashboard panels became one ordered list. Details below, then everything from v0.3.20 onward.
+> **v0.3.22: nothing you started gets lost.** Cam's standing rule is that the UX must keep getting easier without losing a single thing a visitor has already done. All three changes this round protect exactly that: the wizard keeps your draft and the dashboard offers it back; ⌘K finds every document and page by name; and demo mode now says out loud what it is, with a one-click way to save your work.
 
-**Brief (v0.3.21):** **(1)** Compliance and Docs left the top bar for the `Library` menu — the bar is now Dashboard · Strata Tool · Library ▾ · Company ▾, and nothing became unreachable. **(2)** The first visit is a plain question with three ways in (look around / set up a building / sign in), decided *before the first paint* so there is no flash, remembered on the device, and with the first-run tour now waiting its turn instead of stacking on top. **(3)** The setup checklist, the deadlines panel, the Forms windows and the month-end close merged into **one ordered list**: overdue → urgent → soon → routine → setup last. Plus a real breadcrumb fix: `/documents` was mislabelled **Docs**.
+**Brief (v0.3.22):** **(1) Resume chip** — the 8-step wizard persists a device-local draft (every field, every toggle, the step you were on) and the dashboard shows *Continue where you left off — {building} — step N of 8 · in progress*; one click lands back exactly there, dismissing discards it, generating the config clears it. **(2) ⌘K everywhere** — site search now indexes all four print-ready documents (Form B / Form F reachable **by name** for the first time), the eight manual sections, and the “What needs doing” task list; seven groups became ten. **(3) Honest demo banner** — on a sample-data dashboard it says plainly that nothing typed is saved to an account, offers **Save my building** → the wizard, dismisses for a week, and is rule-tested so it can **never** appear to a signed-in council whose books are real.
 
 **Commit:** see `git log --oneline -6` — code → release → docs → handoff, pushed together.
 
 ---
 
-## v0.3.21 in detail
+## v0.3.22 in detail
+
+### Continue where you left off
+The wizard held everything in component state — a phone call or a closed tab meant the whole building came back blank. It now writes a draft (`src/lib/resume.ts`, localStorage `openstrata-wizard-draft`, 8 tests) on every step move, `ResumeChip.svelte` offers it back on the dashboard, the wizard restores fields before the template prefill runs and says “Draft restored”. Corrupt storage degrades to “no draft”; a finished build clears the draft because done is not pending.
+
+### Search that knows the site
+`buildSearchIndex` gained `documents` (deep links to `/documents?doc=<slug>`), `manual`, and a `tasks` row for the dashboard's list. A council that types “Form B” now finds the certificate itself, not a page that mentions it.
+
+### The demo banner
+`shouldShowDemoBanner` (`src/lib/demo-banner.ts`, 7 tests) is the whole rule: only unsigned + sample-data + settled, never a configured host, dismissal is a UTC day-stamp with a 7-day TTL. The banner's CTA protects work in progress; its visibility rule protects the truth.
+
+---
+
+## v0.3.21 (2026-09-18) — a simplification pass
 
 ### The header is four things
 Compliance and Docs were bar items; they are now in `Library` beside the legal sources, the templates and the printable documents. A council reads compliance material — it does not “go to compliance” the way it goes to its own dashboard. Both are still one click away, still in the footer, still in site search.

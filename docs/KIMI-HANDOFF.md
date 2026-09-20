@@ -1,3 +1,30 @@
+## Session — 2026-09-19 · v0.3.22 — work-protection UX: wizard draft resume, full-site ⌘K, honest demo banner (Buffy on M3)
+
+**Task from Cam:** build all three UI improvements suggested last run (resume chip, ⌘K search everywhere, demo banner) and ship as v0.3.22. Standing rules now in force: ELI16, concise, questions for Kimi in every handoff, and 3 new UI suggestions after every run.
+
+**Done:**
+
+- **“Continue where you left off.”** The 8-step wizard used to hold everything in component state — stop halfway and the whole building came back blank. `src/lib/resume.ts` (pure, **8 tests**) persists a device-local draft (`openstrata-wizard-draft`) on every step move; `ResumeChip.svelte` offers it back on the dashboard (*“Harbour House — 4 of 8 · in progress”*); the wizard restores fields before the template prefill and shows a “Draft restored” notice; generating the config clears the draft. Corrupt storage degrades to “no draft”; a nameless step-0 draft is not worth resuming.
+- **⌘K reaches the whole site.** `buildSearchIndex` gained `documents` (all four print-ready docs, deep-linked `/documents?doc=<slug>` — **Form B / Form F are reachable by name for the first time**), `manual` (the eight manual sections), and a `tasks` row for the dashboard's “What needs doing” list. Seven groups became ten; +3 tests in `search.test.ts`.
+- **An honest demo banner.** `src/lib/demo-banner.ts` (pure, **7 tests**) + `DemoBanner.svelte`: on a sample-data dashboard it states nothing typed is saved to an account, offers **Save my building** → the wizard, dismisses for 7 days (UTC day-stamp, `openstrata-demo-banner-dismissed`). The tested rule is the honesty guarantee: **never** while a session exists, **never** before auth settles, **never** when a host is configured — a signed-in council can never be told their real books are sample data.
+- 12 new catalog keys × 9 locales via `scripts/inject-resume-demo-i18n.mjs` (same positional-anchor pattern as the tasks/start injector).
+
+**Verified:** `check` 0/0 · **214 tests** (was 196) · `audit:i18n` **921 keys × 9 locales** · `audit:contrast` **116 pairs** · build green · changelog regenerated (25 releases, 165 items). Live verification on `openstrata.giveabit.io` follows the push (PWA cache-drop first — it is written in DEPLOYMENT.md and it still bites).
+
+**Git State:**
+
+- SHA: see the release commit for v0.3.22 (code → release → docs → handoff, pushed together)
+- Unpushed: none after the docs push
+
+**Questions for you, Kimi (please answer in your next handoff):**
+
+1. **Wizard draft lifetime** — the draft is device-local and never expires right now. Should a stale draft (say, >30 days) be silently dropped, kept forever, or surfaced with a “this is old” note when resumed? My instinct is keep-forever with the dismiss button as the only delete, but a council might see a months-old chip as clutter.
+2. **Saved-buildings ↔ draft overlap** — the wizard already has *Saved buildings* (explicit save of a generated config) and now the auto-draft. Is it clear enough that the draft is “the one you were working on” and Saved buildings is “the ones you finished”? If Kimi-side testing shows confusion, I can rename the chip copy or merge the two surfaces.
+3. **Demo banner placement** — it currently sits at the top of the dashboard body only. Should it also appear on `/tools` (where live-demo modules run on sample data), or is the dashboard the single honest place for it?
+4. **Search ranking sanity check** — documents now outrank FAQ entries for queries like “Form B”. If French/Chinese testing surfaces odd rankings (localized titles vs English document titles), tell me which locale and which query; document titles are canonical English by the same rule as `documents.ts`, and I may need a locale-aware alias row rather than a translation.
+
+---
+
 ## Session — 2026-09-18 · v0.3.21 — a simplification pass: four nav items, a first-visit question, one task list (Buffy on M3)
 
 **Done:**
