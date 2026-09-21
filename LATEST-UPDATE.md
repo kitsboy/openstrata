@@ -4,7 +4,19 @@
 
 **Brief (v0.3.26):** **(1) E2E money-path suite** — `backend/tests/money-path.e2e.test.ts` boots the real Fastify server over HTTP and walks the full council loop: register → units → billing run (the late notice lands on the arrears unit) → Lightning quote with the per-site receive label → confirm posts to the unit's AR ledger → reconcile → hash-chain verification → deadline calendar → Form B issued while Form F is **withheld** on the debtor unit → another council sees nothing. 10 tests. **(2) Guided first-month walkthrough** — five steps in treasurer order (bill → collect → reconcile → review → close) mounted on the tools page, each linking to the real panel where the step happens; device-local progress with reset/hide (`src/lib/first-month.ts`, 6 tests). **(3) Rosa quality gate** — a golden set of 12 real BC questions with expected citations scored by a pure eval harness (`backend/src/rosa/eval.ts`); hit@4 must be 1.0 and out-of-jurisdiction questions must be refused. The gate exposed a real gap: the keyword retriever answered an Alberta question from BC word overlap, so `rosa.ts` now fails closed on out-of-scope questions. **(4) Honest building drill-down** — the modal's fake "reserve funds = health × 2400" is gone; health, open actions and the real issue remain, with a straight note that live detail lives in Strata Tools. **(5) Fake buttons killed** — every toast-only dashboard button now navigates to its real destination (plan-meeting/log-request → tools demos, legal source → `/legal`, activity rows → tools demos, building ••• → Strata Tools). **(6) Deadline calendar** — the "Upcoming" list became a real month-view grid with statutory windows shaded (window length read from the deadline's own wording), today ringed, overdue red (`src/lib/calendar.ts`, 4 tests).
 
-**Commit:** _recorded in the docs commit that lands with this file._
+**Commit:** `9478d99` code + release bump; docs in `ce079d8`.
+
+---
+
+## Live verification (production, 2026-09-21 — v0.3.26)
+
+Measured on `https://openstrata.giveabit.io` after the Cloudflare deploy, version marker reads **0.3.26**:
+
+- **First-month walkthrough** on `/tools`: 5 rows render, "Up next" badge on step 1; ticking step 1 moves the meter to 20%, stores `{"done":["bill"]}` device-local, and the badge advances to step 2; Reset returns to 0% and clears storage.
+- **Deadline calendar** on the dashboard: 42-cell grid renders, the Form B 7-day window shades **8 day-cells**, today is ringed, all three legend chips present.
+- **Honest building modal:** opens on click, shows health % and the drill-down note, and the fake "Reserve funds" label is **gone**.
+- **Real navigation:** the "Find legal source" action card lands on `/legal` — no more toast-only buttons.
+- **Backend:** the money-path suite runs in CI (`npm test` in `backend/`), 229 passing with the e2e journey and the Rosa golden set.
 
 ---
 
