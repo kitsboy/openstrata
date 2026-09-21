@@ -14,6 +14,18 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.27",
+    "date": "2026-09-21",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Deadline popover. Clicking a calendar day opens a small panel pinned under that cell: the day's deadlines in full, each with a one-tap link to the tools panel where the item is handled. The day cells became real buttons — keyboard reachable, aria-expanded on the open day, hover affordance gated behind @media (hover: hover). The popover clamps inside the grid on narrow phones and closes on ✕, Escape, outside click, or month navigation."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.26",
     "date": "2026-09-21",
     "groups": [
