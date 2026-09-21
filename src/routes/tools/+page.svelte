@@ -7,6 +7,7 @@
   import Skeleton from '$lib/components/Skeleton.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import ETransferReconciler from '$lib/components/ETransferReconciler.svelte';
+  import FirstMonthWalkthrough from '$lib/components/FirstMonthWalkthrough.svelte';
 	import MeetingsTool from '$lib/components/MeetingsTool.svelte';
 	import SubAccounts from '$lib/components/SubAccounts.svelte';
 	import XpubImport from '$lib/components/XpubImport.svelte';  import EvidenceExport from '$lib/components/EvidenceExport.svelte';
@@ -337,6 +338,7 @@
 
 	<!-- Live interactive demos -->
 	<h2 id="live-demos" class="text-xl font-bold text-slate-800 mb-6 scroll-mt-28">{$copy.liveInteractiveDemos}</h2>
+	<FirstMonthWalkthrough />
 
 	<!-- Form K -->
 	<Card variant="hero" class="mb-8" as="section">

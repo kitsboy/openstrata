@@ -43,12 +43,6 @@
     { icon: 'arrow-up-right', tone: 'purple', title: 'Form B request received', meta: 'Harbour House · 3 hrs ago' }
   ] as const;
 
-  const upcoming = [
-    { date: '24', month: 'JUN', title: 'Council meeting', place: 'Harbour House · 6:30 PM', tone: 'orange' },
-    { date: '28', month: 'JUN', title: 'Depreciation report review', place: 'Northline Lofts · 10:00 AM', tone: 'purple' },
-    { date: '02', month: 'JUL', title: 'Quarterly financial package', place: 'All communities · Due date', tone: 'blue' }
-  ];
-
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
   import AuthModal from '$lib/components/AuthModal.svelte';
   import Icon from '$lib/components/Icon.svelte';
@@ -62,6 +56,7 @@
   import ResumeChip from '$lib/components/ResumeChip.svelte';
   import DemoBanner from '$lib/components/DemoBanner.svelte';
   import RailsStatus from '$lib/components/RailsStatus.svelte';
+  import DeadlineCalendar from '$lib/components/DeadlineCalendar.svelte';
   import HealthScore from '$lib/components/HealthScore.svelte';
   import RateSparkline from '$lib/components/RateSparkline.svelte';
   import ChainViz from '$lib/components/ChainViz.svelte';
@@ -395,7 +390,7 @@
           <div class="building-grid">
             {#each filteredBuildings as building}
               <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>
-                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); openAction($copy.buildingActionsToast); }}>•••</button></div>
+                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); goto('/tools'); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-3 w-3" /></span>{building.issue}<span class="status-arrow">→</span></div>
@@ -408,19 +403,19 @@
           <div class="section-heading action-heading"><div><h2>{$copy.quickActions}</h2><p>{$copy.commonWork}</p></div></div>
           <div class="action-grid">
             <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph"><Icon name="plus" class="h-4 w-4" /></span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>
-            <button class="action-card purple" onclick={() => openAction($copy.meetingPlannerToast)}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
-            <button class="action-card blue" onclick={() => openAction($copy.legalLibraryToast)}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>
-            <button class="action-card green" onclick={() => openAction($copy.maintenanceToast)}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
+            <button class="action-card purple" onclick={() => goto('/tools#live-demos')}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
+            <button class="action-card blue" onclick={() => goto('/legal')}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>
+            <button class="action-card green" onclick={() => goto('/tools#live-demos')}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
           </div>
         </div>
 
         <aside class="right-stack">
-          <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => openAction($copy.activityFiltersToast)}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => openAction(activity.title)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.activityHistoryToast)}>{$copy.activityHistory} <span>→</span></button></section>
+          <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => goto('/tools#live-demos')}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => goto('/tools#live-demos')}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => goto('/tools#live-demos')}>{$copy.activityHistory} <span>→</span></button></section>
           <RailsStatus />
           <HealthScore />
           <RateSparkline />
           <ChainViz />
-          <section class="panel upcoming-panel"><div class="panel-heading"><div><h2>{$copy.upcoming}</h2><p>{$copy.keepMoving}</p></div><button class="icon-button" aria-label={$copy.calendarOptions} onclick={() => openAction($copy.calendarOptionsToast)}>•••</button></div><div class="upcoming-list">{#each upcoming as event}<button class="upcoming-item" onclick={() => openAction(event.title)}><span class={`event-date ${event.tone}`}><b>{event.date}</b><small>{event.month}</small></span><span class="event-copy"><strong>{event.title}</strong><small>{event.place}</small></span><span class="activity-chevron">›</span></button>{/each}</div><button class="panel-link" onclick={() => openAction($copy.calendarOpenedToast)}>{$copy.seeCalendar} <span>→</span></button></section>
+          <DeadlineCalendar />
           <SatohashStatus />
         </aside>
       </section>
@@ -462,13 +457,13 @@
       <p>{selectedBuilding.location} <span>·</span> {selectedBuilding.units}</p>
       <div class="building-detail-row">
         <div><span class="metric-label">{$copy.communityHealth}</span><strong>{selectedBuilding.health}%</strong><div class="health-bar"><span style="width: {selectedBuilding.health}%"></span></div></div>
-        <div><span class="metric-label">{$copy.reserveFunds}</span><strong>{formatCurrency(Math.round(selectedBuilding.health * 2400), $locale, { maximumFractionDigits: 0 })}</strong></div>
         <div><span class="metric-label">{$copy.openActions}</span><strong>{formatNumber(selectedBuilding.tone === 'green' ? 0 : selectedBuilding.tone === 'amber' ? 2 : 4, $locale)}</strong></div>
+        <div><span class="metric-label">{$copy.health}</span><strong class={`health-chip ${selectedBuilding.tone}`}>{selectedBuilding.issue}</strong></div>
       </div>
-      <div class="building-detail-issue {selectedBuilding.tone}"><span class="status-symbol"><Icon name="alert" class="h-2.5 w-2.5" /></span>{selectedBuilding.issue}</div>
+      <p class="text-xs text-slate-400 mt-3">{$copy.drillDownNote}</p>
       <div class="modal-actions">
         <button class="secondary-button" onclick={() => (selectedBuilding = null)}>{$copy.close}</button>
-        <button class="primary-button" onclick={() => { openAction($copy.buildingActionsToast); selectedBuilding = null; }}>{$copy.openActions} <span>→</span></button>
+        <button class="primary-button" onclick={() => goto('/tools')}>{$copy.openActions} <span>→</span></button>
       </div>
     </dialog>
   </div>

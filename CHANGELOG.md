@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.26
+-  summary: "Three big pushes and three honest UI upgrades. E2E money-path suite: the REAL Fastify server walks the full council loop over HTTP - register, units, billing run with late notice, Lightning quote with per-site receive label, confirm to the AR ledger, reconciliation, hash-chain verification, deadline calendar, Form B issued / Form F withheld on arrears, and cross-council isolation - 10 tests, CI gates the sequence, not just the parts. Guided first-month walkthrough: five steps in treasurer order (bill, collect, reconcile, review, close) on the tools page, each linking to the real panel; device-local progress with reset and hide (first-month.ts, 6 tests). Rosa quality gate: a golden set of 12 real BC questions with expected citations scored by a pure eval harness (eval.ts) - hit@4 must be 1.0, and out-of-jurisdiction questions must be refused, which exposed a real gap: the keyword retriever answered Alberta questions from BC word overlap, so rosa.ts now fails closed on out-of-scope questions. Honest building drill-down: the modal's fake reserve-funds number (health x 2400) is gone; health, open actions and the real issue remain, with a straight note that live detail lives in Strata Tools. Fake buttons killed: every dashboard button now navigates to the real destination - plan meeting and log request go to the tools demos, legal source to /legal, activity rows to the tools demos, building dots to Strata Tools; the Upcoming list became a real month-view deadline calendar with statutory windows shaded (window length read from the deadline's own title), today ringed, overdue red (calendar.ts, 4 tests). 248 frontend tests, 229 backend tests, 998 i18n keys x 9 locales."
 -  version: 0.3.25
 -  summary: "The first-run popup explainer with the intro video is back within reach: it was never deleted — fresh-browser checks on production proved the card works — but it only ever showed on the 'just looking' path (the 'setting up a building' path navigated to the wizard before it could appear) and once dismissed it was unrecoverable; the dashboard welcome row now carries a replay pill (tourReplay, x9 locales) that reopens the full card on demand. Saved searches: a pin button in the Cmd/Ctrl+K modal writes to openstrata-saved-searches (device-local, capped at 8, deduped case-insensitively) and the dashboard renders the pins as one-tap /search?q= chips under the task list. Group counts: each scoping chip shows its index size so the corpus is visible before typing. Modal footer hints: 'open / close' kbd row. Task list filters: All / Overdue / This week / Done, reading the full list so a filter never misses rows parked behind the expansion button; Done rows untick to restore. Keyboard-first wizard: number keys jump steps (disabled while typing in a field, forward jumps respect the building-name validation). 404 rescue: a dead URL's words become /search?q= chips. Docs cross-link checker: every markdown link in docs/ and llms.txt must resolve to a route walked from src/routes (dynamic [category].xml feeds count) or a file on disk — on its first run it caught four broken ../diligence/ links (now fixed). Back-to-top floating arrow on long pages, reduced-motion aware. 238 tests, 976 i18n keys x 9 locales."
 -  version: 0.3.24
@@ -90,6 +92,46 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.26] — 2026-09-21
+
+### Added
+
+- **E2E money-path suite.** The real Fastify server boots over HTTP and walks
+  the full council loop: register → units → billing run (late notice lands on
+  the arrears unit) → Lightning quote with the per-site receive label →
+  confirm posts to the unit's AR ledger → reconcile → hash-chain verification
+  → deadline calendar → Form B issued while Form F is **withheld** on the
+  debtor unit → another council sees nothing. 10 tests. CI now gates the
+  *sequence* a real council runs, not just the parts.
+- **Guided first-month walkthrough.** Five steps in treasurer order (bill →
+  collect → reconcile → review → close) mounted at the top of the tools page,
+  each linking to the real interactive panel where that step happens.
+  Device-local progress (`src/lib/first-month.ts`, 6 tests) with reset, hide
+  and restore — a nudge with a reset button, never a gate.
+- **Rosa quality gate.** A golden set of 12 real BC questions with expected
+  citations, scored by a pure eval harness (`backend/src/rosa/eval.ts`):
+  hit@4 must be 1.0 and out-of-jurisdiction questions must be refused. The
+  gate exposed a real gap — the keyword retriever answered an Alberta
+  question from BC word overlap — so `rosa.ts` now fails closed on
+  out-of-scope questions instead of guessing.
+- **Deadline calendar.** The dashboard "Upcoming" list became a real
+  month-view grid: due dates marked, statutory windows shaded (the window
+  length is read from the deadline's own wording), today ringed, overdue red.
+  `src/lib/calendar.ts` is pure and tested (4 tests); live deadlines when
+  signed in, the honest demo set otherwise.
+
+### Fixed
+
+- **The building modal lied.** "Reserve funds" computed `health × 2400` —
+  demo math wearing a suit. The modal now shows health, open actions and the
+  building's real issue, and says plainly where live detail lives.
+- **Fake buttons.** Every dashboard button that only fired a toast now
+  navigates to the real destination: plan-meeting and log-request to the
+  tools demos, legal source to `/legal`, activity rows and building ••• to
+  Strata Tools. A button either does the thing or it goes.
+
+**248 frontend tests, 229 backend tests, 998 i18n keys × 9 locales.**
 
 ## [0.3.25] — 2026-09-21
 

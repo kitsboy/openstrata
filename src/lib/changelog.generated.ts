@@ -14,6 +14,28 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.26",
+    "date": "2026-09-21",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "E2E money-path suite. The real Fastify server boots over HTTP and walks the full council loop: register → units → billing run (late notice lands on the arrears unit) → Lightning quote with the per-site receive label → confirm posts to the unit's AR ledger → reconcile → hash-chain verification → deadline calendar → Form B issued while Form F is withheld on the debtor unit → another council sees nothing. 10 tests. CI now gates the *sequence* a real council runs, not just the parts.",
+          "Guided first-month walkthrough. Five steps in treasurer order (bill → collect → reconcile → review → close) mounted at the top of the tools page, each linking to the real interactive panel where that step happens. Device-local progress (src/lib/first-month.ts, 6 tests) with reset, hide and restore — a nudge with a reset button, never a gate.",
+          "Rosa quality gate. A golden set of 12 real BC questions with expected citations, scored by a pure eval harness (backend/src/rosa/eval.ts): hit@4 must be 1.0 and out-of-jurisdiction questions must be refused. The gate exposed a real gap — the keyword retriever answered an Alberta question from BC word overlap — so rosa.ts now fails closed on out-of-scope questions instead of guessing.",
+          "Deadline calendar. The dashboard \"Upcoming\" list became a real month-view grid: due dates marked, statutory windows shaded (the window length is read from the deadline's own wording), today ringed, overdue red. src/lib/calendar.ts is pure and tested (4 tests); live deadlines when signed in, the honest demo set otherwise."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "The building modal lied. \"Reserve funds\" computed health × 2400 — demo math wearing a suit. The modal now shows health, open actions and the building's real issue, and says plainly where live detail lives.",
+          "Fake buttons. Every dashboard button that only fired a toast now navigates to the real destination: plan-meeting and log-request to the tools demos, legal source to /legal, activity rows and building ••• to Strata Tools. A button either does the thing or it goes."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.25",
     "date": "2026-09-21",
     "groups": [

@@ -37,6 +37,11 @@ export function keywordRetriever(corpus: SourceRecord[]): Retriever {
   const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
   return {
     async retrieve(question: string, limit: number): Promise<RetrievedChunk[]> {
+      // Scope rule (deterministic, explainable): this corpus is BC-only, so a
+      // question that names another jurisdiction gets no chunks at all and the
+      // composer refuses — rather than answering an Alberta question from a BC
+      // section that shares a word. Fail-closed, like every Rosa seam.
+      if (OUT_OF_JURISDICTION_PATTERN.test(question)) return [];
       const q = normalize(question);
       const scored = corpus
         .map((source) => {
@@ -60,6 +65,14 @@ export interface RosaAnswer {
   cited: string[];
   uncertain: boolean; // true when facts are required to answer precisely
 }
+
+/**
+ * Questions naming a jurisdiction outside the corpus's scope. The BC pack
+ * must not answer them from word overlap; a deterministic refusal is the
+ * honest behavior until a jurisdiction-aware corpus pack is loaded.
+ */
+export const OUT_OF_JURISDICTION_PATTERN =
+  /\b(alberta|ontario|quebec|manitoba|saskatchewan|nova scotia|new brunswick|newfoundland|prince edward island|yukon|northwest territories|nunavut|washington|oregon|california|florida|texas|new york)\b/i;
 
 const NO_MATCH_TEXT =
   'No controlling source was found in the loaded corpus for that question. ' +
