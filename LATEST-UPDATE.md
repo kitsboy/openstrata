@@ -1,23 +1,32 @@
 # openstrata — Last Updated 2026-09-20 by Buffy (M3)
 
-> **v0.3.23: the words agree with the product.** Cam's standing rule is that the UX must keep getting easier without losing a single thing a visitor has already done — and the words must keep up with the features, because a placeholder that undersells the index is the same lost-work problem in miniature: a visitor is told the tool finds less than it does. The ⌘K empty state now names every group the index actually serves, in all nine locales, and a test makes the next drift impossible.
+> **v0.3.24: search that remembers, narrows, and travels.** Cam's standing rule holds — nothing a visitor did gets lost — and this round extends it to *looking things up*: the queries a person already typed are kept on their device, the ten result groups are one tap away as filters, and any search can leave the modal as a link a council member can open.
 
-**Brief (v0.3.23):** **(1) Search hint catch-up** — the empty ⌘K modal said "Search across pages, posts, FAQ, templates, and legal sources", written when there were five groups; there are ten now. The hint names them all, in all 9 locales, and a drift guard test ties the copy to the index's group list — the same class of guard that protects the nav, the task list and the first-visit contract. **(2) Group labels from one home** — the modal's inline group-label map moved into `search.ts` as `searchGroupLabels()`, so the eyebrows, the hint and the index are derived from the same source. **(3) Two labels were quietly English-only** — `primarySources` ("Primary and official sources") and `strataTool` ("Strata Tool") had no locale overrides, so they rendered as English fallbacks in the other eight languages; all eight now carry them.
+**Brief (v0.3.24):** **(1) Recent searches** — the empty ⌘K modal remembers the last five queries, device-local (`openstrata-recent-searches`), capped at 80 chars, deduped case-insensitively, one-tap remove; 7 tests. **(2) Scoping chips** — ten one-tap filters above the results; chips scope *before* ranking, so a query that missed the global top-12 still surfaces inside its group; labels come from `searchGroupShort()` and render from `groupsInIndex()`, so a future group can never grow a chip that filters to nothing. **(3) Shareable search** — every modal state links to `/search?q=…`, Enter-with-no-selection navigates there, and the page runs the same index so a shared link can never disagree with the modal. **(4) Copy debt to zero** — the thank-you flow prose moved to `src/lib/thankyou.ts` as canonical English (the documents/custody rule), its chrome and the home proof band, design specimens, privacy/terms metas, wizard link and footer links all went through the catalog: hard-coded-copy warnings **24 → 0**. **(5) Help lands on the walkthrough** — the sidebar "Need a hand?" card and the HostConnect strip now deep-link to the six-step getting-started guide.
 
 **Commit:** _recorded in the docs commit that lands with this file._
 
 ---
 
-## v0.3.23 in detail
+## v0.3.24 in detail
 
-### The empty state that lagged the product
-Ten groups went into the index in v0.3.22; the empty-modal copy stayed at five because nothing connected the string to the index. Fixed two ways: the copy now lists all ten, and a test reads the group list out of `buildSearchIndex` and fails if `searchHint` ever names fewer. If a future session adds an eleventh group, the test fails until the hint is rewritten — the drift can never ship silently again.
+### The modal remembers you
+`src/lib/recent-searches.ts` is pure and device-local — the same posture as the wizard draft. Open the modal empty: your recent queries are one click each, with an × to drop one. Corrupt storage degrades to an empty list, never a broken modal.
 
-### One home for the group labels
-`searchGroupLabels(t)` in `search.ts` returns the ten eyebrow labels; `SearchModal.svelte` consumes it instead of carrying its own map. The hint copy is written to echo the same labels, so a council reads the same words in the placeholder as in the results.
+### Chips that narrow before they rank
+`scopeIndex()` filters the index to one group, *then* ranks — so "notice" inside Documents finds the meeting notice even when legal sources crowded it out of the global top-12. Chips toggle (click again to unscope) and use short labels so "Print-ready documents" fits as "Documents".
 
-### Two labels that were never localized
-`primarySources` and `strataTool` existed in the English catalog only — the other eight locales silently fell back to English for two of the ten group eyebrows. Now overridden everywhere; "Strata Tool" stays as the product name in every locale, matching the file's own convention (`openStrataToolsCta` keeps it in all nine).
+### A search you can send
+`/search?q=Form%20B` is a real page: hero, ranked results, group eyebrows — the same `buildSearchIndex` the modal uses. In the sitemap (the route is crawlable) and `llms.txt`; the page itself sends `noindex, follow` (each query string is a soft-404 for a crawler).
+
+### The copy-debt sweep
+24 audit warnings → 0. The thank-you page's honesty prose ("nothing was published, emailed, or charged") is canonical English in `src/lib/thankyou.ts` — a loose translation of that is a materially false statement — while all page chrome went through the catalog ×9 locales. One audit quirk recorded: `thanksNoHiddenSteps` ends with an em dash because the audit's key regex reads a trailing `:'` as a phantom key named `e`.
+
+### New guards
+- Every indexed href must resolve to a canonical route (the sitemap's list — not the nav; `/custody` deliberately lives outside the bar). The guard caught a false assumption on its first run, which is the point.
+- Short chip labels never collide within a locale; chip map and eyebrow map always cover the same ten groups; share hrefs round-trip through `URLSearchParams`.
+
+**Verified:** `check` 0/0 · **229 tests** (was 217) · `audit:i18n` **968 keys × 9 locales**, 0 hard-coded warnings · build green · changelog regenerated (27 releases, 176 items).
 
 ---
 
@@ -26,6 +35,10 @@ Ten groups went into the index in v0.3.22; the empty-modal copy stayed at five b
 _Pending deploy._
 
 ---
+
+## v0.3.23 (2026-09-20) — the ⌘K hint caught up with the index
+
+The empty search modal's copy said "Search across pages, posts, FAQ, templates, and legal sources" — written when the index had five groups; v0.3.22 grew it to ten. Fixed in all 9 locales, with `searchGroupLabels()` as the one home for group labels and 3 drift-guard tests so the copy can never lag the index again. Two labels (`primarySources`, `strataTool`) that had silently fallen back to English in eight locales are now localized everywhere. Verified: `check` 0/0, 217 tests, 921 keys × 9 locales, build green.
 
 ## v0.3.22 (2026-09-20) — nothing you started gets lost
 

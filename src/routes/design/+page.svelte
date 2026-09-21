@@ -67,10 +67,10 @@
   <section>
     <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wide mb-4">Type</h2>
     <div class="rounded-2xl border border-border bg-surface-2 p-6">
-      <p class="text-3xl font-bold text-slate-900">Manrope — headings</p>
-      <p class="mt-3 text-lg text-slate-600">Body copy reads clean at 16–18px with relaxed leading.</p>
-      <p class="mt-3 font-mono text-sm text-bc-blue">DM Mono — labels, codes, tallies</p>
-      <p class="mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Eyebrow — tiny caps</p>
+      <p class="text-3xl font-bold text-slate-900">{$copy.designTypeHeading}</p>
+      <p class="mt-3 text-lg text-slate-600">{$copy.designTypeBody}</p>
+      <p class="mt-3 font-mono text-sm text-bc-blue">{$copy.designMonoLine}</p>
+      <p class="mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{$copy.designEyebrowLine}</p>
     </div>
   </section>
 
@@ -90,7 +90,7 @@
         <p class="text-[10px] font-bold text-slate-400 uppercase mb-4">Cards</p>
         <div class="glass-card rounded-2xl p-6">
           <p class="font-bold text-slate-800">glass-card</p>
-          <p class="mt-1 text-sm text-slate-500">Radius 13 · 2-layer shadow · hairline border.</p>
+          <p class="mt-1 text-sm text-slate-500">{$copy.designCardNote}</p>
         </div>
       </div>
       <div class="rounded-2xl border border-border bg-surface-2 p-6">
@@ -99,7 +99,7 @@
         <div class="mt-4 space-y-2"><Skeleton height="12px" width="80%" /><Skeleton height="24px" width="45%" /></div>
       </div>
       <div class="rounded-2xl border border-border bg-surface-2 p-6">
-        <p class="text-[10px] font-bold text-slate-400 uppercase mb-4">States & icons</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase mb-4">{$copy.designStatesIcons}</p>
         <EmptyState icon="search" title="Empty state" message="A mark, a next step, a CTA." actionLabel={$copy.newStrata} />
         <div class="mt-4 flex items-center gap-3 text-slate-500">
           <Icon name="home" class="h-4 w-4" /><Icon name="shield" class="h-4 w-4" /><Icon name="coins" class="h-4 w-4" /><Icon name="bitcoin" class="h-4 w-4 text-bitcoin" /><Icon name="lightning" class="h-4 w-4 text-lightning" /><Glossary term="crf" />

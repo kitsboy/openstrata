@@ -35,6 +35,66 @@ export function searchGroupLabels(t: Translation): Record<SearchGroup, string> {
 	};
 }
 
+/** The one- or two-word labels the scoping chips use. Long names like
+ * "Print-ready documents" do not fit a chip row, so the chips carry short
+ * forms and the full label stays on the per-result eyebrows. */
+export function searchGroupShort(t: Translation): Record<SearchGroup, string> {
+	return {
+		pages: t.searchShortPages,
+		posts: t.searchShortPosts,
+		faq: t.searchShortFaq,
+		templates: t.searchShortTemplates,
+		documents: t.searchShortDocuments,
+		manual: t.searchShortManual,
+		legal: t.searchShortLegal,
+		feeds: t.searchShortFeeds,
+		tools: t.searchShortTools,
+		tasks: t.searchShortTasks
+	};
+}
+
+/** Which groups the index actually carries entries for, in index order.
+ * The scoping chips render from this, so a future group cannot gain a chip
+ * and then filter down to nothing. */
+export function groupsInIndex(index: SearchEntry[]): SearchGroup[] {
+	const order: SearchGroup[] = [
+		'pages',
+		'documents',
+		'manual',
+		'posts',
+		'faq',
+		'templates',
+		'legal',
+		'feeds',
+		'tools',
+		'tasks'
+	];
+	const present = new Set(index.map((entry) => entry.group));
+	return order.filter((group) => present.has(group));
+}
+
+/** Search within one group only. Scope first, then rank — a chip narrows the
+ * corpus so results that would have missed the global cut still surface. */
+export function scopeIndex(
+	index: SearchEntry[],
+	query: string,
+	group: SearchGroup,
+	limit = 12
+): SearchEntry[] {
+	return searchIndex(
+		index.filter((entry) => entry.group === group),
+		query,
+		limit
+	);
+}
+
+/** The canonical, shareable URL for a query — what the modal builds, what the
+ * /search page reads, and what a council bookmarks or sends. One builder so
+ * they can never disagree about encoding. */
+export function searchShareHref(query: string): string {
+	return `/search?q=${encodeURIComponent(query.trim())}`;
+}
+
 function norm(value: string): string {
 	return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }

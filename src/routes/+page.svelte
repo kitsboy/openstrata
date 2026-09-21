@@ -283,9 +283,9 @@
     </nav>
 
     <div class="sidebar-spacer"></div>
-    <a href="/faq" class="sidebar-help no-underline">
+    <a href="/docs/manual/getting-started" class="sidebar-help no-underline">
       <div class="help-orbit"><Icon name="help" class="h-3.5 w-3.5" /></div>
-      <div><strong>{$copy.needAHand}</strong><span>{$copy.visitResourceCentre}</span></div>
+      <div><strong>{$copy.needAHand}</strong><span>{$copy.helpStartHere}</span></div>
       <Icon name="arrow-up-right" class="h-3.5 w-3.5 arrow" />
     </a>
     <div class="sidebar-footer"><span class="status-dot"></span><span>{$copy.allSystemsOperational}</span><button class="mini-settings" aria-label={$copy.openSettings}><Icon name="settings" class="h-3.5 w-3.5" /></button></div>
@@ -402,12 +402,12 @@
         </div>
         <div class="proof-card">
           <div class="proof-mark green"><Icon name="bitcoin" class="h-5 w-5" /></div>
-          <div class="proof-body"><strong>0% custody, always.</strong><span>Fiat rails today. Sovereign rails when you're ready. Keys stay on council hardware wallets.</span></div>
+          <div class="proof-body"><strong>{$copy.proofCustodyTitle}</strong><span>{$copy.proofCustodyBody}</span></div>
           <a href="/custody" class="proof-cta">{$copy.custodyLink} <span>→</span></a>
         </div>
         <div class="proof-card">
           <div class="proof-mark blue"><Icon name="clock" class="h-5 w-5" /></div>
-          <div class="proof-body"><strong>Statutory clocks that don't slip.</strong><span>14-day bylaw window and 7-day Form B deadline are tracked as first-class deadlines.</span></div>
+          <div class="proof-body"><strong>{$copy.proofClocksTitle}</strong><span>{$copy.proofClocksBody}</span></div>
           <a href="/docs" class="proof-cta">{$copy.status} <span>→</span></a>
         </div>
       </div>
@@ -415,7 +415,7 @@
     </main>
 
     <footer class="site-footer">
-      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><BrandMark size={28} /><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/custody">{$copy.custodyLink}</a><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">No cookies. We use self-hosted, cookie-less analytics. Nothing to consent to.</span></div>
+      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><BrandMark size={28} /><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/custody">{$copy.custodyLink}</a><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">{$copy.privacy}</a><a href="/terms">{$copy.terms}</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">No cookies. We use self-hosted, cookie-less analytics. Nothing to consent to.</span></div>
     </footer>
   </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/tools" class:active={isActive('/tools')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><Icon name="plus" class="h-4 w-4" /></button><a href="/tools" class:active={isActive('/tools')}><Icon name="wrench" class="h-4 w-4" />{$copy.operations}</a><button onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
 </div>

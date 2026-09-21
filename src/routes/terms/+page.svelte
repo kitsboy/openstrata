@@ -1,14 +1,12 @@
 <script>
   import LegalDoc from '$lib/components/LegalDoc.svelte';
   import { termsHtml } from '$lib/legal/family-terms.js';
+  import { copy } from '$lib/i18n';
 </script>
 
 <svelte:head>
-  <title>Terms &amp; Conditions — OpenStrata</title>
-  <meta
-    name="description"
-    content="The terms for using the Give A Bit family sites: informational tools, no advice, no warranty, donations vs paid services."
-  />
+  <title>{$copy.termsPageTitle}</title>
+  <meta name="description" content={$copy.termsMetaDescription} />
   <link rel="canonical" href="https://openstrata.giveabit.io/terms" />
 </svelte:head>
 

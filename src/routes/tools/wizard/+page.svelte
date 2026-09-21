@@ -311,7 +311,7 @@
 			<p class="mt-2 text-slate-500">{$copy.generatedDescription}</p>
 			<div class="mt-6 flex flex-wrap justify-center gap-3">
 				<a class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-all"
-					href="/thank-you?from=wizard">What happens next →</a>
+					href="/thank-you?from=wizard">{$copy.wizardWhatNext} →</a>
 				<button class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500 transition-all"
 					onclick={() => { completed = false; step = 0; clearWizardDraft(); }}>{$copy.startNew}</button>
 				<button class="rounded-xl bg-success/10 px-6 py-3 text-sm font-semibold text-success hover:bg-success/20 transition-all" onclick={saveBuilding}>{'\u{1F4BE}'} {$copy.saveBuilding}</button>

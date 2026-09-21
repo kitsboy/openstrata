@@ -1,3 +1,39 @@
+## Session — 2026-09-20 · v0.3.24 — search that remembers, narrows, and travels (Buffy on M3)
+
+**Task from Cam:** run all six solo items (live-verify v0.3.23, recent searches, scoping chips, shareable search, catalog the remaining hard-coded copy, more drift guards) plus UI upgrades 1 and 2 (recent searches, chips).
+
+**Done:**
+
+- **Recent searches in the ⌘K empty state.** `src/lib/recent-searches.ts` (pure, **7 tests**) — last five queries, device-local (`openstrata-recent-searches`), 80-char cap, case-insensitive dedupe ("form b" == "Form B"), one-tap remove, corrupt storage degrades to empty. Same privacy posture as the wizard draft.
+- **Scoping chips.** Ten one-tap filters above the results. `scopeIndex()` filters to one group *before* ranking, so "notice" scoped to Documents surfaces the meeting notice even when legal sources crowded it out globally. Short labels via `searchGroupShort(t)`; chips render from `groupsInIndex(index)` so a future group can never grow a chip that filters to nothing.
+- **Shareable search — `/search?q=…`.** The page runs the *same* `buildSearchIndex`, so a shared link can never disagree with what the modal showed. Every modal state links there (even no-results), Enter with no row highlighted navigates there. Sitemap + `llms.txt` list it; the page sends `noindex, follow` (queries are soft-404s for crawlers; the route is not).
+- **Copy debt 24 → 0.** Thank-you flow prose moved to `src/lib/thankyou.ts` as canonical English (documents/custody rule — it is operational honesty about what just happened to someone's data); chrome, home proof band, design specimens, privacy/terms metas, wizard link, footer Privacy/Terms all through the catalog. Catalog now **968 keys × 9 locales**. Four injector scripts added (chips+thanks, proof+meta, design, /search, help-hint).
+- **Help deep-links.** Sidebar "Need a hand?" card and HostConnect strip now go to `/docs/manual/getting-started`, with hint copy `helpStartHere` — a person asking for help wants the walkthrough, not an index.
+- **New guards:** every indexed href must resolve to a canonical route (the *sitemap's* list, not the nav — the guard caught on its first run that `/custody` deliberately lives outside the bar); short chip labels never collide within a locale; chip map and eyebrow map cover the same ten groups; share hrefs round-trip.
+
+**Verified:** `check` 0/0 · **229 tests** (was 217) · `audit:i18n` **968 keys × 9 locales**, **0** hard-coded warnings (was 24) · build green · changelog regenerated (27 releases, 176 items).
+
+**One audit quirk worth knowing:** the parity guard's key regex reads a value ending in `:'` as a phantom key (the last word + colon-quote) — five locales hit this via `thanksNoHiddenSteps: '…cachée :'`. Values now end with an em dash. If you add catalog copy, watch for trailing colons in translated values.
+
+**Git State:**
+
+- Code + release bump: one commit; docs and this handoff land in the docs commit above it.
+- Unpushed: none by the time you read this.
+
+**Questions for you, Kimi (please answer in your next handoff):**
+
+1. **Still open from 2026-09-19:** wizard draft lifetime, draft ↔ Saved-buildings clarity, demo banner placement on `/tools`, locale search-ranking sanity.
+2. **New:** recent searches and the ten chips now share the empty/results space — on a 390px phone the chip row wraps to two lines before typing. Happy to collapse chips behind a "Filter" toggle on small screens if your testing finds it noisy.
+3. **New:** the shareable page's hero repeats the query as the h1 ("\"Form B\""). Fine in EN/FR/ES; check ZH/HI/SW for awkward quoting with full-width marks.
+
+**Three UI suggestions for the next run (standing rule):**
+
+1. **Search-as-you-type keyboard hints** — show "↵ open · esc close" inside the modal footer.
+2. **Saved searches** — pin a query (e.g. "arrears") to the dashboard, device-local, next to the task list.
+3. **Group counts in chips** — each chip shows how many entries it holds ("Documents · 4"), so the index size is visible before typing.
+
+---
+
 ## Session — 2026-09-20 · v0.3.23 — the ⌘K hint caught up with the index (Buffy on M3)
 
 **Task:** fix the one stale string queued by the v0.3.22 live verification — the empty search modal still said “Search across pages, posts, FAQ, templates, and legal sources”, written when the index had five groups; v0.3.22 grew it to ten.

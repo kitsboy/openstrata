@@ -80,7 +80,7 @@
         <a class="os-strip-cta" href={mailto}>{$copy.demoNoticeCta}</a>
         <a class="os-strip-ghost" href="/about">{$copy.demoNoticeLearn}</a>
       {:else}
-        <a class="os-strip-ghost" href="/faq">{$copy.needAHand}</a>
+        <a class="os-strip-ghost" href="/docs/manual/getting-started">{$copy.needAHand}</a>
       {/if}
       <button class="os-strip-close" onclick={() => (dismissed = true)} aria-label={$copy.closeDialog}>×</button>
     </div>

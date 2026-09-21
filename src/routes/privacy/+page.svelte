@@ -1,14 +1,12 @@
 <script>
   import LegalDoc from '$lib/components/LegalDoc.svelte';
   import { privacyHtml } from '$lib/legal/family-privacy.js';
+  import { copy } from '$lib/i18n';
 </script>
 
 <svelte:head>
-  <title>Privacy Policy — OpenStrata</title>
-  <meta
-    name="description"
-    content="How the Give A Bit family handles data: no accounts, no cookies, cookie-less analytics, and how to reach us."
-  />
+  <title>{$copy.privacyPageTitle}</title>
+  <meta name="description" content={$copy.privacyMetaDescription} />
   <link rel="canonical" href="https://openstrata.giveabit.io/privacy" />
 </svelte:head>
 

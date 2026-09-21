@@ -14,6 +14,35 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.24",
+    "date": "2026-09-20",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Recent searches in the ⌘K empty state. The modal now remembers the last five queries, device-local under openstrata-recent-searches (the same privacy posture as the wizard draft — no account, nothing leaves the browser). src/lib/recent-searches.ts is pure with 7 tests: queries cap at 80 characters, dedupe case-insensitively (\"form b\" == \"Form B\"), a new query moves up instead of duplicating, and one tap removes an entry. Corrupt storage degrades to an empty list.",
+          "Scoping chips. Ten one-tap filters (Pages · Documents · Manual · Posts · FAQ · Templates · Legal · Sources · Tools · Tasks) sit above the results. Chips scope *before* ranking, so a query that missed the global top-12 cut still surfaces inside its group. Short chip labels come from searchGroupShort(t) — long names like \"Print-ready documents\" stay on the per-result eyebrows — and groupsInIndex() renders the chips from the index itself, so a future group cannot grow a chip that filters to nothing.",
+          "Shareable search — /search?q=…. Every modal state links to the shareable page (results, and even no-results), pressing Enter with no row highlighted navigates there, and the page runs the *same* index so a shared link can never show different results than the modal did. Listed in the sitemap and llms.txt; the page sends noindex, follow because each query string is a soft-404 for a crawler while the route is not."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The last hard-coded copy went through the catalog. The thank-you page's flow prose (variant titles, the four step bodies) moved to src/lib/thankyou.ts as canonical English — the same rule as the manual and the custody page, because it is operational honesty about what just happened to someone's data — and its chrome (title, meta, buttons, \"No hidden steps\") went through the catalog in all 9 locales. Also catalogued: the home proof band (\"0% custody, always.\" / \"Statutory clocks that don't slip.\"), the design-page type specimens, the privacy/terms titles and metas, the wizard's \"What happens next →\", and the footer's Privacy/Terms links. The hard-coded-copy audit fell from 24 warnings to 0. Two keys (thanksNoHiddenSteps) end with an em dash instead of a colon — the audit's key regex reads a trailing :' as a phantom key, which surfaced as bogus parity errors.",
+          "Help lands on the six-step guide. The dashboard sidebar's \"Need a hand?\" card and the HostConnect strip's help link now deep-link to /docs/manual/getting-started instead of the FAQ, and the hint copy says so (helpStartHere), because a person asking for help wants the walkthrough, not an index."
+        ]
+      },
+      {
+        "label": "Guarded",
+        "items": [
+          "Every indexed href must resolve to a canonical route (the sitemap's list, not the nav — pages like /custody deliberately live outside the bar). An index row pointing at a dead page now fails the suite.",
+          "Short chip labels never collide within a locale, and the short/long label maps always cover the same ten groups.",
+          "Share hrefs round-trip through URLSearchParams exactly."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.23",
     "date": "2026-09-20",
     "groups": [

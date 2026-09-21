@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.24
+-  summary: "The Cmd/Ctrl+K modal learned three tricks and the last hard-coded copy went through the catalog. Recent searches: the empty modal remembers the last five queries on the device only (capped at 80 chars, deduped case-insensitively, one-tap remove). Scoping chips: ten one-tap filters above the results narrow the corpus before ranking, so a query that missed the global top-12 still surfaces inside its group. Shareable search: every modal state links to /search?q=... which runs the same index, plus Enter-with-no-selection goes straight there; the page is in the sitemap and llms.txt (noindex, follow). Copy debt: the thank-you page's flow prose moved to src/lib/thankyou.ts as canonical English and its chrome through the catalog, the home proof band, design specimens, privacy/terms metas, wizard link and footer Privacy/Terms all through the catalog too - hard-coded-copy warnings fell from 24 to 0. New guards: every indexed href must resolve to a canonical route, short chip labels must never collide within a locale, share hrefs must round-trip. 229 tests, 968 i18n keys x 9 locales."
 -  version: 0.3.23
 -  summary: "The empty-state hint in the Cmd/Ctrl+K search modal said 'Search across pages, posts, FAQ, templates, and legal sources' — written when the index had five groups; v0.3.22 grew it to ten and the copy lagged. The hint now names every group the index serves (pages, posts, FAQ, templates, print-ready documents, the manual, legal sources, primary and official sources, the Strata Tool, and what needs doing) in all nine locales; the modal's group-label map moved into search.ts as searchGroupLabels() so eyebrows, hint and index share one home; two labels (primarySources, strataTool) that had silently fallen back to English in the other eight locales are now overridden everywhere; and three drift-guard tests in search.test.ts fail if the hint ever names fewer groups than the index serves, if any locale reverts to the stale English copy, or if any locale loses a group label. 217 tests, 921 i18n keys x 9 locales."
 -  version: 0.3.22
@@ -86,6 +88,61 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.24] — 2026-09-20
+
+### Added
+
+- **Recent searches in the ⌘K empty state.** The modal now remembers the last
+  five queries, device-local under `openstrata-recent-searches` (the same
+  privacy posture as the wizard draft — no account, nothing leaves the
+  browser). `src/lib/recent-searches.ts` is pure with 7 tests: queries cap at
+  80 characters, dedupe case-insensitively ("form b" == "Form B"), a new query
+  moves up instead of duplicating, and one tap removes an entry. Corrupt
+  storage degrades to an empty list.
+- **Scoping chips.** Ten one-tap filters (Pages · Documents · Manual · Posts ·
+  FAQ · Templates · Legal · Sources · Tools · Tasks) sit above the results.
+  Chips scope *before* ranking, so a query that missed the global top-12 cut
+  still surfaces inside its group. Short chip labels come from
+  `searchGroupShort(t)` — long names like "Print-ready documents" stay on the
+  per-result eyebrows — and `groupsInIndex()` renders the chips from the index
+  itself, so a future group cannot grow a chip that filters to nothing.
+- **Shareable search — `/search?q=…`.** Every modal state links to the
+  shareable page (results, and even no-results), pressing Enter with no row
+  highlighted navigates there, and the page runs the *same* index so a shared
+  link can never show different results than the modal did. Listed in the
+  sitemap and `llms.txt`; the page sends `noindex, follow` because each query
+  string is a soft-404 for a crawler while the route is not.
+
+### Changed
+
+- **The last hard-coded copy went through the catalog.** The thank-you page's
+  flow prose (variant titles, the four step bodies) moved to
+  `src/lib/thankyou.ts` as canonical English — the same rule as the manual and
+  the custody page, because it is operational honesty about what just happened
+  to someone's data — and its chrome (title, meta, buttons, "No hidden steps")
+  went through the catalog in all 9 locales. Also catalogued: the home proof
+  band ("0% custody, always." / "Statutory clocks that don't slip."), the
+  design-page type specimens, the privacy/terms titles and metas, the wizard's
+  "What happens next →", and the footer's Privacy/Terms links. The
+  hard-coded-copy audit fell from 24 warnings to **0**. Two keys
+  (`thanksNoHiddenSteps`) end with an em dash instead of a colon — the audit's
+  key regex reads a trailing `:'` as a phantom key, which surfaced as bogus
+  parity errors.
+- **Help lands on the six-step guide.** The dashboard sidebar's "Need a hand?"
+  card and the HostConnect strip's help link now deep-link to
+  `/docs/manual/getting-started` instead of the FAQ, and the hint copy says so
+  (`helpStartHere`), because a person asking for help wants the walkthrough,
+  not an index.
+
+### Guarded
+
+- **Every indexed href must resolve to a canonical route** (the sitemap's list,
+  not the nav — pages like `/custody` deliberately live outside the bar).
+  An index row pointing at a dead page now fails the suite.
+- **Short chip labels never collide within a locale**, and the short/long label
+  maps always cover the same ten groups.
+- **Share hrefs round-trip** through `URLSearchParams` exactly.
 
 ## [0.3.23] — 2026-09-20
 

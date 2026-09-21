@@ -2,6 +2,10 @@
 /**
  * Generates static/sitemap.xml from the canonical route list.
  * Run before every build (npm run build runs this first via "prebuild").
+ *
+ * `/search` is the shareable search page — listed so a shared link is at least
+ * crawlable, though the page itself sends `noindex, follow` (each query is a
+ * soft-404 for a crawler; the route is not).
  */
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +33,7 @@ const routes = [
   '/roadmap',
   '/rss',
   '/rss.xml',
+  '/search',
   '/spec',
   '/templates',
   '/documents',

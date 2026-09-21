@@ -144,7 +144,7 @@ for (const file of routeFiles) {
 
   // 4. Static meta description/title content (warn-level). Skip metas whose
   //    content is mandated literal by the platform (iOS PWA, theme color).
-  const LITERAL_META = /^(apple-mobile-web-app|theme-color|format-detection|msapplication|robots)/i;
+  const LITERAL_META = /^(apple-mobile-web-app|mobile-web-app-capable|theme-color|format-detection|msapplication|robots)/i;
   for (const match of source.matchAll(/<meta[^>]*content="([^"{]*)"/g)) {
     const value = match[1].trim();
     const nameMatch = /<meta[^>]*\bname="([^"]*)"/.exec(match[0]);
