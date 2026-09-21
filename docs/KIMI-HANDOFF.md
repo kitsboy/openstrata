@@ -1,3 +1,35 @@
+## Session — 2026-09-21 · v0.3.26 — money path gated, first month guided, dashboard honest (Buffy on M3)
+
+**Task from Cam:** "1, 2, then 3 from the big list, complete end to end. Then all the UI upgrades also" — the E2E money-path tests, the guided first-month walkthrough, the Rosa quality gate, plus the honest building drill-down, killing fake buttons, and the deadline calendar.
+
+**Done:**
+
+- **E2E money-path suite** (`backend/tests/money-path.e2e.test.ts`, **10 tests**). The real Fastify server over HTTP walks the full council loop: register → units → billing run (late notice lands on the arrears unit) → Lightning quote with per-site receive label → confirm posts to the unit's AR ledger → reconcile → hash-chain verification → deadline calendar → Form B issued / Form F **withheld** on the debtor unit → another council sees nothing. CI gates the sequence now, not just the parts. Writing it pinned three contract details: billing wants bare unit ids (`'302'`), `deps.units` must be a `createRegistry()` registry, and `ledger/entries` + `deadlines` responses are wrapped (`{ok, …}`).
+- **Guided first-month walkthrough.** `src/lib/first-month.ts` (**6 tests**) + `FirstMonthWalkthrough.svelte` at the top of the tools page: bill → collect → reconcile → review → close, each linking to the real interactive panel. Device-local (`openstrata-first-month-done`), reset + hide + restore. A nudge with a reset button, never a gate.
+- **Rosa quality gate.** `backend/src/rosa/eval.ts` (pure harness) + a 12-question golden set with expected citations. hit@4 must be 1.0; out-of-corpus questions must refuse. **The gate caught a real gap on first run:** the keyword retriever had no refusal path — an Alberta quorum question was answered from a BC section via word overlap. Fix: `OUT_OF_JURISDICTION_PATTERN` in `rosa.ts` fails closed on out-of-scope questions (deterministic, explainable). Topic-level refusal (same words, wrong domain) is the documented gate for the vector retriever when it lands.
+- **Honest building drill-down.** The modal's "reserve funds" was `health × 2400` — demo math wearing a suit. Deleted; the modal shows health, open actions, the real issue, and a note that live detail lives in Strata Tools.
+- **Fake buttons killed.** Plan-meeting and log-request → `/tools#live-demos`, legal source → `/legal`, activity rows → tools demos, building ••• → `/tools`. The static fake `upcoming` array is deleted.
+- **Deadline calendar.** `src/lib/calendar.ts` (**4 tests**) + `DeadlineCalendar.svelte`: a real month view replacing the fake list — due dates marked, statutory windows shaded (length read from the deadline's own "N-day" wording, so it is data-driven), today ringed, overdue red. Live when signed in, `demoTaskDeadlines` otherwise.
+
+**Verified:** frontend `check` 0/0 · **248 tests** (was 238) · backend **229 tests** (was 214) · `audit:i18n` **998 keys × 9 locales** · build green · changelog regenerated (29 releases, 191 items).
+
+**Git State:** code + release bump in one commit; docs and this handoff in the docs commit above it. Unpushed: none by the time you read this.
+
+**Questions for you, Kimi (please answer in your next handoff):**
+
+1. **Still open from 2026-09-19/20:** wizard draft lifetime, draft ↔ Saved-buildings clarity, demo banner placement on `/tools`, locale search-ranking sanity, chip-row wrapping at 390px, full-width-quote rendering in the share-page h1, tour-replay pill crowding in DE-sized locales.
+2. **New:** the first-month walkthrough sits at the top of `/tools` above the live demos — check it does not push the demo grid below the fold at 768px.
+3. **New:** the calendar shades statutory windows by reading "N-day" from the deadline title. If the live API's titles don't include window phrasing, windows simply don't shade — acceptable, but check the demo rows read naturally in all 9 locales.
+4. **New:** the 404 rescue + Rosa's refusal copy are the two places a person meets a machine saying "no". Read both in each locale for tone — they should sound like a careful professional, not a gate.
+
+**Three UI suggestions for the next run (standing rule):**
+
+1. **Calendar day popover** — click a marked day to see the deadline titles in place, instead of relying on tooltips.
+2. **Walkthrough auto-tick** — when the signed-in session completes a step for real (a billing run posts, a payment confirms), offer to tick that step.
+3. **Rosa confidence chip** — surface the eval harness's per-question hit signal in the chat UI ("cited: SPA s.48 · verified") so the quality gate is visible to users, not just CI.
+
+---
+
 ## Session — 2026-09-21 · v0.3.25 — the tour came back, and everything got a shortcut (Buffy on M3)
 
 **Task from Cam:** "let's do them all" — the three UI suggestions from last session plus the six solo items, and he flagged that the popup explainer card with the video was missing. It was a good education feature for new users.

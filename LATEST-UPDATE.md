@@ -1,49 +1,30 @@
 # openstrata — Last Updated 2026-09-21 by Buffy (M3)
 
-> **v0.3.25: the tour came back, and everything got a shortcut.** The popup explainer with the video was never deleted — it was unreachable for half of new visitors and unrecoverable for everyone — so it is now one click away forever. Around it: pinned searches on the dashboard, group counts in ⌘K, keyboard-first wizard steps, a 404 that searches for you, and a docs link checker that already caught four dead links.
+> **v0.3.26: the money path is guarded, the first month is guided, and the dashboard stopped pretending.** The loop a real council runs — bill, collect, reconcile, close, certify — is now a CI-gated end-to-end journey; a five-step walkthrough teaches it; and the dishonest bits of the dashboard (a fake reserve-funds number, toast-only buttons, a static "upcoming" list) are gone.
 
-**Brief (v0.3.25):** **(1) Tour fixed + replay** — diagnosis: the first-run popup only ever appeared on the "just looking" path (the "setting up a building" path went straight to the wizard, past it), and once dismissed it was unrecoverable. The welcome row now carries a "Watch the 60-second intro again" pill (`tourReplay`, ×9 locales) that reopens the full four-step card — video, facts, start steps — on demand. **(2) Saved searches** — a pin button in ⌘K (`saved-searches.ts`, device-local `openstrata-saved-searches`, capped 8, deduped case-insensitively) and a strip on the dashboard under the task list; one tap runs `/search?q=…`, × unpins; 6 tests. **(3) Group counts in ⌘K** — each scoping chip now shows its index size ("Documents · 4"), so the corpus is visible before typing. **(4) Modal footer hints** — "↵ open · esc close" under every modal state, `aria-hidden`, never in the tab order. **(5) Task list filters** — All · Overdue · This week · Done chips; "This week" and "Overdue" read the *full* list (never the collapsed view's parked rows); Done shows ticked setup steps, untick to restore. **(6) Keyboard-first wizard** — number keys jump steps (skipped while typing in a field; forward jumps across step 2 enforce the building-name rule exactly like the Next button). **(7) 404 rescue** — a dead URL's words become `/search?q=` chips, so a mistyped path is a search away from a page. **(8) Docs cross-link checker** — every markdown link in `docs/` and `llms.txt` must resolve to a real route (walked from `src/routes`, so dynamic `[category].xml` feeds count) or a real file; on its first run it caught 4 broken `../diligence/` links (fixed to `diligence/`). **(9) Back-to-top** — a floating arrow after ~900px of scroll on every long page, reduced-motion aware, hidden on print.
+**Brief (v0.3.26):** **(1) E2E money-path suite** — `backend/tests/money-path.e2e.test.ts` boots the real Fastify server over HTTP and walks the full council loop: register → units → billing run (the late notice lands on the arrears unit) → Lightning quote with the per-site receive label → confirm posts to the unit's AR ledger → reconcile → hash-chain verification → deadline calendar → Form B issued while Form F is **withheld** on the debtor unit → another council sees nothing. 10 tests. **(2) Guided first-month walkthrough** — five steps in treasurer order (bill → collect → reconcile → review → close) mounted on the tools page, each linking to the real panel where the step happens; device-local progress with reset/hide (`src/lib/first-month.ts`, 6 tests). **(3) Rosa quality gate** — a golden set of 12 real BC questions with expected citations scored by a pure eval harness (`backend/src/rosa/eval.ts`); hit@4 must be 1.0 and out-of-jurisdiction questions must be refused. The gate exposed a real gap: the keyword retriever answered an Alberta question from BC word overlap, so `rosa.ts` now fails closed on out-of-scope questions. **(4) Honest building drill-down** — the modal's fake "reserve funds = health × 2400" is gone; health, open actions and the real issue remain, with a straight note that live detail lives in Strata Tools. **(5) Fake buttons killed** — every toast-only dashboard button now navigates to its real destination (plan-meeting/log-request → tools demos, legal source → `/legal`, activity rows → tools demos, building ••• → Strata Tools). **(6) Deadline calendar** — the "Upcoming" list became a real month-view grid with statutory windows shaded (window length read from the deadline's own wording), today ringed, overdue red (`src/lib/calendar.ts`, 4 tests).
 
 **Commit:** _recorded in the docs commit that lands with this file._
 
 ---
 
-## v0.3.25 in detail
+## v0.3.26 in detail
 
-### The tour was never missing — it was unreachable
-Fresh-browser testing on production proved the card works. The real bugs were reachability: `chooseStart('setup')` navigated to the wizard *before* the tour could show, so anyone who answered "I'm setting up a building" never saw it; and `openstrata-tour-seen` was a one-way door. The replay pill fixes both by making the tour a destination rather than a one-shot popup. `Tour.svelte` itself needed zero changes — replay is parent-side (`showTour = true`), and a replay's dismissal harmlessly rewrites the same flag.
+### The money path, gated
+The 229 unit tests guarded the parts; nothing guarded the *sequence*. The new suite boots `buildServer()` with in-memory adapters (exactly production wiring minus Postgres) and drives it over HTTP — the same wire shapes `src/lib/api/*` renders. Writing it caught three real contract details the unit tests had allowed to drift out of view: billing wants bare unit ids (`'302'`, not `'unit-302'`), the late-notice rule requires arrears ≥ the monthly fee, and units must arrive as a `UnitRegistry` via `createRegistry()`. The suite also asserts cross-council isolation end-to-end: a second council's token sees an empty ledger. That is the data-sovereignty pitch, made testable.
 
-### Saved searches are the deliberate tier
-Recents remember what you *just did*; pins remember what you *always do*. Same device-local posture as every other nudge (no account, no network, corrupt storage degrades to empty). The dashboard strip renders only when pins exist, so it never nags an empty dashboard.
+### Rosa's honesty is now a number
+"Rosa never guesses" was a claim; the golden set makes it a measurement. Two question types matter: the 10 answerable ones (each must retrieve its citation in the top 4) and the 2 out-of-corpus ones (Rosa must refuse). Running the gate found the keyword retriever had no refusal path at all — any shared word produced an answer. The fix is deliberately modest: a deterministic out-of-jurisdiction scope rule (BC-only corpus, explainable in the UI). Topic-level refusal — same words, wrong domain — is precisely what the pgvector retriever will gate when it lands, and the golden set is waiting for it.
 
-### Chips that show their size
-The count lives in the chip, computed from the same index the search runs — a group that shrank or grew is visible the moment the modal opens, and a drift-guard test keeps chip labels, eyebrows and counts reading from one source.
+### The dashboard's three dishonest bits
+1. **The fake number.** The building modal computed reserve funds from the health score (`health * 2400`) — a plausible-looking dollar figure with no source. Deleted. The modal shows what is real (health, open actions, the issue) and says where the live data lives.
+2. **The dead buttons.** Nine buttons fired "Meeting planner opened!" toasts and did nothing. Every one now navigates to the panel that actually does the thing. A toast is feedback for a completed action, not a substitute for one.
+3. **The static list.** "Upcoming" was three hand-written fake events. It is now a calendar driven by the real deadline shape (live when signed in, the tested demo set otherwise), with statutory windows shaded — the shading is data-driven, read from the deadline's own "7-day" wording, so a new statutory item shades its window by saying so, not by editing code.
 
-### A 404 that helps
-`decodeURIComponent(pathname)` → words → stop-word filter → up to six search chips. `/tools/wizrds` offers "tools" and "wizrds"; `/form-b` offers "form" and "b". Structure words (www, com, html, index, …) never become chips.
-
-### The checker that pays rent immediately
-The authority on "what exists" is `src/routes` walked from disk — the sitemap deliberately omits dynamic routes like `/rss/[category].xml`, and the nav omits deliberate pages like `/custody`. The filesystem knows both. First run found 4 docs links pointing at `../diligence/` (which resolves to the repo root, not `docs/diligence/`); all fixed.
-
-**Verified:** `check` 0/0 · **238 tests** (was 229) · `audit:i18n` **976 keys × 9 locales**, 0 hard-coded warnings · build green.
+**Verified:** frontend `check` 0/0 · **248 tests** (was 238) · backend **229 tests** (was 214, +10 money-path, +5 rosa eval) · `audit:i18n` **998 keys × 9 locales** · build green · changelog regenerated (29 releases, 191 items).
 
 ---
 
-## v0.3.24 (previous release)
+## v0.3.25 (previous release)
 
-Recent searches in ⌘K (device-local, capped, deduped), ten scoping chips that filter before ranking, shareable `/search?q=` pages in the sitemap, copy debt 24 → 0 (968 keys × 9 locales), plus drift guards for dead links, colliding chips and broken share URLs. Live-verified on production.
-
----
-
-## Live verification (production, 2026-09-20 — v0.3.24)
-
-Measured on `https://openstrata.giveabit.io` with the **service worker unregistered and origin caches dropped first**:
-
-- **Version marker reads 0.3.24.**
-- **⌘K empty state:** all ten chips render (Pages · Documents · Manual · Posts · FAQ · Templates · Legal · Sources · Tools · Tasks) with the ten-group hint; no recents block on first open.
-- **Search:** "Form B" returns 7 results led by *Form B — Information Certificate*, with a share link to `/search?q=Form%20B`.
-- **Scoping:** clicking Documents narrows to exactly 1 result, all eyebrows read *Print-ready documents*, the chip shows pressed; clicking again would unscope.
-- **Recents:** searching "arrears", closing, reopening — the query is in the recents block; the × removes it; localStorage holds `openstrata-recent-searches` only (device-local, as documented).
-- **Share page:** `/search?q=Form%20B` renders the ranked results in a real browser with the same top hit as the modal.
-
-_(v0.3.25 live checks land in the docs commit after this release pushes.)_
+The first-run tour made reachable again (replay pill on the dashboard; the card was never broken — it was unreachable for the "setting up" path and unrecoverable once dismissed), saved searches (pin in ⌘K, dashboard strip, live sync), group counts in ⌘K chips, modal footer hints, task-list filters, keyboard-first wizard, 404 search rescue, docs cross-link checker (caught 4 dead links on first run), back-to-top. Live-verified on production.
