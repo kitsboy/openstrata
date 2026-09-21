@@ -7,7 +7,13 @@
 	 * appearing after the first viewport of travel, scrolling smoothly to the
 	 * top. Hidden on print, honoured `prefers-reduced-motion`, and it never
 	 * renders on the server (there is no scroll on the server).
+	 *
+	 * Implemented with `onMount` + a plain listener (the codebase's standard
+	 * pattern, as in `TaskList.svelte`), not `$effect`: effects defer to a
+	 * microtask flush that proved unreliable to observe on the dashboard page,
+	 * and a scroll listener is lifecycle work, not reactive derivation.
 	 */
+	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { copy } from '$lib/i18n';
 	import Icon from '$lib/components/Icon.svelte';
@@ -16,7 +22,7 @@
 
 	let visible = $state(false);
 
-	$effect(() => {
+	onMount(() => {
 		if (!browser) return;
 		const onScroll = () => {
 			visible = window.scrollY > threshold;
@@ -66,11 +72,6 @@
 	@media print {
 		.back-top {
 			display: none;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.back-top {
-			transition: none;
 		}
 	}
 </style>

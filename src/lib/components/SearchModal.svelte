@@ -109,11 +109,15 @@
       saved = unsaveSearch(saved, trimmed);
       writeSavedSearches(saved);
       justSaved = null;
+      // Keep the dashboard strip in sync when a pin is removed, too.
+      window.dispatchEvent(new CustomEvent('openstrata:saved-searches-changed'));
     } else {
       saved = saveSearch(saved, trimmed);
       writeSavedSearches(saved);
       justSaved = trimmed;
     }
+    // The dashboard strip listens for this so a pin shows without a reload.
+    window.dispatchEvent(new CustomEvent('openstrata:saved-searches-changed'));
   }
 
   const querySaved = $derived(query.trim().length > 0 && isSaved(saved, query.trim()));

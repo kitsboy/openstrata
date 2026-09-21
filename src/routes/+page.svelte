@@ -144,6 +144,11 @@
     // the dashboard they just asked to see.
     startPending = isStartPending();
     saved = readSavedSearches();
+    // A pin/unpin in the ⌘K modal updates the strip without a reload.
+    const onSavedChanged = () => {
+      saved = readSavedSearches();
+    };
+    window.addEventListener('openstrata:saved-searches-changed', onSavedChanged);
     try {
       showTour =
         !startPending &&
@@ -178,7 +183,10 @@
         });
       }
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      window.removeEventListener('openstrata:saved-searches-changed', onSavedChanged);
+    };
   });
 
   function rememberNotification(message: string) {

@@ -14,6 +14,26 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.25",
+    "date": "2026-09-21",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The tour is reachable again. The first-run popup with the intro video was never deleted — fresh-browser checks on production proved the card works — but it only ever showed on the \"just looking\" path, and once dismissed it was unrecoverable. The dashboard welcome row now carries a replay pill (\"Watch the 60-second intro again\", all 9 locales) that reopens the full card on demand. Tour.svelte itself needed no changes.",
+          "Saved searches. A pin button in the ⌘K results footer writes to openstrata-saved-searches (device-local, capped at 8, deduped case-insensitively; src/lib/saved-searches.ts, 6 tests). The dashboard renders the pins as one-tap /search?q= chips under the task list, × to unpin; pinning in the modal updates the strip live via a window event.",
+          "Group counts in ⌘K chips. Each scoping chip shows its index size (\"Documents · 4\"), computed from the same index the search runs.",
+          "Modal footer hints. \"↵ open · esc close\" under every modal state, aria-hidden, never in the tab order.",
+          "Task list filters. All · Overdue · This week · Done chips. The week and overdue slices read the full list so a filter never misses rows parked behind the \"more\" button; Done shows ticked setup steps, untick to restore.",
+          "Keyboard-first wizard. Number keys jump steps; skipped while typing in a field, and forward jumps across step 2 enforce the building-name rule exactly like the Next button.",
+          "404 rescue. A dead URL's words become up to six /search?q= chips (stop-word filtered) instead of a dead end.",
+          "Docs cross-link checker. Every markdown link in docs/ and llms.txt must resolve to a route walked from src/routes (dynamic [category].xml feeds count) or a file on disk. Its first run caught 4 broken ../diligence/ links — all fixed.",
+          "Back-to-top. A floating arrow appears after ~900px of scroll on every long page, above the mobile dock, reduced-motion aware, hidden on print."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.24",
     "date": "2026-09-20",
     "groups": [
@@ -715,10 +735,6 @@ export const changelogReleases: ChangelogRelease[] = [
 
 /** Earlier releases recorded only in the changelog's version history. */
 export const changelogEarlyReleases: Array<{ version: string; summary: string | null }> = [
-  {
-    "version": "0.3.25",
-    "summary": "The first-run popup explainer with the intro video is back within reach: it was never deleted — fresh-browser checks on production proved the card works — but it only ever showed on the 'just looking' path (the 'setting up a building' path navigated to the wizard before it could appear) and once dismissed it was unrecoverable; the dashboard welcome row now carries a replay pill (tourReplay, x9 locales) that reopens the full card on demand. Saved searches: a pin button in the Cmd/Ctrl+K modal writes to openstrata-saved-searches (device-local, capped at 8, deduped case-insensitively) and the dashboard renders the pins as one-tap /search?q= chips under the task list. Group counts: each scoping chip shows its index size so the corpus is visible before typing. Modal footer hints: 'open / close' kbd row. Task list filters: All / Overdue / This week / Done, reading the full list so a filter never misses rows parked behind the expansion button; Done rows untick to restore. Keyboard-first wizard: number keys jump steps (disabled while typing in a field, forward jumps respect the building-name validation). 404 rescue: a dead URL's words become /search?q= chips. Docs cross-link checker: every markdown link in docs/ and llms.txt must resolve to a route walked from src/routes (dynamic [category].xml feeds count) or a file on disk — on its first run it caught four broken ../diligence/ links (now fixed). Back-to-top floating arrow on long pages, reduced-motion aware. 238 tests, 976 i18n keys x 9 locales."
-  },
   {
     "version": "0.3.12",
     "summary": "Fix the demo notice layout on phones: the flex-1 text column next to shrink-0 action buttons collapsed to a 13px-wide sliver at 390/430px (a 604px-tall notice), so the strip now uses its own flex classes with a real flex-basis and the buttons wrap to their own line. Text measure 268-338px at 360/390/430, no overlap; svelte-check 0/0, 85 tests, i18n audit clean."

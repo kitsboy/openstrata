@@ -91,6 +91,42 @@ owner: Nova (Product Management & Documentation)
 
 # Changelog
 
+## [0.3.25] — 2026-09-21
+
+### Added
+
+- **The tour is reachable again.** The first-run popup with the intro video was
+  never deleted — fresh-browser checks on production proved the card works —
+  but it only ever showed on the "just looking" path, and once dismissed it was
+  unrecoverable. The dashboard welcome row now carries a replay pill
+  ("Watch the 60-second intro again", all 9 locales) that reopens the full card
+  on demand. `Tour.svelte` itself needed no changes.
+- **Saved searches.** A pin button in the ⌘K results footer writes to
+  `openstrata-saved-searches` (device-local, capped at 8, deduped
+  case-insensitively; `src/lib/saved-searches.ts`, 6 tests). The dashboard
+  renders the pins as one-tap `/search?q=` chips under the task list, × to
+  unpin; pinning in the modal updates the strip live via a window event.
+- **Group counts in ⌘K chips.** Each scoping chip shows its index size
+  ("Documents · 4"), computed from the same index the search runs.
+- **Modal footer hints.** "↵ open · esc close" under every modal state,
+  `aria-hidden`, never in the tab order.
+- **Task list filters.** All · Overdue · This week · Done chips. The week and
+  overdue slices read the full list so a filter never misses rows parked behind
+  the "more" button; Done shows ticked setup steps, untick to restore.
+- **Keyboard-first wizard.** Number keys jump steps; skipped while typing in a
+  field, and forward jumps across step 2 enforce the building-name rule exactly
+  like the Next button.
+- **404 rescue.** A dead URL's words become up to six `/search?q=` chips
+  (stop-word filtered) instead of a dead end.
+- **Docs cross-link checker.** Every markdown link in `docs/` and `llms.txt`
+  must resolve to a route walked from `src/routes` (dynamic `[category].xml`
+  feeds count) or a file on disk. Its first run caught 4 broken
+  `../diligence/` links — all fixed.
+- **Back-to-top.** A floating arrow appears after ~900px of scroll on every
+  long page, above the mobile dock, reduced-motion aware, hidden on print.
+
+**238 tests, 976 i18n keys × 9 locales.**
+
 ## [0.3.24] — 2026-09-20
 
 ### Added
