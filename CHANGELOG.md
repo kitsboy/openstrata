@@ -2,7 +2,9 @@
 title: Changelog
 project: openstrata
 version_history:
--  version: 0.3.27
+-  version: 0.3.28
+-  summary: "Follow-up to the popover release: the month navigation buttons now use their proper aria-labels (Previous month / Next month, x9 locales) instead of reusing unrelated list strings, and the month title button dropped a leftover ternary. No behavioural change - accessibility copy only."
+-  summary: "Calendar day popover: clicking a day opens a small panel pinned under that cell with the day's deadlines in full, each with a one-tap link to the tools panel where the item is handled. Day cells became real buttons - keyboard reachable, aria-expanded on the open day, hover affordance gated behind (hover: hover) - and the popover clamps inside the grid on narrow phones, closing on X, Escape, outside click or month navigation. Month nav buttons got proper aria-labels (previous/next month, x9 locales). 248 frontend tests, 229 backend tests, 1002 i18n keys x 9 locales."
 -  summary: "Calendar day popover: clicking a day opens a small panel pinned under that cell with the day's deadlines in full, each with a one-tap link to the tools panel where the item is handled. Day cells became real buttons - keyboard reachable, aria-expanded on the open day, hover affordance gated behind (hover: hover) - and the popover clamps inside the grid on narrow phones, closing on X, Escape, outside click or month navigation. Month nav buttons got proper aria-labels (previous/next month, x9 locales). 248 frontend tests, 229 backend tests, 1002 i18n keys x 9 locales."
 -  version: 0.3.26
 -  summary: "Three big pushes and three honest UI upgrades. E2E money-path suite: the REAL Fastify server walks the full council loop over HTTP - register, units, billing run with late notice, Lightning quote with per-site receive label, confirm to the AR ledger, reconciliation, hash-chain verification, deadline calendar, Form B issued / Form F withheld on arrears, and cross-council isolation - 10 tests, CI gates the sequence, not just the parts. Guided first-month walkthrough: five steps in treasurer order (bill, collect, reconcile, review, close) on the tools page, each linking to the real panel; device-local progress with reset and hide (first-month.ts, 6 tests). Rosa quality gate: a golden set of 12 real BC questions with expected citations scored by a pure eval harness (eval.ts) - hit@4 must be 1.0, and out-of-jurisdiction questions must be refused, which exposed a real gap: the keyword retriever answered Alberta questions from BC word overlap, so rosa.ts now fails closed on out-of-scope questions. Honest building drill-down: the modal's fake reserve-funds number (health x 2400) is gone; health, open actions and the real issue remain, with a straight note that live detail lives in Strata Tools. Fake buttons killed: every dashboard button now navigates to the real destination - plan meeting and log request go to the tools demos, legal source to /legal, activity rows to the tools demos, building dots to Strata Tools; the Upcoming list became a real month-view deadline calendar with statutory windows shaded (window length read from the deadline's own title), today ringed, overdue red (calendar.ts, 4 tests). 248 frontend tests, 229 backend tests, 998 i18n keys x 9 locales."
@@ -94,6 +96,11 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.28] — 2026-09-21
+
+### Fixed
+- Month nav buttons in the deadline calendar use their real aria-labels (`calPrevMonth` / `calNextMonth`, x9 locales) instead of borrowing the task-list strings; the month-title button lost a dead ternary.
 
 ## [0.3.27] — 2026-09-21
 

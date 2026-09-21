@@ -14,6 +14,18 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.28",
+    "date": "2026-09-21",
+    "groups": [
+      {
+        "label": "Fixed",
+        "items": [
+          "Month nav buttons in the deadline calendar use their real aria-labels (calPrevMonth / calNextMonth, x9 locales) instead of borrowing the task-list strings; the month-title button lost a dead ternary."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.27",
     "date": "2026-09-21",
     "groups": [

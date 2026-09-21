@@ -136,9 +136,9 @@
       <p class="mt-1 text-sm text-slate-500">{$copy.calHint}</p>
     </div>
     <div class="flex items-center gap-1">
-      <button type="button" class="cal-nav" aria-label="{$copy.goBack} 1" onclick={prevMonth}>‹</button>
-      <button type="button" class="cal-nav cal-nav-today" onclick={thisMonth}>{$copy.tasksFilterWeek === 'This week' ? monthLabel : monthLabel}</button>
-      <button type="button" class="cal-nav" aria-label="{$copy.tasksMore} 1" onclick={nextMonth}>›</button>
+      <button type="button" class="cal-nav" aria-label={$copy.calPrevMonth} onclick={prevMonth}>‹</button>
+      <button type="button" class="cal-nav cal-nav-today" onclick={thisMonth}>{monthLabel}</button>
+      <button type="button" class="cal-nav" aria-label={$copy.calNextMonth} onclick={nextMonth}>›</button>
     </div>
   </div>
 
