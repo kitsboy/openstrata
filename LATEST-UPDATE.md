@@ -32,7 +32,17 @@
 
 ## Live verification (production, 2026-09-20)
 
-_Pending deploy._
+Measured on `https://openstrata.giveabit.io` with the **service worker unregistered and origin caches dropped first**:
+
+- **Version marker reads 0.3.24.**
+- **⌘K empty state:** all ten chips render (Pages · Documents · Manual · Posts · FAQ · Templates · Legal · Sources · Tools · Tasks) with the ten-group hint; no recents block on first open.
+- **Search:** "Form B" returns 7 results led by *Form B — Information Certificate*, with a share link to `/search?q=Form%20B`.
+- **Scoping:** clicking Documents narrows to exactly 1 result, all eyebrows read *Print-ready documents*, the chip shows pressed; clicking again would unscope.
+- **Choose:** clicking the result lands on `/documents?doc=form-b` and stores `["Form B"]` under `openstrata-recent-searches`; reopening the modal lists it as a recent.
+- **Recents remove:** the × empties the list and storage reads `[]`. Escape closes the modal.
+- **Shareable page:** `/search?q=Form%20B` renders the h1 *"Form B"* with the certificate as the first result card, and sends `noindex, follow`. Sitemap lists `/search`.
+
+One cosmetic selector miss in the verification script (the count-label probe caught the hero badge instead of the results count) — the page itself is correct; not a product defect.
 
 ---
 
