@@ -1,3 +1,22 @@
+## Session — 2026-09-21 · v0.3.27 — calendar day popover (Buffy on M3)
+
+**Task from Cam:** "Add the calendar day popover so deadlines show in place on click" — UI suggestion #1 from the v0.3.26 handoff.
+
+**Done:**
+
+- **Popover.** `src/lib/components/CalendarDayPopover.svelte` (presentational) + wiring in `DeadlineCalendar.svelte`. Click a day → a 170px panel pinned under that cell listing the day's deadlines, each with a `calPopOpenTools` link to `/tools`. The calendar computes the pin (parent knows cell offsets + grid width), clamps `left` inside the grid so it never overflows on phones, and prefers right-alignment under wide cells.
+- **The day cells became real buttons.** Keyboard reachable (Tab + Enter/Space), `aria-expanded` on the open day, an `.cal-open` pressed plate, hover affordance behind `@media (hover: hover)`. Removed the fake `role="grid"/gridcell` — a flat CSS grid has no `role="row"` structure and svelte-check warns; a `role="group"` of labelled buttons is more honest and more usable.
+- **Close paths:** ✕ button, Escape (bubbling to the grid's keydown), outside pointerdown (document listener removed in onMount cleanup), and month navigation (cursor change re-derives cells; the open day no longer resolves so the popover unmounts).
+- **Bonus a11y fix:** the month-nav buttons' aria-labels said "Go back 1" / "More options 1" (wrong keys) — now `calPrevMonth`/`calNextMonth` ×9. New keys: those two + `calPopOpenTools` + `calPopDueIn` ('in {n} days', placeholder replaced at render) via `scripts/inject-v27-i18n.mjs` → **1002 keys × 9 locales**.
+
+**Decisions:** popover state is two `$state` vars (open iso + anchor element) in the calendar, not a store — it is view-local with no other reader. The popover takes a precomputed `style` string rather than measuring the DOM itself, keeping it presentational and testable. `role="dialog"` on a non-modal popover without focus trap is deliberate: it is small, dismissible four ways, and focus-trapping a 170px panel would be hostile.
+
+**Verified:** `check` 0 errors 0 warnings · **248 tests** · `audit:i18n` 1002 × 9 · build green · changelog regenerated (30 releases, 192 items).
+
+**Git State:** code commit first, docs (this handoff + current-status) above it; LATEST-UPDATE.md updated after live verification.
+
+---
+
 ## Session — 2026-09-21 · v0.3.26 — money path gated, first month guided, dashboard honest (Buffy on M3)
 
 **Task from Cam:** "1, 2, then 3 from the big list, complete end to end. Then all the UI upgrades also" — the E2E money-path tests, the guided first-month walkthrough, the Rosa quality gate, plus the honest building drill-down, killing fake buttons, and the deadline calendar.
