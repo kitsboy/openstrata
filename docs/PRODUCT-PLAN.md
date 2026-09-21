@@ -134,4 +134,4 @@ Financial, Assets, Governance, Meetings, Conveyancing, People, Sovereign.
 | Brokerage Pro | Custom | Multi-building, white-label, API |
 
 ---
-**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)
+**Diligence pack:** [docs/diligence/](diligence/) (investor + architecture + ask)

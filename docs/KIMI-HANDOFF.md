@@ -1,3 +1,41 @@
+## Session — 2026-09-21 · v0.3.25 — the tour came back, and everything got a shortcut (Buffy on M3)
+
+**Task from Cam:** "let's do them all" — the three UI suggestions from last session plus the six solo items, and he flagged that the popup explainer card with the video was missing. It was a good education feature for new users.
+
+**Done:**
+
+- **The tour was never missing — it was unreachable.** Fresh-browser checks on production proved the card works on a genuinely new device. The real bugs: `chooseStart('setup')` navigated to the wizard *before* the tour could show (so "I'm setting up a building" visitors never saw it), and `openstrata-tour-seen` was a one-way door — once dismissed, unrecoverable. **Fix: a replay pill** on the dashboard welcome row (`tourReplay`, ×9 locales) that sets `showTour = true`. `Tour.svelte` needed zero changes; a replay's dismissal harmlessly rewrites the same flag.
+- **Saved searches.** `src/lib/saved-searches.ts` (pure, **6 tests**) — pins under `openstrata-saved-searches` (device-local, cap 8, case-insensitive dedupe, hostile storage degrades to empty). Pin button in the ⌘K results footer; the dashboard renders pins as one-tap `/search?q=` chips under the task list, × to unpin.
+- **Group counts in ⌘K chips.** Each scoping chip shows its index size ("Documents · 4"), computed from the same index the search runs — corpus size visible before typing.
+- **Modal footer hints.** "↵ open · esc close" kbd row under every modal state (`searchHintOpen`/`searchHintClose`), `aria-hidden`, never in the tab order.
+- **Task list filters.** All · Overdue · This week · Done chips in TaskList. The week/overdue slices read the *full* list (never the collapsed view's parked rows behind "more"); Done shows ticked setup steps — untick to restore. New key `tasksFilterWeek` (+`tasksFilterDone` already existed).
+- **Keyboard-first wizard.** Number keys 1–8 jump steps via `svelte:window`; skipped while typing in INPUT/TEXTAREA/SELECT/contentEditable; forward jumps across step 2 enforce the building-name rule exactly like the Next button.
+- **404 rescue.** `+error.svelte` turns a dead URL's words into up to six `/search?q=` chips (stop-word filtered, ≥2 chars) — a mistyped path becomes a search instead of a dead end.
+- **Docs cross-link checker.** `src/lib/docs-links.test.ts` (**3 tests**) — every markdown link in `docs/` and `llms.txt` must resolve to a route walked from `src/routes` (the filesystem is the authority; the sitemap deliberately omits dynamic `[category].xml` feeds and the nav omits `/custody`) or a file on disk. **First run caught 4 broken `../diligence/` links** (resolves to repo root, not `docs/diligence/`) — all fixed to `diligence/`.
+- **Back-to-top.** `BackToTop.svelte` in `+layout.svelte`: appears after ~900px of scroll, above the mobile dock, reduced-motion aware, hidden on print.
+- **Empty states** — already honest: the dashboard's no-buildings view already offered "Add your first building" as its action, so that item needed no code.
+
+**Verified:** `check` 0/0 · **238 tests** (was 229) · `audit:i18n` **976 keys × 9 locales**, 0 hard-coded warnings · build green · changelog regenerated (27 releases, 176 items).
+
+**Git State:**
+
+- Code + release bump: one commit; docs and this handoff land in the docs commit above it.
+- Unpushed: none by the time you read this.
+
+**Questions for you, Kimi (please answer in your next handoff):**
+
+1. **Still open from 2026-09-19/20:** wizard draft lifetime, draft ↔ Saved-buildings clarity, demo banner placement on `/tools`, locale search-ranking sanity, chip-row wrapping at 390px, full-width-quote rendering in the share-page h1.
+2. **New:** the tour replay pill sits under the greeting on the dashboard — check it does not crowd the h1 in DE-sized locales (pl/uk strings are long).
+3. **New:** the 404 rescue chips use a simple Latin+CJK word split — check a Korean/Thai-style locale never produces garbage chips (we ship 9 locales, none of those scripts today, but the guard is the test, not the locale list).
+
+**Three UI suggestions for the next run (standing rule):**
+
+1. **Wizard step chips show numbers** — render the number-key affordance on the wizard's own step indicator ("3 · Funds"), so the keyboard feature is discoverable.
+2. **Saved-search empty state on the dashboard** — when someone has run 3+ searches but pinned none, offer the pin once.
+3. **⌘K recent/pin merge view** — a pin icon on recent rows so pinning does not require running the search again.
+
+---
+
 ## Session — 2026-09-20 · v0.3.24 — search that remembers, narrows, and travels (Buffy on M3)
 
 **Task from Cam:** run all six solo items (live-verify v0.3.23, recent searches, scoping chips, shareable search, catalog the remaining hard-coded copy, more drift guards) plus UI upgrades 1 and 2 (recent searches, chips).

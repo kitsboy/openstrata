@@ -39,4 +39,4 @@ A jurisdiction-aware software platform that automates full management company op
 - **Give A Bit community** — proving sovereign finance works in the most regulated industries
 
 ---
-**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)
+**Diligence pack:** [docs/diligence/](diligence/) (investor + architecture + ask)

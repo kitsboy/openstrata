@@ -80,4 +80,4 @@ Config-driven via `config.yaml` — one codebase, swap law packs.
 | BCFSA | N/A (regulator) | Audit-ready exports |
 
 ---
-**Diligence pack:** [docs/diligence/](../diligence/) (investor + architecture + ask)
+**Diligence pack:** [docs/diligence/](diligence/) (investor + architecture + ask)
