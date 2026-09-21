@@ -73,6 +73,7 @@
     rememberStartChoice,
     type StartChoiceId
   } from '$lib/start';
+  import { readSavedSearches, unsaveSearch, writeSavedSearches } from '$lib/saved-searches';
   import { accent, cycleAccent } from '$lib/theme';
   import { onMount } from 'svelte';
 
@@ -93,6 +94,8 @@
   let showNotifications = $state(false);
   let showAuth = $state(false);
   let showAuthMenu = $state(false);
+  /** Device-local pinned queries, surfaced under the task list. */
+  let saved = $state<string[]>([]);
 
   /**
    * Answer the first-visit question. `exploring` reveals the dashboard in place;
@@ -140,6 +143,7 @@
     // experience at a time. Answering it (chooseStart) then opens the tour over
     // the dashboard they just asked to see.
     startPending = isStartPending();
+    saved = readSavedSearches();
     try {
       showTour =
         !startPending &&
@@ -344,11 +348,31 @@
       <DemoBanner />
       <ResumeChip />
       <section class="welcome-row">
-        <div><div class="date-kicker">{formatDate(new Date(), $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{greeting}</h1><p>{$copy.subtitle}</p></div>
+        <div><div class="date-kicker">{formatDate(new Date(), $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{greeting}</h1><p>{$copy.subtitle}</p><button class="tour-replay" type="button" onclick={() => (showTour = true)}><Icon name="spark" class="h-3 w-3" />{$copy.tourReplay}</button></div>
         <button class="primary-button" onclick={() => (showNewStrata = true)}><span class="plus">+</span>{$copy.newStrata}<span class="button-arrow">↗</span></button>
       </section>
 
       <TaskList />
+
+      {#if saved.length > 0}
+        <div class="saved-strip">
+          <Icon name="search" class="h-3.5 w-3.5 saved-strip-icon" />
+          {#each saved as pin (pin)}
+            <span class="saved-pin">
+              <a href={`/search?q=${encodeURIComponent(pin)}`}>{pin}</a>
+              <button
+                type="button"
+                class="saved-drop"
+                aria-label="{$copy.closeDialog}: {pin}"
+                onclick={() => {
+                  saved = unsaveSearch(saved, pin);
+                  writeSavedSearches(saved);
+                }}
+              >×</button>
+            </span>
+          {/each}
+        </div>
+      {/if}
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
         <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>

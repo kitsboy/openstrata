@@ -10,6 +10,7 @@
   import DonateModal from '$lib/components/DonateModal.svelte';
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
   import SearchModal from '$lib/components/SearchModal.svelte';
+  import BackToTop from '$lib/components/BackToTop.svelte';
   import NavMenu from '$lib/components/NavMenu.svelte';
   import PwaChrome from '$lib/components/PwaChrome.svelte';
   import { copy } from '$lib/i18n';
@@ -166,6 +167,8 @@
     <Breadcrumbs />
     {@render children()}
   </main>
+
+  <BackToTop />
 
   <!-- Mobile bottom nav — the dashboard's floating dock, reused on every page
        so the marketing site never dead-ends on phones. -->

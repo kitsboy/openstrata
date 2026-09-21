@@ -6,6 +6,22 @@
 
   const status = $derived($page.status);
   const notFound = $derived(status === 404);
+
+  /**
+   * The dead URL, read as search words. A mistyped path is usually a page name
+   * — "form-b" or "template_print" — so the same words run through the site
+   * search instead of leaving the visitor at a dead end. Structure words are
+   * dropped; what is left becomes one `/search?q=` link per word.
+   */
+  const rescueWords = $derived(
+    notFound
+      ? decodeURIComponent($page.url.pathname)
+          .split(/[^a-z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u4E00-\u9FFF]+/i)
+          .filter((word) => word.length >= 2 && !STOP_WORDS.has(word.toLowerCase()))
+          .slice(0, 6)
+      : []
+  );
+  const STOP_WORDS = new Set(['www', 'com', 'html', 'php', 'index', 'en', 'the', 'and', 'page']);
 </script>
 
 <svelte:head>
@@ -22,9 +38,26 @@
   <h1 class="mb-4 text-4xl font-extrabold tracking-tight text-slate-800 sm:text-5xl">
     {notFound ? $copy.notFoundTitle : $copy.errorTitle}
   </h1>
-  <p class="mb-10 max-w-xl text-lg text-slate-500">
+  <p class="mb-6 max-w-xl text-lg text-slate-500">
     {notFound ? $copy.notFoundSubtitle : $copy.errorSubtitle}
   </p>
+  {#if rescueWords.length > 0}
+    <div class="mb-10 flex flex-col items-center gap-3">
+      <p class="text-sm font-bold text-slate-500">{$copy.errorSearchTitle}</p>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        {#each rescueWords as word (word)}
+          <a
+            href={`/search?q=${encodeURIComponent(word)}`}
+            class="rounded-full border border-border bg-surface-2 px-4 py-1.5 text-sm font-semibold text-brand-700 no-underline transition-colors hover:bg-slate-50"
+          >
+            {word}
+          </a>
+        {/each}
+      </div>
+    </div>
+  {:else}
+    <div class="mb-10"></div>
+  {/if}
   <div class="flex flex-wrap items-center justify-center gap-4">
     <a
       href="/"

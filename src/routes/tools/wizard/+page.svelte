@@ -264,12 +264,41 @@
 	const prevStep = () => { if (step > 0) step--; persistDraft(); };
 	const goToStep = (s: number) => { if (s >= 0 && s < totalSteps) { step = s; persistDraft(); } };
 
+	/**
+	 * Keyboard-first: number keys jump steps, the same habit the ⌘K modal
+	 * teaches. Skipped while typing into any field, so a "2" in a unit count
+	 * never teleports the wizard, and forward jumps across the building-name
+	 * step respect the same validation the Next button enforces.
+	 */
+	function onWindowKeydown(event: KeyboardEvent) {
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		const target = event.target as HTMLElement | null;
+		if (
+			target &&
+			(target.tagName === 'INPUT' ||
+				target.tagName === 'TEXTAREA' ||
+				target.tagName === 'SELECT' ||
+				target.isContentEditable)
+		) {
+			return;
+		}
+		const n = Number.parseInt(event.key, 10);
+		if (!Number.isInteger(n) || n < 1 || n > totalSteps) return;
+		if (step === 1 && !corpName.trim() && n - 1 > step) {
+			nameError = $copy.nameRequired;
+			return;
+		}
+		goToStep(n - 1);
+	}
+
 	const progress = $derived(((step + 1) / totalSteps) * 100);
 </script>
 
 <svelte:head>
 	<title>{$copy.wizardPageTitle}</title>
 </svelte:head>
+
+<svelte:window onkeydown={onWindowKeydown} />
 
 <section class="page-hero">
 		<HeroArt variant="modules" />

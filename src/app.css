@@ -338,6 +338,19 @@ kbd { padding: 2px 4px; border: 1px solid #e1e6e8; border-radius: 4px; color: #a
 .welcome-row h1 { margin: 13px 0 7px; color: var(--ink); font-size: clamp(28px, 3.1vw, 40px); font-weight: 800; letter-spacing: -1.7px; line-height: 1.06; }
 .welcome-row p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; max-width: 56ch; }
 
+/* Tour replay — the 60-second intro is useful more than once. */
+.tour-replay { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; padding: 4px 10px; border: 1px dashed var(--line); border-radius: 999px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 700; }
+.tour-replay:hover { color: var(--ink); border-color: var(--orange-solid); }
+
+/* Saved searches — device-local pins under the task list. */
+.saved-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: -12px 0 24px; }
+.saved-strip-icon { color: var(--faint); }
+.saved-pin { display: inline-flex; align-items: center; gap: 2px; padding: 4px 8px 4px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); }
+.saved-pin a { color: var(--ink); font-size: 12px; font-weight: 600; text-decoration: none; }
+.saved-pin a:hover { color: var(--orange-solid); }
+.saved-drop { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; color: var(--faint); background: transparent; font-size: 13px; line-height: 1; }
+.saved-drop:hover { color: var(--ink); background: var(--surface-3); }
+
 /* Primary CTA: the only strongly-coloured surface in the hero row. Kept
    flush-aligned to the h1 baseline so the row reads as one unit. */
 .primary-button { display: inline-flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 18px; border-radius: 11px; color: #fff; background: linear-gradient(135deg, var(--orange-solid), var(--orange-solid-deep)); box-shadow: 0 10px 22px rgba(249,115,72,.22); font-size: 11.5px; font-weight: 800; letter-spacing: .01em; transition: .2s ease; }

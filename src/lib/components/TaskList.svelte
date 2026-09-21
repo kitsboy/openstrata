@@ -41,6 +41,8 @@
   let done = $state<SetupStepId[]>([]);
   let hidden = $state(false);
   let expanded = $state(false);
+  /** Which slice of the list is on screen. `week` = due within 7 days. */
+  let filter = $state<'all' | 'overdue' | 'week' | 'done'>('all');
 
   /** Steps, in the order a building actually needs them. Labels come from i18n. */
   const setupSteps = $derived([
@@ -59,6 +61,32 @@
     })
   );
   const counts = $derived(taskCounts(rows.tasks));
+
+  /**
+   * The full list, expansion-independent, so a filter never misses an item the
+   * collapsed view had parked behind `tasksMore`. `all` shows the collapsed /
+   * expanded rows; every other filter reads the full list.
+   */
+  const allTasks = $derived(
+    buildTaskList({
+      deadlines: deadlines ?? demoTaskDeadlines,
+      setupSteps,
+      setupDone: done,
+      limit: 0
+    }).tasks
+  );
+  const visibleTasks = $derived(
+    filter === 'all'
+      ? rows.tasks
+      : filter === 'overdue'
+        ? allTasks.filter((task) => task.urgency === 'overdue')
+        : allTasks.filter(
+            (task) =>
+              task.daysLeft !== undefined && task.daysLeft >= 0 && task.daysLeft <= 7
+          )
+  );
+  /** Ticked setup steps, as completed rows (they leave the active list). */
+  const doneTasks = $derived(setupSteps.filter((step) => done.includes(step.id)));
 
   function persist() {
     try {
@@ -176,17 +204,61 @@
       </button>
     </div>
 
+    <div class="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={$copy.tasksTitle}>
+      {#each [
+        { id: 'all' as const, label: $copy.viewAll },
+        { id: 'overdue' as const, label: $copy.tasksOverdue },
+        { id: 'week' as const, label: $copy.tasksFilterWeek },
+        { id: 'done' as const, label: $copy.tasksFilterDone }
+      ] as chip}
+        <button
+          type="button"
+          class="tasks-chip"
+          class:tasks-chip-on={filter === chip.id}
+          aria-pressed={filter === chip.id}
+          onclick={() => (filter = chip.id)}
+        >
+          {chip.label}
+        </button>
+      {/each}
+    </div>
+
     <div class="mt-4 space-y-2">
       {#if loading}
         <Skeleton height="48px" />
         <Skeleton height="48px" />
         <Skeleton height="48px" />
-      {:else if rows.tasks.length === 0}
+      {:else if filter === 'done'}
+        {#if doneTasks.length === 0}
+          <p class="flex items-center gap-2 rounded-xl border border-border bg-surface-2 p-4 text-sm font-semibold text-slate-600">
+            <Icon name="check" class="h-4 w-4 text-success" /> {$copy.tasksEmpty}
+          </p>
+        {:else}
+          {#each doneTasks as step (step.id)}
+            <div class="tasks-row tasks-row-done flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-3">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={true}
+                aria-label={step.title}
+                class="tasks-tick tasks-tick-on"
+                onclick={() => { done = toggleStep(done, step.id); persist(); }}
+              >
+                <Icon name="check" class="h-3.5 w-3.5" />
+              </button>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-slate-500 line-through">{step.title}</p>
+                <p class="truncate text-xs text-slate-400">{step.hint}</p>
+              </div>
+            </div>
+          {/each}
+        {/if}
+      {:else if visibleTasks.length === 0}
         <p class="flex items-center gap-2 rounded-xl border border-border bg-surface-2 p-4 text-sm font-semibold text-slate-600">
           <Icon name="check" class="h-4 w-4 text-success" /> {$copy.tasksEmpty}
         </p>
       {:else}
-        {#each rows.tasks as task (task.id)}
+        {#each (filter === 'all' ? rows.tasks : visibleTasks) as task (task.id)}
           <div class="tasks-row flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-3">
             {#if task.setup}
               <button
@@ -231,7 +303,7 @@
       {/if}
     </div>
 
-    {#if rows.more > 0}
+    {#if filter === 'all' && rows.more > 0}
       <button
         type="button"
         class="mt-3 text-xs font-bold text-brand-700 hover:underline"
@@ -274,6 +346,22 @@
 
   .tasks-row { transition: border-color 0.2s ease; }
   .tasks-row:hover { border-color: color-mix(in srgb, var(--color-brand-500) 35%, var(--line)); }
+
+  /* Filter chips — same plate style as the urgency chips above. */
+  .tasks-chip {
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .tasks-chip:hover { border-color: var(--orange-solid); color: var(--ink); }
+  .tasks-chip-on { background: color-mix(in srgb, var(--ink) 8%, var(--paper)); border-color: var(--line); color: var(--ink); }
+
+  .tasks-row-done { opacity: 0.75; }
+  .tasks-tick-on { background: var(--color-success); border-color: var(--color-success); color: white; }
 
   @media (max-width: 640px) {
     /* The arrow is decoration; on a phone the whole row is the target. */
