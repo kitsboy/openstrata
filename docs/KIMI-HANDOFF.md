@@ -1,3 +1,18 @@
+## Session — 2026-09-21 · v0.3.28 — nav aria-labels fix + live verification (Buffy on M3)
+
+**Follow-up:** exercising the popover on production exposed that the nav aria-labels fix described in v0.3.27 was never wired — the buttons still carried `goBack`/`tasksMore` ("Go back 1", "more in the full list 1"). Root cause: the v0.3.27 session ended with the keys injected and the changelog claiming them, but the component edit never happened.
+
+**Done:**
+
+- Wired `$copy.calPrevMonth` / `$copy.calNextMonth` into the two nav buttons and replaced the pointless ternary on the month-title button (`tasksFilterWeek === 'This week' ? monthLabel : monthLabel`) with `{monthLabel}`.
+- Bumped **v0.3.28** (changelog front-matter + dated `## [0.3.28]` Fixed section, generated catalog).
+- Live verification on production, v0.3.28 marker confirmed: nav buttons expose "Previous month"/"Next month"; clicking day 25 opens the popover ("25 · in 5 days · Form B request — 7-day statutory delivery window · Open Strata Tools →", links to `/tools`); Escape closes with real keyboard focus on the cell; the ✕ button closes.
+- Test-artifact lesson recorded: a JS `element.click()` does not move focus, so Escape landed on `<body>` and "escapeClosed: false" was my test's bug, not the product's — focus the cell first, then Escape works. This is the second session in a row where a "failure" was instrumentation; check the selector/focus before suspecting the code.
+
+**Verified:** `check` 0/0 · 248 tests · build green · v0.3.28 on production · popover open/Escape/✕ all exercised live.
+
+---
+
 ## Session — 2026-09-21 · v0.3.27 — calendar day popover (Buffy on M3)
 
 **Task from Cam:** "Add the calendar day popover so deadlines show in place on click" — UI suggestion #1 from the v0.3.26 handoff.
