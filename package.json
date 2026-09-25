@@ -36,6 +36,7 @@
     "wrangler": "^4.105.0"
   },
   "dependencies": {
+    "@sentry/sveltekit": "^8.55.2",
     "qrcode": "^1.5.4"
   }
 }
