@@ -1,3 +1,23 @@
+## Session — 2026-09-30
+
+**Done:**
+- Fast-forwarded this workspace onto GitHub `main` at `0a98655` (v0.3.28). The earlier edit pass had been written on the July tree and was not pushed.
+- Evergreen House demo: strata plan LMS 2847, 4100 Cambie Street, 4 floors, 40 lots, books as of September 30, 2026. Operating, CRF, and parkade levy tie. War chest is operating surplus only.
+- Pages: `/units`, `/accounting`, `/pay`, `/tax`, `/calendar`, `/meetings`. Building menu in the header. Dashboard, sidebar, and mobile dock open those pages. E-transfer, Bitcoin, and Lightning stay visible. Destinations are not payable.
+- Tax desk includes T2, T1044, GST, payroll, T4A, UHT, SVT, empty homes, property tax, WorkSafeBC, records, and year-end close. Copy is a sample, not a filing.
+- `npm run check` 0/0, `npm test` 248 passed, `npm run build` green. Routes curled from `vite preview`. No browser tools in this session.
+
+**Decisions:**
+- Kept the v0.3.28 shell (four-ish header, i18n, tools, backend seed of 6 units). The 40-lot story lives in `src/lib/demo/` so the money-path tests keep their own unit list.
+- Did not force-push. The stale layout rewrite is in `git stash` (`stale-base layout rewrite before moving to v0.3.28`) and is not part of this commit.
+
+**Git State:**
+- SHA: pending-this-commit
+- Base: `0a986553b3196b1615c3587331ddad7ecbae81bd`
+- Unpushed: this commit, once it is pushed to `origin/main`
+
+---
+
 ## Session — 2026-09-21 · v0.3.28 — nav aria-labels fix + live verification (Buffy on M3)
 
 **Follow-up:** exercising the popover on production exposed that the nav aria-labels fix described in v0.3.27 was never wired — the buttons still carried `goBack`/`tasksMore` ("Go back 1", "more in the full list 1"). Root cause: the v0.3.27 session ended with the keys injected and the changelog claiming them, but the component edit never happened.

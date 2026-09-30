@@ -39,6 +39,12 @@ const routes = [
   '/documents',
   '/tools',
   '/tools/wizard',
+  '/units',
+  '/accounting',
+  '/pay',
+  '/tax',
+  '/calendar',
+  '/meetings',
   '/privacy',
   '/terms'
 ];

@@ -6,10 +6,10 @@ import { isNavGroup, navGroups, navItems, navParentFor } from './nav';
  * it — and about the breadcrumb resolution that grouping made subtle.
  */
 describe('header navigation', () => {
-  it('keeps the inline bar to four things', () => {
-    // Dashboard, Strata Tool, Library, Company. Adding a fifth inline
-    // destination is the thing that made the strip scroll sideways before.
-    expect(navGroups.length).toBe(4);
+  it('keeps the inline bar to two links', () => {
+    // Dashboard and Strata Tool stay inline. Building, Library, and Company
+    // are menus. A fifth inline link is what made the strip scroll sideways.
+    expect(navGroups.length).toBe(5);
     const inline = navGroups.filter((entry) => !isNavGroup(entry));
     expect(inline.map((entry) => (isNavGroup(entry) ? '' : entry.label))).toEqual([
       'Dashboard',
@@ -44,7 +44,13 @@ describe('header navigation', () => {
       '/pitch',
       '/roadmap',
       '/blog',
-      '/rss'
+      '/rss',
+      '/units',
+      '/accounting',
+      '/pay',
+      '/tax',
+      '/calendar',
+      '/meetings'
     ]) {
       expect(hrefs, href).toContain(href);
     }

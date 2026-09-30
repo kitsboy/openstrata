@@ -25,10 +25,22 @@ export type NavEntry = NavLink | NavGroup;
 
 export const isNavGroup = (entry: NavEntry): entry is NavGroup => 'items' in entry;
 
-/** Header navigation: four inline destinations, then two grouped menus. */
+/** Header navigation: two inline destinations, then the building and the two reference menus. */
 export const navGroups: NavEntry[] = [
   { href: '/', label: 'Dashboard' },
   { href: '/tools', label: 'Strata Tool' },
+  {
+    label: 'Building',
+    align: 'left',
+    items: [
+      { href: '/units', label: 'Units', hint: 'Evergreen House, 40 lots on 4 floors' },
+      { href: '/accounting', label: 'Accounting', hint: 'Operating, reserve, and the parkade levy' },
+      { href: '/pay', label: 'Pay', hint: 'E-transfer, Bitcoin, and Lightning on every bill' },
+      { href: '/tax', label: 'Tax and CRA', hint: 'Returns, payroll, and the owner-tax desk' },
+      { href: '/calendar', label: 'Calendar', hint: 'Fees, council, inspections, and CRA dates' },
+      { href: '/meetings', label: 'Meetings', hint: 'Council, the AGM, and how a vote is counted' }
+    ]
+  },
   {
     label: 'Library',
     align: 'left',

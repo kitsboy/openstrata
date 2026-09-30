@@ -3,12 +3,14 @@
 **What:** A SvelteKit-based strata property management and compliance platform.
 **Domain:** openstrata.giveabit.io
 **Version:** v0.3.0 (SvelteKit 2 + Svelte 5, backend Phase 3)
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-09-30
 
 ## One-Liner
 OpenStrata brings Bitcoin sovereignty to strata property management — with BCFSA compliance tools, interactive wizards, pitch decks, and a complete documentation suite for strata councils.
 
 ## Core Features
+- Evergreen House demo: 40 lots, 4 floors, three separate funds, and a CRA desk (sample data)
+- Pay page where e-transfer, Bitcoin, and Lightning are always offered. Destinations are demo-only
 - Compliance tools (BCFSA — BC Financial Services Authority)
 - Strata wizard for property setup and management
 - Bar/Line chart visualizations for financial data

@@ -1,3 +1,9 @@
+# openstrata — Last Updated 2026-09-30 by Grok
+
+> **Evergreen House.** The dashboard now opens one 40-lot building (LMS 2847, 4 floors, books closed September 30, 2026) instead of three sample communities. Units, accounting, pay, tax, calendar, and meetings are real pages. E-transfer, Bitcoin, and Lightning stay on screen. Payment strings are demo-only. Base is v0.3.28 (`0a98655`). `check` 0/0, 248 tests, build green. Not browser-verified.
+
+---
+
 # openstrata — Last Updated 2026-09-21 by Buffy (M3)
 
 > **v0.3.28: the deadline calendar's day popover is live and its month buttons speak properly.** Clicking a day with deadlines opens a small panel right under that cell — the full item list, each with a one-tap link to Strata Tools — and the month navigation buttons now announce "Previous month"/"Next month" instead of borrowing task-list strings.

@@ -13,6 +13,7 @@
   import BackToTop from '$lib/components/BackToTop.svelte';
   import NavMenu from '$lib/components/NavMenu.svelte';
   import PwaChrome from '$lib/components/PwaChrome.svelte';
+  import PayRail from '$lib/components/PayRail.svelte';
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
   import { browser } from '$app/environment';
@@ -161,6 +162,7 @@
         <button class="w-full mt-2 flex items-center justify-center gap-2 rounded-lg bg-bitcoin/10 px-4 py-2.5 text-sm font-semibold text-bitcoin" onclick={() => { donateOpen = true; mobileNavOpen = false; }}><Icon name="lightning" class="h-4 w-4" /> {$copy.donate} BTC/LN</button>
       </div>
     {/if}
+    <PayRail />
   </header>
 
   <main class="flex-1">

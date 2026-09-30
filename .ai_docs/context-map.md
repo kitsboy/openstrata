@@ -1,6 +1,6 @@
 # Context Map — OpenStrata (Hermes Strata)
 
-Updated: 2026-08-26
+Updated: 2026-09-30
 
 ## Stack
 Framework: SvelteKit 2 + Svelte 5
@@ -49,7 +49,13 @@ src/
   app.css                   Tailwind CSS entry point
   routes/                   SvelteKit file-based routes
     +layout.svelte          Root layout (UI shell)
-    +page.svelte            Homepage
+    +page.svelte            Dashboard — Evergreen House
+    units/+page.svelte      40-lot register
+    accounting/+page.svelte Operating, CRF, levy, budget, journal
+    pay/+page.svelte        E-transfer, Bitcoin, Lightning, PAD, cheque
+    tax/+page.svelte        CRA and owner-tax desk
+    calendar/+page.svelte   Fees, council, CRA, maintenance
+    meetings/+page.svelte   Council, AGM, votes
     about/+page.svelte
     blog/+page.svelte
     compliance/+page.svelte    BCFSA compliance tools
@@ -68,6 +74,7 @@ src/
     components/
       BarChart.svelte, Icon.svelte, LineChart.svelte
       JobsDropdown.svelte, DonateModal.svelte
+    demo/                   Evergreen House sample (building, books, tax, schedule, meetings, payments)
     data.ts, nav.ts, icons.ts
     compliance.ts, marketing.ts, strata-tool.ts
 public/
@@ -78,6 +85,7 @@ docs/
 ## Routes
 /  /about  /blog  /compliance  /docs  /faq  /legal  /pitch
 /roadmap  /rss  /rss.xml  /spec  /templates  /tools  /tools/wizard
+/units  /accounting  /pay  /tax  /calendar  /meetings
 
 ## Deployment
 Auto-deploy from GitHub main to Cloudflare Pages (project: openstrata)

@@ -8,6 +8,8 @@
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
   import HostConnect from '$lib/components/HostConnect.svelte';
+  import PayRail from '$lib/components/PayRail.svelte';
+  import { books } from '$lib/demo/books';
 
   const appVersion = packageJson.version;
 
@@ -21,26 +23,24 @@
   // Every sidebar / footer nav item maps to a real page so links work end to end.
   const navTargets: Record<string, string> = {
     overview: '/',
-    buildings: '/tools',
+    buildings: '/units',
     governance: '/compliance',
-    operations: '/tools',
-    finances: '/tools',
+    operations: '/calendar',
+    finances: '/accounting',
     legal: '/legal',
     insights: '/roadmap'
   };
   const isActive = (href: string) => $page.url.pathname === href;
 
   const buildings = [
-    { name: 'Harbour House', location: 'Vancouver, BC', units: '72 units', health: 96, tone: 'green', issue: 'All systems clear', glyph: 'HH' },
-    { name: 'Cedar Lane', location: 'Burnaby, BC', units: '48 units', health: 82, tone: 'amber', issue: '2 actions due this week', glyph: 'CL' },
-    { name: 'Northline Lofts', location: 'Victoria, BC', units: '31 units', health: 74, tone: 'red', issue: 'Depreciation report due', glyph: 'NL' }
+    { name: 'Evergreen House', location: '4100 Cambie Street, Vancouver', units: '40 lots · 4 floors', health: 86, tone: 'amber', issue: 'T2 and T1044 are due today', glyph: 'EH', href: '/units' }
   ];
 
   const activities = [
-    { icon: 'check', tone: 'green', title: 'AGM minutes approved', meta: 'Harbour House · 12 min ago' },
-    { icon: 'dollar', tone: 'blue', title: 'Reserve fund transfer reconciled', meta: 'Cedar Lane · 46 min ago' },
-    { icon: 'alert', tone: 'amber', title: 'Insurance renewal reminder sent', meta: 'Northline Lofts · 2 hrs ago' },
-    { icon: 'arrow-up-right', tone: 'purple', title: 'Form B request received', meta: 'Harbour House · 3 hrs ago' }
+    { icon: 'alert', tone: 'amber', title: 'T2 and T1044 are due today', meta: 'Evergreen House · year ended March 31, 2026', href: '/tax' },
+    { icon: 'dollar', tone: 'blue', title: 'October fees are due tomorrow', meta: '3 lots already paid · late fee on the 5th', href: '/pay' },
+    { icon: 'arrow-up-right', tone: 'purple', title: 'Form B for lot 201 is due October 5', meta: 'The lot is clear, so Form F can go with it', href: '/units?lot=201' },
+    { icon: 'alert', tone: 'amber', title: 'Lot 207 is three months behind', meta: 'Lien vote is on the October 20 agenda', href: '/units?lot=207' }
   ] as const;
 
   import SatohashStatus from '$lib/components/SatohashStatus.svelte';
@@ -209,7 +209,7 @@
     locales.find((item) => item.code === selectedLanguage)?.nativeName ?? 'English'
   );
   const liveMode = $derived($auth.status === 'signed-in');
-  const workspaceName = $derived(liveMode && $auth.council ? $auth.council.name : 'Give A Bit');
+  const workspaceName = $derived(liveMode && $auth.council ? $auth.council.name : 'Evergreen House');
   const profileInitials = $derived(
     $auth.user
       ? $auth.user.displayName.split(/\s+/).map((part) => part[0] ?? '').join('').slice(0, 2).toUpperCase()
@@ -289,6 +289,13 @@
       {/each}
     </nav>
 
+    <div class="nav-group">
+      <div class="nav-label">Evergreen House</div>
+      <a href="/pay" class="nav-item no-underline"><Icon name="lightning" class="h-[19px] w-[19px] nav-icon" /><span>Pay fees</span></a>
+      <a href="/tax" class="nav-item no-underline"><Icon name="file" class="h-[19px] w-[19px] nav-icon" /><span>Tax &amp; CRA</span></a>
+      <a href="/meetings" class="nav-item no-underline"><Icon name="calendar" class="h-[19px] w-[19px] nav-icon" /><span>Meetings</span></a>
+    </div>
+
     <div class="sidebar-spacer"></div>
     <a href="/docs/manual/getting-started" class="sidebar-help no-underline">
       <div class="help-orbit"><Icon name="help" class="h-3.5 w-3.5" /></div>
@@ -349,6 +356,7 @@
 
       <div class="dashboard-body">
       <DemoBanner />
+      <div class="sticky top-[72px] z-30 mb-4 max-sm:top-16"><PayRail /></div>
       <ResumeChip />
       <section class="welcome-row">
         <div><div class="date-kicker">{formatDate(new Date(), $locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} <span class:demo={!liveMode} class="live-pill"><span class="status-dot"></span> {liveMode ? $copy.live : $copy.demo}</span></div><h1>{greeting}</h1><p>{$copy.subtitle}</p><button class="tour-replay" type="button" onclick={() => (showTour = true)}><Icon name="spark" class="h-3 w-3" />{$copy.tourReplay}</button></div>
@@ -378,19 +386,19 @@
       {/if}
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
-        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(3, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(1, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon"><Icon name="alert" class="h-4 w-4" /></span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div>{#if balancesLoading && crfBalance === null}<div class="metric-skeleton"><Skeleton height="26px" width="120px" /></div>{:else}<strong>{formatCurrency(crfBalance ?? 248500, $locale, { maximumFractionDigits: 0 })}</strong>{/if}<Sparkline values={reserveSpark} tone="blue" /><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span class="trend up">↗ 4.8%</span>{/if}<span>{$copy.yearToDate}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div>{#if balancesLoading && crfBalance === null}<div class="metric-skeleton"><Skeleton height="26px" width="120px" /></div>{:else}<strong>{formatCurrency(crfBalance ?? books.crf.equity / 100, $locale, { maximumFractionDigits: 0 })}</strong>{/if}<Sparkline values={reserveSpark} tone="blue" /><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span>{formatCurrency(books.operating.cash / 100, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{/if}<span>{$copy.yearToDate}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 
       <section class="main-grid">
         <div class="left-stack">
-          <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => goto('/tools')}>{$copy.viewAll}<span>→</span></button></div>
+          <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => goto('/units')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
             {#each filteredBuildings as building}
               <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>
-                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); goto('/tools'); }}>•••</button></div>
+                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); goto(building.href); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-3 w-3" /></span>{building.issue}<span class="status-arrow">→</span></div>
@@ -403,14 +411,14 @@
           <div class="section-heading action-heading"><div><h2>{$copy.quickActions}</h2><p>{$copy.commonWork}</p></div></div>
           <div class="action-grid">
             <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph"><Icon name="plus" class="h-4 w-4" /></span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>
-            <button class="action-card purple" onclick={() => goto('/tools#live-demos')}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
+            <button class="action-card purple" onclick={() => goto('/meetings')}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
             <button class="action-card blue" onclick={() => goto('/legal')}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>
-            <button class="action-card green" onclick={() => goto('/tools#live-demos')}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.logRequestHint}</small></span><b>→</b></button>
+            <button class="action-card green" onclick={() => goto('/calendar')}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>Fees, council, and CRA dates</small></span><b>→</b></button>
           </div>
         </div>
 
         <aside class="right-stack">
-          <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => goto('/tools#live-demos')}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => goto('/tools#live-demos')}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => goto('/tools#live-demos')}>{$copy.activityHistory} <span>→</span></button></section>
+          <section class="panel"><div class="panel-heading"><div><h2>{$copy.activity}</h2><p>{$copy.acrossWorkspace}</p></div><button class="icon-button" aria-label={$copy.activityFilters} onclick={() => goto('/tools#live-demos')}>•••</button></div><div class="activity-list">{#each activities as activity}<button class="activity-item" onclick={() => goto(activity.href)}><span class={`activity-icon ${activity.tone}`}><Icon name={activity.icon} class="h-3.5 w-3.5" /></span><span class="activity-copy"><strong>{activity.title}</strong><small>{activity.meta}</small></span><Icon name="chevron-right" class="h-3.5 w-3.5 activity-chevron" /></button>{/each}</div><button class="panel-link" onclick={() => goto('/calendar')}>{$copy.activityHistory} <span>→</span></button></section>
           <RailsStatus />
           <HealthScore />
           <RateSparkline />
@@ -442,9 +450,9 @@
     </main>
 
     <footer class="site-footer">
-      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><BrandMark size={28} /><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/tools">{$copy.buildings}</a><a href="/compliance">{$copy.governance}</a><a href="/roadmap">{$copy.roadmap}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/custody">{$copy.custodyLink}</a><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">{$copy.privacy}</a><a href="/terms">{$copy.terms}</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">No cookies. We use self-hosted, cookie-less analytics. Nothing to consent to.</span></div>
+      <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><BrandMark size={28} /><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/units">Units</a><a href="/accounting">Accounting</a><a href="/pay">Pay</a><a href="/tax">Tax &amp; CRA</a><a href="/calendar">Calendar</a><a href="/meetings">Meetings</a></div><div><h3>{$copy.trustLegal}</h3><a href="/custody">{$copy.custodyLink}</a><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">{$copy.privacy}</a><a href="/terms">{$copy.terms}</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">No cookies. We use self-hosted, cookie-less analytics. Nothing to consent to.</span></div>
     </footer>
-  </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/tools" class:active={isActive('/tools')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><button class="mobile-add" onclick={() => (showNewStrata = true)} aria-label={$copy.newStrata}><Icon name="plus" class="h-4 w-4" /></button><a href="/tools" class:active={isActive('/tools')}><Icon name="wrench" class="h-4 w-4" />{$copy.operations}</a><button onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
+  </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/units" class:active={isActive('/units')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><a href="/pay" class:active={isActive('/pay')}><Icon name="lightning" class="h-4 w-4" />Pay</a><a href="/accounting" class:active={isActive('/accounting')}><Icon name="coins" class="h-4 w-4" />{$copy.finances}</a><button onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
 </div>
 
 {#if selectedBuilding}
@@ -463,7 +471,7 @@
       <p class="text-xs text-slate-400 mt-3">{$copy.drillDownNote}</p>
       <div class="modal-actions">
         <button class="secondary-button" onclick={() => (selectedBuilding = null)}>{$copy.close}</button>
-        <button class="primary-button" onclick={() => goto('/tools')}>{$copy.openActions} <span>→</span></button>
+        <a class="primary-button no-underline" href={selectedBuilding.href}>Open the lot list <span>→</span></a>
       </div>
     </dialog>
   </div>
