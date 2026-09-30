@@ -1,6 +1,6 @@
 # openstrata — Last Updated 2026-09-30 by Grok
 
-> **Evergreen House.** The dashboard now opens one 40-lot building (LMS 2847, 4 floors, books closed September 30, 2026) instead of three sample communities. Units, accounting, pay, tax, calendar, and meetings are real pages. E-transfer, Bitcoin, and Lightning stay on screen. Payment strings are demo-only. Base is v0.3.28 (`0a98655`). `check` 0/0, 248 tests, build green. Not browser-verified.
+> **Evergreen House.** The dashboard now opens one 40-lot building (LMS 2847, 4 floors, books closed September 30, 2026) instead of three sample communities. Units, accounting, pay, tax, calendar, and meetings are real pages. E-transfer, Bitcoin, and Lightning stay on screen. Payment strings are demo-only. Commit `2df6819`. Base is v0.3.28 (`0a98655`). `check` 0/0, 248 tests, build green. Not browser-verified.
 
 ---
 

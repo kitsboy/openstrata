@@ -12,9 +12,9 @@
 - Did not force-push. The stale layout rewrite is in `git stash` (`stale-base layout rewrite before moving to v0.3.28`) and is not part of this commit.
 
 **Git State:**
-- SHA: pending-this-commit
+- SHA: `2df6819b6f4d5907cb84991484fab2d5a9179e1d`
 - Base: `0a986553b3196b1615c3587331ddad7ecbae81bd`
-- Unpushed: this commit, once it is pushed to `origin/main`
+- Unpushed: none after this note is pushed to `origin/main`
 
 ---
 
