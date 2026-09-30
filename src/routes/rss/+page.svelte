@@ -1,0 +1,188 @@
+<script lang="ts">
+	import { rssFeeds, rssItems, apiEndpoints } from '$lib/data';
+	import Icon from '$lib/components/Icon.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import { copy } from '$lib/i18n';
+	import HeroArt from '$lib/components/HeroArt.svelte';
+
+	let selectedCategory = $state($copy.allLabel);
+	let apiTab = $state<'rest' | 'webhooks' | 'feeds'>('rest');
+
+	const categories = $derived([$copy.allLabel, ...new Set(rssFeeds.map((f) => f.category))]);
+
+	const filteredFeeds = $derived(
+		selectedCategory === $copy.allLabel
+			? rssFeeds
+			: rssFeeds.filter((f) => f.category === selectedCategory)
+	);
+
+	const filteredItems = $derived(
+		selectedCategory === $copy.allLabel
+			? rssItems
+			: rssItems.filter((item) => {
+					const feed = rssFeeds.find((f) => f.id === item.feed);
+					return feed?.category === selectedCategory;
+				})
+	);
+
+	const restEndpoints = $derived(apiEndpoints.filter((e) => !e.path.includes('webhook') && !e.path.includes('feeds')));
+	const webhookEndpoints = $derived(apiEndpoints.filter((e) => e.path.includes('webhook')));
+	const feedEndpoints = $derived(apiEndpoints.filter((e) => e.path.includes('feeds') || e.path.includes('market')));
+</script>
+
+<svelte:head>
+	<title>{$copy.rssPageTitle}</title>
+</svelte:head>
+
+<section class="page-hero">
+		<HeroArt variant="signal" />
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<div class="max-w-3xl">
+			<div class="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700 mb-4">
+				<Icon name="rss" class="h-3.5 w-3.5" />
+				{$copy.feedInfrastructure}
+			</div>
+			<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.rssTitle}</h1>
+			<p class="mt-4 text-lg text-slate-600 leading-relaxed">
+				{$copy.rssIntro}
+			</p>
+			<a href="/rss.xml" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">
+				<Icon name="rss" class="h-4 w-4" />
+				{$copy.rssFeedLabel}
+			</a>
+		</div>
+	</div>
+</section>
+
+<section class="mx-auto max-w-7xl px-6 py-12">
+	<!-- Category filter -->
+	<div class="flex flex-wrap gap-2 mb-8">
+		{#each categories as cat}
+			<button
+				class="rounded-full px-4 py-2 text-sm font-semibold transition-all
+					{selectedCategory === cat
+						? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
+						: 'bg-surface-2 border border-border text-slate-600 hover:border-brand-300'}"
+				onclick={() => (selectedCategory = cat)}
+			>
+				{cat}
+			</button>
+		{/each}
+	</div>
+
+	<div class="grid lg:grid-cols-3 gap-8">
+		<!-- Feed sources -->
+		<div class="lg:col-span-1 min-w-0">
+			<Card class="mb-6">
+				<h3 class="font-semibold text-slate-800 text-sm">{$copy.subscribeRss}</h3>
+				<p class="mt-1 text-xs text-slate-500">{$copy.subscribeRssHint}</p>
+				<div class="mt-3 flex flex-wrap gap-2">
+					<a href="/rss.xml" class="rounded-full bg-brand-600 px-3 py-1.5 text-[11px] font-bold text-white no-underline hover:bg-brand-700">{$copy.allLabel} — {$copy.rssFeedLabel}</a>
+					{#each categories as category}
+						{#if category !== $copy.allLabel}
+							<a href="/rss/{category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.xml" class="rounded-full bg-brand-50 px-3 py-1.5 text-[11px] font-bold text-brand-700 no-underline hover:bg-brand-100">{category}</a>
+						{/if}
+					{/each}
+				</div>
+			</Card>
+
+			<h2 class="text-xl font-bold text-slate-800 mb-4">{$copy.feedSources}</h2>
+			<div class="space-y-3">
+				{#each filteredFeeds as feed}
+					<Card variant="compact">
+						<div class="flex items-center justify-between mb-1">
+							<span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-700">{feed.category}</span>
+							<span class="text-[10px] text-slate-400">{feed.source}</span>
+						</div>
+						<h3 class="font-semibold text-sm text-slate-800">{feed.title}</h3>
+						<a href={feed.url} class="mt-2 block text-xs text-brand-600 no-underline hover:underline truncate" target="_blank" rel="noopener noreferrer">
+							{feed.url}
+						</a>
+					</Card>
+				{/each}
+			</div>
+
+			<Card class="mt-6 border-dashed">
+				<h3 class="font-semibold text-slate-800 text-sm">{$copy.addCustomFeed}</h3>
+				<p class="mt-1 text-xs text-slate-500">{$copy.customFeedHint}</p>
+				<code class="mt-3 block rounded-lg bg-slate-100 p-3 text-[10px] font-mono text-slate-600 overflow-x-auto">
+					feeds:<br/>
+					&nbsp;&nbsp;- url: https://...<br/>
+					&nbsp;&nbsp;&nbsp;&nbsp;category: Regulation<br/>
+					&nbsp;&nbsp;- twitter_list: strata-bc
+				</code>
+			</Card>
+		</div>
+
+		<!-- Feed items -->
+		<div class="lg:col-span-2 min-w-0">
+			<h2 class="text-xl font-bold text-slate-800 mb-4">{$copy.latestItems}</h2>
+			<div class="space-y-4">
+				{#each filteredItems as item}
+					{@const feed = rssFeeds.find((f) => f.id === item.feed)}
+					<Card as="article" hover>
+						<div class="flex items-center gap-3 mb-2">
+							<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">{feed?.source}</span>
+							<span class="text-xs text-slate-400">{item.date}</span>
+							<span class="rounded-full bg-brand-50 px-2.5 py-0.5 text-[10px] font-bold text-brand-700">{feed?.category}</span>
+						</div>
+						<h3 class="text-base font-bold text-slate-800 leading-snug">{item.title}</h3>
+						<p class="mt-2 text-sm text-slate-500 leading-relaxed">{item.excerpt}</p>
+					</Card>
+				{/each}
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- API Section -->
+<section class="border-t border-border bg-surface-2/60">
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<div class="text-center mb-10">
+			<h2 class="text-2xl font-bold text-slate-900">{$copy.apiTitle}</h2>
+			<p class="mt-2 text-slate-500">{$copy.apiIntro}</p>
+		</div>
+
+		<div class="flex justify-center gap-2 mb-8">
+			{#each [['rest', $copy.restEndpoints], ['webhooks', $copy.webhooks], ['feeds', $copy.feedsMarket]] as [tab, label]}
+				<button
+					class="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all
+						{apiTab === tab
+							? 'bg-brand-600 text-white'
+							: 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+					onclick={() => (apiTab = tab as typeof apiTab)}
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+
+		<div class="max-w-4xl mx-auto space-y-3">
+			{#each apiTab === 'rest' ? restEndpoints : apiTab === 'webhooks' ? webhookEndpoints : feedEndpoints as endpoint}
+				<Card variant="compact" class="flex items-start gap-4">
+					<span class="shrink-0 rounded-lg px-3 py-1 text-xs font-bold font-mono
+						{endpoint.method === 'GET' ? 'bg-success/10 text-success' : 'bg-brand-50 text-brand-700'}">
+						{endpoint.method}
+					</span>
+					<div class="flex-1 min-w-0">					<code class="block text-sm font-mono font-semibold text-slate-800 break-all">{endpoint.path}</code>
+					<p class="mt-1 text-sm text-slate-500">{endpoint.desc}</p>
+					</div>
+				</Card>
+			{/each}
+		</div>
+
+		<Card class="mt-10 max-w-4xl mx-auto">
+			<h3 class="font-bold text-slate-800 mb-3">{$copy.quickStart}</h3>
+			<pre class="rounded-xl bg-slate-900 text-slate-100 p-5 text-sm font-mono overflow-x-auto leading-relaxed"><code># Fetch live market rates (BTC/CAD + vacancy)
+curl -H "Authorization: Bearer $HERMES_TOKEN" \\
+  https://openstrata.local/api/v1/market/rates?jurisdiction=BC
+
+# Query Rosa compliance RAG
+curl -X GET "https://openstrata.local/api/v1/rosa/query?q=EPR+2026+deadline" \\
+  -H "Authorization: Bearer $HERMES_TOKEN"
+
+# Subscribe to aggregated RSS output
+curl https://openstrata.local/api/v1/feeds/rss?categories=Regulation,Legal</code></pre>
+		</Card>
+	</div>
+</section>

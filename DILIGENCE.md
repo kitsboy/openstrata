@@ -1,23 +1,19 @@
-# OpenStrata — Diligence Pack
+            ---
+            title: Diligence pointer
+            project: OpenStrata
+            last_updated: 2026-07-13
+            ---
 
-## Project
-**OpenStrata** — Sovereign Data Portability Platform
+# Diligence pack
 
-## Status
-🟢 **LIVE** at https://openstrata.giveabit.io
+Full pack lives in **[docs/diligence/](./docs/diligence/)**.
 
-## Stack
-SvelteKit 5 + Tailwind CSS v4 + TypeScript + Cloudflare Pages
+- [Investor one-pager](./docs/diligence/INVESTOR-ONEPAGER.md)
+- [Architecture one-pager](./docs/diligence/ARCHITECTURE-ONEPAGER.md)
+- [Ask sheet](./docs/diligence/ASK-SHEET.md)
+- [Family of 8 portfolio](https://github.com/kitsboy/giveabit/blob/main/docs/diligence/PORTFOLIO-FAMILY-OF-8.md)
 
-## Key Facts
-- No backend — fully static SPA
-- Auto-deployed from GitHub main → Cloudflare Pages
-- Part of the Give A Bit suite (giveabit.io)
-
-## Team
-- **Grok (M3):** Code, build, deploy
-- **Kimi (THOR):** Docs, monitoring, orchestration
-
-## Legal
-Safe Harbour applied. Educational/informational purposes.
-Part of the [Give A Bit](https://giveabit.io) family — Bitcoin sovereignty first.
+---
+**Safe Harbour:** Educational / informational only. Not financial, legal, or investment advice.
+Bitcoin involves risk. DYOR. Not your keys, not your cheese.
+Part of the [Give A Bit](https://giveabit.io) family.

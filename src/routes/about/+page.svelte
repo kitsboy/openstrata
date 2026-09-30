@@ -1,0 +1,186 @@
+<script lang="ts">
+	import {
+		bcfsaFacts,
+		hermesPositioning,
+		costSavings,
+		competitiveAdvantages,
+		productStack,
+		warChest
+	} from '$lib/marketing';
+	import BarChart from '$lib/components/BarChart.svelte';
+	import Icon from '$lib/components/Icon.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import { copy, locale, formatCurrency } from '$lib/i18n';
+	import HeroArt from '$lib/components/HeroArt.svelte';
+
+	const paymentChart = costSavings.paymentMethods.map((p) => ({
+		label: p.method.split(' ')[0],
+		value: p.annualCost,
+		color: 'recommended' in p && p.recommended
+			? '#14b8a6'
+			: p.method.includes('Credit')
+				? '#ef4444'
+				: '#94a3b8'
+	}));
+</script>
+
+<svelte:head>
+	<title>{$copy.aboutPageTitle}</title>
+</svelte:head>
+
+<section class="page-hero">
+		<HeroArt variant="network" />
+	<div class="mx-auto max-w-7xl px-6 py-20">
+		<h1 class="text-4xl font-bold text-slate-900 sm:text-5xl tracking-tight">
+			{$copy.aboutHeroTitle}<br />
+			<span class="bg-gradient-to-r from-brand-600 to-bitcoin bg-clip-text text-transparent">{$copy.aboutHeroAccent}</span>
+		</h1>
+		<p class="mt-6 text-xl text-slate-600 max-w-3xl leading-relaxed">
+			{$copy.aboutHeroDescription}
+		</p>
+	</div>
+</section>
+
+<!-- Cost savings -->
+<section class="mx-auto max-w-7xl px-6 py-16">
+	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.costOfStrata}</h2>
+	<p class="text-slate-500 mb-8">
+		{costSavings.scenario.units} {$copy.units} × ${costSavings.scenario.monthlyFee}{$copy.perMonth} =
+		<strong class="text-slate-800">{formatCurrency(costSavings.annualFeeFlow, $locale)}{$copy.perYear}</strong> {$copy.feeFlow}
+	</p>
+
+	<div class="grid lg:grid-cols-2 gap-10">
+		<Card>
+			<h3 class="font-bold text-slate-800 mb-4">{$copy.annualProcessingCost}</h3>
+			<BarChart data={paymentChart} height={220} barColor="#14b8a6" />
+			<p class="mt-4 text-sm text-slate-500">
+				{$copy.cardCostWarning}
+			</p>
+		</Card>
+		<div class="space-y-4">
+			{#each costSavings.paymentMethods as pm}
+				<div class="flex items-center justify-between rounded-xl border border-border p-4 {'recommended' in pm && pm.recommended ? 'bg-brand-50 border-brand-200' : ''}">
+					<div>
+						<span class="font-semibold text-slate-800">{pm.method}</span>
+						<p class="text-xs text-slate-400">{pm.label}</p>
+					</div>
+					<span class="text-lg font-bold {pm.annualCost > 5000 ? 'text-danger' : pm.annualCost < 2000 ? 'text-success' : 'text-slate-600'}">
+						{formatCurrency(pm.annualCost, $locale)}/yr
+					</span>
+				</div>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<!-- Manager time savings -->
+<section class="border-y border-border bg-surface-2/60">
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<h2 class="text-2xl font-bold text-slate-900 mb-8">{$copy.managerTimeSavings}</h2>
+		<div class="overflow-x-auto">
+			<table class="w-full text-sm glass-card rounded-2xl overflow-hidden">
+				<thead class="bg-slate-50">
+					<tr class="text-left">
+						<th class="p-4 font-bold text-slate-600">{$copy.task}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.traditional}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.openStrataLabel}</th>
+						<th class="p-4 font-bold text-slate-600">{$copy.saving}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each costSavings.managerSavings as row}
+						<tr class="border-t border-border">
+							<td class="p-4 font-medium text-slate-800">{row.task}</td>
+							<td class="p-4 text-slate-500">{row.traditional}</td>
+							<td class="p-4 text-brand-700 font-semibold">{row.hermes}</td>
+							<td class="p-4"><span class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-bold text-success">{row.saving}</span></td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>
+
+<!-- BCFSA positioning -->
+<section class="mx-auto max-w-7xl px-6 py-16">
+	<h2 class="text-2xl font-bold text-slate-900 mb-2">{$copy.smartWithinLaw}</h2>
+	<p class="text-slate-500 mb-8 max-w-3xl">
+		{bcfsaFacts.regulator} {$copy.requiresLicensedBrokerages}
+		<strong class="text-slate-700">{$copy.softwareNotManagement}</strong>
+		{$copy.threePaths}
+	</p>
+	<div class="grid md:grid-cols-3 gap-6">
+		{#each hermesPositioning.paths as path}
+			<Card hover>
+				<h3 class="font-bold text-slate-800 text-lg">{path.title}</h3>
+				<p class="mt-3 text-sm text-slate-600 leading-relaxed">{path.desc}</p>
+				<span class="mt-4 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{path.legal}</span>
+			</Card>
+		{/each}
+	</div>
+</section>
+
+<!-- Product stack -->
+<section class="border-t border-border bg-gradient-to-b from-slate-50 to-transparent">
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">{$copy.layersTrust}</h2>
+		<div class="grid md:grid-cols-3 gap-6">
+			{#each productStack as product, i}
+				<Card class="text-center relative">
+					<div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-white mb-4
+						{i === 0 ? 'bg-brand-600' : i === 1 ? 'bg-bitcoin' : 'bg-bc-blue'}">
+						{i + 1}
+					</div>
+					<h3 class="font-bold text-slate-800 text-lg">{product.name}</h3>
+					<p class="text-sm font-semibold text-brand-600 mt-1">{product.role}</p>
+					<p class="mt-3 text-sm text-slate-500">{product.desc}</p>
+				</Card>
+			{/each}
+		</div>
+		<p class="mt-8 text-center text-slate-600 max-w-2xl mx-auto">
+			<strong>{$copy.runBuildingProof}</strong>
+		</p>
+	</div>
+</section>
+
+<!-- War chest + advantages -->
+<section class="mx-auto max-w-7xl px-6 py-16">
+	<div class="grid lg:grid-cols-2 gap-10">
+		<Card variant="hero" class="border-l-4 border-l-bitcoin">
+			<h3 class="text-xl font-bold text-slate-800">{$copy.btcWarChest}</h3>
+			<p class="mt-3 text-slate-600 leading-relaxed">
+				{$copy.warChestIntro} <strong>{warChest.allocPct}</strong> {$copy.warChestMiddle}
+				{$copy.purposeLabel}: {warChest.purpose}.
+			</p>
+		</Card>
+		<div>
+			<h3 class="text-xl font-bold text-slate-800 mb-4">{$copy.byNumbers}</h3>
+			<div class="grid grid-cols-2 gap-3">
+				{#each competitiveAdvantages as adv}
+					<div class="rounded-xl bg-surface-2 border border-border p-4 text-center">
+						<div class="text-2xl font-bold text-brand-600">{adv.metric}</div>
+						<div class="text-xs font-semibold text-slate-700 mt-1">{adv.label}</div>
+						<div class="text-[10px] text-slate-400">{$copy.vsLabel} {adv.vs}</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="border-t border-border bg-brand-600">
+	<div class="mx-auto max-w-7xl px-6 py-14 text-center text-white">
+		<h2 class="text-2xl font-bold">{$copy.readySmarter}</h2>
+		<div class="mt-6 flex flex-wrap justify-center gap-4">
+			<a href="/tools" class="rounded-xl bg-surface-2 px-8 py-3.5 text-sm font-bold text-brand-700 no-underline hover:bg-brand-50 transition-colors">{$copy.exploreStrataTool} →</a>
+			<a href="/roadmap" class="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-bold text-white no-underline hover:bg-white/10 transition-colors">
+				{$copy.seeRoadmap}
+			</a>
+			<a href="mailto:hello@giveabit.io" class="rounded-xl border border-white/30 px-8 py-3.5 text-sm font-bold text-white no-underline hover:bg-white/10 transition-colors inline-flex items-center gap-2">
+				<Icon name="mail" class="h-4 w-4" />
+				hello@giveabit.io
+			</a>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,1472 @@
+/**
+ * Fastify application — routes the Phase 3 services.
+ *
+ * The app is a factory over injected dependencies so it can be built in tests
+ * with in-memory stores (no Postgres/Ollama).
+ *
+ * Auth + tenancy: every `/api/v1/*` route except the Rosa KB and `/health`
+ * requires a Bearer JWT. The token's `cid` claim IS the tenant: tenant-scoped
+ * routes derive the ledger `community` from the token instead of trusting the
+ * request body, and role gates enforce admin / treasurer / member privileges.
+ */
+
+import { createHash, randomBytes } from 'node:crypto';
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
+import type { LedgerEngine } from '../ledger/ledger.js';
+import { type Retriever, composeAnswer } from '../rosa/rosa.js';
+import { authorizeSpend } from '../ziggy/ziggy.js';
+import { planDca, type DcaFrequency } from '../ziggy/dca.js';
+import { buildPsbtPlan, type PsbtInputRef } from '../ziggy/psbt.js';
+import { broadcastPsbt, postSpendToLedger, signedCount } from '../ziggy/broadcast.js';
+import { broadcastPsbtWorkflow, broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../ziggy/node-broadcast.js';
+import { deriveUnitAddress } from '../rails/rails.js';
+import type { Reconciler, UnitRefs } from '../trf/recon.js';
+import { runBilling, type UnitFee } from '../billing/billing.js';
+import {
+  newComplaint,
+  issueNotice,
+  canImposeFine,
+  imposeFine,
+  decideNoFine
+} from '../enforcement/enforcement.js';
+import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rails/rails.js';
+import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-request.js';
+import { SITE_SLUG, receiveLabelFor } from '../rails/receive-label.js';
+import type { RateProvider } from '../rails/rails.js';
+import { generateForm } from '../forms/forms.js';
+import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
+import type { UnitRecord, UnitRegistry } from '../units/model.js';
+import { createRegistry, normalizeUnitRef, unitArFundCode } from '../units/model.js';
+import type { UnitStore } from '../units/store.js';
+import type { MemberStore } from '../members/store.js';
+import { normalizeEmail, toMemberWire } from '../members/model.js';
+import { statutoryDeadlines, withDaysLeft, sortDeadlines } from '../deadlines/deadlines.js';
+import { hashPassword, verifyPassword } from '../auth/passwords.js';
+import { signJwt, verifyJwt } from '../auth/jwt.js';
+import type { AuthStore } from '../auth/store.js';
+import { DuplicateEmailError } from '../auth/store.js';
+import type { AuthUser, UserRole } from '../auth/model.js';
+import { ROLE_RANK, toPublicUser } from '../auth/model.js';
+import { RateLimiter, type RateLimitConfig } from '../auth/rate-limit.js';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    user?: AuthUser;
+  }
+}
+
+export interface ApiDeps {
+  ledger: LedgerEngine;
+  rosa: Retriever;
+  reconcile: Reconciler;
+  payments: PaymentRequestStore;
+  auth: AuthStore;
+  resolver?: RateProvider;
+  /** Canonical unit/lot master data. Resolves every unitRef in the product. */
+  units?: UnitRegistry;
+  /** Tenant-scoped unit store (migration 0005). When present, `/units` is
+   * store-backed and seeded per council; the registry stays the fallback. */
+  unitStore?: UnitStore;
+  /** Tenant-scoped member registry (migration 0006). Owner/occupant layer. */
+  memberStore?: MemberStore;
+  config: {
+    crfMandatoryPct: number;
+    vectorCollection: string;
+    rails?: RailRegistry;
+    cadPerBtc?: number; // fallback static rate for convertible rails
+    authSecret: string;
+    authRateLimitMax: number;
+    authRateLimitWindowMs: number;
+    authTokenTtl: number; // seconds
+  };
+}
+
+/** In-memory seen-set for Idempotency-Key on idempotent POSTs (ledger/billing). */
+const lastResults = new Map<string, unknown>();
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type PreHandler = (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
+
+/** Serialize a unit to the wire shape (AR fund code + reconciliation keys). */
+function toUnitWire(u: UnitRecord) {
+  return {
+    unitRef: u.unitRef,
+    floor: u.floor,
+    sqft: u.sqft ?? null,
+    occupancy: u.occupancy,
+    tenant: u.tenant ?? null,
+    rent: u.rent ?? null,
+    eht: u.eht ?? false,
+    evCharger: u.evCharger ?? false,
+    formK: u.formK ?? 'missing',
+    arFundCode: unitArFundCode(u.unitRef),
+    reconciliationRefs: createRegistry([u]).refs(u.unitRef)
+  };
+}
+
+/** Unit list for a council: store-backed when configured, else the registry. */
+async function councilUnits(deps: ApiDeps, councilId: string): Promise<UnitRecord[]> {
+  if (deps.unitStore) return deps.unitStore.list(councilId);
+  return deps.units?.all() ?? [];
+}
+
+export async function buildServer(
+  deps: ApiDeps,
+  opts: { logger?: boolean } = { logger: true }
+): Promise<FastifyInstance> {
+  const app = Fastify({ logger: opts.logger ?? true });
+
+  const defaultBudget = {
+    fiscalYear: '2026',
+    totalOperatingBasis: 4_200_000,
+    crfMandatoryPct: deps.config.crfMandatoryPct
+  };
+
+  // -------------------------------------------------------------  Auth hooks
+  const authenticate: PreHandler = async (req, reply) => {
+    const header = req.headers.authorization;
+    const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+    if (!token) {
+      return reply.code(401).send({ ok: false, reason: 'authentication required' });
+    }
+    const claims = verifyJwt(token, deps.config.authSecret);
+    if (!claims) {
+      return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
+    }
+    req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
+  };
+
+  /** Role gate: admits the role and anything above it (treasurer gate admits admin). */
+  const requireRole = (min: UserRole): PreHandler => async (req, reply) => {
+    if (!req.user) {
+      return reply.code(401).send({ ok: false, reason: 'authentication required' });
+    }
+    if (ROLE_RANK[req.user.role] < ROLE_RANK[min]) {
+      return reply.code(403).send({ ok: false, reason: `requires role '${min}' or higher` });
+    }
+  };
+
+  app.get('/health', async () => ({ ok: true, service: 'openstrata-backend' }));
+
+  // ----------------------------------------------------------------  Auth API
+  // Open signup: anyone can create a council + its first admin. Councils are
+  // the tenant boundary — every later request is scoped to the token's council.
+  app.post<{
+    Body: { councilName: string; email: string; password: string; displayName?: string };
+  }>(
+    '/api/v1/auth/register',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['councilName', 'email', 'password'],
+          additionalProperties: false,
+          properties: {
+            councilName: { type: 'string', minLength: 1 },
+            email: { type: 'string', minLength: 3 },
+            password: { type: 'string', minLength: 8 },
+            displayName: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      const registerThrottle = throttled(`register:ip:${req.ip}`);
+      if (registerThrottle) {
+        return reply
+          .code(429)
+          .header('retry-after', String(registerThrottle.retryAfter))
+          .send({ ok: false, reason: 'too many registrations — try again shortly', retryAfter: registerThrottle.retryAfter });
+      }
+      rateLimiter.record(`register:ip:${req.ip}`);
+      if (await deps.auth.getUserByEmail(email)) {
+        return reply.code(409).send({ ok: false, reason: 'email already registered' });
+      }
+      const council = await deps.auth.createCouncil(req.body.councilName.trim());
+      // Fresh council gets its own building: seed the default unit set into
+      // its tenant-scoped unit table (no-op when running registry-only), then
+      // seed the member layer from the building's owners (migration 0006).
+      if (deps.unitStore) {
+        await deps.unitStore.seedDefault(council.id);
+        if (deps.memberStore) {
+          const seeded = await deps.unitStore.list(council.id);
+          await deps.memberStore.seedDefault(
+            council.id,
+            seeded.map((u) => ({ unitRef: u.unitRef, owner: u.member?.owner }))
+          );
+        }
+      }
+      const passwordHash = await hashPassword(req.body.password);
+      const user = await deps.auth.createUser({
+        councilId: council.id,
+        email,
+        displayName: (req.body.displayName ?? '').trim() || email.split('@')[0]!,
+        passwordHash,
+        role: 'admin'
+      });
+      const token = signJwt(
+        { sub: user.id, cid: council.id, role: user.role },
+        deps.config.authSecret,
+        deps.config.authTokenTtl
+      );
+      return {
+        ok: true,
+        token,
+        council: { id: council.id, name: council.name },
+        user: toPublicUser(user)
+      };
+    }
+  );
+
+  // Brute-force throttle for the open auth surface (per email + per IP). Only
+  // failed attempts consume the window — success clears the email bucket.
+  const rateLimiter = new RateLimiter({
+    max: deps.config.authRateLimitMax,
+    windowMs: deps.config.authRateLimitWindowMs
+  } satisfies RateLimitConfig);
+  const throttled = (key: string): { retryAfter: number } | null =>
+    rateLimiter.isLimited(key)
+      ? { retryAfter: rateLimiter.retryAfterSeconds(key) }
+      : null;
+
+  app.post<{ Body: { email: string; password: string } }>(
+    '/api/v1/auth/login',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email', 'password'],
+          additionalProperties: false,
+          properties: { email: { type: 'string' }, password: { type: 'string', minLength: 1 } }
+        }
+      }
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      const limited = throttled(`login:email:${email}`) ?? throttled(`login:ip:${req.ip}`);
+      if (limited) {
+        return reply
+          .code(429)
+          .header('retry-after', String(limited.retryAfter))
+          .send({ ok: false, reason: 'too many login attempts — try again shortly', retryAfter: limited.retryAfter });
+      }
+      const user = await deps.auth.getUserByEmail(email);
+      if (!user || !(await verifyPassword(req.body.password, user.passwordHash))) {
+        rateLimiter.record(`login:email:${email}`);
+        rateLimiter.record(`login:ip:${req.ip}`);
+        return reply.code(401).send({ ok: false, reason: 'invalid email or password' });
+      }
+      rateLimiter.clear(`login:email:${email}`);
+      const token = signJwt(
+        { sub: user.id, cid: user.councilId, role: user.role },
+        deps.config.authSecret,
+        deps.config.authTokenTtl
+      );
+      return { ok: true, token, user: toPublicUser(user) };
+    }
+  );
+
+  app.get('/api/v1/auth/me', { preHandler: [authenticate] }, async (req) => {
+    const user = await deps.auth.getUserById(req.user!.userId);
+    const council = await deps.auth.getCouncil(req.user!.councilId);
+    if (!user || !council) return { ok: false, reason: 'account not found' };
+    return { ok: true, user: toPublicUser(user), council: { id: council.id, name: council.name } };
+  });
+
+  // Admin-only user management (the rest of a council's accounts).
+  app.get('/api/v1/auth/users', { preHandler: [authenticate, requireRole('admin')] }, async (req) => {
+    const users = await deps.auth.listUsers(req.user!.councilId);
+    return { ok: true, users: users.map(toPublicUser) };
+  });
+
+  app.post<{
+    Body: { email: string; displayName?: string; role: 'treasurer' | 'member' };
+  }>(
+    '/api/v1/auth/users',
+    {
+      preHandler: [authenticate, requireRole('admin')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email', 'role'],
+          additionalProperties: false,
+          properties: {
+            email: { type: 'string', minLength: 3 },
+            displayName: { type: 'string' },
+            role: { type: 'string', enum: ['treasurer', 'member'] }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      if (await deps.auth.getUserByEmail(email)) {
+        return reply.code(409).send({ ok: false, reason: 'email already registered' });
+      }
+      // Generated temporary password — the admin shares it with the new user.
+      const temporaryPassword = randomBytes(9).toString('base64url');
+      const user = await deps.auth.createUser({
+        councilId: req.user!.councilId,
+        email,
+        displayName: (req.body.displayName ?? '').trim() || email.split('@')[0]!,
+        passwordHash: await hashPassword(temporaryPassword),
+        role: req.body.role
+      });
+      return { ok: true, user: toPublicUser(user), temporaryPassword };
+    }
+  );
+
+  // Canonical unit/lot master data — the single source of unit identity.
+  // Tenant-scoped: with a unit store (migration 0005) each council sees only
+  // its own building; the injected registry is the fallback for the scaffold.
+  app.get('/api/v1/units', { preHandler: [authenticate] }, async (req) => {
+    const units = await councilUnits(deps, req.user!.councilId);
+    return { ok: true, units: units.map(toUnitWire) };
+  });
+
+  // Unit detail: the record + its AR ledger account (hash-chain verified) +
+  // payment requests — the unit→payment→ledger traceability spine end to end.
+  app.get<{ Params: { unitRef: string } }>(
+    '/api/v1/units/:unitRef',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const councilId = req.user!.councilId;
+      const unit = deps.unitStore
+        ? await deps.unitStore.get(councilId, req.params.unitRef)
+        : deps.units?.get(req.params.unitRef) ?? null;
+      if (!unit) return reply.code(404).send({ ok: false, reason: 'unknown unit' });
+      const fund = unitArFundCode(unit.unitRef);
+      const ar = await deps.ledger.balance(councilId, fund);
+      const payments = await deps.payments.listByUnit(councilId, unit.unitRef);
+      return {
+        ok: true,
+        unit: toUnitWire(unit),
+        ar: {
+          fundCode: fund,
+          balanceBasis: ar.balanceBasis,
+          entryCount: ar.entryCount,
+          headTally: ar.headTally.slice(0, 8)
+        },
+        payments: payments.map((p) => ({
+          refId: p.refId,
+          referenceCode: p.referenceCode,
+          rail: p.rail,
+          amountBasis: p.amountBasis,
+          status: p.status,
+          createdAt: p.createdAt
+        }))
+      };
+    }
+  );
+
+  // Upsert a unit (treasurer+ — onboarding/edits are financial ops).
+  app.post<{
+    Body: {
+      unitRef: string;
+      floor: number;
+      sqft?: number;
+      occupancy?: 'occupied' | 'vacant' | 'short-term';
+      tenant?: string | null;
+      rent?: number | null;
+      eht?: boolean;
+      evCharger?: boolean;
+      formK?: 'signed' | 'missing';
+      owner?: string;
+      occupants?: string[];
+    };
+  }>(
+    '/api/v1/units',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req, reply) => {
+      if (!deps.unitStore) {
+        return reply.code(501).send({ ok: false, reason: 'unit store not configured' });
+      }
+      // Canonical identity: store the normalized form ('U-501' -> '501') so
+      // the row key, AR fund code, and every lookup agree.
+      const unitRef = normalizeUnitRef(req.body.unitRef);
+      if (!unitRef || !Number.isInteger(req.body.floor)) {
+        return reply.code(400).send({ ok: false, reason: 'unitRef and integer floor are required' });
+      }
+      const saved = await deps.unitStore.upsert(req.user!.councilId, {
+        unitRef,
+        floor: req.body.floor,
+        sqft: req.body.sqft,
+        occupancy: req.body.occupancy ?? 'occupied',
+        tenant: req.body.tenant ?? null,
+        rent: req.body.rent ?? null,
+        eht: req.body.eht ?? false,
+        evCharger: req.body.evCharger ?? false,
+        formK: req.body.formK ?? 'missing',
+        member: req.body.owner || (req.body.occupants?.length ?? 0)
+          ? { owner: req.body.owner, occupants: req.body.occupants ?? [] }
+          : undefined
+      });
+      return { ok: true, unit: toUnitWire(saved) };
+    }
+  );
+
+  // Remove a unit (admin only).
+  app.delete<{ Params: { unitRef: string } }>(
+    '/api/v1/units/:unitRef',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req, reply) => {
+      if (!deps.unitStore) {
+        return reply.code(501).send({ ok: false, reason: 'unit store not configured' });
+      }
+      const removed = await deps.unitStore.remove(req.user!.councilId, req.params.unitRef);
+      if (!removed) return reply.code(404).send({ ok: false, reason: 'unknown unit' });
+      return { ok: true, removed: req.params.unitRef };
+    }
+  );
+
+  // ------------------------------------------------  Member registry
+  // The owner/occupant layer over units (migration 0006). Member rows are
+  // tenant-scoped: each council manages its own building's people.
+  app.get('/api/v1/members', { preHandler: [authenticate] }, async (req) => {
+    const members = deps.memberStore
+      ? await deps.memberStore.list(req.user!.councilId)
+      : [];
+    return { ok: true, members: members.map(toMemberWire) };
+  });
+
+  app.get<{ Querystring: { unitRef?: string } }>(
+    '/api/v1/members/unit',
+    { preHandler: [authenticate] },
+    async (req) => {
+      if (!req.query.unitRef) return { ok: true, members: [] };
+      const unitRef = normalizeUnitRef(req.query.unitRef);
+      if (!unitRef) return { ok: true, members: [] };
+      const members = deps.memberStore
+        ? await deps.memberStore.listByUnit(req.user!.councilId, unitRef)
+        : [];
+      return { ok: true, unitRef, members: members.map(toMemberWire) };
+    }
+  );
+
+  app.post<{
+    Body: {
+      email: string;
+      displayName?: string;
+      phone?: string | null;
+      unitRef: string;
+      roleLabel?: 'owner' | 'tenant' | 'both';
+    };
+  }>(
+    '/api/v1/members',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email', 'unitRef'],
+          additionalProperties: false,
+          properties: {
+            email: { type: 'string', minLength: 3 },
+            displayName: { type: 'string' },
+            phone: { type: ['string', 'null'] },
+            unitRef: { type: 'string', minLength: 1 },
+            roleLabel: { type: 'string', enum: ['owner', 'tenant', 'both'] }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
+      if (!deps.memberStore) {
+        return reply.code(501).send({ ok: false, reason: 'member store not configured' });
+      }
+      if (!EMAIL_RE.test(normalizeEmail(req.body.email))) {
+        return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      }
+      const unitRef = normalizeUnitRef(req.body.unitRef);
+      if (!unitRef) {
+        return reply.code(400).send({ ok: false, reason: 'invalid unitRef' });
+      }
+      const units = await councilUnits(deps, req.user!.councilId);
+      if (!units.some((u) => normalizeUnitRef(u.unitRef) === unitRef)) {
+        return reply.code(404).send({ ok: false, reason: 'unknown unit' });
+      }
+      const member = await deps.memberStore.upsert(req.user!.councilId, {
+        email: req.body.email,
+        displayName: req.body.displayName,
+        phone: req.body.phone ?? null,
+        unitRef,
+        roleLabel: req.body.roleLabel ?? 'owner'
+      });
+      return { ok: true, member: toMemberWire(member) };
+    }
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    '/api/v1/members/:id',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req, reply) => {
+      if (!deps.memberStore) {
+        return reply.code(501).send({ ok: false, reason: 'member store not configured' });
+      }
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id)) return reply.code(400).send({ ok: false, reason: 'invalid id' });
+      const removed = await deps.memberStore.remove(req.user!.councilId, id);
+      if (!removed) return reply.code(404).send({ ok: false, reason: 'unknown member' });
+      return { ok: true, removed: id };
+    }
+  );
+
+  // Ledger balance (verified against the hash chain). Community comes from the
+  // token — a council can only read its own accounts.
+  app.get<{ Querystring: { fund: string } }>(
+    '/api/v1/ledger/balance',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const { balanceBasis, entryCount, headTally } = await deps.ledger.balance(
+        req.user!.councilId,
+        req.query.fund
+      );
+      return { balanceBasis, entryCount, headTally: headTally.slice(0, 8) };
+    }
+  );
+
+  // Monthly treasury series (income vs expenses per month) for the dashboard
+  // charts — verified against the hash chain like balance.
+  app.get<{ Querystring: { fund?: string; months?: string } }>(
+    '/api/v1/ledger/series',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const months = Math.min(24, Math.max(1, Number(req.query.months) || 6));
+      return {
+        fund: req.query.fund ?? 'operating',
+        points: await deps.ledger.series(req.user!.councilId, req.query.fund ?? 'operating', months)
+      };
+    }
+  );
+
+  // Full verified chain for a fund — the ledger explorer + CSV export read
+  // this. Tampering anywhere in the chain makes the request throw 500.
+  app.get<{ Querystring: { fund: string } }>(
+    '/api/v1/ledger/entries',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const entries = await deps.ledger.entries(req.user!.councilId, req.query.fund);
+      return { ok: true, fund: req.query.fund, entries };
+    }
+  );
+
+  // "What's due" task center: statutory calendar + operational deadlines
+  // (open payment quotes expiring) for this council, sorted soonest-first.
+  app.get('/api/v1/deadlines', { preHandler: [authenticate] }, async (req) => {
+    const now = new Date();
+    const statutory = withDaysLeft(statutoryDeadlines(now), now);
+    const items = statutory.map((s) => ({ ...s, kind: s.kind, source: 'statutory' }));
+
+    // Operational: open payment quotes (status 'quoted') expire per invoice.
+    const units = await councilUnits(deps, req.user!.councilId);
+    for (const unit of units) {
+      const requests = await deps.payments.listByUnit(req.user!.councilId, unit.unitRef);
+      for (const p of requests) {
+        if (p.status !== 'quoted') continue;
+        const expiresAt = p.expiresAt ? new Date(p.expiresAt) : null;
+        const daysLeft = expiresAt
+          ? Math.ceil((expiresAt.getTime() - now.getTime()) / 86_400_000)
+          : 1;
+        items.push({
+          id: `quote:${p.referenceCode}`,
+          kind: 'quote',
+          title: `Payment quote ${p.referenceCode} for unit ${unit.unitRef} is open`,
+          dueAt: expiresAt ? expiresAt.toISOString() : now.toISOString(),
+          daysLeft,
+          severity: daysLeft <= 1 ? 'urgent' : 'soon',
+          jurisdiction: 'BC',
+          source: 'operational'
+        });
+      }
+    }
+    return { ok: true, asOf: now.toISOString(), items: sortDeadlines(items) };
+  });
+
+  // Post a single credit/debit (idempotent via Idempotency-Key header).
+  // Treasurer + admin only; the community is the caller's council.
+  app.post<{
+    Body: {
+      fund: string;
+      amountBasis: number;
+      kind: 'credit' | 'debit';
+      type: string;
+      description?: string;
+      referenceCode?: string;
+      reconRef?: string;
+    };
+  }>(
+    '/api/v1/ledger/post',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['fund', 'amountBasis', 'kind', 'type'],
+          additionalProperties: false,
+          properties: {
+            fund: { type: 'string' },
+            amountBasis: { type: 'integer', not: { const: 0 } },
+            kind: { type: 'string', enum: ['credit', 'debit'] },
+            type: { type: 'string' },
+            description: { type: 'string' },
+            referenceCode: { type: 'string' },
+            reconRef: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req) => {
+      const idem = req.headers['idempotency-key'];
+      const idemKey = idem ? `ledger:${req.user!.councilId}:${idem}` : null;
+      if (idemKey) {
+        const cached = lastResults.get(idemKey);
+        if (cached) return cached;
+      }
+      const row = await deps.ledger.post(
+        req.user!.councilId,
+        req.body.fund,
+        req.body.amountBasis,
+        req.body.kind,
+        {
+          type: req.body.type,
+          description: req.body.description,
+          referenceCode: req.body.referenceCode,
+          reconRef: req.body.reconRef
+        }
+      );
+      const result = { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
+      if (idemKey) lastResults.set(idemKey, result);
+      return result;
+    }
+  );
+
+  // Ziggy: treasury spend verdict (authorization gate, not execution).
+  app.post<{
+    Body: {
+      budget?: {
+        fiscalYear: string;
+        totalOperatingBasis: number;
+        crfMandatoryPct: number;
+      };
+      balances: Record<string, number>;
+      spend: {
+        amountBasis: number;
+        fundCode: string;
+        poRef: string;
+        category: string;
+        description?: string;
+      };
+    };
+  }>(
+    '/api/v1/treasury/authorize',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const verdict = authorizeSpend(
+        req.body.budget ?? defaultBudget,
+        req.body.balances,
+        req.body.spend
+      );
+      return verdict;
+    }
+  );
+
+  // ------------------------------------------------------------------  Ziggy
+  // War-chest DCA plan (item #18) — pure schedule at the current CAD/BTC rate.
+  app.post<{
+    Body: {
+      annualOperatingBudgetBasis: number;
+      allocationPerPeriodBasis: number;
+      frequency: DcaFrequency;
+      periods: number;
+      cadPerBtc?: number;
+    };
+  }>(
+    '/api/v1/treasury/dca/plan',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const b = req.body;
+      const rate = b.cadPerBtc ?? (await cadPerBtc());
+      const plan = planDca({
+        annualOperatingBudgetBasis: b.annualOperatingBudgetBasis,
+        allocationPerPeriodBasis: b.allocationPerPeriodBasis,
+        frequency: b.frequency,
+        periods: b.periods,
+        cadPerBtc: rate
+      });
+      return { ok: true, plan, cadPerBtc: rate };
+    }
+  );
+
+  // PSBT/multisig execution plan (item #15) — skeleton + signature tracking.
+  app.post<{
+    Body: {
+      verdict: { allow: true; reason: string; pulledFrom: string; basis: number };
+      amountSats: number;
+      feeSats: number;
+      recipient: string;
+      inputs: PsbtInputRef[];
+      totalSigners: number;
+      requiredSignatures: number;
+    };
+  }>(
+    '/api/v1/treasury/psbt/plan',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const b = req.body;
+      try {
+        const plan = buildPsbtPlan({
+          verdict: b.verdict,
+          amountSats: b.amountSats,
+          feeSats: b.feeSats,
+          recipient: b.recipient,
+          inputs: b.inputs,
+          totalSigners: b.totalSigners,
+          requiredSignatures: b.requiredSignatures
+        });
+        return { ok: true, plan };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  // PSBT broadcast (item #15 continuation) — marks a ready plan broadcasted,
+  // optionally posts the spend to the trust ledger (on-chain leg reconciles into
+  // the same hash chain Ziggy uses for e-transfers / rail quotes / billing), and
+  // when the host has a bitcoind RPC configured (BITCOIN_RAIL_ENABLED=true +
+  // BITCOIN_NODE_URL + rpc auth), broadcasts the spend for real via the raw-tx
+  // seam and returns the txid. Otherwise the txid stays null (stub) until a node
+  // client is plugged in.
+  app.post<{
+    Body: {
+      planId: string;
+      readyPlan: {
+        id: string;
+        authorization: { allowed: boolean; fundCode: string; amountBasis: number };
+        recipient: string;
+        amountSats: number;
+        feeSats: number;
+        inputs: PsbtInputRef[];
+        totalSigners: number;
+        requiredSignatures: number;
+        signatures: Record<string, string | undefined>;
+        ready: boolean;
+        psbtB64: string | null;
+      };
+      postToLedger: boolean;
+      amountBasis?: number; // CAD basis for the ledger debit (from the verdict basis)
+    };
+  }>(
+    '/api/v1/treasury/psbt/broadcast',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      const b = req.body;
+      const readyPlan = b.readyPlan;
+      const result = broadcastPsbt({
+        plan: readyPlan as any,
+        ledger: deps.ledger,
+        communityId: req.user!.councilId
+      });
+
+      let ledgerSeq: number | null = null;
+      let txid: string | null = result.txid;
+      // Broadcast-honesty tri-state (Lenny ruling t_2fda9855): on the real rail
+      // a placeholder must NEVER stand for an on-chain spend; in demo (rail off)
+      // the placeholder stays but is explicitly tagged.
+      let placeholder = false;
+      let rail: 'live' | 'unavailable' | undefined;
+      let seamReason: string | undefined;
+
+      if (result.broadcasted) {
+        // On-chain broadcast seam: when the host runs bitcoind (or another node
+        // client) and it is enabled, broadcast the spend for real and return the
+        // txid. The PSBT workflow seam (walletprocesspsbt → finalizepsbt →
+        // sendpsbt) runs first — it is the BIP174 path hardware-wallet
+        // signatures feed. If the node has no signing wallet, fall back to the
+        // raw-tx seam (watch-only + external signer); if that fails too, txid
+        // stays null and the response notes it (ledger post already succeeded).
+        if (b.postToLedger && b.amountBasis) {
+          try {
+            const posted = await postSpendToLedger(
+              readyPlan as any,
+              deps.ledger,
+              req.user!.councilId,
+              b.amountBasis,
+              `PSBT broadcast ${readyPlan.id}`
+            );
+            ledgerSeq = posted.seq;
+          } catch (err) {
+            return { ok: false, reason: (err as Error).message, broadcasted: true, ledgerSeq: null, txid };
+          }
+        }
+
+        const nodeUrl = process.env.BITCOIN_NODE_URL;
+        const nodeEnabled = process.env.BITCOIN_RAIL_ENABLED === 'true';
+        if (nodeEnabled) {
+          // Real rail path — this branch is where the system proves an on-chain
+          // spend. The placeholder must NEVER escape it: an unreachable or
+          // auth-failed node yields txid:null + rail:'unavailable', and only a
+          // real node-provided txid upgrades broadcasted to a claim.
+          // The PSBT workflow seam (walletprocesspsbt → finalizepsbt → sendpsbt)
+          // runs first — the BIP174 path hardware-wallet signatures feed; the
+          // raw-tx seam (watch-only + external signer) is the fallback.
+          rail = 'unavailable';
+          if (nodeUrl && readyPlan.recipient) {
+            const btc: BitcoindRpcConfig = {
+              url: nodeUrl,
+              user: process.env.BITCOIN_RPC_USER ?? undefined,
+              pass: process.env.BITCOIN_RPC_PASS ?? undefined
+            };
+            try {
+              // Path A — wallet-backed node. Throws when the wallet is missing
+              // or finalizepsbt is not complete (below threshold); the fallback
+              // covers watch-only host shapes.
+              const tx = await broadcastPsbtWorkflow(readyPlan as any, btc);
+              txid = tx.txid;
+              rail = 'live';
+            } catch {
+              // Path B — railEnabled:true → broadcastRawTx throws on node
+              // failure instead of substituting a placeholder, so this catch
+              // stays reachable.
+              try {
+                const tx = await broadcastRawTx(readyPlan as any, btc, [
+                  { address: readyPlan.recipient, sats: readyPlan.amountSats }
+                ], { railEnabled: true });
+                txid = tx.txid;
+                rail = 'live';
+              } catch (err) {
+                // Node unavailable / auth failure — leave txid null + rail
+                // unavailable. (In a real deploy this would be a retry queue.)
+                txid = null;
+                rail = 'unavailable';
+                seamReason = `broadcast seam failed: ${(err as Error).message}`;
+              }
+            }
+          }
+          // rail enabled but no node / no recipient → txid stays null, rail stays
+          // 'unavailable', placeholder stays false.
+        } else {
+          // Demo/bootstrap — rail NOT enabled. Keep the no-node placeholder so
+          // the seam can iterate, but tag it explicitly so it can never be read
+          // as a spend that reached the chain.
+          placeholder = true;
+          if (readyPlan.recipient && readyPlan.amountSats) {
+            const demo = await broadcastRawTx(readyPlan as any, { url: '' }, [
+              { address: readyPlan.recipient, sats: readyPlan.amountSats }
+            ], { railEnabled: false });
+            txid = demo.txid;
+          }
+        }
+      }
+
+      // The stub reason is only honest while no real txid exists — a real
+      // broadcast must not echo "no node client configured". A hard seam error
+      // (inputs/outputs mismatch) overrides the stub reason too.
+      const reason = seamReason ?? (txid ? undefined : result.reason);
+
+      return {
+        ok: true,
+        broadcasted: result.broadcasted,
+        plan: { ...readyPlan, ready: result.broadcasted },
+        summary: planSummary(readyPlan),
+        signedCount: signedCount(readyPlan),
+        requiredSignatures: readyPlan.requiredSignatures,
+        txid,
+        ledgerSeq,
+        placeholder,
+        ...(rail !== undefined ? { rail } : {}),
+        reason
+      };
+    }
+  );
+
+  // --------------------------------------------------  Satohash stamping
+  // Item #19 — hash-of-record for payments/votes/bylaw actions. Returns the
+  // SHA-256 digest + the satohash.io stamp URL; the stamp call itself runs
+  // client-side (src/lib/satohash.ts) against api.satohash.io.
+  app.post<{ Body: { scope: string; payload: unknown } }>(
+    '/api/v1/compliance/stamp',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      const canonical = JSON.stringify({
+        scope: b.scope,
+        council: req.user!.councilId,
+        payload: b.payload
+      });
+      const hash = createHash('sha256').update(canonical).digest('hex');
+      return {
+        ok: true,
+        hash,
+        scope: b.scope,
+        stampUrl: `https://satohash.io/stamp?hash=${hash}`
+      };
+    }
+  );
+
+  // --------------------------------------------------  Watch-only xpub
+  // Item #16 — register the council's watch-only xpub (keys never leave the
+  // hardware wallets); per-unit BIP32 receive paths derive deterministically.
+  const councilXpubs = new Map<string, string>();
+  app.post<{ Body: { xpub: string } }>(
+    '/api/v1/rails/xpub',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req, reply) => {
+      try {
+        const xpub = req.body.xpub.trim();
+        // Validate the prefix via the derivation seam (throws on bad input).
+        deriveUnitAddress(xpub, '1');
+        councilXpubs.set(req.user!.councilId, xpub);
+        return { ok: true, registered: true };
+      } catch (err) {
+        return reply.code(400).send({ ok: false, reason: (err as Error).message });
+      }
+    }
+  );
+
+  app.get('/api/v1/rails/xpub', { preHandler: [authenticate] }, async (req) => {
+    const xpub = councilXpubs.get(req.user!.councilId);
+    if (!xpub) return { ok: true, registered: false };
+    const units = (await councilUnits(deps, req.user!.councilId)).slice(0, 20);
+    return {
+      ok: true,
+      registered: true,
+      xpub,
+      addresses: units.map((u) => deriveUnitAddress(xpub, u.unitRef))
+    };
+  });
+
+  // Rosa: strict RAG query (citations only). Public — BC law is the knowledge
+  // base behind the product and the site already publishes it.
+  app.post<{ Body: { question: string; facts?: Record<string, string> } }>(
+    '/api/v1/rosa/query',
+    async (req) => {
+      const chunks = await deps.rosa.retrieve(req.body.question, 3);
+      const answer = composeAnswer(req.body.question, chunks, req.body.facts ?? {});
+      return {
+        answer,
+        cited: answer.cited,
+        uncertain: answer.uncertain,
+        collection: deps.config.vectorCollection
+      };
+    }
+  );
+
+  // Rosa: raw retrieval endpoint (returns citations, no answer).
+  app.get<{ Querystring: { q: string } }>('/api/v1/rosa/sources', async (req) => {
+    const chunks = await deps.rosa.retrieve(req.query.q, 5);
+    return {
+      chunks: chunks.map((c) => ({
+        citation: c.source.citation,
+        title: c.source.title,
+        url: c.source.url,
+        score: c.score
+      }))
+    };
+  });
+
+  const cadPerBtc = async (): Promise<number> =>
+    (await deps.resolver?.cadPerBtc()) ?? deps.config.cadPerBtc ?? 0;
+
+  // ------------------------------------------------  Sovereign rails
+  app.get('/api/v1/rails/status', { preHandler: [authenticate] }, async () => ({
+    rails: enabledRails(deps.config.rails ?? {}),
+    cadPerBtc: await cadPerBtc()
+  }));
+
+  // Build a rail quote; idempotent per (community, refId, unitRef, rail) via
+  // the payment store. The community is the caller's council.
+  app.post<{
+    Body: {
+      rail: Rail;
+      refId: string;
+      unitRef: string;
+      amountBasis: number;
+      currency: 'CAD' | 'BTC';
+      recipient: string;
+      note?: string;
+    };
+  }>(
+    '/api/v1/payments/quote',
+    {
+      preHandler: [authenticate],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['rail', 'refId', 'unitRef', 'amountBasis', 'currency', 'recipient'],
+          additionalProperties: false,
+          properties: {
+            rail: { type: 'string', enum: ['fiat', 'onchain', 'lightning', 'liquid', 'paynym_bip47', 'nostr'] },
+            refId: { type: 'string', minLength: 1 },
+            unitRef: { type: 'string', minLength: 1 },
+            amountBasis: { type: 'integer', not: { const: 0 } },
+            currency: { type: 'string', enum: ['CAD', 'BTC'] },
+            recipient: { type: 'string', minLength: 1 },
+            note: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req) => {
+      const b = req.body;
+      const registry = deps.config.rails ?? {};
+      if (!registry[b.rail]?.enabled) {
+        return { ok: false, reason: `rail '${b.rail}' is not enabled` };
+      }
+      // Unit master-data rule: resolve every unit key through the canonical
+      // normalization ('unit-302' / 'U-302' / '302' -> '302') so the stored
+      // payment_request rows and unit-detail traceability agree.
+      const unitRef = normalizeUnitRef(b.unitRef);
+      if (!unitRef) return { ok: false, reason: 'invalid unitRef' };
+      try {
+        const rate = await cadPerBtc(); // resolve outside the sync buildInvoice()
+        const communityId = req.user!.councilId;
+        const { request, created } = await getOrCreateQuote(
+          deps.payments,
+          {
+            refId: b.refId,
+            unitRef,
+            communityId,
+            rail: b.rail,
+            amountBasis: b.amountBasis,
+            currency: b.currency,
+            recipient: b.recipient
+          },
+          () =>
+            quotePayment(
+              {
+                refId: b.refId,
+                communityId,
+                unitRef,
+                amountBasis: b.amountBasis,
+                currency: b.currency,
+                rail: b.rail,
+                note: b.note
+              },
+              b.recipient,
+              new Date(),
+              rate
+            )
+        );
+        const invoice = {
+          rail: request.rail,
+          // Per-site receive label. Returned to the caller so the council can put
+          // it on the transfer, and read by the rail seam as the node memo — one
+          // string, so a payment can never be traced to the wrong project.
+          receiveLabel: receiveLabelFor({
+            site: SITE_SLUG,
+            communityId,
+            unitRef,
+            refId: b.refId
+          }),
+          referenceCode: request.referenceCode,
+          recipient: request.recipient,
+          invoice: request.invoice || undefined,
+          fiatLockedBasis: request.fiatLockedBasis || undefined,
+          amountSat: request.amountSat || undefined,
+          expiresAt: request.expiresAt,
+          status: request.status
+        };
+        return { ok: true, created, invoice };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  // Confirm a rail payment by its shared referenceCode -> mark paid AND post to
+  // the unit's AR ledger account (reconciles like an e-transfer would). The
+  // lookup is council-scoped so one council can never confirm another's quote.
+  app.post<{ Body: { referenceCode: string } }>(
+    '/api/v1/payments/confirm',
+    {
+      preHandler: [authenticate],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['referenceCode'],
+          additionalProperties: false,
+          properties: { referenceCode: { type: 'string', minLength: 1 } }
+        }
+      }
+    },
+    async (req) => {
+      const councilId = req.user!.councilId;
+      const req0 = await deps.payments.findByReference(councilId, req.body.referenceCode);
+      if (!req0) return { ok: false, reason: 'unknown referenceCode' };
+      if (req0.status !== 'quoted') return { ok: false, reason: `request is ${req0.status}, not quoted` };
+
+      // Post the confirmed amount to the unit's AR ledger (credit).
+      const kind = req0.amountBasis >= 0 ? ('credit' as const) : ('debit' as const);
+      const row = await deps.ledger.post(
+        councilId,
+        req0.referenceCode,
+        Math.abs(req0.amountBasis),
+        kind,
+        { type: 'strata_fee', referenceCode: req0.referenceCode, reconRef: req0.referenceCode }
+      );
+      await deps.payments.markStatus(councilId, req0.referenceCode, 'paid');
+      return { ok: true, seq: row.seq, referenceCode: req0.referenceCode, status: 'paid' };
+    }
+  );
+
+  // Reconciliation: auto-post decision for one inbound transfer.
+  app.post<{
+    Body: { reference: string; units: UnitRefs[] };
+  }>(
+    '/api/v1/treasury/reconcile',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      return deps.reconcile(req.body.reference, req.body.units);
+    }
+  );
+
+  // ------------------------------------------------ Billing
+  // Run a monthly billing cycle: compute charges + late notices, then post the
+  // charges to the trust ledger so AR is wired end-to-end. Treasurer + admin.
+  app.post<{
+    Body: {
+      period: string;
+      fees: UnitFee[];
+      dueDay: number;
+      graceDays: number;
+      lateFeeBasis: number;
+      arrears: Record<string, number>;
+      asOf?: string;
+    };
+  }>(
+    '/api/v1/billing/run',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['period', 'fees', 'dueDay', 'graceDays', 'lateFeeBasis', 'arrears'],
+          additionalProperties: false,
+          properties: {
+            period: { type: 'string', minLength: 1 },
+            fees: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['unitId', 'monthlyBasis'],
+                additionalProperties: false,
+                properties: {
+                  unitId: { type: 'string' },
+                  monthlyBasis: { type: 'integer' }
+                }
+              }
+            },
+            dueDay: { type: 'integer', minimum: 1, maximum: 28 },
+            graceDays: { type: 'integer', minimum: 0 },
+            lateFeeBasis: { type: 'integer', minimum: 0 },
+            arrears: { type: 'object' },
+            asOf: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req) => {
+      const b = req.body;
+      const community = req.user!.councilId;
+      const run = runBilling(
+        b.fees,
+        (unitId) => b.arrears[unitId] ?? 0,
+        { period: b.period, dueDay: b.dueDay, graceDays: b.graceDays, lateFlatBasis: b.lateFeeBasis },
+        b.asOf ? new Date(b.asOf) : new Date()
+      );
+      // AR isolation: post each charge to a per-unit AR ledger account.
+      const posted: Array<{ unitId: string; seq: number }> = [];
+      for (const charge of run.charges) {
+        const row = await deps.ledger.post(
+          community,
+          charge.referenceCode,
+          charge.amountBasis,
+          'credit',
+          { type: 'strata_fee', referenceCode: charge.referenceCode, reconRef: charge.referenceCode }
+        );
+        posted.push({ unitId: charge.unitId, seq: row.seq });
+      }
+      return { run, postedCount: posted.length, posted };
+    }
+  );
+
+  // ------------------------------------------------ Bylaw enforcement
+  // Stateless over the pure state machine: each request submits the current
+  // complaint facts and receives the validated next state or a rejection.
+  app.post<{
+    Body: {
+      id: string;
+      unitId: string;
+      bylawRef: string;
+      breachKind: 'standard' | 'short_term_rental';
+      receivedAt: string;
+      evidence: boolean;
+    };
+  }>(
+    '/api/v1/bylaw/complaint',
+    { preHandler: [authenticate] },
+    async (req) => {
+      try {
+        const c = newComplaint(req.body);
+        return { ok: true, complaint: c };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  app.post<{
+    Body: { complaint: string; issuedAt: string };
+  }>(
+    '/api/v1/bylaw/complaint/notice',
+    { preHandler: [authenticate, requireRole('treasurer')] },
+    async (req) => {
+      try {
+        const c = issueNotice(JSON.parse(req.body.complaint), req.body.issuedAt);
+        return { ok: true, complaint: c };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  app.post<{
+    Body: { complaint: string; now: string; amountBasis: number; councilMinutesRef: string };
+  }>(
+    '/api/v1/bylaw/fine',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req) => {
+      let state: ReturnType<typeof JSON.parse>;
+      try {
+        state = JSON.parse(req.body.complaint) as Parameters<typeof imposeFine>[0];
+      } catch {
+        return { ok: false, reason: 'invalid complaint payload' };
+      }
+      const res = imposeFine(state, req.body.now, {
+        councilMinutesRef: req.body.councilMinutesRef,
+        amountBasis: req.body.amountBasis
+      });
+      return res.ok ? { ok: true, complaint: res.complaint } : { ok: false, reason: res.reason };
+    }
+  );
+
+  app.post<{ Body: { complaint: string; now: string } }>(
+    '/api/v1/bylaw/status',
+    { preHandler: [authenticate] },
+    async (req) => {
+      let state;
+      try {
+        state = JSON.parse(req.body.complaint) as Parameters<typeof canImposeFine>[0];
+      } catch {
+        return { ok: false, reason: 'invalid complaint payload' };
+      }
+      const gate = canImposeFine(state, req.body.now);
+      return { ...gate, fineCapsBp: { standard: 20_000, short_term_rental: 100_000 } };
+    }
+  );
+
+  app.post<{ Body: { complaint: string; councilMinutesRef: string } }>(
+    '/api/v1/bylaw/nofine',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req) => {
+      try {
+        const c = decideNoFine(JSON.parse(req.body.complaint), req.body.councilMinutesRef);
+        return { ok: true, complaint: c };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  // --------------------------------------------------  Export / evidence
+  // Item #20 — portable OpenStrata export: everything a council needs to move
+  // (per the protocol spec) as one JSON document.
+  app.get('/api/v1/export/portable', { preHandler: [authenticate] }, async (req) => {
+    const councilId = req.user!.councilId;
+    const council = await deps.auth.getCouncil(councilId);
+    const funds = ['operating', 'crf', 'war_chest'];
+    const accounts: Record<string, unknown> = {};
+    for (const fund of funds) {
+      const b = await deps.ledger.balance(councilId, fund);
+      accounts[fund] = { balanceBasis: b.balanceBasis, entryCount: b.entryCount, headTally: b.headTally.slice(0, 4) };
+    }
+    const units = (await councilUnits(deps, councilId)).map((u) => ({
+      unitRef: u.unitRef,
+      floor: u.floor,
+      sqft: u.sqft,
+      occupancy: u.occupancy,
+      eht: u.eht,
+      evCharger: u.evCharger
+    }));
+    return {
+      format: 'openstrata-portable/v1',
+      exportedAt: new Date().toISOString(),
+      council: council ? { id: council.id, name: council.name } : null,
+      units,
+      accounts,
+      rails: enabledRails(deps.config.rails ?? {})
+    };
+  });
+
+  // Item #11 — CRT evidence export: a print-ready HTML bundle of the ledger
+  // hash chain for a fund (browser → PDF). Includes the verification verdict.
+  app.get<{ Querystring: { fund?: string; months?: string } }>(
+    '/api/v1/compliance/crt-export',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const fund = req.query.fund ?? 'operating';
+      const councilId = req.user!.councilId;
+      const council = await deps.auth.getCouncil(councilId);
+      const b = await deps.ledger.balance(councilId, fund);
+      const series = await deps.ledger.series(councilId, fund, Math.min(12, Number(req.query.months) || 6));
+      const rows = series
+        .filter((s) => s.incomeBasis !== 0 || s.expenseBasis !== 0)
+        .map(
+          (s) =>
+            `<tr><td>${s.month}</td><td>+$${(s.incomeBasis / 100).toFixed(2)}</td><td>$${(s.expenseBasis / 100).toFixed(2)}</td><td>$${(s.netBasis / 100).toFixed(2)}</td></tr>`
+        )
+        .join('');
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>CRT Evidence — ${council?.name ?? councilId}</title>
+      <style>body{font-family:system-ui,sans-serif;margin:40px;color:#18232b}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #cbd5d9;padding:8px;text-align:left;font-size:13px}th{background:#eef2f3}code{font-family:ui-monospace,monospace;font-size:12px}.badge{display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700}.ok{background:#eaf8f2;color:#238c6b}.head{font-size:18px;font-weight:800}</style></head><body>
+      <p class="head">CRT Evidence Bundle — ${council?.name ?? 'Council'}</p>
+      <p>Fund: <strong>${fund}</strong> · Balance: <strong>$${(b.balanceBasis / 100).toFixed(2)}</strong> · ${b.entryCount} entries</p>
+      <p><span class="badge ok">Hash chain verified ✓</span> — head tally <code>${b.headTally.slice(0, 16) || '(empty)'}</code></p>
+      <table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead><tbody>${rows || '<tr><td colspan="4">No activity in this window</td></tr>'}</tbody></table>
+      </body></html>`;
+      return reply.type('text/html; charset=utf-8').send(html);
+    }
+  );
+
+  // --------------------------------------------------  Conveyancing (Form B/F)
+  // Print-ready HTML certificates (item #9) — browser → PDF. Form F is
+  // WITHHELD when the unit's AR ledger balance is > 0 (sale blocked).
+  const unitFormHtml = (
+    form: ReturnType<typeof generateForm>,
+    councilName: string
+  ) => `<!doctype html><html><head><meta charset="utf-8"><title>Form ${form.kind} — ${form.unitId}</title>
+  <style>body{font-family:system-ui,sans-serif;margin:48px;color:#18232b;max-width:720px}.title{font-size:22px;font-weight:800;margin-bottom:4px}.meta{color:#6d7a82;font-size:13px;margin-bottom:24px}.box{border:1px solid #cbd5d9;border-radius:8px;padding:16px;margin-bottom:16px;font-size:14px}.warn{border-color:#f0b8b0;background:#fff5f2;color:#b3352b;font-weight:700}.okc{border-color:#b6dccb;background:#f1fbf6;color:#238c6b;font-weight:700}ul{margin:8px 0 0;padding-left:20px}.foot{margin-top:28px;color:#9aa6ab;font-size:11px}</style></head><body>
+  <p class="title">Form ${form.kind} — ${councilName}</p>
+  <p class="meta">Unit ${form.unitId} · Issued ${form.issuedAt}${form.dueDate ? ` · Due ${form.dueDate} (${form.status})` : ''}</p>
+  <div class="box ${form.state === 'withheld' ? 'warn' : 'okc'}">
+    ${form.state === 'withheld' ? `WITHHELD — ${form.withheldReason ?? 'balance due'}` : 'Issued'}
+  </div>
+  <div class="box">Balance: <strong>$${(form.balanceBasis / 100).toFixed(2)}</strong><ul>${form.disclosures.map((d) => `<li>${d}</li>`).join('')}</ul></div>
+  <p class="foot">Statutory deadline per SPA ss.256–258. Professional review required before reliance.</p>
+  </body></html>`;
+
+  app.get<{ Params: { unitId: string } }>(
+    '/api/v1/forms/b/:unitId',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const unitId = req.params.unitId;
+      const fund = `ar:unit-${unitId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+      const bal = await deps.ledger.balance(req.user!.councilId, fund);
+      const council = await deps.auth.getCouncil(req.user!.councilId);
+      const form = generateForm(
+        { kind: 'B', unitId, requestedAt: new Date().toISOString().slice(0, 10) },
+        { unitId, balanceBasis: bal.balanceBasis, arrearsBasis: bal.balanceBasis, crfBasis: (await deps.ledger.balance(req.user!.councilId, 'crf')).balanceBasis },
+        new Date().toISOString().slice(0, 10)
+      );
+      return reply.type('text/html; charset=utf-8').send(unitFormHtml(form, council?.name ?? 'Council'));
+    }
+  );
+
+  app.get<{ Params: { unitId: string } }>(
+    '/api/v1/forms/f/:unitId',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      const unitId = req.params.unitId;
+      const fund = `ar:unit-${unitId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+      const bal = await deps.ledger.balance(req.user!.councilId, fund);
+      const council = await deps.auth.getCouncil(req.user!.councilId);
+      const form = generateForm(
+        { kind: 'F', unitId, requestedAt: new Date().toISOString().slice(0, 10) },
+        { unitId, balanceBasis: bal.balanceBasis, arrearsBasis: bal.balanceBasis },
+        new Date().toISOString().slice(0, 10)
+      );
+      return reply.type('text/html; charset=utf-8').send(unitFormHtml(form, council?.name ?? 'Council'));
+    }
+  );
+
+  // ------------------------------------------------ Conveyancing (Form B/F)
+  app.post<{
+    Body: {
+      kind: 'B' | 'F';
+      unitId: string;
+      requestedAt: string;
+      balanceBasis: number;
+      arrearsBasis?: number;
+      crfBasis?: number;
+      pendingCases?: string[];
+      eprDisclosed?: boolean;
+      requester?: string;
+    };
+  }>(
+    '/api/v1/forms',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      const form = generateForm(
+        { kind: b.kind, unitId: b.unitId, requestedAt: b.requestedAt, requester: b.requester },
+        {
+          unitId: b.unitId,
+          balanceBasis: b.balanceBasis,
+          arrearsBasis: b.arrearsBasis ?? b.balanceBasis,
+          crfBasis: b.crfBasis,
+          pendingCases: b.pendingCases,
+          eprDisclosed: b.eprDisclosed
+        },
+        new Date().toISOString().slice(0, 10)
+      );
+      return form;
+    }
+  );
+
+  // ------------------------------------------------ Meetings (quorum + voting)
+  app.post<{
+    Body: {
+      type: 'AGM' | 'SGM' | 'council' | 'rescheduled';
+      eligible: number;
+      present: number;
+      councilSize?: number;
+    };
+  }>(
+    '/api/v1/meetings/quorum',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      return b.type === 'rescheduled'
+        ? checkQuorumRescheduled(b.present)
+        : checkQuorum(b.type, b.eligible, b.present, b.councilSize ?? 0);
+    }
+  );
+
+  app.post<{
+    Body: {
+      threshold: 'majority' | 'three_quarter' | 'eighty' | 'unanimous';
+      eligible: number;
+      present: number;
+      yes: number;
+      no: number;
+      abstain: number;
+    };
+  }>(
+    '/api/v1/meetings/vote',
+    { preHandler: [authenticate] },
+    async (req) => {
+      const b = req.body;
+      try {
+        return countVote(b.threshold, { eligible: b.eligible, present: b.present, yes: b.yes, no: b.no, abstain: b.abstain });
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  return app;
+}

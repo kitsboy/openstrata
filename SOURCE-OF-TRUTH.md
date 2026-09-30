@@ -1,63 +1,141 @@
+# SOURCE-OF-TRUTH — OpenStrata / Hermes Strata
+
+**Generated:** July 2026 — **latest revision 2026-09-18 at v0.3.21 (Buffy, M3)**  
+**Machine:** M3 (dev) <-> M4 HERMES / Obsidian via Tailscale  
+**GitHub:** https://github.com/kitsboy/openstrata
+
+> **Version note.** This document was assembled in July 2026 and is deliberately
+> high-level; it is *not* a file-by-file index (that is `DIRECTORY-MAP.md`) and
+> it is not the current status (that is `.ai_docs/current-status.md` and
+> `LATEST-UPDATE.md`). Where it disagrees with those, **they win.**
+
 ---
-title: SOURCE-OF-TRUTH
-project: openstrata
-version: 0.1.0
-audience: internal
-last_updated: 2026-06-22
-owner: Nova (Product Management & Documentation)
-verified_by: [Department Head(s)]
+
+## Project Identity
+
+- **Name:** Hermes Strata (OpenStrata protocol)
+- **One-line:** BCFSA-aware strata operations software — cheaper, faster, provable. Fiat + optional Bitcoin sovereignty.
+- **Folder:** /Users/cam/projects/openstrata
+- **Live:** Deployed via Cloudflare (static SvelteKit build)
+- **Parent:** Give A Bit (https://giveabit.io)
+- **Contact:** hello@giveabit.io
+
 ---
 
-# openstrata — Source of Truth
+## Related Give A Bit Projects
 
-## Mission
-Open standard for sovereign data portability and decentralized identity bridging across Bitcoin, Lightning, and Nostr protocols.
+| Project | Role | Status |
+|---------|------|--------|
+| **Satohash** (satohash.io) | Proof layer — OpenTimestamps | v4.1 in progress |
+| **OpenStrata** (this repo) | Operations + protocol | Marketing site live |
+| **Hermes** (M4) | Orchestrator agent | Kimi on M4 |
 
-## Live URL
-Not yet deployed.
+---
 
 ## Tech Stack
-- [Language/Framework]
-- [Infrastructure]
-- [Key libraries]
 
-## Architecture
-[Brief architecture overview or link to architecture doc]
+- **Frontend:** SvelteKit 2 + Svelte 5 + Tailwind CSS 4
+- **Frontend build:** Vite 6, adapter-static -> Cloudflare (static site; mock data in `src/lib/`)
+- **Backend (Phase 3, scaffolded in `backend/`):** Node 22 + TypeScript (ESM), Fastify 5, PostgreSQL 17 + pgvector, Docker Compose
+- **Backend services:** immutable append-only trust ledger, Rosa compliance RAG, Ziggy treasury state machine
 
-## Deploy Info
-| Field | Value |
-|-------|-------|
-| Deploy Type | TBD |
-| Edit Machine | M3 |
-| Deploy Machine | TBD |
-| CF Project Name | N/A |
-| Custom Domain | N/A |
-| DNS Status | Not configured |
-
-## Key Decisions
-- Project scaffold created 2026-06-22 from canonical TEMPLATE
-
-## Dependencies
-| Depends On | Used By | Shared Infrastructure |
-|------------|---------|----------------------|
-| TBD | TBD | TBD |
-
-## Deployment Commands
 ```bash
-# Edit:
-ssh m3 "cd ~/projects/openstrata && code ."
+npm install && npm run dev    # frontend localhost:5173
+npm run build                 # frontend output: build/
 
-# Deploy:
-# TBD
+cd backend                    # Phase 3 backend workspace
+npm install
+npm run migrate && npm run seed
+npm run dev                   # API on 8080
 ```
 
-## Status
-Scaffolding — template docs deployed.
-
-## Kanban ID
-[tbd]
+See `backend/README.md` for the backend quick start.
 
 ---
 
-**Safe Harbour:** This project is provided for informational and educational purposes only. It does not constitute financial, legal, or investment advice.
-Part of the [Give A Bit](https://giveabit.io) family.
+## Critical Files — DO NOT DELETE OR REORGANIZE WITHOUT READING
+
+| File | Purpose |
+|------|---------|
+| src/lib/compliance.ts | BC SPA/BCFSA structured knowledge — Rosa corpus source |
+| src/lib/strata-tool.ts | 30+ tool modules — product map |
+| src/lib/marketing.ts | Facts, savings, BCFSA positioning |
+| src/lib/data.ts | Mock data, API endpoints, jobs, units |
+| src/lib/nav.ts | Navigation — update here for new pages |
+| src/routes/tools/wizard/+page.svelte | Building Template Wizard — 8-step onboarding (Phase 2) |
+| docs/BC-STRATA-COMPLIANCE.md | Compliance markdown archive |
+| docs/KIMI-HANDOFF.md | Read this first on M4 |
+| docs/WORKPLAN.md | Phase tracker |
+| public/logo.png | Brand logo — header, footer, favicon |
+
+---
+
+## Routes
+
+| Path | Page |
+|------|------|
+| / | Dashboard (homepage) |
+| /about | Marketing, cost savings, product stack |
+| /compliance | BC compliance knowledge base |
+| /roadmap | Paths, timeline, jurisdictions |
+| /tools | Strata Tool hub (30+ modules) |
+| /tools/wizard | Building Template Wizard — 8-step onboarding |
+| /docs | Framework docs index |
+| /legal | Legal source library |
+| /templates | Template library |
+| /faq | Frequently asked questions |
+| /rss | RSS feeds + API reference |
+| /rss.xml | Prerendered RSS 2.0 feed |
+| /spec | OpenStrata protocol spec |
+| /blog | Announcements |
+
+---
+
+## Regulatory Positioning
+
+**Hermes is software, not a licensed management company.**
+
+Three paths: Licensed Brokerage Partner | Self-Managed Council | Hybrid.
+
+See docs/BCFSA-STRATEGY.md.
+
+---
+
+## What Was Built (Jul 2026)
+
+1. Full light-themed marketing site from hermes-strata-app-framework-v2.md
+2. BC compliance KB (triple retention)
+3. 30+ Strata Tool modules
+4. Executive docs, workplan, product plan, roadmap
+5. About page, supercharged homepage with graphs
+6. Kimi handoff prompt
+7. Brand logo integration
+8. Building Template Wizard (/tools/wizard) — 8-step onboarding with JSON export
+9. Satohash/OpenStrata product stack positioning
+
+---
+
+## Next Actions for Kimi
+
+1. Read docs/KIMI-HANDOFF.md in full
+2. Ingest into Obsidian MASTER-BRAIN
+3. Do NOT rebuild from scratch — extend existing SvelteKit site
+4. [x] Building Template Wizard live at /tools/wizard
+5. Coordinate with Satohash handoff when Cam ready
+6. Phase 3 in progress: backend scaffolded in `backend/` (Docker stack, trust ledger, Rosa/Ziggy API); next fee billing, Form B/F generator, bylaw enforcement state machine
+
+---
+
+*Give A Bit — Bitcoin sovereignty first.*
+
+
+## Diligence Pack (partner + technical disclosure)
+**Self-evolving.** Canonical path in-repo:
+- `docs/diligence/README.md` — index
+- `docs/diligence/INVESTOR-ONEPAGER.md`
+- `docs/diligence/ARCHITECTURE-ONEPAGER.md`
+- `docs/diligence/ASK-SHEET.md`
+- Portfolio: `giveabit` → `docs/diligence/PORTFOLIO-FAMILY-OF-8.md`
+
+Update rule: material product changes update diligence in the same change-set.
+Last pack generation: 2026-07-13

@@ -1,0 +1,141 @@
+<script lang="ts">
+	import { jurisdictions, currencies } from '$lib/data';
+	import { getToolStats } from '$lib/strata-tool';
+	import { copy } from '$lib/i18n';
+	import PageToc from '$lib/components/PageToc.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import { manualSections } from '$lib/manual';
+	import HeroArt from '$lib/components/HeroArt.svelte';
+
+	const stats = getToolStats();
+
+	const docIndex = [
+		{ file: 'EXECUTIVE-SUMMARY.md', title: 'Executive Summary', desc: 'One-page pitch, problem, solution, revenue, roadmap snapshot', href: '/about' },
+		{ file: 'PRODUCT-PLAN.md', title: 'Product Plan', desc: 'Building templates, payment rails, war chest, Satohash integration', href: '/tools' },
+		{ file: 'WORKPLAN.md', title: 'Workplan', desc: 'Phase tracker, file map, build commands', href: '/roadmap' },
+		{ file: 'BCFSA-STRATEGY.md', title: 'BCFSA Strategy', desc: 'Competitive positioning within licensing law — three GTM paths', href: '/about' },
+		{ file: 'BC-STRATA-COMPLIANCE.md', title: 'BC Compliance KB', desc: 'SPA workflows, quorum, voting, retention, localization', href: '/compliance' },
+		{ file: 'ROADMAP.md', title: 'Roadmap', desc: 'Timeline, jurisdictions, integrations', href: '/roadmap' }
+	];
+
+	const installSteps = [
+		{ step: 1, title: 'Bootstrap', code: 'docker compose up -d', desc: 'Ollama, vector DB, API, web. Tailscale + Umbrel BTC link.' },
+		{ step: 2, title: 'Seed Rosa', code: 'rosa ingest --corpus bc-spa-rta-crt', desc: 'BC SPA, RTA, EPR, bylaws → vector DB. Validate 3 queries.' },
+		{ step: 3, title: 'Pipeline', code: 'watch-folder /inbox → ocr → rosa-buffer', desc: 'Email webhook → OCR → Rosa buffer.' },
+		{ step: 4, title: 'Treasury', code: 'ziggy simulate --invoice sample.pdf', desc: 'CRF 10% check → PSBT → 3-sig → reconcile.' },
+		{ step: 5, title: 'Deploy UI', code: 'npm run build && docker compose restart web', desc: 'PWA + mobile touch flow.' }
+	];
+
+</script>
+
+<svelte:head>
+	<title>{$copy.docsPageTitle}</title>
+</svelte:head>
+
+<section class="page-hero">
+		<HeroArt variant="ledger" />
+	<div class="mx-auto max-w-7xl px-6 py-16">
+		<h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{$copy.documentationHub}</h1>
+		<p class="mt-4 text-lg text-slate-600 max-w-3xl">
+			{$copy.bcFirstMvp} {stats.total} {$copy.strataToolModules}. {$copy.allDocsIn} <code class="text-sm bg-slate-100 px-1.5 py-0.5 rounded">docs/</code> folder.
+		</p>
+		<div class="mt-6 flex flex-wrap gap-3">
+			<a href="/compliance" class="rounded-xl bg-bc-blue/5 border border-bc-blue/20 px-5 py-3 text-sm font-semibold text-bc-blue no-underline hover:bg-bc-blue/10">{$copy.complianceKb} →</a>
+			<a href="/tools" class="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500">{$copy.strataTool} →</a>
+		</div>
+	</div>
+</section>
+
+<div class="mx-auto max-w-7xl px-6 py-12">
+	<PageToc />
+	<!-- Doc index -->
+	<section class="mb-16">
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.documentIndex}</h2>
+		<div class="grid sm:grid-cols-2 gap-4">
+			{#each docIndex as doc}
+				<Card>
+					<code class="text-[10px] font-mono text-slate-400">docs/{doc.file}</code>
+					<h3 class="font-bold text-slate-800 mt-1">{doc.title}</h3>
+					<p class="text-sm text-slate-500 mt-1">{doc.desc}</p>
+					{#if doc.href}
+						<a href={doc.href} class="mt-3 inline-block text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">{$copy.viewOnSite} →</a>
+					{/if}
+				</Card>
+			{/each}
+		</div>
+		<p class="mt-4 text-sm text-slate-400">{$copy.alsoLabel}: <code class="text-xs bg-slate-100 px-1 rounded">SOURCE-OF-TRUTH.md</code> {$copy.atProjectRoot}</p>
+	</section>
+
+	<!-- User manual — orientation for non-technical readers -->
+	<section class="mb-16">
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.manualSections}</h2>
+		<div class="grid sm:grid-cols-2 gap-4">
+			{#each manualSections as guide}
+				<Card hover>
+					<code class="text-[10px] font-mono text-slate-400">{guide.label}</code>
+					<h3 class="font-bold text-slate-800 mt-1">{guide.title}</h3>
+					<p class="text-sm text-slate-500 mt-1">{guide.desc}</p>
+					<a href={guide.href} class="mt-3 inline-block text-sm font-semibold text-brand-600 no-underline hover:text-brand-700">{$copy.manualReadMore} →</a>
+				</Card>
+			{/each}
+		</div>
+		<p class="mt-4 text-sm text-slate-400">
+			<a href="/docs/manual" class="text-brand-600 hover:underline">{$copy.manualTitle}</a> — {$copy.manualIntro}
+		</p>
+	</section>
+
+	<!-- Architecture -->
+	<section class="mb-16">
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.architecture}</h2>
+		<Card variant="hero" class="font-mono text-sm space-y-3">
+			<div class="rounded-xl bg-brand-50 border border-brand-200 p-4 text-center text-brand-800 font-semibold">{$copy.archMobilePwa}</div>
+			<div class="text-center text-slate-400">{$copy.archTailscaleGateway}</div>
+			<div class="rounded-xl bg-slate-100 p-4 text-center font-semibold">{$copy.archHermesCore}</div>
+			<div class="text-center text-slate-400">↓</div>
+			<div class="grid sm:grid-cols-2 gap-4">
+				<div class="rounded-xl bg-bc-blue/5 border p-4 text-center"><strong>{$copy.archFiatRail}</strong><p class="text-xs text-slate-500 mt-1 font-sans">{$copy.archCadCrf}</p></div>
+				<div class="rounded-xl bg-bitcoin/5 border p-4 text-center"><strong>{$copy.archBitcoinRail}</strong><p class="text-xs text-slate-500 mt-1 font-sans">{$copy.archPsbtLightning}</p></div>
+			</div>
+		</Card>
+	</section>
+
+	<!-- Install SOP -->
+	<section class="mb-16">
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.installSop}</h2>
+		<div class="space-y-4">
+			{#each installSteps as s}
+				<Card class="flex gap-4">
+					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white font-bold text-sm">{s.step}</div>
+					<div>
+						<h3 class="font-bold text-slate-800">{s.title}</h3>
+						<code class="mt-1 block text-sm font-mono text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg">{s.code}</code>
+						<p class="mt-2 text-sm text-slate-500">{s.desc}</p>
+					</div>
+				</Card>
+			{/each}
+		</div>
+	</section>
+
+	<!-- Jurisdictions -->
+	<section>
+		<h2 class="text-xl font-bold text-slate-900 mb-6">{$copy.jurisdictionsCurrencies}</h2>
+		<div class="grid lg:grid-cols-2 gap-8">
+			<div class="space-y-2">
+				{#each jurisdictions as j}
+					<div class="flex items-center justify-between rounded-xl border p-3 {j.active ? 'bg-brand-50/50 border-brand-200' : 'opacity-60'}">
+						<span class="font-semibold text-sm">{j.flag} {j.name}</span>
+						<span class="text-xs text-slate-400">{j.laws.join(' · ')}</span>
+					</div>
+				{/each}
+			</div>
+			<div class="flex flex-wrap gap-2">
+				{#each currencies as c}
+					<span class="rounded-full px-4 py-2 text-sm font-semibold {c.primary ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-600'}">{c.symbol} {c.code}</span>
+				{/each}
+			</div>
+		</div>
+		<p class="mt-8 text-center text-sm text-slate-400">
+			<a href="mailto:hello@giveabit.io" class="text-brand-600 hover:underline">hello@giveabit.io</a>
+		</p>
+	</section>
+</div>

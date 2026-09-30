@@ -1,0 +1,83 @@
+# Hermes Strata — Roadmap & Paths
+
+---
+
+## Go-To-Market Paths
+
+```mermaid
+flowchart LR
+    A[Hermes Strata] --> B[Licensed Brokerage]
+    A --> C[Self-Managed Council]
+    A --> D[Hybrid Model]
+    B --> E[BCFSA Compliant Ops]
+    C --> F[No License Required]
+    D --> G[Council + Broker Oversight]
+```
+
+| Path | License | Hermes Role | Revenue |
+|------|---------|-------------|---------|
+| Licensed Brokerage | BCFSA brokerage + Managing Broker | White-label ops platform | $4–6/unit × portfolio |
+| Self-Managed | None (owners manage themselves) | Direct SaaS | $4/unit or $200/bldg flat |
+| Hybrid | Broker for trust/forms only | Council day-to-day + broker oversight | Split pricing |
+
+---
+
+## Timeline
+
+### Phase 1 — Foundation ✅ (Jul 2026)
+Marketing site, compliance KB, Strata Tool hub, docs, graphs
+
+### Phase 2 — Supercharge (Jul–Aug 2026) ✅ COMPLETE
+About page, roadmap, building template wizard, FAQ, RSS feed, full interface localization, passing typecheck, e-transfer auto-reconciliation prototype (verified on `/tools`, brief/full modes, CSV import seam, live-unit wiring)
+
+### Phase 3 — Core Product (Q3 2026) 🔄 IN PROGRESS
+Docker stack (Rosa + Ziggy + Postgres/pgvector) scaffolded in `backend/`, immutable multi-account trust ledger (append-only, hash-chain diffable), fee billing, Form B/F API, bylaw state machine, PWA. Backend core services live and tested.
+
+**Completed in this run:** Rosa pgvector/Ollama retriever wired (migration `0002` + `vectorRetriever` — real embeddings when pgvector+Ollama are reachable, keyword fallback otherwise, same `Retriever` contract, same `composeAnswer` strictness); Rosa corpus → pgvector indexer (`backend/src/rosa/ingest-vector.ts` — embeds the BC corpus with Ollama `/api/embeddings`, upserts into `corpus_chunk`, idempotent per citation; `rosa index` CLI to write it, `rosa reset` dev helper); Ziggy PSBT broadcast + on-chain reconcile seam complete (`broadcastPsbt` + `postSpendToLedger` + `POST /api/v1/treasury/psbt/broadcast` — marks ready plans broadcasted, posts the debit to the trust ledger so the on-chain leg reconciles into the same hash chain); Ziggy on-chain broadcast plug-in seam complete (`backend/src/ziggy/node-broadcast.ts` — both node paths: the BIP174 PSBT workflow seam `walletprocesspsbt → finalizepsbt → sendpsbt` (never fabricates; hardware-wallet aggregated PSBTs pass straight through) with the raw-tx `sendrawtransaction` seam as the watch-only fallback; the broadcast endpoint tries the workflow first when `BITCOIN_RAIL_ENABLED=true` + `BITCOIN_NODE_URL` + rpc auth are set and returns the real txid); deployment docs rewritten for Tailscale-first, per-user-tailnet self-hosting (any operator brings their own Tailscale; API at host MagicDNS name; Postgres never public) + a self-contained onboarding doc (`docs/TAILSCALE-ONBOARDING.md`) that any operator can follow to stand up the backend on their own host.
+
+**Remaining:** deploy the stack on a Tailscale host (`docker compose up -d`, `AUTH_SECRET`, migrate, e2e smoke gate — see `docs/TAILSCALE-ONBOARDING.md`), provision Rosa Ollama + run `rosa index` to populate `corpus_chunk`, provision Bitcoin rails daemons (bitcoind/LND/Liquid/PayNym/Nostr) and enable them in `.env` so `/treasury/psbt/broadcast` returns a real txid and `payments/confirm` → real broadcast.
+
+**The infrastructure already exists (2026-09-18):** THOR, the family VPS that runs the HERMES agent, carries a **pruned Bitcoin node + LND reachable over Tailscale**; Cam separately owns an **UMBREL full node still syncing (~63% IBD, ETA weeks)**; M3, M4, THOR and UMBREL are all Tailscale peers. So the bitcoind/LND half of the remaining work is a matter of *pointing the seams*, not building nodes.
+
+**Decision:** **THOR's pruned node is the MVP rail** — broadcast and confirm need no historical rescan, so `sendrawtransaction`, the PSBT workflow seam and UTXO watching all work. **UMBREL is the correctness backstop**, not a blocker: it is the only node that can answer "does this address have old history?". Until its IBD finishes, watch-only xpub imports may show a **partial** history, which the UI must label honestly rather than present as a complete ledger. Nothing waits on UMBREL — re-pointing at it later is a config change (`BITCOIN_NODE_URL`), because the seams are address-agnostic.
+
+Still open: LND reachability + macaroon (read-only vs admin), THOR's prune target and chain, whether THOR's bitcoind is **wallet-enabled** (the PSBT workflow needs a node-side wallet; LND's is separate), THOR's Docker/Tailscale/Node toolchain, Ollama + `nomic-embed-text`, stable MagicDNS names, disk/RAM headroom, and Tailscale ACLs for the API and RPC ports. Questions recorded in `docs/KIMI-HANDOFF.md` and tabulated in `docs/DEPLOYMENT.md` ("Nodes, hosts & the tailnet").
+
+### Phase 4 — Sovereign (Q4 2026)
+Satohash integration, Lightning, Nostr identity, multisig watch, CRT export
+
+### Phase 5 — Scale (2027)
+Brokerage multi-building, bank feeds, war chest, agent pay, ON/AB packs
+
+### Phase 6 — International (2028)
+US HOA (WA, FL, CA), EU multi-language, OpenStrata protocol adoption
+
+---
+
+## Jurisdiction Expansion
+
+| Order | Region | Law Pack | Status |
+|-------|--------|----------|--------|
+| 1 | BC | SPA, RTA, EPR | **Live** |
+| 2 | ON | Condo Act | Planned |
+| 3 | AB | Condo Act | Planned |
+| 4 | US-WA | RCW 64.34 | Planned |
+| 5 | US-FL/CA | HOA/CC&R | Planned |
+| 6 | EU | Multi-lang | Planned |
+
+Config-driven via `config.yaml` — one codebase, swap law packs.
+
+---
+
+## Integration Dependencies
+
+| Partner | Status | Integration Point |
+|---------|--------|-------------------|
+| Satohash | In progress (v4.1) | OTS stamping API |
+| OpenStrata | Spec phase | Nostr export format |
+| Umbrel/Tailscale | Ready | Local-first hosting |
+| Unchained/Casa | Future | Multisig provider option |
+| BCFSA | N/A (regulator) | Audit-ready exports |
+
+---
+**Diligence pack:** [docs/diligence/](diligence/) (investor + architecture + ask)

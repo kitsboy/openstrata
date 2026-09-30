@@ -1,0 +1,122 @@
+# Hermes Strata — Workplan
+
+**Last updated:** 2026-09-18 (v0.3.21)  
+**Status:** Phase 1 complete. Phase 2 complete. Phase 3 complete (code; host deploy pending).
+
+---
+
+## Phase 1 — Foundation ✅ COMPLETE
+
+- [x] Light-themed Hermes Strata marketing site (SvelteKit + Tailwind)
+- [x] Live dashboard with treasury, occupancy, EPR, unit matrix, charts
+- [x] BC Compliance knowledge base (`/compliance`, `compliance.ts`, `BC-STRATA-COMPLIANCE.md`)
+- [x] RSS & API hub (`/rss`)
+- [x] Strata Tools interactive modules (`/tools`)
+- [x] Docs, Spec, Blog pages
+- [x] Footer: careers dropdown, BTC/LN donate modal, social icons
+- [x] Brand logo, jurisdiction selector
+- [x] Triple knowledge retention (UI + code + markdown)
+
+## Phase 2 — Supercharge & Document (CURRENT)
+
+- [x] Executive summary, workplan, BCFSA strategy docs
+- [x] Kimi handoff prompt (SOURCE-OF-TRUTH + KIMI-HANDOFF)
+- [x] Full Strata Tool module map (30+ modules)
+- [x] About page with cost savings, product stack, BCFSA paths
+- [x] Roadmap/paths page
+- [x] Supercharged homepage with graphs and competitive facts
+- [x] Building Template Wizard (onboarding flow) — live at /tools/wizard
+- [x] Full interface localization across all routes (461 catalog keys, hardened `npm run audit:i18n`)
+- [x] FAQ page (/faq) and prerendered RSS feed (/rss.xml)
+- [x] `npm run check` passing — 0 type errors, 0 accessibility warnings
+- [x] E-transfer auto-reconciliation prototype (interactive demo on /tools) ✅ COMPLETE
+- [x] WORKPLAN.md updated: Phase 2 audit complete; KIMI-HANDOFF, ROADMAP, LATEST-UPDATE, .ai_docs current-status all refreshed
+
+## Phase 3 — Core Product (Q3 2026)
+
+- [x] Docker stack: Rosa RAG + Ziggy treasury + API (+ Postgres/pgvector) — scaffold in `backend/`
+- [x] Multi-account trust ledger (Operating, CRF, Special Levy) — append-only data model + migrations + API
+- [x] Rosa RAG pgvector/Ollama adapter — `vectorRetriever` wired in `index.ts`, same `Retriever` contract + `composeAnswer` strictness, keyword fallback when pgvector/Ollama unavailable (this run)
+- [x] Rosa corpus → pgvector indexer — `backend/src/rosa/ingest-vector.ts` (embeds the BC corpus with Ollama `/api/embeddings`, upserts into `corpus_chunk`, idempotent per citation); `rosa index` + `rosa reset` CLI (this run)
+- [x] Ziggy PSBT/multisig broadcast + on-chain reconcile seam — `broadcastPsbt` / `postSpendToLedger` + `POST /api/v1/treasury/psbt/broadcast`; marks ready plans broadcasted, posts the debit to the trust ledger (this run)
+- [x] Ziggy on-chain broadcast plug-in seam — `backend/src/ziggy/node-broadcast.ts`: both node paths live — the PSBT workflow seam (`walletprocesspsbt → finalizepsbt → sendpsbt`, BIP174; never fabricates, throws when the wallet is missing or finalize is incomplete) with the raw-tx seam (`sendrawtransaction`) as the watch-only fallback; the broadcast endpoint tries the workflow first and returns the real txid when `BITCOIN_RAIL_ENABLED=true` + `BITCOIN_NODE_URL` + rpc auth (this run)
+- [x] Deployment docs rewritten for Tailscale-first, per-user-tailnet self-hosting (any operator brings their own Tailscale; API at host MagicDNS name; Postgres never public) + `docs/TAILSCALE-ONBOARDING.md` self-contained onboarding walkthrough (this run)
+- [x] Automated fee billing + late notices — `backend/src/billing/` + `POST /api/v1/billing/run`
+- [ ] Form B/F generator with deadline tracking
+- [x] Bylaw enforcement state machine API (`BLOCK_FINE_ACTIONS`, fine caps) — `backend/src/enforcement/` + `/api/v1/bylaw/*`
+- [ ] Meeting quorum calculator + voting engine
+- [ ] PWA manifest + service worker
+
+## Phase 4 — Sovereign Layer (Q4 2026)
+
+- [ ] Satohash API integration (payment/rule stamping)
+- [x] Lightning LNURL with CAD rate lock — `backend/src/rails/` + `POST /api/v1/payments/quote`
+- [x] Nostr npub per unit identity + BIP-47 PayNym + Liquid recipients — validated/quoteable in `backend/src/rails/`
+- [ ] External multisig watch-only (xpub import)
+- [ ] CRT evidence export (PDF bundle)
+- [ ] Transparent sub-accounts (Pool, Garden, War Chest)
+
+## Phase 5 — Scale (2027+)
+
+- [ ] Licensed brokerage multi-building dashboard
+- [ ] Bank feed import (Plaid/Flinks)
+- [ ] BOLT-12 recurring offers for monthly fees
+- [ ] BTC war chest DCA module
+- [ ] Agent payments (HERMES/Grok orchestration)
+- [ ] ON/AB/US law packs via config.yaml
+- [ ] OpenStrata portable export format
+
+---
+
+## File Map (do not break)
+
+```
+openstrata/
+├── docs/
+│   ├── BC-STRATA-COMPLIANCE.md    # SPA/BCFSA compliance KB
+│   ├── EXECUTIVE-SUMMARY.md       # This executive doc
+│   ├── WORKPLAN.md                # This workplan
+│   ├── BCFSA-STRATEGY.md          # Competitive/regulatory strategy
+│   ├── PRODUCT-PLAN.md            # Full product vision
+│   ├── ROADMAP.md                 # Timeline and paths
+│   └── KIMI-HANDOFF.md            # Handoff prompt for M4 Kimi
+├── SOURCE-OF-TRUTH.md             # Project source of truth
+├── hermes-strata-app-framework-v2.md
+├── public/logo.png
+├── src/
+│   ├── lib/
+│   │   ├── compliance.ts          # Structured compliance data
+│   │   ├── data.ts                # Mock data, API endpoints, jobs
+│   │   ├── marketing.ts           # Facts, savings, positioning
+│   │   ├── strata-tool.ts         # 30+ tool modules
+│   │   ├── nav.ts                 # Navigation items
+│   │   └── components/            # UI components
+│   └── routes/
+│       ├── +page.svelte           # Dashboard (homepage)
+│       ├── about/+page.svelte     # About / marketing
+│       ├── compliance/+page.svelte
+│       ├── roadmap/+page.svelte   # Paths and timeline
+│       ├── tools/+page.svelte     # Strata Tool hub
+│       ├── tools/wizard/+page.svelte # Building Template Wizard
+│       ├── docs/+page.svelte
+│       ├── rss/+page.svelte
+│       ├── rss.xml/+server.ts  # Prerendered RSS 2.0 feed
+│       ├── faq/+page.svelte
+│       ├── legal/+page.svelte
+│       ├── templates/+page.svelte
+│       ├── pitch/+page.svelte
+│       ├── spec/+page.svelte
+│       └── blog/+page.svelte
+```
+
+---
+
+## Build & Deploy
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # static output to build/
+```
+
+Deployed via Cloudflare (adapter-static).
