@@ -56,7 +56,7 @@
 | src/lib/setup.ts | Pure state for the dashboard setup checklist (localStorage-only) + `setup.test.ts` | UI |
 | src/lib/brand-assets.test.ts | Guards the mark: the inline `BrandMark.svelte` must match `static/icon.svg` path-for-path, the favicon must stay a square simplified rendition, no shipping source may reference the retired `logo.png`, `og.png` must be 1200×630, the manifest must point at rasters, `app.html` must declare the browser-facing icons | Brand |
 | src/lib/changelog.generated.ts | **Generated** from `CHANGELOG.md` by `scripts/generate-changelog.mjs` — do not edit by hand. `changelog.test.ts` fails if it drifts | Docs |
-| src/lib/nav.ts | **The one authoring home for navigation.** Two inline destinations (Dashboard, Strata Tool) + two grouped menus (Library, Company); `navItems` (footer + breadcrumbs) is *derived* from it, so the two can never disagree. `navParentFor()` resolves a pathname to its deepest nav item, on a segment boundary — the fix for `/documents` being labelled `Docs` | UI |
+| src/lib/nav.ts | **The one authoring home for navigation.** Two inline destinations (Dashboard, Strata Tool) + three grouped menus (Building, Library, Company). Building holds Units, Accounting, Pay, Tax and CRA, Calendar, and Meetings. `navItems` (footer + breadcrumbs) is *derived* from it, so the bar and the flat list cannot disagree. `navParentFor()` resolves a pathname to its deepest nav item, on a segment boundary — the fix for `/documents` being labelled `Docs` | UI |
 | src/lib/tasks.ts | Pure aggregation behind the dashboard's **one** ordered list: deadlines + setup steps → overdue / urgent / soon / routine / setup, with `taskCounts` and the demo rows. 16 tests in `tasks.test.ts` | UI |
 | src/lib/start.ts | The first-visit question: `parseStartChoice`, `shouldShowStart`, the storage key and the `start-pending` class shared with the inline script in `app.html` and the two rules in `app.css`. 7 tests, including that the three-file contract still agrees | UI |
 | src/lib/custody.ts | The `/custody` body prose (English by decision — see the note in the file; `documents.ts` and `manual.ts` follow the same rule) + `custody.test.ts` | Docs |
@@ -113,10 +113,16 @@
 
 | Route | File | Description |
 |-------|------|-------------|
-| / | src/routes/+page.svelte | Dashboard with treasury, charts, unit matrix |
+| / | src/routes/+page.svelte | Dashboard for Evergreen House (LMS 2847). The 40-lot register is `/units` |
+| /units | src/routes/units/+page.svelte | 40-lot register, 4 floors. Demo data in `src/lib/demo/` |
+| /accounting | src/routes/accounting/+page.svelte | Operating, contingency reserve, parkade levy, budget, journal |
+| /pay | src/routes/pay/+page.svelte | E-transfer, Bitcoin, and Lightning stay visible. Destinations are not payable |
+| /tax | src/routes/tax/+page.svelte | CRA desk. Sample copy, not a filing |
+| /calendar | src/routes/calendar/+page.svelte | Fees, council, inspections, CRA dates |
+| /meetings | src/routes/meetings/+page.svelte | Council, AGM, votes |
 | /about | src/routes/about/+page.svelte | Marketing, cost savings, BCFSA paths |
 | /compliance | src/routes/compliance/+page.svelte | BC compliance KB — 7 tabs |
-| /roadmap | src/routes/roadmap/+page.svelte | Paths, timeline, jurisdictions |
+| /roadmap | src/routes/roadmap/+page.svelte | Paths, timeline, jurisdictions, and the UI polish queue (`docs/ROADMAP.md`) |
 | /tools | src/routes/tools/+page.svelte | Strata Tool hub — 30+ modules |
 | /tools/wizard | src/routes/tools/wizard/+page.svelte | **Building Template Wizard** — 8-step onboarding |
 | /docs | src/routes/docs/+page.svelte | Framework docs index |

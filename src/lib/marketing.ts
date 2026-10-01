@@ -30,10 +30,11 @@ export const revenueTiers = [
 
 export const roadmapSnapshot = [
 	{ phase: 1, timeline: 'Now', deliverable: 'Marketing site, compliance KB, Strata Tool hub', status: 'complete' as const },
-	{ phase: 2, timeline: 'Q3 2026', deliverable: 'Building wizard, e-transfer auto-match', status: 'active' as const },
+	{ phase: 2, timeline: 'Q3 2026', deliverable: 'Evergreen House workspace, wizard, e-transfer auto-match', status: 'complete' as const },
 	{ phase: 3, timeline: 'Q4 2026', deliverable: 'Lightning Dual Pay, Satohash API', status: 'planned' as const },
 	{ phase: 4, timeline: '2027', deliverable: 'War chest DCA, multisig PSBT, agent payments', status: 'planned' as const },
-	{ phase: 5, timeline: '2028', deliverable: 'ON/AB/US expansion via config.yaml', status: 'planned' as const }
+	{ phase: 5, timeline: '2028', deliverable: 'ON/AB/US expansion via config.yaml', status: 'planned' as const },
+	{ phase: 'UI', timeline: 'Ongoing', deliverable: 'Four UI upgrades offered after every push. Pick one or two. The queue stays at four.', status: 'active' as const }
 ] as const;
 
 export const bcfsaFacts = {

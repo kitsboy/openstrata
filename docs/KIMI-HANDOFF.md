@@ -1,3 +1,24 @@
+## Session — 2026-09-30 · docs, UI queue, goodbye
+
+**Done:**
+- Wrote the four offered UI upgrades onto the public roadmap (`/roadmap`), `docs/ROADMAP.md`, the pitch snapshot in `src/lib/marketing.ts`, `docs/PRODUCT-PLAN.md`, both workplans, and the agent docs (README, DIRECTORY-MAP, SOURCE-OF-TRUTH, KNOWN-LIMITATIONS, PRODUCT-BUILD-PLAN pointer, `.ai_docs/`).
+- Wrote the same queue and the standing rule into `static/llms.txt` so any model that is not you still sees it.
+- Did not build the four upgrades. Cam has not picked.
+
+**Decisions:**
+- The interface keeps being refined as the product grows. This is standing work, not a finished list. After every push that changes what a person sees, offer exactly four concrete UI upgrades and wait. Cam picks one or two. Polish only those. When a pick ships, replace it so four remain. Do not start a queued item before it is picked.
+- Offered 2026-09-30, not started: (1) a floor you can walk on `/units`; (2) a one-lot pay sheet on `/pay`; (3) a September close on `/accounting`; (4) the next 30 days, once, shared by `/tax` and `/calendar`. Full sentences are in `docs/ROADMAP.md`. Do not rephrase them into a different four.
+- Already noticed, not in the queue, do not re-offer unless a slot is empty: marketing header plus PayRail is tall; homepage and inner pages are two shells; calendar grid dots are not category-filtered while the day panel is; tax `scroll-mt-36` may sit under the taller sticky header (`scroll-mt-44` if a title hides).
+- Still in force from the Evergreen session: do not pop the stash `stale-base layout rewrite before moving to v0.3.28`. Do not force-push `main`. Do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story. Payment strings stay non-payable. Tax copy stays a sample, not a filing and not tax advice.
+- Other models: read `static/llms.txt`, then `docs/ROADMAP.md`, then `.ai_docs/current-status.md`, then this file from the top.
+
+**Git State:**
+- SHA: filled in the note pushed immediately after this docs commit
+- Base: `eff4ee91fa39d8e46c5c2081901c1b1063a1cf56`
+- Unpushed: this docs commit, until the goodbye push
+
+---
+
 ## Session — 2026-09-30
 
 **Done:**

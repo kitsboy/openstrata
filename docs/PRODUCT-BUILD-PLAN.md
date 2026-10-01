@@ -5,6 +5,8 @@
 **Owner:** OpenStrata engineering and product team  
 **Last reviewed:** 2026-08-25
 
+**Live product, 2026-09-30.** The readable workspace is Evergreen House (LMS 2847) on `/units`, `/accounting`, `/pay`, `/tax`, `/calendar`, and `/meetings`. Payment strings are not payable. Tax copy is a sample, not a filing. The checklist below is the production-jurisdiction backlog and is unchanged by that demo. The current interface queue, and the rule that the UI keeps being refined as the product grows, is in [ROADMAP.md](ROADMAP.md). Four upgrades are offered and not started. Do not start them until Cam picks one or two.
+
 ## Product boundary
 
 OpenStrata is a secure operating system for strata and condominium communities. It can guide formation, produce reviewed templates, track legal and operational obligations, run meetings and votes, manage records, coordinate maintenance, and automate communications. It must not represent itself as a law firm, provide unreviewed legal advice, create a legally recognized corporation without the required registrar/land-title process, certify engineering or financial work, or replace licensed professionals.

@@ -134,4 +134,17 @@ Financial, Assets, Governance, Meetings, Conveyancing, People, Sovereign.
 | Brokerage Pro | Custom | Multi-building, white-label, API |
 
 ---
+
+## UI refinement (standing)
+
+The workspace keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete UI upgrades. Cam picks one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Do not start a queued item before it is picked.
+
+Offered 2026-09-30, not started. Full wording is in [ROADMAP.md](ROADMAP.md) and on `/roadmap`.
+
+1. **A floor you can walk** — `/units`, four floors sized by square footage.
+2. **One-lot pay sheet** — `/pay`, one amount and three large choices (e-transfer, Bitcoin QR, Lightning QR).
+3. **September close** — `/accounting`, reconcile the three accounts, confirm the funds tie, list Form F blocks, release the T2.
+4. **The next 30 days, once** — one strip shared by `/tax` and `/calendar`.
+
+---
 **Diligence pack:** [docs/diligence/](diligence/) (investor + architecture + ask)

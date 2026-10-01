@@ -1,7 +1,24 @@
 # Hermes Strata — Workplan
 
-**Last updated:** 2026-09-18 (v0.3.21)  
-**Status:** Phase 1 complete. Phase 2 complete. Phase 3 complete (code; host deploy pending).
+**Last updated:** 2026-09-30
+**Status:** Phase 1 complete. Phase 2 complete. Phase 3 code is in tree; host deploy still pending. Evergreen House workspace shipped 2026-09-30.
+
+---
+
+## Now — 2026-09-30
+
+Evergreen House is on `main` (LMS 2847, 40 lots, pages `/units`, `/accounting`, `/pay`, `/tax`, `/calendar`, `/meetings`). Sample data. Payment destinations are not payable. Tax copy is not a filing.
+
+Next product work is the UI refinement queue in [ROADMAP.md](ROADMAP.md). Four items are offered and not chosen:
+
+1. A floor you can walk (`/units`)
+2. One-lot pay sheet (`/pay`)
+3. September close (`/accounting`)
+4. The next 30 days, once (`/tax` and `/calendar`)
+
+The interface keeps being refined as the product grows. After every push that changes what a person sees, offer exactly four upgrades and wait. Cam picks one or two. Only those are polished. When a pick ships, replace it so four remain. Do not start this queue before a pick.
+
+The phase checklists below are the historical tracker. Do not reopen a checked item because this note is newer.
 
 ---
 

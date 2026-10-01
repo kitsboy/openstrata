@@ -16,7 +16,13 @@ Sovereign strata corporation operations — strata governance, treasury, and pro
 - [Search](https://openstrata.giveabit.io/search?q=Form%20B) — the shareable search page: same index as the ⌘K modal, one link per query
 - [Print-ready documents](https://openstrata.giveabit.io/documents) — meeting notice, minutes, Form B and Form F, laid out to print on real paper (template preview with sample data)
 - [FAQ](https://openstrata.giveabit.io/faq) — plain-language BC strata answers
-- [Roadmap](https://openstrata.giveabit.io/roadmap) — go-to-market paths and phases
+- [Roadmap](https://openstrata.giveabit.io/roadmap) — go-to-market paths, phases, and the UI polish queue
+- [Units](https://openstrata.giveabit.io/units) — Evergreen House lot register (demo, 40 lots, 4 floors)
+- [Accounting](https://openstrata.giveabit.io/accounting) — operating, contingency reserve, and the parkade levy
+- [Pay](https://openstrata.giveabit.io/pay) — e-transfer, Bitcoin, and Lightning stay visible
+- [Tax and CRA](https://openstrata.giveabit.io/tax) — sample returns, payroll, and the owner-tax desk
+- [Calendar](https://openstrata.giveabit.io/calendar) — fees, council, inspections, and CRA dates
+- [Meetings](https://openstrata.giveabit.io/meetings) — council, the AGM, and how a vote is counted
 - [Docs](https://openstrata.giveabit.io/docs) — architecture and documentation hub
 - [Blog](https://openstrata.giveabit.io/blog) — announcements and deep dives
 - [Changelog](https://openstrata.giveabit.io/changelog) — every release, newest first, with verification notes
@@ -40,3 +46,20 @@ Sovereign strata corporation operations — strata governance, treasury, and pro
 - [Terms of service](https://github.com/kitsboy/openstrata/blob/main/docs/TERMS-OF-SERVICE.md)
 - [Accessibility statement](https://github.com/kitsboy/openstrata/blob/main/docs/ACCESSIBILITY-STATEMENT.md)
 - [Known limitations](https://github.com/kitsboy/openstrata/blob/main/docs/KNOWN-LIMITATIONS.md)
+- [Kimi handoff](https://github.com/kitsboy/openstrata/blob/main/docs/KIMI-HANDOFF.md) — latest session first. Read this before editing.
+- [Current status](https://github.com/kitsboy/openstrata/blob/main/.ai_docs/current-status.md)
+
+## Evergreen House (demo only)
+
+Sample building for a self-managed strata. Plan LMS 2847, 4100 Cambie Street, Vancouver, 4 floors, 40 lots, books as of 2026-09-30. Payment destinations on `/pay` are not payable. Tax copy is a sample, not a filing, and not tax advice. Do not replace the 6-lot seed in `src/lib/units.ts` with this 40-lot story. The 40-lot data lives in `src/lib/demo/`.
+
+## For other models
+
+The interface keeps being refined as the product grows. After every push that changes what a person sees, offer exactly four concrete UI upgrades and wait. The owner picks one or two. Polish only those. When a pick ships, replace it so four are always waiting. Do not start a queued item before it is picked.
+
+Offered 2026-09-30, not started:
+
+1. A floor you can walk — `/units`. A plan of four floors, lots sized by square footage, a corridor, color for arrears, a missing Form K, or a levy balance.
+2. One-lot pay sheet — `/pay`. One amount, three large choices (e-transfer, Bitcoin QR, Lightning QR), the 15-minute rate lock as a quiet stamp. PAD and cheque stay tucked under the sheet.
+3. September close — `/accounting`. Reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.
+4. The next 30 days, once — one strip shared by `/tax` and `/calendar`. T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.

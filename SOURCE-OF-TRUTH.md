@@ -61,12 +61,13 @@ See `backend/README.md` for the backend quick start.
 | src/lib/strata-tool.ts | 30+ tool modules — product map |
 | src/lib/marketing.ts | Facts, savings, BCFSA positioning |
 | src/lib/data.ts | Mock data, API endpoints, jobs, units |
-| src/lib/nav.ts | Navigation — update here for new pages |
+| src/lib/nav.ts | Navigation — two inline links plus Building, Library, and Company. Update here for new pages |
+| src/lib/demo/ | Evergreen House sample (40 lots). Do not replace `src/lib/units.ts` `demoUnits` |
 | src/routes/tools/wizard/+page.svelte | Building Template Wizard — 8-step onboarding (Phase 2) |
 | docs/BC-STRATA-COMPLIANCE.md | Compliance markdown archive |
 | docs/KIMI-HANDOFF.md | Read this first on M4 |
 | docs/WORKPLAN.md | Phase tracker |
-| public/logo.png | Brand logo — header, footer, favicon |
+| static/icon.svg | Brand mark. `public/logo.png` was retired in v0.3.20 — do not restore it |
 
 ---
 
@@ -74,10 +75,16 @@ See `backend/README.md` for the backend quick start.
 
 | Path | Page |
 |------|------|
-| / | Dashboard (homepage) |
+| / | Dashboard — Evergreen House |
+| /units | 40-lot register |
+| /accounting | Operating, reserve, levy |
+| /pay | E-transfer, Bitcoin, Lightning (demo destinations, not payable) |
+| /tax | CRA desk (sample, not a filing) |
+| /calendar | Fees, council, inspections, CRA |
+| /meetings | Council, AGM, votes |
 | /about | Marketing, cost savings, product stack |
 | /compliance | BC compliance knowledge base |
-| /roadmap | Paths, timeline, jurisdictions |
+| /roadmap | Paths, timeline, jurisdictions, and the four UI upgrades waiting for a pick |
 | /tools | Strata Tool hub (30+ modules) |
 | /tools/wizard | Building Template Wizard — 8-step onboarding |
 | /docs | Framework docs index |
@@ -117,12 +124,14 @@ See docs/BCFSA-STRATEGY.md.
 
 ## Next Actions for Kimi
 
-1. Read docs/KIMI-HANDOFF.md in full
+1. Read `docs/KIMI-HANDOFF.md` from the top (latest session first), then `docs/ROADMAP.md` and `static/llms.txt`
 2. Ingest into Obsidian MASTER-BRAIN
 3. Do NOT rebuild from scratch — extend existing SvelteKit site
 4. [x] Building Template Wizard live at /tools/wizard
-5. Coordinate with Satohash handoff when Cam ready
-6. Phase 3 in progress: backend scaffolded in `backend/` (Docker stack, trust ledger, Rosa/Ziggy API); next fee billing, Form B/F generator, bylaw enforcement state machine
+5. [x] Evergreen House workspace live (2026-09-30). Sample data. Payment strings are not payable. Tax copy is not a filing
+6. UI refinement continues as the product grows. Four upgrades are offered and not started (see `docs/ROADMAP.md`). Wait for Cam to pick one or two. Do not start the queue. After every later UI push, offer exactly four again and replace anything that shipped
+7. Coordinate with Satohash handoff when Cam ready
+8. Do not pop the stash `stale-base layout rewrite before moving to v0.3.28`. Do not force-push `main`. Do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story
 
 ---
 

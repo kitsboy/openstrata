@@ -12,7 +12,7 @@
 	const phases = [
 		{ id: 1, name: 'Foundation', when: 'Jul 2026', status: 'complete', items: ['Marketing site', 'Compliance KB', 'Strata Tool hub', 'Executive docs', 'About + Roadmap'] },
 		{ id: 2, name: 'Supercharge', when: 'Jul–Aug 2026', status: 'complete', items: ['Building template wizard', 'E-transfer auto-reconciliation', 'Enhanced graphs', 'Full 9-locale i18n', 'handoff'] },
-		{ id: 3, name: 'Core Product', when: 'Q3 2026', status: 'current', items: ['Docker stack (Rosa + Ziggy) — scaffold', 'Trust ledger API + data model', 'Fee billing API', 'Form B/F generator', 'Bylaw state machine', 'PWA'] },
+		{ id: 3, name: 'Core Product', when: 'Q3 2026', status: 'current', items: ['Docker stack (Rosa + Ziggy) — scaffold', 'Trust ledger API + data model', 'Fee billing API', 'Form B/F generator', 'Bylaw state machine', 'PWA', 'Evergreen House workspace', 'UI polish queue (offered)'] },
 		{ id: 4, name: 'Sovereign Layer', when: 'Q4 2026', status: 'planned', items: ['Satohash integration', 'Lightning Dual Pay', 'Nostr unit identity', 'Multisig watch', 'CRT export', 'Sub-accounts'] },
 		{ id: 5, name: 'Scale', when: '2027', status: 'planned', items: ['Brokerage multi-building', 'Bank feeds', 'War chest DCA', 'Agent payments', 'ON/AB law packs'] },
 		{ id: 6, name: 'International', when: '2028', status: 'planned', items: ['US HOA (WA, FL, CA)', 'EU multi-language', 'OpenStrata protocol adoption'] }
@@ -23,6 +23,37 @@
 		{ name: 'OpenStrata', url: 'openstrata', status: 'Spec phase', role: 'Portable identity' },
 		{ name: 'Umbrel/Tailscale', url: '—', status: 'Ready', role: 'Local-first hosting' },
 		{ name: 'BCFSA', url: 'bcfsa.ca', status: 'Regulator', role: 'Audit-ready exports' }
+	];
+
+	/** Offered 2026-09-30. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
+	const uiHeading = 'Keep refining the workspace';
+	const uiIntro =
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. These four were offered on September 30, 2026. None of them has been started.';
+	const uiQueue = [
+		{
+			name: 'A floor you can walk',
+			where: '/units',
+			detail:
+				'Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.'
+		},
+		{
+			name: 'One-lot pay sheet',
+			where: '/pay',
+			detail:
+				'One amount and three large choices: e-transfer, a Bitcoin QR, and a Lightning QR. The 15-minute rate lock is a quiet stamp. PAD and cheque stay tucked under the sheet.'
+		},
+		{
+			name: 'September close',
+			where: '/accounting',
+			detail:
+				'A short close on Accounting: reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.'
+		},
+		{
+			name: 'The next 30 days, once',
+			where: '/tax and /calendar',
+			detail:
+				'One strip shared by Tax and Calendar: T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.'
+		}
 	];
 </script>
 
@@ -44,6 +75,24 @@
 			<a href="/tools" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-brand-500 transition-colors">{$copy.openStrataToolsCta} →</a>
 			<span class="rounded-full bg-bc-blue/10 px-4 py-1.5 text-sm font-bold text-bc-blue">{stats.bcfsaModules} {$copy.bcfsaRelevant}</span>
 		</div>
+	</div>
+</section>
+
+<!-- UI queue. English on purpose: same pattern as the phase chips, and the wording is a product decision, not chrome. -->
+<section class="mx-auto max-w-7xl px-6 py-14">
+	<h2 class="text-2xl font-bold text-slate-900 mb-3">{uiHeading}</h2>
+	<p class="max-w-3xl text-slate-600">{uiIntro}</p>
+	<div class="mt-8 grid gap-6 md:grid-cols-2">
+		{#each uiQueue as item, i}
+			<Card>
+				<div class="mb-2 flex items-center gap-3">
+					<span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-sm font-bold text-brand-700">{i + 1}</span>
+					<h3 class="font-bold text-slate-800">{item.name}</h3>
+				</div>
+				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{item.where} · offered, not started</p>
+				<p class="mt-2 text-sm text-slate-600">{item.detail}</p>
+			</Card>
+		{/each}
 	</div>
 </section>
 

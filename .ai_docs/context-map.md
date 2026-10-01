@@ -87,5 +87,7 @@ docs/
 /roadmap  /rss  /rss.xml  /spec  /templates  /tools  /tools/wizard
 /units  /accounting  /pay  /tax  /calendar  /meetings
 
+`/roadmap` and `docs/ROADMAP.md` hold the UI polish queue (four items, offered 2026-09-30, not started) and the standing rule that the interface keeps being refined as the product grows. `static/llms.txt` is the index for any model that is not Kimi. Kimi reads `docs/KIMI-HANDOFF.md` first.
+
 ## Deployment
 Auto-deploy from GitHub main to Cloudflare Pages (project: openstrata)

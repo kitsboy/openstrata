@@ -54,6 +54,34 @@ US HOA (WA, FL, CA), EU multi-language, OpenStrata protocol adoption
 
 ---
 
+## Evergreen House — shipped 2026-09-30
+
+The readable workspace on the v0.3.28 shell. Strata plan LMS 2847, 4100 Cambie Street, 4 floors, 40 lots, books as of September 30, 2026. Pages: `/units`, `/accounting`, `/pay`, `/tax`, `/calendar`, `/meetings`. E-transfer, Bitcoin, and Lightning stay on screen. Payment destinations are not payable. The tax desk is a sample, not a filing and not tax advice. The 40-lot story lives in `src/lib/demo/`. Do not replace the 6-lot `demoUnits` seed in `src/lib/units.ts`.
+
+The same queue is on the public page `/roadmap`.
+
+## UI refinement — standing rule
+
+The interface keeps being refined as the product grows. This queue is not a one-time list.
+
+After every push that changes what a person sees:
+
+1. Offer exactly four concrete UI upgrades.
+2. Wait. Cam picks one or two.
+3. The next session polishes only those picks.
+4. When a pick ships, replace it so four are always waiting.
+
+Do not start a queued item before it is picked. Do not treat the queue as finished.
+
+### Offered 2026-09-30 — not started
+
+1. **A floor you can walk** (`/units`). Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.
+2. **One-lot pay sheet** (`/pay`). One amount and three large choices: e-transfer, a Bitcoin QR, and a Lightning QR. The 15-minute rate lock is a quiet stamp. PAD and cheque stay tucked under the sheet.
+3. **September close** (`/accounting`). A short close: reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.
+4. **The next 30 days, once** (`/tax` and `/calendar`). One strip shared by both pages: T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.
+
+---
+
 ## Jurisdiction Expansion
 
 | Order | Region | Law Pack | Status |

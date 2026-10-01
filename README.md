@@ -27,10 +27,13 @@ If you see the SvelteKit dev server running on http://localhost:5173, you're goo
 
 Visit the demo site and play around:
 
-- **Dashboard** — operations hub with graphs, live stats, and unit matrix
+- **Dashboard** — Evergreen House, one 40-lot building (LMS 2847)
+- **Units, Accounting, Pay, Tax, Calendar, Meetings** — the workspace a council actually runs
 - **Tools** — 30+ interactive tool modules
 - **Compliance** — BC legal rules and requirements
-- **Roadmap** — future features and phases
+- **Roadmap** — phases, plus four UI upgrades waiting for a pick
+
+Before changing the product, read `docs/KIMI-HANDOFF.md` (latest session first), `docs/ROADMAP.md`, and `static/llms.txt`. The interface keeps being refined as the product grows: after every push that changes what a person sees, offer exactly four UI upgrades and wait for a pick of one or two.
 
 The public site ships in **demo mode**: every community, balance and action you
 see is sample data, and the page labels it as such. There is no public API to
@@ -43,7 +46,7 @@ register against — the backend is self-hosted behind Tailscale by design (see
 #### Basic Workflow
 
 1. **Read the docs** — start with this README and the Manual section
-2. **Run tests** — the project has 85+ automated tests to catch bugs
+2. **Run tests** — `npm test` in the repo root (248 frontend tests as of 2026-09-30) and `npm test` inside `backend/`
 3. **Make a change** — open an issue or PR if you're stuck
 4. **Get feedback** — contributors review everything before merging
 

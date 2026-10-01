@@ -64,7 +64,7 @@ export const navGroups: NavEntry[] = [
     items: [
       { href: '/about', label: 'About', hint: 'Why this exists, and who builds it' },
       { href: '/pitch', label: 'Pitch', hint: 'The business case, with the numbers' },
-      { href: '/roadmap', label: 'Roadmap', hint: 'What is live, in beta, and planned' },
+      { href: '/roadmap', label: 'Roadmap', hint: 'Phases, plus four UI upgrades waiting for a pick' },
       { href: '/blog', label: 'Blog', hint: 'Longer notes and working-throughs' },
       { href: '/rss', label: 'RSS & API', hint: 'Follow every change without an account' }
     ]
