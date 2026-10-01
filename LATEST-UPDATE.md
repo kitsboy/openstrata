@@ -1,6 +1,6 @@
 # openstrata — Last Updated 2026-09-30 by Grok
 
-> **UI queue is on the roadmap.** Four upgrades are written down and not started: a floor you can walk, a one-lot pay sheet, a September close, and one next-30-days strip. The interface keeps being refined as the product grows. After every UI push, offer exactly four and wait for a pick. Kimi reads `docs/KIMI-HANDOFF.md`. Any other model reads `static/llms.txt`. Commit hash is recorded in the follow-up note.
+> **UI queue is on the roadmap.** Four upgrades are written down and not started: a floor you can walk, a one-lot pay sheet, a September close, and one next-30-days strip. The interface keeps being refined as the product grows. After every UI push, offer exactly four and wait for a pick. Kimi reads `docs/KIMI-HANDOFF.md`. Any other model reads `static/llms.txt`. Commit `2c8dfd0`.
 
 ---
 

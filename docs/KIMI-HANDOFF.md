@@ -13,9 +13,9 @@
 - Other models: read `static/llms.txt`, then `docs/ROADMAP.md`, then `.ai_docs/current-status.md`, then this file from the top.
 
 **Git State:**
-- SHA: filled in the note pushed immediately after this docs commit
+- SHA: `2c8dfd022b2caca8aca68ac4b77616d80fe7a804`
 - Base: `eff4ee91fa39d8e46c5c2081901c1b1063a1cf56`
-- Unpushed: this docs commit, until the goodbye push
+- Unpushed: none after this note is pushed to `origin/main`
 
 ---
 
