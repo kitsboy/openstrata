@@ -250,7 +250,7 @@
 
   .toggle {
     margin-top: 12px;
-    color: var(--color-brand-700);
+    color: var(--brand-text);
     font-size: 12px;
     font-weight: 700;
     background: transparent;

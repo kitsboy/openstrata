@@ -140,7 +140,7 @@
 			{#if tab === 'btc'}
 				<div class="space-y-4">
 					<div class="flex justify-center">
-						<div class="rounded-xl border-2 border-dashed border-brand-200 bg-white p-3">
+						<div class="rounded-xl border-2 border-dashed border-brand-200 qr-plate p-3">
 							{#if btcQr}
 								<div class="h-32 w-32 [&_svg]:h-full [&_svg]:w-full">{@html btcQr}</div>
 							{/if}
@@ -164,7 +164,7 @@
 			{:else}
 				<div class="space-y-4">
 					<div class="flex justify-center">
-						<div class="rounded-xl border-2 border-lightning/30 bg-white p-3">
+						<div class="rounded-xl border-2 border-lightning/30 qr-plate p-3">
 							{#if lnQr}
 								<div class="h-32 w-32 [&_svg]:h-full [&_svg]:w-full">{@html lnQr}</div>
 							{/if}

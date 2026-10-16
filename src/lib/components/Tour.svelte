@@ -203,7 +203,7 @@
 
   .tour-greet { display: flex; flex-direction: column; align-items: center; gap: 9px; }
   .tour-art { margin: 0 auto; opacity: .9; }
-  .tour-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--muted); background: var(--surface-3); }
+  .tour-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--muted); background: var(--color-surface-3); }
   .tour-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; color: var(--orange); background: color-mix(in srgb, var(--orange) 10%, transparent); }
   .tour-eyebrow { margin: 0; color: var(--faint); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .09em; text-transform: uppercase; }
   .tour-card h2 { margin: 0; color: var(--ink); font-size: 19px; font-weight: 800; letter-spacing: -.4px; }
@@ -232,7 +232,7 @@
     width: 100%;
     aspect-ratio: 16 / 9;
     border-radius: 12px;
-    background: var(--surface-2);
+    background: var(--color-surface-2);
     display: block;
     object-fit: cover;
   }
@@ -246,7 +246,7 @@
     width: 100%;
     aspect-ratio: 16 / 9;
     border-radius: 12px;
-    background: var(--surface-2);
+    background: var(--color-surface-2);
     color: var(--muted);
     border: 1px solid var(--line);
     text-align: center;

@@ -68,7 +68,7 @@
   .resume-copy { min-width: 0; flex: 1; margin: 0; display: flex; flex-direction: column; gap: 1px; }
   .resume-copy strong { color: var(--ink); font-size: 13px; font-weight: 800; }
   .resume-copy span { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-  .resume-action { flex: 0 0 auto; color: var(--color-brand-600); font-size: 12px; font-weight: 800; text-decoration: none; }
+  .resume-action { flex: 0 0 auto; color: var(--brand-text); font-size: 12px; font-weight: 800; text-decoration: none; }
   .resume-action:hover { text-decoration: underline; }
   .resume-dismiss {
     flex: 0 0 auto;
@@ -83,7 +83,7 @@
     font-size: 15px;
     line-height: 1;
   }
-  .resume-dismiss:hover { color: var(--ink); background: var(--surface-3); }
+  .resume-dismiss:hover { color: var(--ink); background: var(--color-surface-3); }
   @media (max-width: 640px) {
     .resume-chip { flex-wrap: wrap; gap: 8px 12px; }
     .resume-action { order: 2; }

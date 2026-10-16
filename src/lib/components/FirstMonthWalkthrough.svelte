@@ -209,7 +209,7 @@
     flex-shrink: 0;
     padding: 2px 8px;
     border-radius: 999px;
-    background: var(--color-brand-500);
+    background: var(--color-brand-600);
     color: white;
     font-size: 9px;
     font-weight: 800;

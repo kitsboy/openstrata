@@ -75,9 +75,9 @@
     gap: 6px;
     padding: 8px 14px;
     border-radius: 999px;
-    border: 1px solid var(--brand-200, #c7d2fe);
-    background: var(--brand-50, #eef2ff);
-    color: var(--brand-700, #4338ca);
+    border: 1px solid var(--color-brand-200);
+    background: var(--color-brand-50);
+    color: var(--brand-text);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;

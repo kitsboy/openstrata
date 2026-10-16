@@ -84,7 +84,7 @@
   .demo-copy { min-width: 0; flex: 1; margin: 0; display: flex; flex-direction: column; gap: 1px; }
   .demo-copy strong { color: var(--ink); font-size: 12.5px; font-weight: 800; }
   .demo-copy span { color: var(--muted); font-size: 12px; }
-  .demo-action { flex: 0 0 auto; color: var(--color-brand-600); font-size: 12px; font-weight: 800; text-decoration: none; }
+  .demo-action { flex: 0 0 auto; color: var(--brand-text); font-size: 12px; font-weight: 800; text-decoration: none; }
   .demo-action:hover { text-decoration: underline; }
   .demo-dismiss {
     flex: 0 0 auto;
@@ -99,7 +99,7 @@
     font-size: 15px;
     line-height: 1;
   }
-  .demo-dismiss:hover { color: var(--ink); background: var(--surface-3); }
+  .demo-dismiss:hover { color: var(--ink); background: var(--color-surface-3); }
   @media (max-width: 640px) {
     .demo-banner { flex-wrap: wrap; gap: 8px 10px; }
     .demo-action { order: 2; }

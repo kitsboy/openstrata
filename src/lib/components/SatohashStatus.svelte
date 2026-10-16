@@ -75,19 +75,19 @@
   .satohash-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
   .satohash-title { color: var(--ink); font-size: 16px; font-weight: 800; letter-spacing: -.4px; }
   .satohash-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 700; }
-  .satohash-pill.online { color: #2da379; background: #edf9f4; }
-  .satohash-pill.offline { color: #b48332; background: #fff8e9; }
-  .satohash-pill.checking { color: var(--faint); background: var(--surface-3); }
+  .satohash-pill.online { color: var(--success-text); background: var(--color-emerald-50); }
+  .satohash-pill.offline { color: var(--warning-text); background: var(--color-amber-50); }
+  .satohash-pill.checking { color: var(--faint); background: var(--color-surface-3); }
   .satohash-body { padding: 20px 24px 24px; }
   .satohash-label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
   .satohash-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .satohash-row input { min-width: 0; flex: 1 1 240px; height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; outline: 0; color: var(--ink); background: var(--canvas); font-family: 'DM Mono', monospace; font-size: 11px; }
   .satohash-row input:focus { border-color: #06b6d4; }
-  .satohash-action { height: 40px; padding: 0 16px; border-radius: 9px; color: #fff; background: #0891b2; font-size: 11px; font-weight: 800; }
-  .satohash-action:hover { background: #0e7490; }
-  .satohash-action.secondary { color: var(--muted); background: var(--surface-3); }
+  .satohash-action { height: 40px; padding: 0 16px; border-radius: 9px; color: #fff; background: var(--color-brand-600); font-size: 11px; font-weight: 800; }
+  .satohash-action:hover { background: var(--color-brand-700); }
+  .satohash-action.secondary { color: var(--muted); background: var(--color-surface-3); }
   .satohash-action.secondary:hover { color: var(--ink); }
   .satohash-message { margin: 12px 0 0; font-size: 11px; line-height: 1.5; }
-  .satohash-message.ok { color: #2da379; }
+  .satohash-message.ok { color: var(--success-text); }
   .satohash-message.err { color: #cb5a61; }
 </style>

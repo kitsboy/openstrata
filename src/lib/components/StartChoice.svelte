@@ -132,7 +132,7 @@
     height: 34px;
     border-radius: 10px;
     background: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
-    color: var(--color-brand-700);
+    color: var(--brand-text);
   }
 
   .start-card strong { color: var(--ink); font-size: 14.5px; font-weight: 800; }
@@ -141,7 +141,7 @@
   .start-action {
     margin-top: auto;
     padding-top: 10px;
-    color: var(--color-brand-700);
+    color: var(--brand-text);
     font-size: 11.5px;
     font-weight: 700;
   }

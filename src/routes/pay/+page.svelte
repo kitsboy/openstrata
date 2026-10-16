@@ -72,7 +72,7 @@
 		<label class="block text-sm font-semibold text-slate-700">
 			Lot
 			<select
-				class="mt-1 block w-full rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium sm:w-96"
+				class="mt-1 block w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm font-medium sm:w-96"
 				value={unit.id}
 				onchange={(event) => chooseUnit((event.currentTarget as HTMLSelectElement).value)}
 			>
@@ -88,7 +88,7 @@
 		</div>
 	</div>
 
-	<div class="grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-3 lg:grid-cols-6">
+	<div class="grid gap-3 rounded-2xl border border-border bg-surface-2 p-5 sm:grid-cols-3 lg:grid-cols-6">
 		<div><p class="text-xs text-slate-400">October fee</p><p class="font-semibold tabular-nums">{money(due.october)}</p></div>
 		<div><p class="text-xs text-slate-400">Fees behind</p><p class="font-semibold tabular-nums">{money(due.arrears)}</p></div>
 		<div><p class="text-xs text-slate-400">Late</p><p class="font-semibold tabular-nums">{money(due.late)}</p></div>
@@ -103,7 +103,7 @@
 
 	<div class="mt-6 grid gap-4 lg:grid-cols-3">
 		{#each rails.filter((item) => item.id === 'etransfer' || item.id === 'bitcoin' || item.id === 'lightning') as item}
-			<article class="rounded-2xl border bg-white p-5 {rail === item.id ? 'border-slate-900 ring-2 ring-slate-900' : 'border-border'}">
+			<article class="rounded-2xl border bg-surface-2 p-5 {rail === item.id ? 'border-slate-900 ring-2 ring-slate-900' : 'border-border'}">
 				<div class="flex items-center gap-2">
 					{#if item.id === 'bitcoin'}<Icon name="bitcoin" class="h-5 w-5 text-bitcoin" />{/if}
 					{#if item.id === 'lightning'}<Icon name="lightning" class="h-5 w-5 text-amber-500" />{/if}
@@ -160,7 +160,7 @@
 
 	<div class="mt-4 grid gap-4 md:grid-cols-2">
 		{#each rails.filter((item) => item.id === 'pad' || item.id === 'cheque') as item}
-			<article class="rounded-2xl border border-border bg-white p-5">
+			<article class="rounded-2xl border border-border bg-surface-2 p-5">
 				<h2 class="font-bold text-slate-900">{item.name}</h2>
 				<p class="mt-1 text-sm text-slate-500">{item.summary}</p>
 				<ol class="mt-3 list-decimal space-y-1 pl-4 text-sm text-slate-600">
@@ -172,7 +172,7 @@
 		{/each}
 	</div>
 
-	<section class="mt-8 rounded-2xl border border-border bg-white p-5">
+	<section class="mt-8 rounded-2xl border border-border bg-surface-2 p-5">
 		<h2 class="font-bold text-slate-900">How a payment finds its lot</h2>
 		<ol class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
 			{#each howMatchingWorks as step}
@@ -184,7 +184,7 @@
 	<section class="mt-8">
 		<h2 class="font-bold text-slate-900">September receipt tape</h2>
 		<p class="mt-1 text-sm text-slate-500">A sample of the month, not a second copy of the cash total. The fund statement is the number that has to tie.</p>
-		<div class="mt-3 overflow-x-auto rounded-2xl border border-border bg-white">
+		<div class="mt-3 overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[680px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -214,9 +214,9 @@
 		</div>
 	</section>
 
-	<section class="mt-8 rounded-2xl border border-border bg-slate-900 p-5 text-white">
+	<section class="mt-8 rounded-2xl border border-slab-line bg-slab p-5 text-slab-ink">
 		<h2 class="font-bold">Council paying a vendor</h2>
-		<p class="mt-2 text-sm leading-relaxed text-white/75">
+		<p class="mt-2 text-sm leading-relaxed text-slab-muted">
 			{vendor.vendor} is owed {money(vendor.cents)} for {vendor.memo.toLowerCase()}, due {vendor.due}.
 			The ordinary way out is an e-transfer from the operating account, after the treasurer matches the invoice to account 6250.
 			Bitcoin and Lightning are on the card because the vendor may ask. They are not the default, and they are never paid from the reserve or the levy trust.

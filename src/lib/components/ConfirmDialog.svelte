@@ -42,7 +42,7 @@
   .confirm-actions { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
   .confirm-cancel, .confirm-danger { min-height: 38px; padding: 0 16px; border-radius: 9px; font-size: 11px; font-weight: 800; }
   .confirm-cancel { border: 1px solid var(--line); color: var(--muted); background: var(--paper); }
-  .confirm-cancel:hover { background: var(--surface-3); }
+  .confirm-cancel:hover { background: var(--color-surface-3); }
   .confirm-danger { color: #fff; background: var(--red); }
   .confirm-danger:hover { background: color-mix(in srgb, var(--red) 85%, #000); }
 </style>

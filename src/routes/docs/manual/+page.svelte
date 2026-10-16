@@ -57,22 +57,22 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--green-500);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-500) 22%, transparent);
+    background: var(--color-success);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 22%, transparent);
     flex: 0 0 auto;
     animation: pulse-green 2.4s ease-in-out infinite;
   }
   @keyframes pulse-green {
-    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-500) 22%, transparent); }
-    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--green-500) 10%, transparent); }
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 22%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-success) 10%, transparent); }
   }
   .start-flag-label {
     font-size: 10px;
     font-weight: 700;
     letter-spacing: .05em;
     text-transform: uppercase;
-    color: var(--green-700);
-    background: color-mix(in srgb, var(--green-500) 10%, transparent);
+    color: var(--success-text);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
     padding: 3px 8px;
     border-radius: 4px;
   }
@@ -122,7 +122,7 @@
     letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--faint);
-    background: var(--surface-2);
+    background: var(--color-surface-2);
     padding: 2px 6px;
     border-radius: 4px;
   }
@@ -134,7 +134,7 @@
     align-items: center;
   }
   .manual-card-cta:hover {
-    color: var(--brand);
+    color: var(--brand-text);
     transform: translateX(2px);
   }
 

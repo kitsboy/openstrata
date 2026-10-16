@@ -107,22 +107,22 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--green-500);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-500) 22%, transparent);
+    background: var(--color-success);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 22%, transparent);
     flex: 0 0 auto;
     animation: pulse-green 2.4s ease-in-out infinite;
   }
   @keyframes pulse-green {
-    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-500) 22%, transparent); }
-    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--green-500) 10%, transparent); }
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 22%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-success) 10%, transparent); }
   }
   .start-flag-label {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
-    color: var(--green-700);
-    background: color-mix(in srgb, var(--green-500) 10%, transparent);
+    color: var(--success-text);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
     padding: 3px 8px;
     border-radius: 4px;
   }
@@ -170,7 +170,7 @@
     border-bottom: var(--border-card);
   }
   .manual-section-title-warn {
-    color: var(--orange-700);
+    color: var(--orange-text);
   }
 
   .manual-cap-list,
@@ -204,7 +204,7 @@
   }
 
   .manual-limit-body {
-    color: var(--orange-800);
+    color: var(--orange-text);
   }
 
   .manual-next {
@@ -219,17 +219,17 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--brand);
+    color: var(--brand-text);
     text-decoration: none;
     padding: 10px 16px;
     border-radius: 10px;
-    background: var(--brand-50);
-    border: 1px solid var(--brand-200);
+    background: var(--color-brand-50);
+    border: 1px solid var(--color-brand-200);
     transition: background .15s ease, border-color .15s ease, transform .1s ease;
   }
   .manual-next-link:hover {
-    background: var(--brand-100);
-    border-color: var(--brand-300);
+    background: var(--color-brand-100);
+    border-color: var(--color-brand-300);
     transform: translateY(-1px);
   }
 

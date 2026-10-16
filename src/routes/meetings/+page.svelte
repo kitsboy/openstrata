@@ -16,17 +16,17 @@
 	/>
 
 	<div class="grid gap-3 sm:grid-cols-3">
-		<div class="rounded-2xl border border-border bg-white p-4">
+		<div class="rounded-2xl border border-border bg-surface-2 p-4">
 			<p class="text-xs font-bold uppercase tracking-wide text-slate-400">AGM quorum</p>
 			<p class="mt-1 text-2xl font-bold">{quorum.agmNeed} of {quorum.lots}</p>
 			<p class="mt-1 text-sm text-slate-600">{quorum.agmRule}</p>
 		</div>
-		<div class="rounded-2xl border border-border bg-white p-4">
+		<div class="rounded-2xl border border-border bg-surface-2 p-4">
 			<p class="text-xs font-bold uppercase tracking-wide text-slate-400">Council quorum</p>
 			<p class="mt-1 text-2xl font-bold">{quorum.councilNeed} of 5</p>
 			<p class="mt-1 text-sm text-slate-600">{quorum.councilRule}</p>
 		</div>
-		<div class="rounded-2xl border border-border bg-white p-4">
+		<div class="rounded-2xl border border-border bg-surface-2 p-4">
 			<p class="text-xs font-bold uppercase tracking-wide text-slate-400">If people don’t show</p>
 			<p class="mt-1 text-sm leading-relaxed text-slate-600">{quorum.adjourn}</p>
 		</div>
@@ -37,7 +37,7 @@
 			<h2 class="font-bold text-slate-900">Council</h2>
 			<ul class="mt-3 space-y-3">
 				{#each councilSeats as seat}
-					<li class="rounded-2xl border border-border bg-white p-4">
+					<li class="rounded-2xl border border-border bg-surface-2 p-4">
 						<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{seat.role} · since {seat.since}</p>
 						<p class="font-semibold text-slate-900">{getUnit(seat.unitId).owner}</p>
 						<p class="text-sm text-slate-500">Lot {seat.unitId}</p>
@@ -46,7 +46,7 @@
 				{/each}
 			</ul>
 		</div>
-		<div class="rounded-2xl border border-border bg-white p-5">
+		<div class="rounded-2xl border border-border bg-surface-2 p-5">
 			<p class="text-xs font-bold uppercase tracking-wide text-brand-700">Next meeting</p>
 			<h2 class="text-2xl font-bold text-slate-900">{nextCouncil.date}</h2>
 			<p class="text-sm text-slate-500">{nextCouncil.time} · {nextCouncil.place}</p>
@@ -62,7 +62,7 @@
 	</section>
 
 	<section class="mt-8 grid gap-6 lg:grid-cols-2">
-		<article class="rounded-2xl border border-border bg-white p-5">
+		<article class="rounded-2xl border border-border bg-surface-2 p-5">
 			<h2 class="font-bold text-slate-900">Minutes — {lastCouncil.date}</h2>
 			<p class="text-sm text-slate-500">{lastCouncil.attendance}</p>
 			<ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
@@ -71,7 +71,7 @@
 				{/each}
 			</ul>
 		</article>
-		<article class="rounded-2xl border border-border bg-white p-5">
+		<article class="rounded-2xl border border-border bg-surface-2 p-5">
 			<h2 class="font-bold text-slate-900">AGM — {agm.date}</h2>
 			<p class="text-sm text-slate-500">{agm.attendance}. {agm.quorum}.</p>
 			<p class="mt-2 text-sm leading-relaxed text-slate-600">Next AGM {nextAgm.date}. {nextAgm.note}</p>
@@ -86,7 +86,7 @@
 		</article>
 	</section>
 
-	<section class="mt-8 rounded-2xl border border-border bg-white p-5">
+	<section class="mt-8 rounded-2xl border border-border bg-surface-2 p-5">
 		<h2 class="font-bold text-slate-900">Bylaw file — lot {bylawCase.lot}</h2>
 		<p class="mt-1 text-sm text-slate-600">{bylawCase.bylaw}. Fine {bylawCase.fine}. {bylawCase.ceiling}</p>
 		<ol class="mt-4 space-y-3">
@@ -103,7 +103,7 @@
 		<h2 class="font-bold text-slate-900">Which vote is which</h2>
 		<div class="mt-3 grid gap-3 md:grid-cols-2">
 			{#each voteGuide as vote}
-				<div class="rounded-2xl border border-border bg-white p-4">
+				<div class="rounded-2xl border border-border bg-surface-2 p-4">
 					<p class="font-semibold text-slate-900">{vote.kind}</p>
 					<p class="text-sm text-slate-500">{vote.use}</p>
 					<p class="mt-2 text-sm leading-relaxed text-slate-600">{vote.count}</p>

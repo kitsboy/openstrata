@@ -32,6 +32,6 @@
   .live-sync { display: inline-flex; align-items: center; gap: 7px; }
   .live-sync-label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .04em; }
   .live-sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 15%, transparent); }
-  .live-sync-refresh { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; color: var(--muted); background: var(--surface-3); transition: color .15s ease, transform .15s ease; }
+  .live-sync-refresh { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; color: var(--muted); background: var(--color-surface-3); transition: color .15s ease, transform .15s ease; }
   .live-sync-refresh:hover { color: var(--orange); transform: rotate(18deg); }
 </style>

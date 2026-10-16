@@ -19,7 +19,7 @@
   .skeleton-stack { display: flex; flex-direction: column; gap: 8px; }
   .skeleton-line {
     display: block;
-    background: linear-gradient(90deg, var(--surface-3) 25%, var(--line) 37%, var(--surface-3) 63%);
+    background: linear-gradient(90deg, var(--color-surface-3) 25%, var(--line) 37%, var(--color-surface-3) 63%);
     background-size: 400% 100%;
     animation: os-shimmer 1.3s ease infinite;
   }

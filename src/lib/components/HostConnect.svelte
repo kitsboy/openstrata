@@ -96,15 +96,15 @@
     margin: 0 0 20px;
     padding: 12px 16px;
     border-radius: 14px;
-    border: 1px solid var(--brand-200, #c7d2fe);
-    background: linear-gradient(180deg, var(--brand-50, #eef2ff), var(--surface-2, #f1f5f9));
+    border: 1px solid var(--color-brand-200);
+    background: linear-gradient(180deg, var(--color-brand-50), var(--color-surface-2));
   }
   .os-strip-icon {
     flex: 0 0 auto;
     display: inline-flex;
     width: 16px;
     height: 16px;
-    color: var(--brand-600, #4f46e5);
+    color: var(--color-brand-600);
   }
   /* A real flex-basis (not `flex-1`'s 0%) so the column keeps a readable
      measure and pushes the actions onto their own line on narrow screens. */
@@ -122,7 +122,7 @@
     margin-top: 3px;
     font-size: 12px;
     line-height: 1.5;
-    color: #64748b;
+    color: var(--muted);
   }
   .os-strip-actions {
     flex: 0 0 auto;
@@ -133,7 +133,7 @@
   }
   .os-strip-cta {
     border-radius: 10px;
-    background: var(--brand-600, #4f46e5);
+    background: var(--color-brand-600);
     padding: 6px 12px;
     font-size: 12px;
     font-weight: 700;
@@ -142,16 +142,16 @@
     white-space: nowrap;
   }
   .os-strip-cta:hover {
-    background: var(--brand-700, #4338ca);
+    background: var(--color-brand-700);
   }
   .os-strip-ghost {
     border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface-2, #f1f5f9);
+    border: 1px solid var(--line);
+    background: var(--color-surface-2);
     padding: 6px 10px;
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--muted);
     text-decoration: none;
     white-space: nowrap;
   }
@@ -173,12 +173,12 @@
   }
   .os-strip-close {
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface-2, #f1f5f9);
+    border: 1px solid var(--line);
+    background: var(--color-surface-2);
     padding: 5px 9px;
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--muted);
   }
   .os-strip-close:hover {
     color: var(--ink, #18232b);

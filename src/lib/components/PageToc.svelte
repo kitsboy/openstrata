@@ -92,7 +92,7 @@
     text-align: left;
     transition: color .15s ease, background .15s ease;
   }
-  .toc button:hover { color: var(--ink); background: var(--surface-3); }
+  .toc button:hover { color: var(--ink); background: var(--color-surface-3); }
   .toc button.toc-active { color: var(--orange); background: color-mix(in srgb, var(--orange) 9%, transparent); }
   @media (max-width: 1024px) { .toc { display: none; } }
 </style>

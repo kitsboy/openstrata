@@ -20,14 +20,14 @@
 	<div class="mb-8 overflow-x-auto">
 		<div class="flex gap-2">
 			{#each sections as section}
-				<a href="#{section.id}" class="shrink-0 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 no-underline hover:border-brand-300">
+				<a href="#{section.id}" class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600 no-underline hover:border-brand-300">
 					{section.title}
 				</a>
 			{/each}
 		</div>
 	</div>
 
-	<section class="mb-8 rounded-2xl border border-border bg-white p-5">
+	<section class="mb-8 rounded-2xl border border-border bg-surface-2 p-5">
 		<h2 class="font-bold text-slate-900">Prior year, the one being filed today</h2>
 		<p class="text-sm text-slate-500">{priorYear.label}</p>
 		<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -41,7 +41,7 @@
 
 	<div class="space-y-4">
 		{#each sections as section}
-			<article id={section.id} class="scroll-mt-36 rounded-2xl border border-border bg-white p-5 sm:p-6">
+			<article id={section.id} class="scroll-mt-36 rounded-2xl border border-border bg-surface-2 p-5 sm:p-6">
 				<div class="flex flex-wrap items-start justify-between gap-3">
 					<div>
 						<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{section.agency}</p>

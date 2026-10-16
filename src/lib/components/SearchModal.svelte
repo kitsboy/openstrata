@@ -252,10 +252,10 @@
   .search-input-row { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
   .search-input-row input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 15px; }
   .search-input-row input::placeholder { color: var(--faint); }
-  .search-close { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); background: var(--surface-3); font-size: 18px; line-height: 1; }
+  .search-close { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); background: var(--color-surface-3); font-size: 18px; line-height: 1; }
   .search-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 0; }
   .search-chip { padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 600; }
-  .search-chip:hover { color: var(--ink); background: var(--surface-3); }
+  .search-chip:hover { color: var(--ink); background: var(--color-surface-3); }
   .search-chip.on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
   .search-chip-count { margin-left: 5px; color: var(--faint); font-family: 'DM Mono', monospace; font-size: 9px; }
   .search-chip.on .search-chip-count { color: color-mix(in srgb, var(--paper) 75%, transparent); }
@@ -266,18 +266,18 @@
   .search-recent-list { margin: 0; padding: 0; list-style: none; }
   .search-recent-list li { display: flex; align-items: center; gap: 4px; }
   .search-recent { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border-radius: 8px; color: var(--ink); background: transparent; font-size: 13px; text-align: left; }
-  .search-recent:hover { background: var(--surface-3); }
+  .search-recent:hover { background: var(--color-surface-3); }
   .search-recent span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .search-recent-drop { width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px; color: var(--faint); background: transparent; font-size: 14px; line-height: 1; }
-  .search-recent-drop:hover { color: var(--ink); background: var(--surface-3); }
-  .search-share { display: block; margin: 6px 6px 8px; padding: 8px 10px; border-radius: 8px; color: var(--muted); background: var(--surface-3); font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; }
+  .search-recent-drop:hover { color: var(--ink); background: var(--color-surface-3); }
+  .search-share { display: block; margin: 6px 6px 8px; padding: 8px 10px; border-radius: 8px; color: var(--muted); background: var(--color-surface-3); font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; }
   .search-share:hover { color: var(--ink); }
   .search-results { margin: 0; padding: 0; list-style: none; }
   .search-result { display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 11px 12px; border-radius: 10px; color: var(--ink); background: transparent; text-align: left; }
-  .search-result:hover, .search-result.selected { background: var(--surface-3); }
+  .search-result:hover, .search-result.selected { background: var(--color-surface-3); }
   .search-result strong { font-size: 14px; font-weight: 700; }
   .search-result-desc { overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-  .search-result-group { align-self: flex-start; margin-bottom: 2px; padding: 2px 7px; border-radius: 999px; color: var(--faint); background: var(--surface-3); font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: .06em; text-transform: uppercase; }
+  .search-result-group { align-self: flex-start; margin-bottom: 2px; padding: 2px 7px; border-radius: 999px; color: var(--faint); background: var(--color-surface-3); font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: .06em; text-transform: uppercase; }
 
   /* Results footer: pin + share on one row. */
   .search-foot { display: flex; align-items: stretch; gap: 6px; margin: 6px 6px 8px; }
@@ -288,5 +288,5 @@
 
   /* Keyboard hints — a quiet footer, never in the tab order. */
   .search-hints { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 14px 9px; border-top: 1px solid var(--line); color: var(--faint); font-size: 10px; }
-  .search-hints kbd { padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-3); font-family: 'DM Mono', monospace; font-size: 9px; }
+  .search-hints kbd { padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--color-surface-3); font-family: 'DM Mono', monospace; font-size: 9px; }
 </style>

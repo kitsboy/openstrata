@@ -83,11 +83,11 @@
   }
   .manual-nav-item:hover {
     color: var(--ink);
-    background: var(--surface-3);
+    background: var(--color-surface-3);
   }
   .manual-nav-item-active {
-    color: var(--brand);
-    background: color-mix(in srgb, var(--brand) 8%, transparent);
+    color: var(--brand-text);
+    background: color-mix(in srgb, var(--color-brand-500) 8%, transparent);
     font-weight: 600;
   }
 
@@ -103,8 +103,8 @@
     text-transform: uppercase;
     padding: 2px 6px;
     border-radius: 4px;
-    background: color-mix(in srgb, var(--brand) 10%, transparent);
-    color: var(--brand-700);
+    background: color-mix(in srgb, var(--color-brand-500) 10%, transparent);
+    color: var(--brand-text);
     font-weight: 600;
     white-space: nowrap;
   }
@@ -128,5 +128,5 @@
     padding: 4px 0;
     transition: color .15s ease;
   }
-  .manual-nav-root:hover { color: var(--brand); }
+  .manual-nav-root:hover { color: var(--brand-text); }
 </style>

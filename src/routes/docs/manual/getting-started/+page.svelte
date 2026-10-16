@@ -202,7 +202,7 @@
     padding: 12px 14px;
     border-radius: 10px;
     border: var(--border-card);
-    background: var(--surface-2);
+    background: var(--color-surface-2);
     cursor: default;
     transition: border-color .15s ease, background .15s ease;
     font-size: 13px;
@@ -213,7 +213,7 @@
     width: 16px;
     height: 16px;
     margin-top: 2px;
-    accent-color: var(--brand);
+    accent-color: var(--brand-text);
     flex: 0 0 auto;
     cursor: default;
   }
@@ -239,7 +239,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--brand);
+    background: var(--color-brand-500);
     color: white;
     font-size: 13px;
     font-weight: 700;
@@ -267,7 +267,7 @@
     gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--brand);
+    color: var(--brand-text);
     text-decoration: none;
     padding: 5px 0;
     transition: gap .15s ease;
@@ -303,7 +303,7 @@
   }
   .pricing-target {
     font-size: 11px;
-    color: var(--brand-700);
+    color: var(--brand-text);
     font-weight: 600;
   }
 
@@ -334,7 +334,7 @@
     color: var(--ink);
     transition: background .15s ease;
   }
-  .faq-question:hover { background: var(--surface-2); }
+  .faq-question:hover { background: var(--color-surface-2); }
   .faq-chevron {
     flex: 0 0 auto;
     width: 18px;
@@ -373,7 +373,7 @@
     text-align: left;
     font-size: 13px;
     font-weight: 600;
-    color: var(--orange-700);
+    color: var(--orange-text);
     transition: background .15s ease;
   }
   .trouble-question:hover { background: color-mix(in srgb, var(--orange) 4%, transparent); }
@@ -381,7 +381,7 @@
     flex: 0 0 auto;
     width: 16px;
     height: 16px;
-    color: var(--orange-600);
+    color: var(--orange-text);
     transition: transform .2s ease;
   }
   .trouble-chevron-open { transform: rotate(180deg); }
@@ -391,7 +391,7 @@
     line-height: 1.6;
     color: var(--muted);
     background: color-mix(in srgb, var(--orange) 5%, transparent);
-    border-left: 3px solid var(--orange-400);
+    border-left: 3px solid var(--orange-solid);
     padding-left: 14px;
     margin-left: -4px;
   }
@@ -407,17 +407,17 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--brand);
+    color: var(--brand-text);
     text-decoration: none;
     padding: 10px 16px;
     border-radius: 10px;
-    background: var(--brand-50);
-    border: 1px solid var(--brand-200);
+    background: var(--color-brand-50);
+    border: 1px solid var(--color-brand-200);
     transition: background .15s ease, border-color .15s ease, transform .1s ease;
   }
   .manual-next-link:hover {
-    background: var(--brand-100);
-    border-color: var(--brand-300);
+    background: var(--color-brand-100);
+    border-color: var(--color-brand-300);
     transform: translateY(-1px);
   }
 

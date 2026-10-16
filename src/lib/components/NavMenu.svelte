@@ -149,8 +149,8 @@
     transition: color .15s ease, background .15s ease;
   }
   .nav-trigger:hover,
-  .nav-trigger[aria-expanded='true'] { color: var(--color-brand-700); background: var(--canvas); }
-  .nav-trigger.active { color: var(--color-brand-700); }
+  .nav-trigger[aria-expanded='true'] { color: var(--brand-text); background: var(--canvas); }
+  .nav-trigger.active { color: var(--brand-text); }
   .chev { display: inline-flex; opacity: .7; transition: transform .18s ease; }
   .nav-trigger[aria-expanded='true'] .chev { transform: rotate(180deg); }
   :global(.dark) .nav-trigger:hover,

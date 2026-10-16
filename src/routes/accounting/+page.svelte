@@ -51,7 +51,7 @@
 	<div class="mb-6 flex gap-1 overflow-x-auto">
 		{#each tabs as [id, label]}
 			<button
-				class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold {tab === id ? 'bg-slate-900 text-white' : 'border border-border bg-white text-slate-600'}"
+				class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold {tab === id ? 'bg-slab text-slab-ink' : 'border border-border bg-surface-2 text-slate-600'}"
 				onclick={() => (tab = id)}
 			>{label}</button>
 		{/each}
@@ -59,22 +59,22 @@
 
 	{#if tab === 'overview'}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-			<div class="rounded-2xl border border-border bg-white p-5">
+			<div class="rounded-2xl border border-border bg-surface-2 p-5">
 				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">Operating cash</p>
 				<p class="mt-2 text-2xl font-bold tabular-nums">{money(books.operating.cash)}</p>
 				<p class="mt-1 text-xs text-slate-500">Unrestricted equity {money(books.operating.unrestricted)}</p>
 			</div>
-			<div class="rounded-2xl border border-border bg-white p-5">
+			<div class="rounded-2xl border border-border bg-surface-2 p-5">
 				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">Reserve</p>
 				<p class="mt-2 text-2xl font-bold tabular-nums">{money(books.crf.equity)}</p>
 				<p class="mt-1 text-xs text-slate-500">Cash {money(books.crf.cash)}</p>
 			</div>
-			<div class="rounded-2xl border border-border bg-white p-5">
+			<div class="rounded-2xl border border-border bg-surface-2 p-5">
 				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">Levy trust</p>
 				<p class="mt-2 text-2xl font-bold tabular-nums">{money(books.levy.cash)}</p>
 				<p class="mt-1 text-xs text-slate-500">{money(books.levy.remaining)} of work left</p>
 			</div>
-			<div class="rounded-2xl border border-border bg-white p-5">
+			<div class="rounded-2xl border border-border bg-surface-2 p-5">
 				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">War chest at cost</p>
 				<p class="mt-2 text-2xl font-bold tabular-nums">{money(books.warChestCost)}</p>
 				<p class="mt-1 text-xs text-slate-500">Fair value {money(books.warChestValue)} · {money(books.warChestGain)} unrealized</p>
@@ -86,7 +86,7 @@
 				: `Out of balance by ${books.tie.equityDelta} operating cents. Do not treat this package as closed.`}
 		</p>
 
-		<div class="mt-6 rounded-2xl border border-border bg-white p-5">
+		<div class="mt-6 rounded-2xl border border-border bg-surface-2 p-5">
 			<h2 class="font-bold text-slate-900">Fees billed vs operating expenses</h2>
 			<p class="text-sm text-slate-500">April through September. Fees are flat. Expenses move with summer grounds work and the September payroll start.</p>
 			<div class="mt-4">
@@ -96,7 +96,7 @@
 		</div>
 
 		<div class="mt-6 grid gap-4 lg:grid-cols-2">
-			<div class="rounded-2xl border border-border bg-white p-5 text-sm leading-relaxed text-slate-600">
+			<div class="rounded-2xl border border-border bg-surface-2 p-5 text-sm leading-relaxed text-slate-600">
 				<h2 class="font-bold text-slate-900">Year to date, operating fund</h2>
 				<p class="mt-2">Fee income that belongs to operating: {money(books.feesOperating)}.</p>
 				<p>Other income: {money(books.otherIncome)}.</p>
@@ -104,7 +104,7 @@
 				<p class="font-semibold text-slate-800">Surplus before the war-chest allocation: {money(books.surplusYtd)}.</p>
 				<p class="mt-2">The war chest took {money(books.warChestYtd)} of that surplus. It is a transfer inside the fund, not an expense, and it is not a CRF withdrawal.</p>
 			</div>
-			<div class="rounded-2xl border border-border bg-white p-5 text-sm leading-relaxed text-slate-600">
+			<div class="rounded-2xl border border-border bg-surface-2 p-5 text-sm leading-relaxed text-slate-600">
 				<h2 class="font-bold text-slate-900">Insurance and the long repair list</h2>
 				<p class="mt-2">{building.insurance.broker}. Policy {building.insurance.policy}, {building.insurance.term}. Premium {money(building.insurance.premiumCents)} was prepaid and is expensed monthly. Water deductible {money(building.insurance.waterDeductibleCents)}. Quake: {building.insurance.quakeDeductible}.</p>
 				<p class="mt-2">{depreciation.firm} report dated {depreciation.dated}. Recommended reserve contribution {money(depreciation.recommendedAnnualCents)}. AGM funded {money(depreciation.fundedAnnualCents)}. Next report {depreciation.nextDue}.</p>
@@ -113,7 +113,7 @@
 	{/if}
 
 	{#if tab === 'budget'}
-		<div class="overflow-x-auto rounded-2xl border border-border bg-white">
+		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[640px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -170,11 +170,11 @@
 	{#if tab === 'receivables'}
 		<div class="mb-3 flex items-center justify-between gap-3">
 			<p class="text-sm text-slate-500">October is due tomorrow, so almost every lot shows an October number. “Past due only” hides lots whose only item is that upcoming fee.</p>
-			<button class="shrink-0 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-semibold" onclick={() => (onlyPastDue = !onlyPastDue)}>
+			<button class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold" onclick={() => (onlyPastDue = !onlyPastDue)}>
 				{onlyPastDue ? 'Show every lot' : 'Past due only'}
 			</button>
 		</div>
-		<div class="overflow-x-auto rounded-2xl border border-border bg-white">
+		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[760px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -210,7 +210,7 @@
 	{/if}
 
 	{#if tab === 'payables'}
-		<div class="overflow-x-auto rounded-2xl border border-border bg-white">
+		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[640px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -244,7 +244,7 @@
 		</div>
 		<div class="mt-6 grid gap-3 md:grid-cols-2">
 			{#each books.contracts as contract}
-				<div class="rounded-2xl border border-border bg-white p-4">
+				<div class="rounded-2xl border border-border bg-surface-2 p-4">
 					<p class="font-semibold text-slate-900">{contract.vendor}</p>
 					<p class="text-sm text-slate-600">{contract.service}</p>
 					<p class="mt-1 text-xs text-slate-400">Renews or ends {contract.renewal}</p>
@@ -256,7 +256,7 @@
 
 	{#if tab === 'funds'}
 		<div class="grid gap-4 lg:grid-cols-3">
-			<article class="rounded-2xl border border-border bg-white p-5">
+			<article class="rounded-2xl border border-border bg-surface-2 p-5">
 				<h2 class="font-bold text-slate-900">Operating</h2>
 				<p class="text-xs text-slate-400">{building.banks.operating.name} · {building.banks.operating.account}</p>
 				<ul class="mt-3 space-y-1 text-sm text-slate-600">
@@ -269,7 +269,7 @@
 					<li class="flex justify-between gap-3 font-semibold text-slate-900"><span>Fund balance</span><span class="tabular-nums">{money(books.operating.equity)}</span></li>
 				</ul>
 			</article>
-			<article class="rounded-2xl border border-border bg-white p-5">
+			<article class="rounded-2xl border border-border bg-surface-2 p-5">
 				<h2 class="font-bold text-slate-900">Contingency reserve</h2>
 				<p class="text-xs text-slate-400">{building.banks.crf.name} · {building.banks.crf.account}</p>
 				<ul class="mt-3 space-y-1 text-sm text-slate-600">
@@ -282,7 +282,7 @@
 				</ul>
 				<p class="mt-3 text-xs leading-relaxed text-slate-500">Spend from this account has to be a repair or replacement the report supports. Bitcoin is not that. The war chest is funded from operating surplus by a 3/4 vote.</p>
 			</article>
-			<article class="rounded-2xl border border-border bg-white p-5">
+			<article class="rounded-2xl border border-border bg-surface-2 p-5">
 				<h2 class="font-bold text-slate-900">Parkade levy</h2>
 				<p class="text-xs text-slate-400">{building.banks.levy.name} · {building.banks.levy.account}</p>
 				<ul class="mt-3 space-y-1 text-sm text-slate-600">
@@ -302,7 +302,7 @@
 		<p class="mb-4 text-sm text-slate-600">These are the September control entries a treasurer would read before signing the month. They are not a dump of every hydro bill. The year-to-date totals live on the Budget tab. Each entry balances.</p>
 		<div class="space-y-4">
 			{#each books.journal as entry}
-				<article class="rounded-2xl border border-border bg-white p-4">
+				<article class="rounded-2xl border border-border bg-surface-2 p-4">
 					<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{entry.date}</p>
 					<h2 class="font-semibold text-slate-900">{entry.memo}</h2>
 					<table class="mt-2 w-full text-sm">

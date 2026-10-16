@@ -50,7 +50,7 @@
 
 	<div class="mb-4 flex gap-2 overflow-x-auto">
 		{#each highlightDates as item}
-			<button class="shrink-0 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-semibold text-slate-600" onclick={() => jump(item.date)}>
+			<button class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600" onclick={() => jump(item.date)}>
 				{item.label}
 			</button>
 		{/each}
@@ -58,14 +58,14 @@
 
 	<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
 		<div class="flex items-center gap-2">
-			<button class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm font-semibold" onclick={() => shift(-1)}>Previous</button>
+			<button class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm font-semibold" onclick={() => shift(-1)}>Previous</button>
 			<h2 class="min-w-40 text-center text-lg font-bold text-slate-900">{names[month - 1]} {year}</h2>
-			<button class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm font-semibold" onclick={() => shift(1)}>Next</button>
+			<button class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm font-semibold" onclick={() => shift(1)}>Next</button>
 		</div>
 		<div class="flex gap-1 overflow-x-auto">
-			<button class="rounded-full px-3 py-1 text-xs font-semibold {filter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-border'}" onclick={() => (filter = 'all')}>All</button>
+			<button class="rounded-full px-3 py-1 text-xs font-semibold {filter === 'all' ? 'bg-slab text-slab-ink' : 'bg-surface-2 border border-border'}" onclick={() => (filter = 'all')}>All</button>
 			{#each categories as [id, meta]}
-				<button class="rounded-full px-3 py-1 text-xs font-semibold {filter === id ? 'bg-slate-900 text-white' : 'bg-white border border-border text-slate-600'}" onclick={() => (filter = id)}>
+				<button class="rounded-full px-3 py-1 text-xs font-semibold {filter === id ? 'bg-slab text-slab-ink' : 'bg-surface-2 border border-border text-slate-600'}" onclick={() => (filter = id)}>
 					{meta.label}
 				</button>
 			{/each}
@@ -73,7 +73,7 @@
 	</div>
 
 	<div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-		<div class="rounded-2xl border border-border bg-white p-3 sm:p-4">
+		<div class="rounded-2xl border border-border bg-surface-2 p-3 sm:p-4">
 			<div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase tracking-wide text-slate-400">
 				{#each weekdayLabels as day}
 					<div class="py-1">{day}</div>
@@ -82,7 +82,7 @@
 			<div class="mt-1 grid grid-cols-7 gap-1">
 				{#each grid as cell}
 					<button
-						class="min-h-16 rounded-lg border p-1 text-left {cell.inMonth ? 'bg-white' : 'bg-slate-50 text-slate-300'} {selected === cell.date ? 'border-slate-900 ring-1 ring-slate-900' : 'border-transparent'}"
+						class="min-h-16 rounded-lg border p-1 text-left {cell.inMonth ? 'bg-surface-2' : 'bg-slate-50 text-slate-400'} {selected === cell.date ? 'border-slate-900 ring-1 ring-slate-900' : 'border-transparent'}"
 						onclick={() => (selected = cell.date)}
 					>
 						<span class="text-xs font-semibold {cell.date === '2026-09-30' ? 'text-rose-600' : ''}">{Number(cell.date.slice(-2))}</span>
@@ -103,7 +103,7 @@
 			{/if}
 			<ul class="mt-3 space-y-3">
 				{#each dayEvents as event}
-					<li class="rounded-2xl border border-border bg-white p-4">
+					<li class="rounded-2xl border border-border bg-surface-2 p-4">
 						<span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase {categoryMeta[event.category].pill}">{categoryMeta[event.category].label}</span>
 						<p class="mt-2 font-semibold text-slate-900">{event.title}</p>
 						<p class="mt-1 text-sm leading-relaxed text-slate-600">{event.detail}</p>
@@ -115,7 +115,7 @@
 
 	<section class="mt-8">
 		<h2 class="font-bold text-slate-900">Everything in {names[month - 1]}</h2>
-		<ul class="mt-3 divide-y divide-border rounded-2xl border border-border bg-white">
+		<ul class="mt-3 divide-y divide-border rounded-2xl border border-border bg-surface-2">
 			{#each monthEvents as event}
 				<li>
 					<button class="flex w-full gap-3 px-4 py-3 text-left hover:bg-slate-50" onclick={() => (selected = event.date)}>

@@ -79,12 +79,12 @@
 			bind:value={query}
 			placeholder="Search a name or a lot"
 			aria-label="Search lots"
-			class="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm sm:max-w-xs"
+			class="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm sm:max-w-xs"
 		/>
 		<div class="flex gap-1 overflow-x-auto">
 			{#each [1, 2, 3, 4] as level}
 				<button
-					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {floor === level ? 'bg-slate-900 text-white' : 'bg-white border border-border text-slate-600'}"
+					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {floor === level ? 'bg-slab text-slab-ink' : 'bg-surface-2 border border-border text-slate-600'}"
 					onclick={() => (floor = floor === level ? 'all' : level)}
 				>Floor {level}</button>
 			{/each}
@@ -93,7 +93,7 @@
 	<div class="mb-6 flex gap-1 overflow-x-auto">
 		{#each filters as [id, label]}
 			<button
-				class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {focus === id ? 'bg-brand-600 text-white' : 'bg-white border border-border text-slate-600'}"
+				class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {focus === id ? 'bg-brand-600 text-white' : 'bg-surface-2 border border-border text-slate-600'}"
 				onclick={() => (focus = id)}
 			>{label}</button>
 		{/each}
@@ -104,7 +104,7 @@
 			{#each floorsDesc as level}
 				{@const onFloor = level.units.filter(matches)}
 				{#if onFloor.length > 0 && (floor === 'all' || floor === level.floor)}
-					<div class="rounded-2xl border border-border bg-white p-3">
+					<div class="rounded-2xl border border-border bg-surface-2 p-3">
 						<p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Floor {level.floor}</p>
 						<div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
 							{#each onFloor as unit}
@@ -126,7 +126,7 @@
 			{/if}
 		</div>
 
-		<aside class="h-fit rounded-2xl border border-border bg-white p-5 lg:sticky lg:top-36">
+		<aside class="h-fit rounded-2xl border border-border bg-surface-2 p-5 lg:sticky lg:top-36">
 			<p class="text-xs font-bold uppercase tracking-wide text-slate-400">Lot {selected.id} · strata lot {selected.lot}</p>
 			<h2 class="mt-1 text-2xl font-bold text-slate-900">{selected.owner}</h2>
 			<p class="text-sm text-slate-500">{selected.type} · {selected.sqft} sq ft · floor {selected.floor}</p>
@@ -187,7 +187,7 @@
 
 			<a
 				href="/pay?unit={selected.id}"
-				class="mt-4 flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white no-underline"
+				class="mt-4 flex items-center justify-center rounded-xl bg-slab px-4 py-3 text-sm font-bold text-slab-ink no-underline transition-colors hover:bg-slab-raised"
 				onclick={() => payerUnitId.set(selected.id)}
 			>
 				Pay this lot

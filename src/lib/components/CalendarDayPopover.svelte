@@ -100,7 +100,7 @@
     align-items: center;
     gap: 3px;
     margin-top: 1px;
-    color: var(--color-brand-700);
+    color: var(--brand-text);
     font-size: 9.5px;
     font-weight: 700;
   }

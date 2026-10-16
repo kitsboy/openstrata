@@ -47,7 +47,9 @@
     letter-spacing: .06em;
     text-transform: uppercase;
   }
-  .crumb-link { color: var(--faint); transition: color .15s ease; }
-  .crumb-link:hover { color: var(--orange); }
+  /* A breadcrumb is navigation, not a decorative micro-label: `--faint` is
+     held to a documented 3:1 floor and measured 3.4:1 here at 9px. */
+  .crumb-link { color: var(--muted); transition: color .15s ease; }
+  .crumb-link:hover { color: var(--orange-text); }
   .crumb-current { color: var(--ink); font-weight: 700; }
 </style>

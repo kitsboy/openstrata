@@ -49,7 +49,7 @@
 </script>
 
 <div class="flex flex-col items-center gap-3">
-  <div class="rounded-2xl border border-border bg-white p-3 shadow-sm">
+  <div class="rounded-2xl border border-border qr-plate p-3 shadow-sm">
     {#if svg}
       {@html svg}
     {:else}

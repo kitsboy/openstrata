@@ -41,6 +41,6 @@
   .spark-wrap { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
   .spark-svg { width: 72px; height: 30px; overflow: visible; }
   .spark-delta { font-family: 'DM Mono', monospace; font-size: 8px; font-weight: 700; }
-  .spark-delta.up { color: var(--green); }
-  .spark-delta.down { color: var(--amber); }
+  .spark-delta.up { color: var(--success-text); }
+  .spark-delta.down { color: var(--warning-text); }
 </style>

@@ -173,7 +173,7 @@
 
 		<Card class="mt-10 max-w-4xl mx-auto">
 			<h3 class="font-bold text-slate-800 mb-3">{$copy.quickStart}</h3>
-			<pre class="rounded-xl bg-slate-900 text-slate-100 p-5 text-sm font-mono overflow-x-auto leading-relaxed"><code># Fetch live market rates (BTC/CAD + vacancy)
+			<pre class="rounded-xl border border-slab-line bg-slab text-slab-muted p-5 text-sm font-mono overflow-x-auto leading-relaxed"><code># Fetch live market rates (BTC/CAD + vacancy)
 curl -H "Authorization: Bearer $HERMES_TOKEN" \\
   https://openstrata.local/api/v1/market/rates?jurisdiction=BC
 

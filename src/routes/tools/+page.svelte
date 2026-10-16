@@ -483,7 +483,7 @@
 	</div>
 
 	{#if sovereignMode}
-		<div class="mt-8 rounded-xl bg-slate-900 p-6 text-sm font-mono text-slate-300">
+		<div class="mt-8 rounded-xl border border-slab-line bg-slab p-6 text-sm font-mono text-slab-muted">
 			<p class="text-bitcoin font-bold mb-2">{$copy.sovereignStackActive}</p>
 			<p>→ {$copy.externalMultisig}</p>
 			<p class="mt-2 text-slate-500">{$copy.orchestrationNote}</p>
