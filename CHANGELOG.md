@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.30
+-  summary: "The one-lot pay sheet — the second of the four queued UI upgrades, picked by Cam. /pay is now a single sheet instead of a rail list: one amount in the largest type on the page, then three large choices (e-Transfer, Bitcoin, Lightning) as real radios under styled labels, then the picked rail in full (destination, exact BTC and sats, QR, steps). The 15-minute rate lock is a quiet stamp rather than a control, and when it expires the sheet stops pretending the numbers are live — the BTC/sats row switches to warning ink and a note offers the re-price. PAD and cheque are tucked under the sheet in a disclosure, along with a lot picker and deep links (/pay?unit=108&rail=bitcoin). A race found while building it, and the reason the sheet now has exactly one writer: reseeding the chosen rail from ?rail= in an effect looked harmless and was not — a click wrote the rail and started the URL write, the effect then re-ran against the URL as it still was and put the old rail back, so the tick and the URL said e-Transfer while the panel showed Lightning's invoice. The rail is owned by the sheet; the URL is an output and a one-time seed on arrival, and the rules (which three rails, what the clock reads, which rail a link may select — PAD and cheque fall back rather than rendering nothing) live in src/lib/pay-sheet.ts with 13 tests. Verified in Chrome: every choice in sequence, a rapid-click sequence (three and four picks with no wait between them), six deep links, all 40 lots (the shown amount must equal the option's own amount), the zero-balance lots (no destination rows, no QR, 'Nothing to collect on this lot.'), and 0 text below 4.5:1 at 1280px and 390px in both themes. 261 frontend tests, 1017 i18n keys x 9 locales, contrast audit 218 token pairs + 4 structural guards."
 -  version: 0.3.29
 -  summary: "Contrast and design-system pass: every rendered page and overlay now clears WCAG AA. The root cause was never 'some colours are too light' — it was surfaces whose plate and ink did not move together. Three of them are fixed at the source: the dashboard chrome (navy in BOTH themes) scopes its own `--chrome-*` ramp, so its labels stop resolving to the light-theme steps (the workspace eyebrow and nav group label measured 2.2:1, the sidebar help line 3.7:1, the sidebar wordmark 2.2:1); the auth modal's navy brand panel does the same with the slab ramp (its wordmark measured 1.04:1 in light, its subtitle 1.25:1); and nine card fills that were pinned `#fff` in app.css and re-declared for dark mode in a separate block now use `var(--paper)` and flip by construction, which deleted four hand-written overrides and the whole class of bug they compensated for. Also fixed: two `var(…)` references to tokens that do not exist (`--surface-3`, `--shadow-sm`), which silently fell back to a fixed near-white plate and a stale shadow; the auth modal's password-strength verdict, step labels and field labels (literal greys at 2.44:1–3.6:1); the legal library's table headers, quotes and code spans (a pinned #f7f8fa wash under light ink, 1.11:1 at night); the print document's smallest labels (3.62:1); the roadmap's decorative step numerals (1.25:1) and its completed-phase dot (white on emerald-500, 2.54:1); the pitch deck's two paper slides (pinned near-white, headline 1.06:1 at night); and the page footer's own lockup. New this pass: a theme-aware focus ring (it was a 45%-alpha blue, ~1.9:1, i.e. a focus indicator failing the 3:1 non-text floor), brand-tinted text selection, a skip-to-content link in both shells (x9 locales), and the inverse surfaces now re-point the accent ink for their subtree so a ring on navy is legible. The audit grew from 194 to 218 token pairs plus four structural guards — the chrome scope, an undefined-`var()` scan, a literal-white fill scan of the stylesheet outside print, and the fill-literal guards — and each guard was verified to FAIL when the fixed line is reintroduced. Verified in Chrome: 28 routes x both themes (56 loads, 10,976 text nodes) at zero below 4.5:1, plus the search modal, topbar menus and auth modal at zero, with the harness asserting the newest token resolved on every load so a service-worker-cached sheet cannot pass as a fresh one. 248 frontend tests, 229 backend tests, 1003 i18n keys x 9 locales."
 -  version: 0.3.28
@@ -98,6 +100,60 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.30] — 2026-10-16
+
+### Added
+
+- **The one-lot pay sheet** (`/pay`) — the second of the four queued UI upgrades,
+  picked by Cam. The page was a rail list plus a pay dock; it is one sheet now.
+  One amount in the largest type on the page, its parts (fee, arrears, late fee,
+  fine, levy) under a dashed rule and only the parts actually owed; three large
+  choices as real `input[type=radio]`s under styled labels in a `fieldset` with a
+  screen-reader legend, so keyboard, arrow keys and announcement stay the
+  browser's; and the picked rail in full — destination, exact BTC and sats, the
+  QR, and the steps. A lot picker and deep links (`/pay?unit=108&rail=bitcoin`)
+  let a treasurer send a lot the exact rail they agreed on.
+- **PAD and cheque are tucked under the sheet** in a native `<details>`: they are
+  not what a treasurer sends from, and they must stay reachable.
+- **A zero-balance lot offers no destination at all** — no rows, no QR, and
+  "Nothing to collect on this lot." rather than an artefact panel with nothing in
+  it.
+
+### Changed
+
+- **The rate lock is a stamp, not a control.** It states how long the fiat
+  amounts are good for and nothing else. When it expires the sheet says so in
+  words *and* moves the BTC/sats row to the warning ink, because a stale rate that
+  still looks live is the one dishonest thing this page could do. Both the note
+  and the stamp's own icon re-price it.
+- **The sheet has exactly one writer per value.** The chosen rail is owned by the
+  component; `?rail=` seeds it once on arrival and is an output after that.
+
+### Fixed
+
+- **A rail/URL race that could show the wrong payment destination.** Reseeding the
+  chosen rail from `?rail=` in an `$effect` looked harmless. A traced run showed
+  the failure: the click wrote the rail and began the URL write, then the effect
+  re-ran against the URL *as it still was* and put the old rail back, so the tick
+  and the URL said e-Transfer while the panel, the rows and the QR showed
+  **Lightning's invoice**. `replaceState` navigations also did not always deliver
+  a page-store update, so making the URL the single source of truth would have
+  stuck the same way. One writer per value; the rules (`sheetRail()` falls back to
+  the first choice for a link naming `pad`, `cheque` or nothing) live in
+  `src/lib/pay-sheet.ts` with 13 tests.
+- **The 15-minute clock can never print a negative remainder** (`lockClock` clamps
+  at `00:00`), and a hostile time reads as expired rather than as a live rate.
+
+### Verified
+
+- Chrome on the built artefact: every choice in sequence, rapid-click sequences
+  (three and four picks with ~30ms between), six deep links, all 40 lots (the
+  shown amount must equal the option's own amount, with the URL intact), the
+  zero-balance lots, the full expiry → re-price → re-expire flow (scratch build,
+  `LOCK_SECONDS = 3`), and **0 text below 4.5:1 at 1280px and 390px in both
+  themes** with no page overflow. 261 frontend tests, 1017 i18n keys x 9 locales,
+  `audit:contrast` pass (218 pairs + 4 guards).
 
 ## [0.3.29] — 2026-10-16
 

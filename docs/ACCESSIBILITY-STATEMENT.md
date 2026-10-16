@@ -33,6 +33,12 @@ preferences.
   line when the underlying bug is reintroduced.
 - **Keyboard affordances** — one visible focus ring on every focusable element, and a
   skip-to-content link as the first tab stop on both shells (all nine locales).
+- **The pay sheet's choices are real radios** — the three payment rails on `/pay` are a
+  `fieldset` with a screen-reader legend and one radio per choice under a styled label, so
+  arrow-key selection and screen-reader announcement are the browser's own; the rail is also
+  deep-linkable (`/pay?unit=201&rail=bitcoin`), and the rate lock that decides whether the
+  Bitcoin amounts are still true is announced in words, not by colour alone. PAD and cheque are
+  a native disclosure rather than a hidden path.
 - **Automated checks** — `npm run check` enforces Svelte accessibility rules
   (0 warnings) on every build.
 

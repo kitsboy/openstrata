@@ -87,6 +87,30 @@ so an accent can be bright as a fill and dark enough as a label.
 - Formation workspace modal
 - Legal, trust, privacy, and accessibility footer
 
+### The one-lot pay sheet (`/pay`)
+
+One amount, three choices, and the picked rail in full. The shape is deliberate, because a
+payment page is the one place a visitor acts on what is on screen:
+
+- **One number, biggest on the page.** The amount due is the only display-size number; no second
+  total competes with it. Its parts (fee, arrears, late fee, fine, levy) sit under a dashed rule
+  and only the parts that are actually owed are listed — an empty lot lists nothing.
+- **Three large choices, as real radios.** The choice is an `<input type="radio">` under a styled
+  `<label>` inside a `<fieldset>` with a screen-reader legend, so keyboard, arrow-keys and
+  screen-reader behaviour are the browser's rather than a re-implementation. The picked card takes
+  the brand border, a brand tint and a tick.
+- **The rate lock is a stamp, not a control.** It states how long the fiat amounts are good for and
+  nothing else. When it expires the sheet says so in words *and* moves the BTC/sats row to the
+  warning ink, because a stale rate that still looks live is the one dishonest thing this page
+  could do. `lockState`/`lockClock` are rules in `src/lib/pay-sheet.ts`, not colours in a template.
+- **Exactly one writer per value.** The rail is owned by the component; `?rail=` seeds it once on
+  arrival and is then an output. A second writer — an effect that reseeded from the URL — produced a
+  sheet whose tick and URL said e-Transfer while the panel showed Lightning's invoice, which is how
+  this rule was learned.
+- **Nothing is offered that cannot be paid.** Destinations are demo strings, the QR plate is the one
+  surface allowed to stay light in both themes, and PAD and cheque sit in a disclosure rather than
+  competing with the three rails a treasurer sends from.
+
 ## Interaction and accessibility
 
 - Every icon-only button has an accessible label.

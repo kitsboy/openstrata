@@ -25,22 +25,16 @@
 		{ name: 'BCFSA', url: 'bcfsa.ca', status: 'Regulator', role: 'Audit-ready exports' }
 	];
 
-	/** Offered 2026-09-30. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
+	/** Offered 2026-10-16. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. These four were offered on September 30, 2026. None of them has been started.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. The one-lot pay sheet on Pay was picked from the September 30 offer and shipped on October 16, 2026; these four are what is waiting now.';
 	const uiQueue = [
 		{
 			name: 'A floor you can walk',
 			where: '/units',
 			detail:
 				'Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.'
-		},
-		{
-			name: 'One-lot pay sheet',
-			where: '/pay',
-			detail:
-				'One amount and three large choices: e-transfer, a Bitcoin QR, and a Lightning QR. The 15-minute rate lock is a quiet stamp. PAD and cheque stay tucked under the sheet.'
 		},
 		{
 			name: 'September close',
@@ -53,6 +47,12 @@
 			where: '/tax and /calendar',
 			detail:
 				'One strip shared by Tax and Calendar: T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.'
+		},
+		{
+			name: 'You are here',
+			where: '/changelog',
+			detail:
+				'A release trail: the version you are running is marked on the timeline, and each release says what changed for you since the one before it, rather than a flat list of versions.'
 		}
 	];
 </script>

@@ -73,12 +73,16 @@ After every push that changes what a person sees:
 
 Do not start a queued item before it is picked. Do not treat the queue as finished.
 
-### Offered 2026-09-30 — not started
+### Offered 2026-10-16 — not started
 
 1. **A floor you can walk** (`/units`). Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.
-2. **One-lot pay sheet** (`/pay`). One amount and three large choices: e-transfer, a Bitcoin QR, and a Lightning QR. The 15-minute rate lock is a quiet stamp. PAD and cheque stay tucked under the sheet.
-3. **September close** (`/accounting`). A short close: reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.
-4. **The next 30 days, once** (`/tax` and `/calendar`). One strip shared by both pages: T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.
+2. **September close** (`/accounting`). A short close: reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.
+3. **The next 30 days, once** (`/tax` and `/calendar`). One strip shared by both pages: T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.
+4. **You are here** (`/changelog`). A release trail: the version you are running is marked on the timeline, and each release says what changed for you since the one before it, rather than a flat list of versions.
+
+### Shipped
+
+- **One-lot pay sheet** (`/pay`) — offered 2026-09-30, **picked by Cam**, shipped 2026-10-16 in v0.3.30. One amount, three large choices, the 15-minute rate lock as a quiet stamp, PAD and cheque tucked under the sheet. The queue was renumbered and one item added, so four are waiting again.
 
 ---
 

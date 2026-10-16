@@ -14,6 +14,40 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.30",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The one-lot pay sheet (/pay) — the second of the four queued UI upgrades, picked by Cam. The page was a rail list plus a pay dock; it is one sheet now. One amount in the largest type on the page, its parts (fee, arrears, late fee, fine, levy) under a dashed rule and only the parts actually owed; three large choices as real input[type=radio]s under styled labels in a fieldset with a screen-reader legend, so keyboard, arrow keys and announcement stay the browser's; and the picked rail in full — destination, exact BTC and sats, the QR, and the steps. A lot picker and deep links (/pay?unit=108&rail=bitcoin) let a treasurer send a lot the exact rail they agreed on.",
+          "PAD and cheque are tucked under the sheet in a native <details>: they are not what a treasurer sends from, and they must stay reachable.",
+          "A zero-balance lot offers no destination at all — no rows, no QR, and \"Nothing to collect on this lot.\" rather than an artefact panel with nothing in it."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The rate lock is a stamp, not a control. It states how long the fiat amounts are good for and nothing else. When it expires the sheet says so in words *and* moves the BTC/sats row to the warning ink, because a stale rate that still looks live is the one dishonest thing this page could do. Both the note and the stamp's own icon re-price it.",
+          "The sheet has exactly one writer per value. The chosen rail is owned by the component; ?rail= seeds it once on arrival and is an output after that."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A rail/URL race that could show the wrong payment destination. Reseeding the chosen rail from ?rail= in an $effect looked harmless. A traced run showed the failure: the click wrote the rail and began the URL write, then the effect re-ran against the URL *as it still was* and put the old rail back, so the tick and the URL said e-Transfer while the panel, the rows and the QR showed Lightning's invoice. replaceState navigations also did not always deliver a page-store update, so making the URL the single source of truth would have stuck the same way. One writer per value; the rules (sheetRail() falls back to the first choice for a link naming pad, cheque or nothing) live in src/lib/pay-sheet.ts with 13 tests.",
+          "The 15-minute clock can never print a negative remainder (lockClock clamps at 00:00), and a hostile time reads as expired rather than as a live rate."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Chrome on the built artefact: every choice in sequence, rapid-click sequences (three and four picks with ~30ms between), six deep links, all 40 lots (the shown amount must equal the option's own amount, with the URL intact), the zero-balance lots, the full expiry → re-price → re-expire flow (scratch build, LOCK_SECONDS = 3), and 0 text below 4.5:1 at 1280px and 390px in both themes with no page overflow. 261 frontend tests, 1017 i18n keys x 9 locales, audit:contrast pass (218 pairs + 4 guards)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.29",
     "date": "2026-10-16",
     "groups": [

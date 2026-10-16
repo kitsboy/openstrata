@@ -1,3 +1,35 @@
+## Session — 2026-10-16 · the one-lot pay sheet, v0.3.30
+
+**Done:**
+- Built the item Cam picked from the 2026-09-30 offer: **2. One-lot pay sheet (`/pay`)**. The page was a rail list plus a pay dock; it is now one sheet — **one amount** in the page's largest type (only the parts actually owed listed, under a dashed rule), **three large choices** (e-Transfer · Bitcoin · Lightning) as real radio inputs under styled labels in a `fieldset` with an sr-only legend, and **the picked rail in full** (destination, exact BTC + sats, QR, numbered steps). The **15-minute rate lock is a quiet stamp**, not a control, and when it expires the sheet stops pretending the numbers are live: the BTC/sats row takes the warning ink and a note offers the re-price. **PAD and cheque are tucked under the sheet** in a `<details>`. New: a lot picker, deep links (`/pay?unit=108&rail=bitcoin`), and a zero-balance state (`Nothing to collect on this lot.` — no destination rows, no QR).
+- New module **`src/lib/pay-sheet.ts`** + `pay-sheet.test.ts` (**13 tests**) holds the three rules that are rules: which rails are the sheet's three large choices (PAD and cheque deliberately are not), what the lock reads (`lockState`, `lockClock`, clamped at `00:00`), and `sheetRail()` — a link asking for `pad`, `cheque`, `BITCOIN` or nothing falls back to the first choice rather than rendering an empty panel.
+- **A real bug, found by verifying instead of reasoning.** The sheet reseeded its chosen rail from `?rail=` in an `$effect`. A traced run showed the failure shape exactly: the click wrote the rail and began the URL write, then the effect re-ran against the URL *as it still was* and put the old rail back — **the tick and the URL said e-Transfer while the panel, the rows and the QR showed Lightning's invoice.** SvelteKit's `replaceState` navigation also did not always deliver a page-store update, so making the URL the single source of truth would have stuck too. Fix: **one writer per value** — the component owns `rail`; the URL is an output, plus a one-time seed in `onMount`.
+- 14 new catalog keys × 9 locales, hand-written (the codemods are gone). One trap worth remembering: a `{rate}` placeholder written **after a colon** makes `audit-i18n` see a phantom key (14 added keys read as 15) — the copy was reworded so the placeholder never follows a colon.
+- Queue housekeeping per the standing rule: item 2 is recorded as **shipped** and replaced, so four are waiting again — a floor you can walk (`/units`), a September close (`/accounting`), the next 30 days once (`/tax` + `/calendar`), and a new fourth, **a release trail on `/changelog`**. Updated everywhere the queue is copied: `docs/ROADMAP.md`, the public `/roadmap` page, `static/llms.txt`, `docs/WORKPLAN.md`, `WORKPLAN.md`, `docs/PRODUCT-PLAN.md`, `.ai_docs/current-status.md`.
+- Docs: `CHANGELOG.md` (+ regenerated `src/lib/changelog.generated.ts`), `LATEST-UPDATE.md`, `DESIGN.md` (new "The one-lot pay sheet" section — one number, real radios, the lock as a stamp, the one-writer rule), `DIRECTORY-MAP.md`, `docs/ACCESSIBILITY-STATEMENT.md`, this file.
+
+**Verified (not estimated):**
+- Chrome, on the built artifact: every choice in sequence, **rapid-click sequences** (three and four picks with ~30ms between them), **six deep links**, **all 40 lots** (the shown amount must equal the option's own amount, with the URL's unit and rail intact), the zero-balance lots, and **0 text below 4.5:1 at 1280px and 390px in both themes** with no page overflow.
+- The expiry flow was verified rather than assumed: a scratch worktree (outside the repo) with `LOCK_SECONDS = 3` — stamp locked `00:03` → **expired** with the BTC row moved to the warning ink and the re-price note → re-price from the note → locked, then expired again and re-locked from the stamp's own icon.
+- The rail invariant was checked where it hurt before: tick / radio / panel / `?rail=` must all be the same rail on every load, including after rapid clicks. The earlier failure would have been caught by this line.
+- `check` **0/0**, `npm test` **261/261**, `audit:i18n` pass (**1017 keys × 9 locales**, no hard-coded copy added), `audit:contrast` pass (**218 token pairs + 4 guards**), build green.
+- Two harness traps this session, both worth knowing: 14 keys became 15 (the colon/placeholder phantom above), and a **stale `vite preview` process** kept the port and served old-hash chunks — `start.*.js` 404'd, hydration never ran, and every click looked dead. Kill the listener, not just the parent, then re-check the artifact before believing a failure.
+
+**Decisions:**
+- **The sheet owns its own state; the URL mirrors it.** One writer per value is now the rule for this page, because the two-writer version could show an owner one payment rail's invoice while the tick and the URL named another — the worst failure a payment page can have. A link seeds the rail once on arrival.
+- The rate lock is a **stamp, not a control**: it only ever states how long the fiat amounts are good for. Expiry is announced **in words and in ink**, because a stale rate that still looks live is the one dishonest thing this page could do.
+- The three large choices are **real radios**, not buttons wearing a state: keyboard, arrow keys and screen-reader announcement stay the browser's behaviour. PAD and cheque are a disclosure rather than a fourth and fifth choice — they are not what a treasurer sends from, but they must stay reachable.
+- Nothing changed about honesty rules: every destination on `/pay` is still a demo string that cannot be paid, payment strings stay non-payable, tax copy stays a sample, and the queue rule stands (offer four, wait for a pick, polish only those, replace a shipped one). The 2026-09-30 offer is now spent — see the queue in `docs/ROADMAP.md` for the four that are waiting.
+- Still in force: do not pop the stash `stale-base layout rewrite before moving to v0.3.28`; do not force-push `main`; do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story.
+
+**Git State:**
+- Code SHA: `000dbd7` — `feat(pay): one amount, three large choices, and the rail that was picked`
+- Base: `d0b44e7` (end of the contrast pass).
+- This note rides the docs commit on top of it; version `0.3.30`. Unpushed after this note: none.
+- `npm run check:security` **fails on this repo, before and after this work** (12 findings: `backend/.env.example:21` plus eleven quoted-credential literals in backend tests and `scripts/audit-contrast.mjs`). Verified identical at `d0b44e7` in a clean worktree, and the gate is not wired into CI. Not touched here — it is a pre-existing gate/tree disagreement for someone to decide on, not something a payment-sheet session should quietly rewrite.
+
+---
+
 ## Session — 2026-10-16 · contrast sweep, fixed surfaces, v0.3.29
 
 **Done:**

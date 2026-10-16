@@ -58,6 +58,7 @@
 | src/lib/changelog.generated.ts | **Generated** from `CHANGELOG.md` by `scripts/generate-changelog.mjs` — do not edit by hand. `changelog.test.ts` fails if it drifts | Docs |
 | src/lib/nav.ts | **The one authoring home for navigation.** Two inline destinations (Dashboard, Strata Tool) + three grouped menus (Building, Library, Company). Building holds Units, Accounting, Pay, Tax and CRA, Calendar, and Meetings. `navItems` (footer + breadcrumbs) is *derived* from it, so the bar and the flat list cannot disagree. `navParentFor()` resolves a pathname to its deepest nav item, on a segment boundary — the fix for `/documents` being labelled `Docs` | UI |
 | src/lib/tasks.ts | Pure aggregation behind the dashboard's **one** ordered list: deadlines + setup steps → overdue / urgent / soon / routine / setup, with `taskCounts` and the demo rows. 16 tests in `tasks.test.ts` | UI |
+| src/lib/pay-sheet.ts | The `/pay` sheet's rules: the three large rails (PAD and cheque are deliberately not among them), the 15-minute rate lock and its `mm:ss` clock, and which rail a `?rail=` link may select — a link to `pad` falls back to the first choice rather than rendering nothing. 13 tests in `pay-sheet.test.ts` | UI |
 | src/lib/start.ts | The first-visit question: `parseStartChoice`, `shouldShowStart`, the storage key and the `start-pending` class shared with the inline script in `app.html` and the two rules in `app.css`. 7 tests, including that the three-file contract still agrees | UI |
 | src/lib/custody.ts | The `/custody` body prose (English by decision — see the note in the file; `documents.ts` and `manual.ts` follow the same rule) + `custody.test.ts` | Docs |
 | src/lib/documents.ts | The print-ready document set (notice, minutes, Form B, Form F) + pure helpers (`docReference`, `addDays`, `daysBetween`, `applyNoticeParams`) + `documents.test.ts` | Docs |
@@ -116,7 +117,7 @@
 | / | src/routes/+page.svelte | Dashboard for Evergreen House (LMS 2847). The 40-lot register is `/units` |
 | /units | src/routes/units/+page.svelte | 40-lot register, 4 floors. Demo data in `src/lib/demo/` |
 | /accounting | src/routes/accounting/+page.svelte | Operating, contingency reserve, parkade levy, budget, journal |
-| /pay | src/routes/pay/+page.svelte | E-transfer, Bitcoin, and Lightning stay visible. Destinations are not payable |
+| /pay | src/routes/pay/+page.svelte | **The one-lot pay sheet** — one amount, three large choices, the picked rail in full. E-transfer, Bitcoin and Lightning stay visible; PAD and cheque are tucked under the sheet. Deep-linkable (`?unit=201&rail=bitcoin`). Destinations are not payable |
 | /tax | src/routes/tax/+page.svelte | CRA desk. Sample copy, not a filing |
 | /calendar | src/routes/calendar/+page.svelte | Fees, council, inspections, CRA dates |
 | /meetings | src/routes/meetings/+page.svelte | Council, AGM, votes |

@@ -12,9 +12,11 @@ Evergreen House is on `main` (LMS 2847, 40 lots, pages `/units`, `/accounting`, 
 Next product work is the UI refinement queue in [ROADMAP.md](ROADMAP.md). Four items are offered and not chosen:
 
 1. A floor you can walk (`/units`)
-2. One-lot pay sheet (`/pay`)
-3. September close (`/accounting`)
-4. The next 30 days, once (`/tax` and `/calendar`)
+2. September close (`/accounting`)
+3. The next 30 days, once (`/tax` and `/calendar`)
+4. You are here (`/changelog`)
+
+Shipped from the previous offer: the one-lot pay sheet on `/pay` (v0.3.30, 2026-10-16). Wherever the queue is copied (here, `static/llms.txt`, the `/roadmap` page), keep it the same four.
 
 The interface keeps being refined as the product grows. After every push that changes what a person sees, offer exactly four upgrades and wait. Cam picks one or two. Only those are polished. When a pick ships, replace it so four remain. Do not start this queue before a pick.
 

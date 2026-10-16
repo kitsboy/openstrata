@@ -9,7 +9,7 @@
 
 Do not treat the unchecked boxes below as the current plan. They were written before v0.3.28. The current instruction is:
 
-The interface keeps being refined as the product grows. Four UI upgrades are offered and not started (a floor you can walk, a one-lot pay sheet, a September close, the next 30 days once). Wait for a pick of one or two. See `docs/ROADMAP.md` and the latest session in `docs/KIMI-HANDOFF.md`.
+The interface keeps being refined as the product grows. Four UI upgrades are offered and not started (a floor you can walk, a September close, the next 30 days once, and a release trail on `/changelog`). Wait for a pick of one or two. The one-lot pay sheet on `/pay` was picked and shipped in v0.3.30, and the queue was replaced. See `docs/ROADMAP.md` and the latest session in `docs/KIMI-HANDOFF.md`.
 
 ---
 
