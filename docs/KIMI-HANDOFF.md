@@ -1,3 +1,38 @@
+## Session — 2026-10-16 · contrast sweep, fixed surfaces, v0.3.29
+
+**Done:**
+- Finished the contrast pass Cam asked for. The reported bug (an unreadable pay dock in dark mode) was already fixed in `8357075`; this session took the same bug class to every remaining surface and then to the whole site.
+- **The root shape, in one line:** the theme flips the ramp, so a step that is legible as *ink* is a near-white *fill*. Every failure this session was a surface whose plate and ink did not move together. Three are now scoped rather than patched:
+  - `aside.sidebar` (navy in both themes) scopes six shell tokens at a fixed `--chrome-*` ramp for its subtree — measured before: workspace eyebrow 2.2:1, nav group label 2.2:1, sidebar help 3.7:1, sidebar wordmark **2.18:1**.
+  - The auth modal's navy brand panel scopes the slab ramp — measured before: wordmark **1.04:1** in light, subtitle 1.25:1.
+  - `.site-footer` / `.bg-slab` / `.bg-slab-raised` re-point the accent ink so a focus ring on navy stays visible.
+- **Card fills flip by construction.** Nine `background: #fff` cards in `src/app.css` (each with a hand-written `.dark .x { background: var(--paper) }` a thousand lines below) now use `var(--paper)`; four redundant overrides deleted.
+- **`var()` typos were silently painting plates.** `var(--surface-3, #eef2f2)` and `var(--shadow-sm, …)` reference tokens that do not exist — CSS drops the declaration and uses the fallback, so the auth modal had a fixed near-white plate under light ink. Fixed, and now a failing guard.
+- Also fixed: auth strength/label greys (2.44–3.6:1), legal-doc plates (1.11:1 at night), print-doc ink (3.62:1), roadmap numerals (1.25:1) and phase dot (2.54:1), pitch deck paper slides (1.06:1 at night), footer lockup, and the `/` marketing dashboard (chevron + footer notes + panel micro-labels).
+- New: theme-aware focus ring (was 45%-alpha blue ≈1.9:1), brand-tinted `::selection`, skip-to-content links in both shells (x9 locales, `skipToContent`).
+- Deleted 23 one-off codemods (`scripts/inject-*.mjs`, `scripts/wire-*.mjs`, `scripts/migrate-page-hero.mjs`, the two `*.py` injectors). `scripts/` is 7 live tools now.
+- Docs: `CHANGELOG.md` (+ front-matter, regenerated `src/lib/changelog.generated.ts`), `LATEST-UPDATE.md`, `DESIGN.md` (new "Fixed surfaces and the ramp they own" section), `docs/ACCESSIBILITY-STATEMENT.md`, `.ai_docs/current-status.md`, this file.
+
+**Verified (not estimated):**
+- Chrome, 28 routes × light and dark = 56 page loads, **10,976 text nodes, 0 below 4.5:1**; plus the ⌘K search modal, the topbar menus and the auth modal in both themes at 0.
+- `audit:contrast`: **218 token pairs** + 4 structural guards (chrome scope, undefined `var()`, literal-white fills outside print, non-flipping fill literals). **Every new guard was reintroduced against its own fix and confirmed to exit 1** — a guard that has never failed is not a guard.
+- `check` 0/0, `audit:i18n` pass, `npm test` **248/248**, build green.
+- Three harness bugs had to be fixed before any of those numbers were trusted: a stylesheet that had parsed to 0 rules, a `vite preview` child that outlived its parent and served a stale build, and (this session) transparent `body`/`html` composited as **black** (fabricating ~900 failures), plus translucent gradient glows scored as if they were the plate. The harness now asserts the **newest** token resolved on every load, so a service-worker-cached sheet can no longer be scored as a fresh build.
+
+**Decisions:**
+- The four queued UI upgrades from 2026-09-30 are **untouched and not started** (a floor you can walk, a one-lot pay sheet, a September close, one next-30-days strip). Cam directed this session; the queue rule still stands — offer four after a UI push and wait for a pick.
+- `--faint` no longer has a 3:1 carve-out: it carries real sentences, so its floor is 4.5:1 in the audit like everything else.
+- No new per-surface dark-mode override should ever be added for a card fill. If a plate needs to stay light (a QR quiet zone, print), it gets a role token (`.qr-plate`, `@media print`).
+- Two gradient-blind spots are documented rather than "fixed": `background-clip: text` headlines and decorative gradient plates are scored with a conservative worst-case composite of their stops, not pixel-sampled. Anything that reports a failure there should be checked by eye before a colour is changed.
+- Still in force: do not pop the stash `stale-base layout rewrite before moving to v0.3.28`; do not force-push `main`; do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story; payment strings stay non-payable.
+
+**Git State:**
+- Code SHA: `f552024` — `fix(ui): scope every fixed surface's ramp so no plate fights its ink`
+- Base: `8357075` (the pay-dock fix this session continues)
+- This note rides the docs commit on top of it; version `0.3.29`. Unpushed after this note: none.
+
+---
+
 ## Session — 2026-09-30 · docs, UI queue, goodbye
 
 **Done:**

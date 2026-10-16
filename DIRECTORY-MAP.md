@@ -81,12 +81,12 @@
 | Script | What it does | Wired into |
 |--------|--------------|------------|
 | `audit-i18n.mjs` | Locale parity (every locale vs French) + hard-coded-copy scan | CI + deploy checklist |
-| `audit-contrast.mjs` | Recomputes WCAG 2.2 contrast for **106 token pairs** in both themes from `src/app.css`. An unresolvable token is a **failure**, not a skip | CI + deploy checklist |
+| `audit-contrast.mjs` | Recomputes WCAG 2.2 contrast for **218 token pairs** in both themes from `src/app.css`, and holds four structural guards that no colour pair can express: the chrome ramp scope on `.sidebar`, a `var(--token)` defined nowhere in `src/` (CSS drops the declaration and silently uses the fallback), a literal white fill in the stylesheet outside `@media print`, and a non-flipping fill literal in a component. An unresolvable token is a **failure**, not a skip. Generated files are skipped — `changelog.generated.ts` quotes this bug in prose | CI + deploy checklist |
 | `generate-changelog.mjs` | `CHANGELOG.md` → `src/lib/changelog.generated.ts` for the public `/changelog` page | Run by hand; `changelog.test.ts` guards drift |
-| `wire-hero-art.mjs` | Mounts `HeroArt` motifs on the 14 hero pages (idempotent) | One-off codemod |
+| `check-secret-hygiene.mjs` | `npm run check:security` — fails on a committed secret or a credential-shaped literal | CI + deploy checklist |
+| `generate-csp.mjs`, `generate-sitemap.mjs` | `prebuild` — hash-pinned CSP and the sitemap | `npm run build` |
 | `generate-icons.mjs` | `npm run icons` — rasterises `static/icon.svg` + `favicon.svg` into `favicon.ico`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, and the 1200×630 `og.png` link-preview card (mark + wordmark + URL on the brand navy). Committed output; rerun after editing either vector | Run after icon art changes |
-| `migrate-page-hero.mjs` | Migrated 14 hand-rolled header gradients onto `.page-hero` | One-off codemod |
-| `inject-*-i18n.mjs` | Catalog injectors (journey, tour offer, setup + changelog) — the pattern for adding keys across all 9 locales | One-off |
+| ~~one-off codemods~~ | `inject-*-i18n.mjs`, `wire-hero-art.mjs`, `wire-start-here.mjs`, `migrate-page-hero.mjs` and the two `*.py` injectors were deleted on 2026-10-16. They ran once each and were kept only as history: 23 files that a later model could have re-run against a changed `src/lib/i18n.ts` and corrupted it. The `CHANGELOG.md` entries that describe what they did remain | Deleted |
 
 ### Code — Phase 3 Backend (`backend/`)
 
