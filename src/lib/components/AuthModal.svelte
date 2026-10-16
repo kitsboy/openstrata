@@ -298,36 +298,54 @@
     height: 30px;
     border-radius: 9px;
     color: var(--muted, #64748b);
-    background: var(--surface-3, #eef2f2);
+    background: var(--color-surface-3);
   }
   .auth-close:hover { color: var(--ink, #18232b); }
 
   /* Split layout */
   .auth-split { display: grid; grid-template-columns: 1fr 1.15fr; min-height: 520px; }
   .auth-brand {
+    /* A fixed navy plate in BOTH themes, so it scopes the slab ramp exactly the
+       way `.sidebar` scopes the chrome ramp. It had been using the flipping
+       tokens, and this panel is `aria-hidden` decorative chrome — the wordmark
+       accent measured 1.04:1 in light mode and the subtitle 1.25:1, on a plate
+       that never moves. The two glows are also pulled back (from .35/.22 to
+       .16/.12): at their old strength they composited the plate up to a mid
+       slate-teal in the corners, which is what pushed the 10px trust lines under
+       the line. Subtler glows, darker plate, and the ink clears AA in the worst
+       corner rather than only in the middle. */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
     padding: 34px 30px;
     border-radius: 20px 0 0 20px;
-    color: #eaf3f5;
+    color: var(--color-slab-ink);
+    --ink: var(--color-slab-ink);
+    --muted: var(--color-slab-muted);
+    --faint: var(--color-slab-muted);
+    --line: var(--color-slab-line);
+    --orange-text: var(--color-slab-accent);
+    --brand-text: var(--color-slab-accent);
     background:
-      radial-gradient(120% 90% at 0% 0%, rgba(8, 145, 178, .35), transparent 55%),
-      radial-gradient(120% 100% at 100% 100%, rgba(249, 115, 72, .22), transparent 55%),
+      radial-gradient(120% 90% at 0% 0%, rgba(8, 145, 178, .16), transparent 55%),
+      radial-gradient(120% 100% at 100% 100%, rgba(249, 115, 72, .12), transparent 55%),
       linear-gradient(165deg, #0d2b38, #123b4c);
   }
   .auth-brand-lockup { display: flex; align-items: center; gap: 10px; }
-  .auth-brand-lockup .brand-name { color: #fff; }
+  .auth-brand-lockup .brand-name { color: var(--color-slab-ink); }
   .auth-brand-art { color: rgba(234, 243, 245, .85); margin: 6px 0 2px; }
   .auth-brand-title { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.45; letter-spacing: -.2px; color: #fff; }
   .auth-trust { display: flex; flex-direction: column; gap: 13px; margin: 4px 0 0; padding: 0; list-style: none; }
-  .auth-trust li { display: flex; gap: 10px; align-items: flex-start; color: #b9d2da; }
+  .auth-trust li { display: flex; gap: 10px; align-items: flex-start; color: var(--muted); }
   .auth-trust li > :global(.inline-flex) { margin-top: 2px; color: #4fd1c5; }
   .auth-trust span { display: flex; flex-direction: column; gap: 1px; }
-  .auth-trust strong { font-size: 11px; color: #eaf3f5; }
-  .auth-trust small { font-size: 10px; line-height: 1.5; color: #8fb2bd; }
-  .auth-brand-note { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; font-size: 10px; color: #7fa3ae; }
+  .auth-trust strong { font-size: 11px; color: var(--color-slab-ink); }
+  /* These two are measured against the plate *plus* the glow, not the plate
+     alone: #8fb2bd and #7fa3ae sat at 4.0:1 and 3.4:1 at 10px once the glow
+     covering the bottom of the panel was composited in. */
+  .auth-trust small { font-size: 10px; line-height: 1.5; color: var(--muted); }
+  .auth-brand-note { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; font-size: 10px; color: var(--muted); }
   .auth-brand-note :global(.inline-flex) { color: #4fd1c5; }
 
   /* Form panel */
@@ -343,7 +361,7 @@
     margin-bottom: 22px;
     padding: 4px;
     border-radius: 12px;
-    background: var(--surface-3, #eef2f2);
+    background: var(--color-surface-3);
   }
   .auth-toggle button {
     padding: 9px 10px;
@@ -360,17 +378,21 @@
   }
 
   .auth-steps { display: flex; gap: 18px; margin: 0 0 18px; padding: 0; list-style: none; }
-  .auth-steps li { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; color: #a3aeb2; }
+  /* Step labels, step numbers, field labels and the eye button were literal
+     greys (#a3aeb2 / #8d9ba1 / #728188) — 2.5:1 to 3.6:1 on paper, and they are
+     not decorative: they name the step you are on and the field you are
+     filling. The token ramp carries them now, so they flip with the theme. */
+  .auth-steps li { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; color: var(--muted); }
   .auth-steps li span {
     display: grid; place-items: center; width: 20px; height: 20px;
-    border-radius: 50%; font-size: 10px; color: #8d9ba1; background: var(--surface-3, #eef2f2);
+    border-radius: 50%; font-size: 10px; color: var(--muted); background: var(--color-surface-3);
   }
   .auth-steps li.active { color: var(--ink, #18232b); }
   .auth-steps li.active span { color: #fff; background: var(--orange-solid); }
-  .auth-steps li.done span { color: #fff; background: var(--green); }
+  .auth-steps li.done span { color: #fff; background: var(--color-emerald-700); }
 
   .auth-field { display: block; margin-top: 14px; }
-  .auth-field > span { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 800; color: #728188; }
+  .auth-field > span { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 800; color: var(--muted); }
   .auth-field input {
     width: 100%; height: 44px; padding: 0 13px;
     border: 1px solid var(--line); border-radius: 10px; outline: 0;
@@ -378,31 +400,35 @@
     font-size: 13px; transition: border-color .18s ease, box-shadow .18s ease;
   }
   .auth-field input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249, 115, 72, .14); }
-  .auth-field input.input-invalid { border-color: var(--red, #e86b72); }
+  .auth-field input.input-invalid { border-color: var(--danger-text); }
   .auth-password-wrap { position: relative; }
   .auth-password-wrap input { padding-right: 42px; }
   .auth-eye {
     position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
     display: grid; place-items: center; width: 30px; height: 30px;
-    border-radius: 8px; color: #8d9ba1;
+    border-radius: 8px; color: var(--muted);
   }
-  .auth-eye:hover { color: var(--ink, #18232b); background: var(--surface-3, #eef2f2); }
-  .auth-field-error { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 10px; font-weight: 700; color: var(--red, #e86b72); }
-  .auth-strength-hint { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 10px; color: #a3aeb2; }
+  .auth-eye:hover { color: var(--ink, #18232b); background: var(--color-surface-3); }
+  .auth-field-error { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 10px; font-weight: 700; color: var(--danger-text); }
+  .auth-strength-hint { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 10px; color: var(--muted); }
 
   .auth-strength { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
   .auth-strength-bars { display: flex; gap: 3px; flex: 1; max-width: 140px; }
-  .auth-strength-bars i { height: 4px; flex: 1; border-radius: 3px; background: var(--surface-3, #eef2f2); transition: background .2s ease; }
+  .auth-strength-bars i { height: 4px; flex: 1; border-radius: 3px; background: var(--color-surface-3); transition: background .2s ease; }
   .auth-strength-label { font-size: 9px; font-weight: 800; }
-  .auth-strength-label.weak { color: var(--red, #e86b72); }
-  .auth-strength-label.ok { color: #d99a2b; }
-  .auth-strength-label.strong { color: var(--green, #36b989); }
+  /* The password-strength verdict is a status, so it rides the same three
+     status tokens as every other verdict in the app rather than three literals
+     ("Fair" was #d99a2b, 2.44:1 on paper). */
+  .auth-strength-label.weak { color: var(--danger-text); }
+  .auth-strength-label.ok { color: var(--warning-text); }
+  .auth-strength-label.strong { color: var(--success-text); }
 
   .auth-error {
     display: flex; align-items: center; gap: 6px;
     margin: 12px 0 0; padding: 9px 12px;
-    border: 1px solid rgba(232, 107, 114, .3); border-radius: 10px;
-    color: #b33a44; background: #fdf0f1; font-size: 11px; font-weight: 700;
+    border: 1px solid color-mix(in srgb, var(--red) 34%, transparent); border-radius: 10px;
+    color: var(--danger-text); background: color-mix(in srgb, var(--red) 9%, var(--paper));
+    font-size: 11px; font-weight: 700;
   }
 
   .auth-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 22px; }
@@ -434,7 +460,7 @@
   }
   .auth-demo:hover { color: var(--ink, #18232b); }
   .auth-demo :global(.inline-flex) { color: var(--orange); }
-  .auth-note { display: block; margin-top: 14px; font-size: 9px; line-height: 1.55; color: #a3aeb2; }
+  .auth-note { display: block; margin-top: 14px; font-size: 9px; line-height: 1.55; color: var(--muted); }
 
   /* Success moment */
   .auth-success { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 420px; padding: 40px; text-align: center; }
@@ -448,7 +474,7 @@
   .auth-success .eyebrow { margin-bottom: 2px; color: var(--green, #36b989); }
   .auth-success h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.8px; color: var(--ink, #18232b); }
   .auth-success p { margin: 0; font-size: 12px; color: var(--muted, #64748b); }
-  .auth-success-note { margin-top: 4px !important; font-size: 10px !important; color: #a3aeb2 !important; }
+  .auth-success-note { margin-top: 4px !important; font-size: 10px !important; color: var(--muted) !important; }
 
   /* Dark mode */
   :global(.dark) .auth-shell { background: var(--paper, #16222a); }

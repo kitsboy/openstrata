@@ -460,17 +460,27 @@
 		scroll-snap-align: start;
 	}
 
+	/* The deck's two "paper" slides were pinned near-white, which reads well in
+	   light mode and turns the gallery into pale-on-pale at night: the headline
+	   (`text-slate-900`, remapped to a light step in dark) measured 1.06:1 on the
+	   fixed white wash. The wash is mixed from `--paper` and the accent tints, so
+	   the plate and the ink on it move together — the same 135deg warm gradient in
+	   light, a deep tinted sheet in dark. */
 	.pitch-slide-hero {
 		background: linear-gradient(
 			135deg,
-			rgba(240, 253, 249, 0.9) 0%,
-			rgba(255, 255, 255, 1) 50%,
-			rgba(255, 251, 235, 0.4) 100%
+			color-mix(in srgb, var(--paper) 88%, var(--green)) 0%,
+			var(--paper) 50%,
+			color-mix(in srgb, var(--paper) 56%, var(--amber)) 100%
 		);
 	}
 
 	.pitch-slide-cta {
-		background: linear-gradient(180deg, white 0%, rgba(240, 253, 249, 0.5) 100%);
+		background: linear-gradient(
+			180deg,
+			var(--paper) 0%,
+			color-mix(in srgb, var(--paper) 62%, var(--green)) 100%
+		);
 	}
 
 	@media print {

@@ -14,6 +14,38 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.29",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Changed",
+        "items": [
+          "The dashboard chrome owns its ramp. The sidebar is navy in *both* themes, but its ink was still resolving to the shell's --muted / --faint / --orange-text, which flip at night. Read in light mode those are a dark slate (2.2:1 on navy) and a dark rust (2.2:1). .sidebar now re-points six shell tokens at a fixed --chrome-* ramp for its whole subtree, so a rule — or a component's own scoped style — inside the chrome cannot reach a flipping step by accident. Same treatment for the auth modal's navy brand panel (slab ramp), and the inverse surfaces now re-point the accent ink too, so a focus ring on navy stays legible.",
+          "Card surfaces flip by construction. Nine fills in src/app.css were pinned #fff and re-declared in a separate .dark block; they use var(--paper) now and four redundant overrides are gone with them.",
+          "Focus, selection and skips. The focus ring was a fixed 45%-alpha blue (~1.9:1 — a focus indicator below the 3:1 non-text floor); it rides the audited --brand-text now, which the chrome and slab scopes re-point on inverse surfaces. Text selection uses the brand tint with the page's own ink, and both shells gained a skip-to-content link (x9 locales).",
+          "Ink that had to be measured against a glow, not a plate. The auth panel's 10px trust lines sat at 4.0:1 and 3.4:1 once the glow covering that corner was composited in; the glows were pulled back (.35/.22 → .16/.12) and the steps lifted, so the worst corner clears AA instead of only the middle.",
+          "Print, legal and deck surfaces. PrintDoc's smallest ink moved from #7d8890 (3.62:1) to #5a6672; LegalDoc's table headers, blockquotes and code spans use the tint tokens instead of a pinned light wash; the pitch deck's two \"paper\" slides are mixed from --paper and the accent tints, so the plate and the ink move together; the roadmap's step numerals became brand chips and its completed-phase dot moved to emerald-700 (white on emerald-500 was 2.54:1).",
+          "Removed 23 one-off i18n and codemod scripts (scripts/inject-*.mjs, scripts/wire-*.mjs, scripts/migrate-page-hero.mjs, the two *.py injectors). scripts/ is now seven live tools, all reachable from package.json or the changelog generator."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "var(--surface-3, …) and var(--shadow-sm, …) referenced tokens that do not exist. CSS does not warn: the declaration is dropped and the FALLBACK wins, so the auth modal painted a fixed near-white plate (light ink on it at night) and the start card used a stale shadow literal.",
+          "The auth modal's password-strength verdict, step labels, step numbers and field labels were literal greys at 2.44:1–3.6:1; the strength verdict now rides the same three status tokens as every other verdict in the app.",
+          "The dashboard / was the last route with failures: a 17px chevron, 8px footer notes and the panels' micro-labels."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Chrome, 28 routes × light and dark (56 loads, 10,976 text nodes): zero below 4.5:1. Plus the ⌘K search modal, the topbar menus and the auth modal in both themes at zero. The harness asserts the newest token resolved on every load, so a service-worker-cached sheet cannot be scored as a fresh build.",
+          "The audit grew 194 → 218 token pairs and gained four structural guards (chrome scope, undefined var(), literal-white fills in the stylesheet outside print, and the existing fill-literal guards). Each new guard was reintroduced against its own fix and confirmed to exit 1."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.28",
     "date": "2026-09-21",
     "groups": [

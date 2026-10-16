@@ -115,7 +115,7 @@
     border: 1px solid var(--line);
     border-radius: 16px;
     background: var(--paper);
-    box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 45, 59, 0.06));
+    box-shadow: var(--shadow-card);
     text-align: left;
     transition: border-color 0.2s ease, transform 0.2s ease;
   }

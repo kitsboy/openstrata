@@ -259,6 +259,7 @@
 </svelte:head>
 
 <div class="app-shell">
+  <a class="skip-link" href="#content">{$copy.skipToContent}</a>
   <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label={$copy.primaryNavigation}>
     <div class="brand-lockup">
       <BrandMark size={30} />
@@ -349,7 +350,7 @@
       </div>
     </header>
 
-    <main class="content">
+    <main id="content" class="content">
       <!-- First-visit question. Hidden unless `<html>` carries `start-pending`,
            which the inline script in app.html sets before the first paint. -->
       <StartChoice onChoose={chooseStart} onSignIn={() => (showAuth = true)} />

@@ -94,6 +94,7 @@
   {@render children()}
 {:else}
 <div class="flex min-h-screen flex-col mesh-bg">
+  <a class="skip-link" href="#main-content">{$copy.skipToContent}</a>
   <header class="no-print sticky top-0 z-50 border-b border-border bg-surface-2/80 backdrop-blur-md">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
       <a href="/" class="flex items-center gap-3 no-underline group shrink-0">
@@ -165,7 +166,7 @@
     <PayRail />
   </header>
 
-  <main class="flex-1">
+  <main id="main-content" class="flex-1">
     <Breadcrumbs />
     {@render children()}
   </main>

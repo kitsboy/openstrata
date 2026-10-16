@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.29
+-  summary: "Contrast and design-system pass: every rendered page and overlay now clears WCAG AA. The root cause was never 'some colours are too light' — it was surfaces whose plate and ink did not move together. Three of them are fixed at the source: the dashboard chrome (navy in BOTH themes) scopes its own `--chrome-*` ramp, so its labels stop resolving to the light-theme steps (the workspace eyebrow and nav group label measured 2.2:1, the sidebar help line 3.7:1, the sidebar wordmark 2.2:1); the auth modal's navy brand panel does the same with the slab ramp (its wordmark measured 1.04:1 in light, its subtitle 1.25:1); and nine card fills that were pinned `#fff` in app.css and re-declared for dark mode in a separate block now use `var(--paper)` and flip by construction, which deleted four hand-written overrides and the whole class of bug they compensated for. Also fixed: two `var(…)` references to tokens that do not exist (`--surface-3`, `--shadow-sm`), which silently fell back to a fixed near-white plate and a stale shadow; the auth modal's password-strength verdict, step labels and field labels (literal greys at 2.44:1–3.6:1); the legal library's table headers, quotes and code spans (a pinned #f7f8fa wash under light ink, 1.11:1 at night); the print document's smallest labels (3.62:1); the roadmap's decorative step numerals (1.25:1) and its completed-phase dot (white on emerald-500, 2.54:1); the pitch deck's two paper slides (pinned near-white, headline 1.06:1 at night); and the page footer's own lockup. New this pass: a theme-aware focus ring (it was a 45%-alpha blue, ~1.9:1, i.e. a focus indicator failing the 3:1 non-text floor), brand-tinted text selection, a skip-to-content link in both shells (x9 locales), and the inverse surfaces now re-point the accent ink for their subtree so a ring on navy is legible. The audit grew from 194 to 218 token pairs plus four structural guards — the chrome scope, an undefined-`var()` scan, a literal-white fill scan of the stylesheet outside print, and the fill-literal guards — and each guard was verified to FAIL when the fixed line is reintroduced. Verified in Chrome: 28 routes x both themes (56 loads, 10,976 text nodes) at zero below 4.5:1, plus the search modal, topbar menus and auth modal at zero, with the harness asserting the newest token resolved on every load so a service-worker-cached sheet cannot pass as a fresh one. 248 frontend tests, 229 backend tests, 1003 i18n keys x 9 locales."
 -  version: 0.3.28
 -  summary: "Follow-up to the popover release: the month navigation buttons now use their proper aria-labels (Previous month / Next month, x9 locales) instead of reusing unrelated list strings, and the month title button dropped a leftover ternary. No behavioural change - accessibility copy only."
 -  summary: "Calendar day popover: clicking a day opens a small panel pinned under that cell with the day's deadlines in full, each with a one-tap link to the tools panel where the item is handled. Day cells became real buttons - keyboard reachable, aria-expanded on the open day, hover affordance gated behind (hover: hover) - and the popover clamps inside the grid on narrow phones, closing on X, Escape, outside click or month navigation. Month nav buttons got proper aria-labels (previous/next month, x9 locales). 248 frontend tests, 229 backend tests, 1002 i18n keys x 9 locales."
@@ -96,6 +98,68 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.29] — 2026-10-16
+
+### Changed
+
+- **The dashboard chrome owns its ramp.** The sidebar is navy in *both* themes, but
+  its ink was still resolving to the shell's `--muted` / `--faint` /
+  `--orange-text`, which flip at night. Read in light mode those are a dark slate
+  (2.2:1 on navy) and a dark rust (2.2:1). `.sidebar` now re-points six shell
+  tokens at a fixed `--chrome-*` ramp for its whole subtree, so a rule — or a
+  component's own scoped style — inside the chrome cannot reach a flipping step
+  by accident. Same treatment for the auth modal's navy brand panel (slab ramp),
+  and the inverse surfaces now re-point the accent ink too, so a focus ring on
+  navy stays legible.
+- **Card surfaces flip by construction.** Nine fills in `src/app.css` were pinned
+  `#fff` and re-declared in a separate `.dark` block; they use `var(--paper)`
+  now and four redundant overrides are gone with them.
+- **Focus, selection and skips.** The focus ring was a fixed 45%-alpha blue
+  (~1.9:1 — a focus indicator below the 3:1 non-text floor); it rides the audited
+  `--brand-text` now, which the chrome and slab scopes re-point on inverse
+  surfaces. Text selection uses the brand tint with the page's own ink, and both
+  shells gained a skip-to-content link (x9 locales).
+- **Ink that had to be measured against a glow, not a plate.** The auth panel's
+  10px trust lines sat at 4.0:1 and 3.4:1 once the glow covering that corner was
+  composited in; the glows were pulled back (.35/.22 → .16/.12) and the steps
+  lifted, so the worst corner clears AA instead of only the middle.
+- **Print, legal and deck surfaces.** `PrintDoc`'s smallest ink moved from
+  `#7d8890` (3.62:1) to `#5a6672`; `LegalDoc`'s table headers, blockquotes and
+  code spans use the tint tokens instead of a pinned light wash; the pitch deck's
+  two "paper" slides are mixed from `--paper` and the accent tints, so the plate
+  and the ink move together; the roadmap's step numerals became brand chips and
+  its completed-phase dot moved to `emerald-700` (white on emerald-500 was
+  2.54:1).
+- Removed 23 one-off i18n and codemod scripts (`scripts/inject-*.mjs`,
+  `scripts/wire-*.mjs`, `scripts/migrate-page-hero.mjs`, the two `*.py`
+  injectors). `scripts/` is now seven live tools, all reachable from
+  `package.json` or the changelog generator.
+
+### Fixed
+
+- `var(--surface-3, …)` and `var(--shadow-sm, …)` referenced tokens that do not
+  exist. CSS does not warn: the declaration is dropped and the FALLBACK wins, so
+  the auth modal painted a fixed near-white plate (light ink on it at night) and
+  the start card used a stale shadow literal.
+- The auth modal's password-strength verdict, step labels, step numbers and field
+  labels were literal greys at 2.44:1–3.6:1; the strength verdict now rides the
+  same three status tokens as every other verdict in the app.
+- The dashboard `/` was the last route with failures: a 17px chevron, 8px footer
+  notes and the panels' micro-labels.
+
+### Verified
+
+- Chrome, 28 routes × light and dark (56 loads, 10,976 text nodes): **zero below
+  4.5:1**. Plus the ⌘K search modal, the topbar menus and the auth modal in both
+  themes at zero. The harness asserts the newest token resolved on every load, so
+  a service-worker-cached sheet cannot be scored as a fresh build.
+- The audit grew 194 → 218 token pairs and gained four structural guards (chrome
+  scope, undefined `var()`, literal-white fills in the stylesheet outside print,
+  and the existing fill-literal guards). Each new guard was reintroduced against
+  its own fix and confirmed to exit 1.
+
+**248 frontend tests, 229 backend tests, 1003 i18n keys × 9 locales.**
 
 ## [0.3.28] — 2026-09-21
 

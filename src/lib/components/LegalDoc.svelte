@@ -51,30 +51,34 @@
   }
   .legal-doc :global(th),
   .legal-doc :global(td) {
-    border: 1px solid #e3e6ea;
+    border: 1px solid var(--line);
     padding: 0.5rem 0.6rem;
     text-align: left;
     vertical-align: top;
   }
+  /* A legal document is read on screen in both themes, so its plates are tint
+     tokens rather than pinned light values: a fixed #f7f8fa wash under the
+     theme's own ink measured 1.11:1 at night — a table header you cannot read.
+     The tint flips with the paper now, and the ink flips with it. */
   .legal-doc :global(th) {
-    background: #f7f8fa;
+    background: var(--color-surface-3);
   }
   .legal-doc :global(blockquote) {
     margin: 1rem 0;
     padding: 0.75rem 1rem;
-    border-left: 3px solid #b8893a;
-    background: #f7f8fa;
+    border-left: 3px solid var(--orange);
+    background: var(--color-surface-3);
     border-radius: 0 6px 6px 0;
   }
   .legal-doc :global(code) {
-    background: #f7f8fa;
+    background: var(--color-surface-3);
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
     font-size: 0.9em;
   }
   .legal-doc :global(hr) {
     border: 0;
-    border-top: 1px solid #e3e6ea;
+    border-top: 1px solid var(--line);
     margin: 2.5rem 0;
   }
 </style>

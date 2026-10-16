@@ -103,7 +103,7 @@
 		{#each hermesPositioning.paths as path, i}
 			<Card class="relative overflow-hidden">
 				<div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-brand-100 to-transparent rounded-bl-full"></div>
-				<span class="text-4xl font-bold text-brand-200">{i + 1}</span>
+				<span class="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-lg font-bold text-brand-700">{i + 1}</span>
 				<h3 class="font-bold text-slate-800 text-lg mt-2">{path.title}</h3>
 				<p class="mt-2 text-sm text-slate-600">{path.desc}</p>
 				<span class="mt-4 inline-block text-xs font-bold text-brand-700">{path.legal}</span>
@@ -122,7 +122,7 @@
 				<div class="flex gap-6 items-start">
 					<div class="flex flex-col items-center shrink-0">
 						<div class="flex h-12 w-12 items-center justify-center rounded-full font-bold text-sm
-							{phase.status === 'complete' ? 'bg-success text-white' :
+							{phase.status === 'complete' ? 'bg-emerald-700 text-white' :
 							 phase.status === 'current' ? 'bg-brand-600 text-white ring-4 ring-brand-200' :
 							 'bg-slate-200 text-slate-500'}">
 							{phase.id}

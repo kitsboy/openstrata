@@ -156,11 +156,11 @@
     font-size: 8.5pt;
     letter-spacing: 0.02em;
   }
-  .print-org-registration { color: #7d8890; }
+  .print-org-registration { color: #5a6672; }
 
   .print-ref { margin: 0; text-align: right; }
   .print-ref dt {
-    color: #7d8890;
+    color: #5a6672;
     font-family: 'DM Mono', ui-monospace, monospace;
     font-size: 7.5pt;
     letter-spacing: 0.12em;
@@ -257,7 +257,7 @@
   }
   .print-table-note {
     margin: 6px 0 0;
-    color: #7d8890;
+    color: #5a6672;
     font-size: 9pt;
   }
 
@@ -273,7 +273,7 @@
   }
   .print-signature-role {
     margin: 0;
-    color: #7d8890;
+    color: #5a6672;
     font-family: 'DM Mono', ui-monospace, monospace;
     font-size: 7.5pt;
     letter-spacing: 0.1em;
@@ -289,7 +289,7 @@
     margin-top: 26px;
     padding-top: 10px;
     border-top: 1px solid #dfe4e8;
-    color: #7d8890;
+    color: #5a6672;
     font-family: 'DM Mono', ui-monospace, monospace;
     font-size: 7.5pt;
     letter-spacing: 0.02em;

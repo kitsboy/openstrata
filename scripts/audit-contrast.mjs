@@ -19,10 +19,10 @@
  *     a deliberate fix is not reported as a failure.
  *
  * Floors (WCAG 2.2, sRGB):
- *   - 4.5:1 — normal body/secondary text.
- *   - 3.0:1 — bold UI labels on solid brand fills, and the `--faint` micro-label
- *     token, which drives decorative 9–10px uppercase eyebrows only. Anything
- *     that carries meaning must clear 4.5.
+ *   - 4.5:1 — normal body/secondary text, and now every text token including
+ *     the micro-label step. The old 3.0 carve-out for `--faint` is gone: an
+ *     audit of the rendered pages showed it driving captions, placeholders and
+ *     empty-state copy, so the carve-out was protecting the wrong thing.
  *
  * An unresolvable token is a FAILURE, not a skip. The first version of this
  * script silently skipped any token with no value in `src/app.css` — which hid
@@ -142,6 +142,118 @@ function scanSources() {
   return hits;
 }
 
+/**
+ * Literal white fills in the STYLESHEET, outside `@media print`.
+ *
+ * The `.svelte` fill guards below only ever read component sources, so nine
+ * `background: #fff` cards in src/app.css went unnoticed — each one "fixed" by a
+ * hand-written `.dark .card { background: var(--paper); }` a thousand lines
+ * further down. That is the same shape as the bug that started this: a fill that
+ * does not follow the theme, one missing override away from white-on-white. The
+ * cards now use `var(--paper)` and flip by construction, and this guard keeps a
+ * literal from creeping back. Print is excluded on purpose — paper is white. A
+ * surface that must stay light under a QR code uses `.qr-plate`.
+ */
+function stripPrintBlocks(source) {
+  let inPrint = false;
+  let depth = 0;
+  return source
+    .split('\n')
+    .map((line) => {
+      const opens = (line.match(/\{/g) || []).length;
+      const closes = (line.match(/\}/g) || []).length;
+      if (inPrint) {
+        depth += opens - closes;
+        if (depth <= 0) inPrint = false;
+        return '';
+      }
+      if (/@media\s+print/.test(line)) {
+        depth = opens - closes;
+        if (depth > 0) inPrint = true;
+        return '';
+      }
+      return line;
+    })
+    .join('\n');
+}
+
+function scanStylesheetFills() {
+  const problems = [];
+  stripPrintBlocks(css)
+    .split('\n')
+    .forEach((line, index) => {
+      if (/^\s*(\/\/|\/\*|\*)/.test(line)) return;
+      const match = line.match(/(?<![-\w])background(?:-color)?\s*:\s*(#fff\b|#ffffff\b|white\b)/i);
+      if (!match) return;
+      problems.push(
+        `src/app.css:${index + 1}: \`${match[0].trim()}\` is a pinned white fill. It does not follow the theme, so any ink that flips on it breaks at night — use \`var(--paper)\` for a card, \`var(--color-surface-2)\` for a chip, or \`.qr-plate\` where the surface must stay light.`
+      );
+    });
+  return problems;
+}
+
+/**
+ * `var(--token)` where `--token` is not defined anywhere in `src/`.
+ *
+ * Generated files are skipped: `src/lib/changelog.generated.ts` is a copy of
+ * CHANGELOG.md's prose, so it quotes this very bug (`var(--surface-3, …)`) while
+ * explaining it, and a prose mention is not a use. The first run of this guard
+ * failed on exactly that line, which is the right failure for the wrong reason.
+ *
+ * This is the quietest failure in CSS and the one that caused two live bugs:
+ * an unknown custom property does not warn, it makes the declaration invalid at
+ * computed-value time, so the browser uses the FALLBACK. `var(--surface-3,
+ * #eef2f2)` in the auth modal was reaching for a token this repo spells
+ * `--color-surface-3`, and silently painting a fixed near-white plate, which in
+ * dark mode is a light plate under light ink. The guard also accepts tokens a
+ * component injects at runtime (`style="--mark-size: 30px"`, `setProperty`) and
+ * Tailwind's own `--color-*` namespace, so it has no false positives left: after
+ * the fixes above it reports zero, and it reported the real two when it was
+ * written.
+ */
+function scanTokenReferences() {
+  const root = path.join(process.cwd(), 'src');
+  const walk = (directory) =>
+    fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) return walk(entryPath);
+      if (/\.generated\.(ts|js)$/.test(entry.name)) return [];
+      return /\.(svelte|css|ts|js|html)$/.test(entry.name) ? [entryPath] : [];
+    });
+
+  const files = walk(root);
+  const defined = new Set();
+  const runtime = new Set();
+  for (const file of files) {
+    const text = fs.readFileSync(file, 'utf8');
+    for (const match of text.matchAll(/(^|[\s;{('"])--[\w-]+\s*:/g)) {
+      defined.add(match[0].trim().replace(/:$/, ''));
+    }
+    for (const match of text.matchAll(/(?:style="[^"]*|setProperty\(\s*['"])(--[\w-]+)/g)) {
+      runtime.add(match[1]);
+    }
+    for (const match of text.matchAll(/(--[\w-]+)\s*=\s*\{/g)) runtime.add(match[1]);
+  }
+
+  const problems = [];
+  for (const file of files) {
+    fs.readFileSync(file, 'utf8')
+      .split('\n')
+      .forEach((line, index) => {
+        if (/^\s*(\/\/|\/\*|\*|<!--)/.test(line)) return;
+        for (const match of line.matchAll(/var\(\s*(--[\w-]+)\s*[,)]/g)) {
+          const token = match[1];
+          if (token.startsWith('--color-')) continue; // Tailwind's namespace
+          if (defined.has(token) || runtime.has(token)) continue;
+          problems.push(
+            `${path.relative(process.cwd(), file)}:${index + 1} references \`${token}\`, which is defined nowhere in src/. CSS will fall back silently — a spelling like \`--surface-3\` for \`--color-surface-3\` paints a literal that does not flip with the theme. Rename it, or inject it at runtime.`
+          );
+        }
+      });
+  }
+  return problems;
+}
+
 // Text-only colour overrides — the repo's convention for lightening a *text*
 // usage without touching the solid fill of the same token:
 //   `.dark .text-bc-blue { color: #5fb4d9; }`
@@ -186,7 +298,11 @@ const SURFACES = [
 const TEXT_TOKENS = [
   ['--ink', 4.5, 'body text'],
   ['--muted', 4.5, 'secondary copy, labels, table cells'],
-  ['--faint', 3.0, 'decorative micro-labels (9–10px uppercase eyebrows)'],
+  /* Raised from 3.0. `--faint` was carrying real sentences, placeholders and a
+     task's own status label, not just decorative eyebrows — see the token note
+     in src/app.css. 43 call sites made reclassifying them one by one the wrong
+     fix, so the token moved up and the floor moved with it. */
+  ['--faint', 4.5, 'micro-labels, captions and empty-state copy'],
   ['--color-slate-400', 4.5, 'meta text, muted captions'],
   ['--color-slate-500', 4.5, 'meta text, chips'],
   ['--color-slate-600', 4.5, 'body copy'],
@@ -224,6 +340,11 @@ const TEXT_TOKENS = [
 // because it is an accent/glow token, not a fill (see --orange-solid).
 const SOLID_FILL_TOKENS = [
   ['--color-brand-600', 4.5, 'white label on a solid brand button'],
+  /* The completed-phase marker on /roadmap: a numbered green circle with a
+     white label. `bg-success` was the fill, and white on emerald-500 measures
+     2.54:1 — the same mistake as white on the bitcoin orange, so the fill moved
+     to the darker step and this pair holds it there. */
+  ['--color-emerald-700', 4.5, 'white label on a completed-phase marker'],
   ['--color-bc-blue', 4.5, 'white label on a solid navy badge'],
   ['--orange-solid', 4.5, 'white label on a solid orange button'],
   ['--color-danger-solid', 4.5, 'white label on a solid danger button']
@@ -249,6 +370,9 @@ const TINT_PAIRS = [
   ['--color-brand-50', '--color-slate-800', 4.5, 'selected wizard card: brand tint + heading'],
   ['--color-brand-50', '--color-slate-600', 4.5, 'selected plate: brand tint + body copy'],
   ['--color-brand-100', '--color-brand-700', 4.5, 'badge chip: brand-100 tint + brand label'],
+  /* `::selection`. The plate is the brand tint and the ink is left alone — the
+     pair that has to hold is the page's own ink on that tint, in both themes. */
+  ['--color-brand-100', '--ink', 4.5, 'selected text: brand tint + page ink'],
   /* The status tints. These carry the lot tone on /units (`toneStyles`), the
      arrears and levy notes, the Form B reminder and the deadline chips. They
      were never remapped for dark mode, so every one of them stayed a near-white
@@ -295,7 +419,42 @@ const QR_PAIRS = [
   ['--color-qr-plate', '--color-on-qr', 4.5, 'dark modules ink on the pinned QR plate']
 ];
 
+// The dashboard chrome (`aside.sidebar`). It is neither a neutral surface nor
+// the slab: it is a navy surface in BOTH themes whose ink is the fixed
+// `--chrome-*` ramp, and it had never been audited as a surface at all. A
+// browser pass found the workspace eyebrow and the nav group label at 2.2:1, the
+// sidebar footer at 4.1:1 and the sidebar's own `strata` wordmark at 2.2:1 — all
+// of them a shell token (`--muted`, `--faint`, `--orange-text`) read on navy,
+// which no pair in this file covers because the pair it looks like is
+// "token on canvas", and that one passes.
+//
+// The chrome is checked against the two planes it can actually produce: bare
+// `--navy`, and the 6% white workspace card, which is the lightest thing on it.
+const CHROME_INK_TOKENS = [
+  ['--chrome-ink', 'chrome: brand wordmark, card titles, hovered nav item'],
+  ['--chrome-muted', 'chrome: body copy, nav labels, inactive nav items'],
+  ['--chrome-faint', 'chrome: micro-labels, sidebar help and status lines'],
+  ['--chrome-accent', 'chrome: orange accent (the wordmark, the active nav icon)'],
+  ['--chrome-link', 'chrome: brand accent used as a link']
+];
+
+// The shell tokens `.sidebar` must re-point for its subtree. This is the part
+// that cannot be left to a colour pair: the bug is that a *token name* resolves
+// to a flipping step, so the guard is structural. Drop one of these six from the
+// scope block and every rule inside the chrome silently goes back to the light
+// ramp — which is exactly how the panel shipped at 2.2:1 the first time.
+const CHROME_SCOPE_TOKENS = ['--ink', '--muted', '--faint', '--line', '--orange-text', '--brand-text'];
+
 const PLATE_PAIRS = [...TINT_PAIRS, ...SLAB_PAIRS, ...QR_PAIRS];
+
+/** Composite `alpha` white over `hex`, for a translucent card on a fixed fill. */
+function whiteOver(hex, alpha) {
+  return '#' + toRgb(hex)
+    .map((channel) => Math.round(alpha * 255 + (1 - alpha) * channel)
+      .toString(16)
+      .padStart(2, '0'))
+    .join('');
+}
 
 function resolve(vars, value) {
   if (!value) return undefined;
@@ -352,6 +511,18 @@ for (const [themeName, themeVars] of [
       why
     });
   }
+  const navy = themeVars['--navy'];
+  if (!navy) throw new Error(`--navy has no value in the ${themeName} theme — the chrome cannot be audited.`);
+  for (const [plane, planeName] of [[navy, 'navy'], [whiteOver(navy, 0.06), 'navy + 6% white card']]) {
+    for (const [token, why] of CHROME_INK_TOKENS) {
+      const fg = themeVars[token];
+      if (!fg) throw new Error(`${token} has no value in src/app.css — declare the chrome ramp in :root.`);
+      const ratio = contrast(fg, plane);
+      const pass = ratio >= 4.5;
+      if (!pass) failures += 1;
+      rows.push({ theme: themeName, pair: `${token.replace('--', '')} on ${planeName}`, ratio, floor: 4.5, pass, why });
+    }
+  }
   for (const [fillToken, inkToken, floor, why] of INK_LABEL_FILL_TOKENS) {
     const bg = resolve(themeVars, themeVars[fillToken]);
     const ink = resolve(themeVars, themeVars[inkToken]);
@@ -370,7 +541,52 @@ for (const [themeName, themeVars] of [
   }
 }
 
+/**
+ * Structural guard for the chrome ramp scope on `.sidebar`.
+ *
+ * The chrome is a fixed navy surface, so the tokens its subtree resolves must
+ * be the fixed chrome ramp rather than the shell's flipping steps. A colour
+ * pair cannot express that: `--muted` is legitimately a dark slate (it is
+ * audited, and it passes) and it is also the wrong colour 252px to the left.
+ * What can be checked is the wiring — the scope block exists and re-points all
+ * six shell tokens, and the chrome ramp itself is declared once in `:root` and
+ * is NOT remapped by `.dark` (a chrome token that flips would undo the fix).
+ */
+function checkChromeScope() {
+  const problems = [];
+  const scopes = [...css.matchAll(/\.sidebar\s*\{([^}]*)\}/g)].map((match) => match[1]);
+  const scope = scopes.find((body) => body.includes('--chrome-ink'));
+  if (!scope) {
+    problems.push(
+      '`.sidebar { … }` no longer scopes the chrome ramp (no `--ink: var(--chrome-ink)` block in src/app.css). The sidebar is navy in both themes; without this its labels resolve to the light-theme ramp and measure 2.2:1.'
+    );
+  } else {
+    for (const token of CHROME_SCOPE_TOKENS) {
+      if (!new RegExp(`${token}\\s*:\\s*var\\(--chrome-`).test(scope)) {
+        problems.push(
+          `\`.sidebar\` chrome scope is missing \`${token}\` — every rule inside the chrome that reaches for ${token} will silently go back to the light-theme step.`
+        );
+      }
+    }
+  }
+  const darkBlock = blockAfter('\n.dark {');
+  for (const [token] of CHROME_INK_TOKENS) {
+    if (!base[token]) {
+      problems.push(`\`${token}\` is not declared in :root — the chrome ramp must be declared once.`);
+    }
+    if (new RegExp(`^\\s*${token}\\s*:`, 'm').test(darkBlock)) {
+      problems.push(`\`${token}\` is remapped in the dark theme. The chrome is navy in BOTH themes, so a flipping chrome token reintroduces the bug.`);
+    }
+  }
+  return problems;
+}
+
 const sourceHits = scanSources();
+const structureProblems = [
+  ...checkChromeScope(),
+  ...scanTokenReferences(),
+  ...scanStylesheetFills()
+];
 
 const fmt = (ratio) => `${ratio.toFixed(2)}:1`.padStart(8);
 console.log('Contrast audit — src/app.css tokens (WCAG 2.2)\n');
@@ -382,7 +598,12 @@ for (const themeName of ['light', 'dark']) {
   console.log('');
 }
 
-if (failures > 0 || sourceHits.length > 0) {
+if (failures > 0 || sourceHits.length > 0 || structureProblems.length > 0) {
+  if (structureProblems.length > 0) {
+    console.error(`Contrast audit failed: the chrome ramp scope is broken.\n`);
+    for (const problem of structureProblems) console.error(`- ${problem}`);
+    console.error('');
+  }
   if (failures > 0) {
     console.error(`Contrast audit failed: ${failures} pair${failures === 1 ? '' : 's'} below floor.\n`);
     for (const row of rows.filter((r) => !r.pass)) {
@@ -402,5 +623,5 @@ if (failures > 0 || sourceHits.length > 0) {
 }
 
 console.log(
-  `Contrast audit passed: ${rows.length} token pairs and ${LITERAL_FILL_GUARDS.length} source guards checked, all clear.`
+  `Contrast audit passed: ${rows.length} token pairs, ${LITERAL_FILL_GUARDS.length} fill guards, every var() reference resolving and the ${CHROME_SCOPE_TOKENS.length}-token chrome scope checked, all clear.`
 );
