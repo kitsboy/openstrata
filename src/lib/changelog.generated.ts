@@ -14,6 +14,45 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.34",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Cross-origin access, opt-in and exact. The site is a static Cloudflare build and the API is the council's own host, so a browser blocked every /api/v1/* call before it left the tab — both documented exposure paths said live data works, and neither could from a browser. backend/src/api/cors.ts holds the rules as a pure module and CORS_ORIGINS turns them on.",
+          "CORS_ORIGINS (comma-separated) documents both shapes in .env.example, backend/API.md, docs/DEPLOYMENT.md and backend/README.md, with the tailnet example spelled out end to end."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "A preflight is answered 204 in an onRequest hook, before any route runs, and the hook also runs on error responses — so a 401 from an allowed origin stays readable in the browser instead of arriving as an opaque CORS failure. The route still wants a body; the browser only asked whether it may send one.",
+          "Vary: Origin rides on every response that carried an Origin, allowed or not, and merges with whatever the route already set."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A promise the docs made and the code did not keep. docs/DEPLOYMENT.md described Option A (tailnet-only) as *“live data works for browsers on the tailnet”* and Option B as *“add the site origin to the backend's CORS allowlist”* — there was no allowlist to add to. Both now name CORS_ORIGINS in their commands."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "On the built server, with logger: false: no CORS header at all when CORS_ORIGINS is unset (a same-origin deployment is untouched); a preflight from an allowed origin answers 204 with the origin echoed, POST in the methods, and authorization in the allowed headers; a second origin (http://…ts.net:8080) is echoed for its own request; a lookalike host, a wrong scheme and a wrong port each get no permission header; an unauthenticated call from an allowed origin still returns 401 with the permission header; the real flow runs end to end cross-origin (register → authed /units); and CORS_ORIGINS=* grants nothing (Access-Control-Allow-Origin is absent, never *).",
+          "npm test in backend/ — 285 tests (17 new) · tsc clean · frontend check 0/0 · 303 frontend tests · audit:i18n 1065 × 9 · build green."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "A council host is still not deployed, so no build has been pointed at a real one. The browser-level proof here is against a local host on the same machine; the tailnet and tunnel shapes need a running host and are recorded as open questions for Kimi in docs/KIMI-HANDOFF.md."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.33",
     "date": "2026-10-16",
     "groups": [
@@ -81,7 +120,7 @@ export const changelogReleases: ChangelogRelease[] = [
         "label": "Known issues",
         "items": [
           "The public demo still cannot start a real request: with no Interac merchant credential the host answers from the labelled rehearsal provider, so the payer sees *Simulation — nothing was sent*. The link path is live end to end up to that provider boundary.",
-          "PUBLIC_API_BASE_URL is not applied at build time. src/lib/api/config.ts reads import.meta.env.PUBLIC_API_BASE_URL, which the production bundle compiles to an empty object, so only the runtime override (localStorage['openstrata-api-base']) actually points a build at a host. Found while verifying this release; not changed here."
+          "PUBLIC_API_BASE_URL is not applied at build time. src/lib/api/config.ts reads import.meta.env.PUBLIC_API_BASE_URL, which the production bundle compiles to an empty object, so only the runtime override (localStorage['openstrata-api-base']) actually points a build at a host. Found while verifying this release; fixed in v0.3.33 (envPrefix in vite.config.ts, plus .env loading in the prebuild CSP script)."
         ]
       }
     ]

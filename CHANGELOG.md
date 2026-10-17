@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.34
+-  summary: "The API can now be called from the static site, which is the half the deployment docs had been promising without. The site is a Cloudflare static build and the API is a council's own host, so every /api/v1/* call was blocked by the browser before it left: both documented exposure paths (tailnet-only, and public HTTPS behind a tunnel) described live data working, and neither could work from a browser. backend/src/api/cors.ts holds the rules as a pure module — an exact allow-list from CORS_ORIGINS, echoed origin (never a wildcard), GET/POST/OPTIONS with authorization, content-type and idempotency-key, a 10-minute preflight cache, and Vary: Origin on every response that carried an Origin so a shared cache cannot hand one site the answer meant for another. Three decisions are load-bearing: it is OFF by default (no CORS_ORIGINS, no header at all, same-origin deployments unchanged), '*' is refused rather than honoured (this API carries bearer tokens; a wildcard would let any page in the world make authenticated calls from a visitor's browser, and the process logs a warning at boot), and a disallowed origin gets no permission headers rather than a 403, because a special status would only tell an attacker which origins a council allows. Preflights are answered 204 in an onRequest hook before any route runs, and the hook runs on error responses too, so a 401 is readable in the browser instead of surfacing as an opaque CORS failure. 17 backend tests; CORS_ORIGINS documented in .env.example, API.md, DEPLOYMENT.md and backend/README.md with the tailnet example. Verified on a real server: no header when unconfigured, preflight 204 for an allowed origin, exact echo for both a public origin and a MagicDNS one, no permission for a lookalike or a scheme/port mismatch, register + an authed /units call cross-origin, 401 still carrying the header, and a '*' configuration granting nothing."
 -  version: 0.3.33
 -  summary: "PUBLIC_API_BASE_URL now reaches the browser. The variable was documented as the build-time way to point the static site at a council host, but src/lib/api/config.ts read it through import.meta.env, which Vite only populates for its own VITE_ prefix — the production bundle compiled to const i = {}, so the value was always undefined and only the runtime localStorage['openstrata-api-base'] override ever worked. That is why every earlier release verified live data through the override and said so. The fix is one line of real configuration: envPrefix: ['PUBLIC_', 'VITE_'] in vite.config.ts, which keeps the Sentry DSN (VITE_PUBLIC_SENTRY_DSN) exposed and adds the documented PUBLIC_ namespace. The precedence rule moved out of the browser-dependent function into a pure resolveApiBase(stored, built), and src/lib/api/config.test.ts (9 tests) pins both halves: the rules, and a contract test that fails if envPrefix loses PUBLIC_ (the guard no runtime test could have given, since the value was simply absent). The prebuild CSP script had the matching half-bug: it read process.env only, so an operator who put the base in .env — the documented workflow — got a bundle pointed at their host and a connect-src still allowing only https:, which the browser then blocks for a plain-http tailnet host. scripts/generate-csp.mjs now loads .env, .env.local, .env.production, .env.production.local in Vite's order (a shell variable still wins) via util.parseEnv. Verified on the built artifact with no runtime override of any kind — every openstrata-* key cleared, localStorage['openstrata-api-base'] null — the signed bill link rendered its $921.00 and the council's reference against a local host, where before it showed the offline card; the same build with PUBLIC_API_BASE_URL unset contains no baked origin, compiles back to the demo fallback, and serves the demo sheet; build/_headers pins connect-src to the configured origin and returns to the documented https: fallback when none is set; static/_headers is unchanged in git. 303 frontend tests, 1065 i18n keys x 9 locales."
 -  version: 0.3.32
@@ -106,6 +108,58 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.34] — 2026-10-16
+
+### Added
+
+- **Cross-origin access, opt-in and exact.** The site is a static Cloudflare
+  build and the API is the council's own host, so a browser blocked every
+  `/api/v1/*` call before it left the tab — both documented exposure paths said
+  live data works, and neither could from a browser. `backend/src/api/cors.ts`
+  holds the rules as a pure module and `CORS_ORIGINS` turns them on.
+- **`CORS_ORIGINS`** (comma-separated) documents both shapes in `.env.example`,
+  `backend/API.md`, `docs/DEPLOYMENT.md` and `backend/README.md`, with the
+  tailnet example spelled out end to end.
+
+### Changed
+
+- **A preflight is answered `204` in an `onRequest` hook, before any route runs**,
+  and the hook also runs on error responses — so a `401` from an allowed origin
+  stays readable in the browser instead of arriving as an opaque CORS failure.
+  The route still wants a body; the browser only asked whether it may send one.
+- **`Vary: Origin` rides on every response that carried an `Origin`**, allowed or
+  not, and merges with whatever the route already set.
+
+### Fixed
+
+- **A promise the docs made and the code did not keep.** `docs/DEPLOYMENT.md`
+  described Option A (tailnet-only) as *“live data works for browsers on the
+  tailnet”* and Option B as *“add the site origin to the backend's CORS
+  allowlist”* — there was no allowlist to add to. Both now name `CORS_ORIGINS`
+  in their commands.
+
+### Verified
+
+- On the built server, with `logger: false`: **no CORS header at all** when
+  `CORS_ORIGINS` is unset (a same-origin deployment is untouched); a preflight
+  from an allowed origin answers **204** with the origin echoed, `POST` in the
+  methods, and `authorization` in the allowed headers; a second origin
+  (`http://…ts.net:8080`) is echoed for its own request; a lookalike host, a
+  wrong scheme and a wrong port each get **no** permission header; an
+  unauthenticated call from an allowed origin still returns **401 with** the
+  permission header; the real flow runs end to end cross-origin
+  (`register` → authed `/units`); and `CORS_ORIGINS=*` grants **nothing**
+  (`Access-Control-Allow-Origin` is absent, never `*`).
+- `npm test` in `backend/` — **285 tests** (17 new) · `tsc` clean · frontend
+  `check` 0/0 · **303 frontend tests** · `audit:i18n` 1065 × 9 · build green.
+
+### Known issues
+
+- **A council host is still not deployed**, so no build has been pointed at a
+  real one. The browser-level proof here is against a local host on the same
+  machine; the tailnet and tunnel shapes need a running host and are recorded as
+  open questions for Kimi in `docs/KIMI-HANDOFF.md`.
 
 ## [0.3.33] — 2026-10-16
 

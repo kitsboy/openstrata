@@ -1,3 +1,64 @@
+## Session — 2026-10-16 · cross-origin access on the API, v0.3.34
+
+**Done:**
+- **The API can now be called from the static site — the half the deployment docs had been promising without.** The site is a Cloudflare static build and the API is a council's own host, so a browser blocked **every** `/api/v1/*` call before it left the tab. `docs/DEPLOYMENT.md` described Option A (tailnet-only) as *“live data works for browsers on the tailnet”* and Option B as *“add the site origin to the backend's CORS allowlist”* — and there was no allowlist to add to.
+- **`backend/src/api/cors.ts`** — the rules as a pure module: an exact allow-list from `CORS_ORIGINS`, the requesting origin echoed (never a wildcard), `GET, POST, OPTIONS` with `authorization`, `content-type` and `idempotency-key`, a 600-second preflight cache, and `Vary: Origin` on **every** response that carried an `Origin`. Wired as an `onRequest` hook in `backend/src/api/server.ts`; `CORS_ORIGINS` read in `backend/src/config.ts` and passed through in `backend/src/index.ts`.
+- **Three decisions are load-bearing:** it is **off by default** (no variable, no header, same-origin deployments untouched); **`*` is refused, not honoured** (this API carries bearer tokens — a wildcard would let any page in the world make authenticated calls from a visitor's browser, and the process logs a warning at boot); and a disallowed origin gets **no permission headers rather than a 403**, because a special status would only tell an attacker which origins a council allows.
+- **Preflights are answered `204` in the hook before any route runs**, and the hook runs on error responses too — so a `401` from an allowed origin stays readable in the browser instead of arriving as an opaque CORS failure.
+- **17 backend tests** (`backend/tests/cors.test.ts`): the pure rules, plus a real server — no header when unconfigured, preflight 204, exact echo for a public origin and a MagicDNS one, no permission for a lookalike / wrong scheme / wrong port, `register` → authed `/units` cross-origin, 401 still carrying the header, and `CORS_ORIGINS=*` granting nothing.
+- Docs: `CORS_ORIGINS` in `backend/.env.example`, `backend/API.md`, `docs/DEPLOYMENT.md` (both exposure paths now name the variable), `backend/README.md` (host setup step 5), and `SOURCE-OF-TRUTH.md` gained a wiring table (build value → host, `CORS_ORIGINS` → site) plus a no-secrets rule.
+- Release record: `CHANGELOG.md` **v0.3.34** + regenerated `changelog.generated.ts`, `LATEST-UPDATE.md`, `.ai_docs/current-status.md`, version bumped.
+
+**Verified (not estimated):**
+- Against a real `buildServer` (in-memory adapters, `logger: false`): with `CORS_ORIGINS` unset, **no** `Access-Control-Allow-Origin` and no `Vary` on `/health`, and a preflight gets none either; configured, a preflight answers **204** with the origin echoed, `POST` present in the methods and `authorization` in the allowed headers; a second origin is echoed for its own request; **a lookalike host, a wrong scheme and a wrong port each get nothing**; an unauthenticated call from an allowed origin returns **401 with** the permission header; the real flow runs end to end cross-origin; `CORS_ORIGINS=*` yields **no** `Access-Control-Allow-Origin` (never `*`).
+- Gates: backend `tsc` clean · **285 backend tests** (+17) · frontend `check` **0/0** · **303 frontend tests** · `audit:i18n` **1065 keys × 9 locales** · `audit:contrast` pass · `npm run build` green · `static/_headers` unchanged.
+
+**Decisions:**
+- **Off by default, and exact.** A wildcard would be the easy way to make a demo work and the wrong way to run a council's books; an allow-list keeps the exposure a deliberate act, and an empty list keeps every existing same-origin deployment byte-identical.
+- **No 403 for the wrong origin.** Silence is the standard answer and it leaks less; the test asserts the absence of headers rather than a status.
+- **No new dependency.** ~60 lines of pure rules plus one hook, in the repo's existing style, rather than adding a CORS plugin to a stack that deliberately has seven runtime dependencies.
+- Still in force: the queue rule (four offered, waiting for a pick), do not pop the stash, do not force-push `main`, do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story.
+
+**Git State:**
+- Base of this session: `1d061c7` (v0.3.33 docs). Read `git log -1` for the tip. Version `0.3.34`.
+- **Unpushed at the time of writing — see the prompt below; Cam decides the push.**
+
+**Limitations, stated plainly:**
+- **No council host is deployed, so no build has been pointed at a real one.** The browser-level proof for the build-time base (v0.3.33) and the header-level proof for CORS (v0.3.34) are against a local host on this machine. The tailnet and tunnel shapes need a running host — which is exactly what the prompt below asks Kimi for.
+- **INTERAC_\* still needs a bank.** The council's financial institution issues that credential; until then the payer sees the labelled rehearsal provider. Nothing in these releases changes that.
+- Cross-origin tests assert headers and the flow through `app.inject`; they do **not** run a real browser against a real cross-origin host (that needs the deployed API).
+
+---
+
+## ⤵ PROMPT FOR KIMI — paste this to her as-is
+
+> **Hi Kimi — Buffy on M3 here. One question, then four small jobs.**
+>
+> **Context in 30 seconds.** OpenStrata (`~/projects/openstrata`, GitHub `kitsboy/openstrata`, live site `https://openstrata.giveabit.io`) is the strata-operations project. Since your last sync I shipped three releases on M3: **v0.3.32** — a signed owner payment link, so `/pay` can start a live Interac request with **no login** (a treasurer issues one link per bill; the link is the credential); **v0.3.33** — `PUBLIC_API_BASE_URL` now actually reaches the browser (it was compiled to `undefined`, so only the runtime `localStorage['openstrata-api-base']` override ever worked); **v0.3.34** — the API now accepts calls from the site's origin (`CORS_ORIGINS`), because the site is a static Cloudflare build and the API is a council's own host, so the browser was blocking every `/api/v1/*` call.
+>
+> **The one question: is the Phase 3 backend (`backend/`, Node 22 + Fastify + Postgres/pgvector) running on any host right now?** If yes, please tell me exactly where and how to reach it: the machine, the Tailscale **MagicDNS name and port**, the output of `docker compose ps` (or however it runs), whether `npm run migrate` has been applied (migrations `0001`–`0006` — the member registry and unit store came in 0005/0006, and the bill-link routes need the latest), and whether `GET /health` answers with `{"ok":true,"service":"openstrata-backend"}` from a tailnet machine. If it is **not** running anywhere, say so plainly and tell me whether THOR has the headroom to take it (CPU/RAM/disk, and whether pgvector + Postgres 17 can live there) — a straight *“not deployed, and here is what it needs”* is more useful to me than a maybe.
+>
+> **Job 1 — the two values I need to build against.** Give me the exact string for `PUBLIC_API_BASE_URL` (the frontend build value) and the matching `CORS_ORIGINS` (the site's origin) for a real test. Rule of thumb: **the build value points at the host, `CORS_ORIGINS` points at the site.** With those two I can run the first honest end-to-end build on M3:
+>
+> ```bash
+> cd ~/projects/openstrata
+> PUBLIC_API_BASE_URL=http://<magicdns>:8080 npm run build
+> npx vite preview --port 4173   # then open /pay and the dashboard in a browser
+> ```
+>
+> **Job 2 — which environment variables exist on the host, set or not set. Never the values.** I need to know whether these are configured (and, without quoting them, whether they look strong): `AUTH_SECRET`, `PAY_LINK_SECRET`, `CORS_ORIGINS`, `DATABASE_URL`, `POSTGRES_PASSWORD`, and the `INTERAC_*` set. **Please never paste a secret value into Obsidian, a handoff file or chat** — `AUTH_SECRET` signs session tokens and `PAY_LINK_SECRET` signs owner payment links, so a leaked value means someone else can mint both. *Set / not set* is all I need.
+>
+> **Job 3 — record it in MASTER-BRAIN / Obsidian, and educate yourself and Hermes.** Please add, dated **2026-10-16**: the three releases above with one line each on *what it means for Cam*; the wiring table now in `SOURCE-OF-TRUTH.md` (build value → host, `CORS_ORIGINS` → site, `PAY_LINK_SECRET` for links, `INTERAC_*` needs a bank); the **open question** (is a backend host deployed, and where); and the standing rules if they are not already in MASTER-BRAIN — **do not force-push `main`**, **do not pop the stash `stale-base layout rewrite before moving to v0.3.28`**, **do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story**, and the queue rule (four UI upgrades are offered, Cam picks one or two, nothing starts before a pick). Please add `SOURCE-OF-TRUTH.md`, `docs/KIMI-HANDOFF.md` and `LATEST-UPDATE.md` to the nightly Obsidian backup set, and confirm they are in there. Education, as always: **please make sure you and Hermes stay current on this and every Give A Bit project automatically**, and tell me if the template above is missing anything you need.
+>
+> **Job 4 — tell me one of two things, in a short bullet list.** Either **(a) “ready to test”** with the host URL, the port, whether the migrations ran, and the two env values — or **(b) “blocked”** with the exact missing piece and who or what can supply it (a machine, a credential, a decision from Cam). Please also flag anything you know about the host that I would get wrong from M3 — the tailnet ACLs, whether the API binds the tailscale interface, whether Cloudflare is proxying the site and would strip a tailnet hostname, and whether the pruned node on THOR matters here (it should not: this is the API, not the Bitcoin rail).
+>
+> **Conflict-avoidance rules for the vault:** cross-reference the existing OpenStrata entries rather than adding a second copy, keep one dated section per session, and note where this and `MASTER-BRAIN.md` disagree rather than silently overwriting. If something here looks wrong to you, say so — you know the setup better than I do, and I would rather be corrected than consistent.
+>
+> **Back to me:** just answer in your next note. I will pick it up from `docs/KIMI-HANDOFF.md` in the repo, and Cam will carry it to you. Thanks, Kimi — this is the last thing standing between a verified local build and a real council host. \n>
+> — *Buffy (M3 coding agent)*
+
+---
+
 ## Session — 2026-10-16 · PUBLIC_API_BASE_URL reaches the browser, v0.3.33
 
 **Done:**

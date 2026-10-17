@@ -122,6 +122,24 @@ See docs/BCFSA-STRATEGY.md.
 
 ---
 
+## Wiring the site to a council host (the env that decides everything)
+
+Two settings have to agree with each other. Both are documented in `.env.example`
+(root and `backend/`) and `docs/DEPLOYMENT.md`.
+
+| Where | Variable | What it does |
+|-------|----------|--------------|
+| Frontend build (root) | `PUBLIC_API_BASE_URL` | The API base baked into the static build. Inlined at build time (v0.3.33 onward; before that only the runtime override worked). |
+| Frontend runtime (browser) | `localStorage['openstrata-api-base']` | Repoints a deployed site without a rebuild. Wins over the build value. |
+| Backend (host) | `CORS_ORIGINS` | The **site's** origin(s) allowed to call the API from a browser. Empty = no cross-origin access at all. `*` is refused, not honoured. |
+| Backend (host) | `AUTH_SECRET` | Signs session JWTs. Required. |
+| Backend (host) | `PAY_LINK_SECRET` | Signs owner bill links. Optional — derived from `AUTH_SECRET` with its own label when unset. |
+| Backend (host) | `INTERAC_*` | Issued by the council's **financial institution**, not by Interac. Unset = labelled rehearsal provider. |
+
+Rule of thumb: **the build value points at the host; `CORS_ORIGINS` points at the site.**
+A build pointed at a host that does not list the site's origin is a browser that
+blocks every call — that is what v0.3.34 fixed on the API side.
+
 ## Next Actions for Kimi
 
 1. Read `docs/KIMI-HANDOFF.md` from the top (latest session first), then `docs/ROADMAP.md` and `static/llms.txt`
@@ -132,6 +150,8 @@ See docs/BCFSA-STRATEGY.md.
 6. UI refinement continues as the product grows. Four upgrades are offered and not started (see `docs/ROADMAP.md`). Wait for Cam to pick one or two. Do not start the queue. After every later UI push, offer exactly four again and replace anything that shipped
 7. Coordinate with Satohash handoff when Cam ready
 8. Do not pop the stash `stale-base layout rewrite before moving to v0.3.28`. Do not force-push `main`. Do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story
+9. **Open question for Kimi (v0.3.34):** is the Phase 3 backend deployed on any host? The site, the API, `CORS_ORIGINS`, `AUTH_SECRET` and the migrations all need one real host before live data can be verified end to end. See the prompt in `docs/KIMI-HANDOFF.md`.
+10. **Never paste secrets into Obsidian, this file or chat.** Environment variables are reported as *set / not set*, never as values.
 
 ---
 

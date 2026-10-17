@@ -245,20 +245,34 @@ no rebuild needed.
 
 There are two exposure paths:
 
+**Both paths need the API to permit the site's origin.** The site is a static
+Cloudflare build and the API is your own host, so a browser treats them as two
+origins and blocks every `/api/v1/*` call until the API says otherwise. Set
+`CORS_ORIGINS` to the exact origins the site is served from (comma-separated);
+leave it empty for a same-origin deployment and not one CORS header is added.
+`*` is refused rather than honoured, because this API carries bearer tokens.
+
 **A. Tailnet-only (recommended while the host is behind Tailscale).**
 ```bash
 PUBLIC_API_BASE_URL=http://<tailscale-ip-or-hostname>:8080 npm run build
 ```
-Live data works for browsers on the tailnet; everyone else sees demo data.
-The backend already binds to the Tailscale interface and requires a Bearer JWT
-for every `/api/v1/*` route.
+And on the host, the origin(s) the *site* is served from:
+```bash
+CORS_ORIGINS=https://openstrata.giveabit.io
+# Add a second entry only if the site is also served from the tailnet host itself:
+#   CORS_ORIGINS=https://openstrata.giveabit.io,http://vmi3446772.tailb672ac.ts.net:8080
+```
+Live data works for browsers on the tailnet; everyone else sees demo data (the
+host resolves only inside the tailnet, so the request simply fails and the
+widgets fall back). The backend binds to the Tailscale interface and requires a
+Bearer JWT for every `/api/v1/*` route.
 
 **B. Public HTTPS behind auth + CORS.**
 Expose the backend through a Cloudflare Tunnel (or a reverse proxy with TLS)
-and add the site origin to the backend's CORS allowlist. The existing JWT auth
-protects every route, so the surface is the same as the tailnet — but this is a
-real security boundary: do it deliberately, add login rate limiting first, and
-keep `AUTH_SECRET` strong. Then:
+and put the site origin in `CORS_ORIGINS`. The existing JWT auth protects every
+route, so the surface is the same as the tailnet — but this is a real security
+boundary: do it deliberately, keep the login rate limiting on, and keep
+`AUTH_SECRET` strong. Then:
 ```bash
 PUBLIC_API_BASE_URL=https://api.example.com npm run build
 ```
