@@ -14,6 +14,50 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.31",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Interac e-Transfer as a real rail on the pay sheet. The e-transfer panel (still on /pay?unit=305, as asked) carries one button above the copy fallback: Open your bank and pay. It starts a Business Request Money request with the lot's amount and the sheet's reference already in it, hands the payer to Interac to choose *their own* financial institution and approve from their own banking app, and then takes the answer back with the request id in the URL.",
+          "src/lib/interac.ts (+ interac.test.ts, 26 tests) — the rules, out of the component so they are testable without a browser: the provider status vocabulary (seven states; anything unrecognised is refused, never guessed), the institution list, the request builder (integer cents, one normalised shape per payer contact), the gateway allow-list, and the return contract.",
+          "The institutional side, where it belongs: backend/src/rails/interac.ts (a labelled rehearsal provider and a live HTTP provider), three routes — POST /api/v1/payments/interac/request, GET …/:requestId, POST …/:requestId/reported (treasurer+) — INTERAC_* in .env.example, /api/v1/rails/status publishing interac: { configured, live }, and 21 backend tests. Frontend wiring in src/lib/api/interac.ts."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Honesty, in two places a payment page could lie. A status that arrives in a link is a claim: with no council host to confirm it, the card reads *\"Returned from your bank — waiting for the council to confirm\"* and never shows \"paid\" on a URL alone. And a request never moves backwards — a replayed or out-of-order report cannot un-deposit a completed transfer or resurrect a stopped one.",
+          "A configured host that is unreachable is a failure, not a rehearsal. Demo mode (no host at all) runs the labelled simulation; a host that is configured and does not answer says *\"Your council's host could not be reached, so no request was started.\"* The rehearsal is never used to paper over a broken host.",
+          "Interac's real onboarding rule is stated, not worked around. A business gets Business Request Money through a participating financial institution (BMO, CIBC, DC Bank, Peoples Trust, Scotiabank today), which is what issues the merchant credential — so the credential lives on the council's host and the button rehearses, clearly labelled, until one exists."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "The card moved to the answer the moment the payer acted, and one build did not. After a simulated approval nothing further happened on screen while the bank picker stayed up — a lie of omission found in the browser sweep, not by reasoning. The card now moves to the answer on approval and the deposit beat updates it in place.",
+          "The dialog no longer prints \"approved and deposited\" on a link's word. The first version showed the URL's status in full; the headline is now the claim's own wording until a host confirms."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Chrome, on the built artifact: all 40 lots (the dialog's amount must equal the lot's own amount — 0 mismatches), the three zero-balance lots (no button at all — nothing owed, nothing to send), the decline and cancel paths (each lands on its own state and its own URL), four return links (deposited, approved, declined, an unknown status), Escape, keyboard entry (focus + Enter opens it), and 0 text below 4.5:1 inside the dialog at 1280px and 390px in both themes with no page overflow.",
+          "The live branch against a local stand-in host (self-signed HTTPS, the real request shape): a trusted gateway shows Continue to Interac with no bank list (that list is Interac's page, not ours); an untrusted gateway is refused with nothing opened; an unreachable host produces the failure line, not a rehearsal.",
+          "check 0/0 · 287 frontend tests · audit:i18n 1058 keys × 9 locales · audit:contrast 218 token pairs + 4 guards · build green · backend tsc clean · 250 backend tests."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "Nothing payable: every destination and QR payload on /pay is still a demo string, and the rehearsal provider is what answers on the public demo.",
+          "A live request needs a council host and a signed-in owner (the API routes are council-scoped like every other /api/v1 route), so on the public demo the button always rehearses."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.30",
     "date": "2026-10-16",
     "groups": [

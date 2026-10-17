@@ -14,7 +14,7 @@ site's `/docs` bootstrap steps describe.
 | **Ziggy** | Treasury state machine — CRF hard cap, expense verification, no-guess reconciliation. | `src/ziggy/` |
 | **Billing** | Automated monthly strata-fee billing + late notices (posts charges to the ledger). | `src/billing/` |
 | **Enforcement** | CRT-proof bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps). | `src/enforcement/` |
-| **Rails** | Sovereign payment rails — Bitcoin on-chain, Lightning (LNURL/BOLT-12), Liquid, PayNym (BIP-47), Nostr. Recipient validation + quoting (LNURL 15-min CAD lock). | `src/rails/` |
+| **Rails** | Sovereign payment rails — Bitcoin on-chain, Lightning (LNURL/BOLT-12), Liquid, PayNym (BIP-47), Nostr. Recipient validation + quoting (LNURL 15-min CAD lock). Interac e-Transfer Business Request Money (fiat) with a labelled rehearsal provider when no merchant credential is configured. | `src/rails/` |
 | **Auth** | Multi-tenant councils — zero-dependency HS256 JWTs (node:crypto), scrypt password hashing, admin/treasurer/member role gates. Every `/api/v1/*` route except `/health` + Rosa derives its tenant from the token. | `src/auth/` |
 | **API** | Fastify wire-up exposing `/api/v1/*` + `/health`. | `src/api/server.ts` |
 
@@ -189,6 +189,20 @@ user management), `treasurer` (financial writes, no fines), `member`
 > small BC corpus (`src/rosa/bc-corpus.ts`) so it runs before models are
 > provisioned. Ledger reads/writes against Postgres are implemented; the
 > in-memory store backs the unit tests.
+
+## Interac e-Transfer (fiat rail)
+
+Interac does not issue this credential to a website: a business gets **Business
+Request Money through a participating financial institution** (BMO, CIBC, DC
+Bank, Peoples Trust, Scotiabank today) and that institution issues the merchant
+id + key. Set `INTERAC_RAIL_ENABLED=true` with `INTERAC_API_URL`,
+`INTERAC_MERCHANT_ID` and `INTERAC_API_KEY` (plus `INTERAC_GATEWAY_HOSTS` if the
+provider redirects somewhere other than Interac's own domains) and the API starts
+real requests. With those unset it answers from `DemoInteracProvider` — the same
+request shape and status vocabulary, `demo: true` on every response, and nothing
+sent anywhere — so the handshake stays exercisable end to end without pretending
+a bank was contacted. `GET /api/v1/rails/status` publishes which one is
+answering (`interac: { configured, live }`). See `API.md` for the three routes.
 
 ## Sovereign rails (Bitcoin + Layer-2)
 

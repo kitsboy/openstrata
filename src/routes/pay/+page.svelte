@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Icon from '$lib/components/Icon.svelte';
+	import InteracPay from '$lib/components/InteracPay.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import QrPay from '$lib/components/QrPay.svelte';
 	import { copy } from '$lib/i18n';
@@ -28,6 +29,7 @@
 		sheetRail,
 		type SheetRail
 	} from '$lib/pay-sheet';
+	import { parseReturn, type ReturnSignal } from '$lib/interac';
 
 	/** The sheet: one amount, three large choices, PAD and cheque tucked below. */
 	const railIcon: Record<SheetRail, 'mail' | 'bitcoin' | 'lightning'> = {
@@ -44,15 +46,20 @@
 	 * said e-Transfer while the panel showed Lightning's invoice. So the URL is an
 	 * output here, plus a seed on arrival (below), and never a second writer: the
 	 * tick, the rows, the QR and the copy button all read this one value.
-	 */
-	let rail = $state<SheetRail>(DEFAULT_SHEET_RAIL);
+	 */	let rail = $state<SheetRail>(DEFAULT_SHEET_RAIL);
 	let seconds = $state(LOCK_SECONDS);
 	let copied = $state('');
-
+	/**
+	 * An Interac return, read once on arrival. It is a claim the dialog repeats as
+	 * a claim — the council's host is what turns it into a payment, and the sheet
+	 * never does.
+	 */
+	let interacReturn = $state<ReturnSignal | null>(null);
 	onMount(() => {
 		// A link arrives asking for the rail and the lot a treasurer agreed to.
 		const params = new URL(location.href).searchParams;
 		rail = sheetRail(params.get('rail'));
+		interacReturn = parseReturn(location.search);
 		const lot = params.get('unit');
 		if (lot && isUnitId(lot)) payerUnitId.set(lot);
 
@@ -254,6 +261,17 @@
 					<Icon name="file" class="h-3.5 w-3.5" />
 					{copied === 'etransfer' ? $copy.walletCopied : $copy.payCopyInstructions}
 				</button>
+
+				<!-- The same rail, without the typing: start the Interac request with the
+				     amount and reference already in it, and let the owner approve it in
+				     their own bank. -->
+				<InteracPay
+					cents={due.total}
+					{reference}
+					unitId={unit.id}
+					payee={building.payTo.etransfer}
+					returned={interacReturn}
+				/>
 			{:else}
 				<dl class="sheet-rows">
 					<div class="sheet-row">

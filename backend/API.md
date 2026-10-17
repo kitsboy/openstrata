@@ -303,6 +303,57 @@ council-scoped — a council can never confirm another council's quote.
 { "referenceCode": "pay-fees-2026-02-U-101" }
 ```
 
+## Interac e-Transfer — Business Request Money (fiat rail)
+
+Interac does not issue this credential to a website: a business gets Business
+Request Money **through a participating financial institution** (BMO, CIBC, DC
+Bank, Peoples Trust, Scotiabank today), and that institution issues the merchant
+id + key the host reads from `INTERAC_*`. With those unset the API answers from a
+labelled rehearsal provider (`demo: true` on every response) that never contacts
+anyone — so the handshake is exercisable end to end without pretending a bank was
+involved. `GET /api/v1/rails/status` publishes which of the two is answering
+(`interac: { configured, live }`).
+
+### `POST /api/v1/payments/interac/request`
+Start a request for one unit's balance. Amounts are integer cents and the
+`referenceCode` is the same shared reference the ledger reconciles by.
+```json
+{
+  "unitRef": "U-305",
+  "amountBasis": 92100,
+  "referenceCode": "EVG-305-202610",
+  "payerContact": "owner@example.com",
+  "payeeContact": "fees@lms2847.invalid",
+  "returnUrl": "https://openstrata.giveabit.ca/pay?unit=305&rail=etransfer"
+}
+```
+→ `{ ok, requestId, gatewayUrl, gatewayHosts, status, amountBasis, referenceCode, unitRef, expiresAt, demo }`
+
+`gatewayUrl` is where the payer chooses **their own** financial institution and
+approves — the council never holds a banking login. Two refusals are structural,
+not cosmetic:
+
+- a gateway URL that is not https on an allowed host (Interac's own by default,
+or the hosts a host names in `INTERAC_GATEWAY_HOSTS`) is rejected, so a payer's
+banking session can never be sent to an address a response invented;
+- a payer contact that is neither an email address nor a 10-digit Canadian mobile
+  is refused before anything is sent.
+
+### `GET /api/v1/payments/interac/request/:requestId`
+The status to trust after the payer returns. Council-scoped: one council can
+never read another's request (`404`). The request's own vocabulary is
+`requested | awaiting_payer | approved | deposited | declined | expired |
+cancelled`, and `approved` is deliberately **not** money — only `deposited` is.
+
+### `POST /api/v1/payments/interac/request/:requestId/reported` (treasurer+)
+Applies what the provider reported by webhook or poll. It advances the request
+and nothing else: the deposit itself is reconciled by Ziggy against the same
+reference code, so this route never posts to the ledger twice. A report that is
+unreadable, repeats the current state, or would move the request **backwards**
+(a replayed webhook after `deposited`) is ignored rather than applied. On the
+live provider the route answers `{ ok: false, reason: 'the live provider reports
+its own status' }` — that provider is read through `GET`.
+
 ## Conveyancing — Form B / Form F
 
 ### `POST /api/v1/forms`

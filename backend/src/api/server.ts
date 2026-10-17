@@ -32,6 +32,7 @@ import {
 import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rails/rails.js';
 import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-request.js';
 import { SITE_SLUG, receiveLabelFor } from '../rails/receive-label.js';
+import type { InteracProvider, InteracRequest } from '../rails/interac.js';
 import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
@@ -69,6 +70,8 @@ export interface ApiDeps {
   unitStore?: UnitStore;
   /** Tenant-scoped member registry (migration 0006). Owner/occupant layer. */
   memberStore?: MemberStore;
+  /** Interac e-Transfer Business Request Money seam (demo provider when unset). */
+  interac?: InteracProvider;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
@@ -975,6 +978,9 @@ export async function buildServer(
   // ------------------------------------------------  Sovereign rails
   app.get('/api/v1/rails/status', { preHandler: [authenticate] }, async () => ({
     rails: enabledRails(deps.config.rails ?? {}),
+    // `live: false` with a provider present means the host is answering from the
+    // labelled rehearsal, which is a fact a payer-facing screen has to know.
+    interac: { configured: Boolean(deps.interac), live: Boolean(deps.interac && !deps.interac.demo) },
     cadPerBtc: await cadPerBtc()
   }));
 
@@ -1111,6 +1117,132 @@ export async function buildServer(
       );
       await deps.payments.markStatus(councilId, req0.referenceCode, 'paid');
       return { ok: true, seq: row.seq, referenceCode: req0.referenceCode, status: 'paid' };
+    }
+  );
+
+  // -------------------------------------------  Interac e-Transfer (Request Money)
+  // The council's bank issues the merchant credential; this host starts the
+  // request, hands back the provider's gateway URL, and reads the status the
+  // payer returns with. Amounts are integer cents and the reference code is the
+  // same one the ledger reconciles by, so an e-transfer still finds its lot.
+  const interacWire = (request: InteracRequest) => ({
+    ok: true,
+    requestId: request.requestId,
+    gatewayUrl: request.gatewayUrl,
+    gatewayHosts: request.gatewayHosts,
+    status: request.status,
+    amountBasis: request.amountBasis,
+    referenceCode: request.referenceCode,
+    unitRef: request.unitRef,
+    expiresAt: request.expiresAt,
+    demo: request.demo
+  });
+
+  app.post<{
+    Body: {
+      unitRef: string;
+      amountBasis: number;
+      referenceCode: string;
+      payerContact: string;
+      payeeContact: string;
+      returnUrl: string;
+      cancelUrl?: string;
+      language?: string;
+    };
+  }>(
+    '/api/v1/payments/interac/request',
+    {
+      preHandler: [authenticate],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['unitRef', 'amountBasis', 'referenceCode', 'payerContact', 'payeeContact', 'returnUrl'],
+          additionalProperties: false,
+          properties: {
+            unitRef: { type: 'string', minLength: 1 },
+            amountBasis: { type: 'integer', minimum: 1 },
+            referenceCode: { type: 'string', minLength: 1 },
+            payerContact: { type: 'string', minLength: 3 },
+            payeeContact: { type: 'string', minLength: 3 },
+            returnUrl: { type: 'string', minLength: 8 },
+            cancelUrl: { type: 'string' },
+            language: { type: 'string' }
+          }
+        }
+      }
+    },
+    async (req) => {
+      if (!deps.interac) return { ok: false, reason: 'Interac rail is not configured on this host' };
+      const unitRef = normalizeUnitRef(req.body.unitRef);
+      if (!unitRef) return { ok: false, reason: 'invalid unitRef' };
+      try {
+        const request = await deps.interac.create({
+          councilId: req.user!.councilId,
+          unitRef,
+          amountBasis: req.body.amountBasis,
+          referenceCode: req.body.referenceCode,
+          payerContact: req.body.payerContact,
+          payeeContact: req.body.payeeContact,
+          returnUrl: req.body.returnUrl,
+          cancelUrl: req.body.cancelUrl,
+          language: req.body.language
+        });
+        return interacWire(request);
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  app.get<{ Params: { requestId: string } }>(
+    '/api/v1/payments/interac/request/:requestId',
+    { preHandler: [authenticate] },
+    async (req, reply) => {
+      if (!deps.interac) return { ok: false, reason: 'Interac rail is not configured on this host' };
+      try {
+        const request = await deps.interac.status(req.user!.councilId, req.params.requestId);
+        if (!request) {
+          reply.code(404);
+          return { ok: false, reason: 'unknown request' };
+        }
+        return interacWire(request);
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  // What the provider reported (webhook or poll result). This advances the
+  // request only: the deposit itself is reconciled by Ziggy against the same
+  // reference code, so nothing here posts to the ledger twice.
+  app.post<{ Params: { requestId: string }; Body: { status: string } }>(
+    '/api/v1/payments/interac/request/:requestId/reported',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['status'],
+          additionalProperties: false,
+          properties: { status: { type: 'string', minLength: 2 } }
+        }
+      }
+    },
+    async (req, reply) => {
+      if (!deps.interac) return { ok: false, reason: 'Interac rail is not configured on this host' };
+      if (!deps.interac.report) {
+        return { ok: false, reason: 'the live provider reports its own status' };
+      }
+      const request = await deps.interac.report(
+        req.user!.councilId,
+        req.params.requestId,
+        req.body.status
+      );
+      if (!request) {
+        reply.code(404);
+        return { ok: false, reason: 'unknown request' };
+      }
+      return interacWire(request);
     }
   );
 

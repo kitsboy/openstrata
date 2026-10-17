@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.31
+-  summary: "Interac e-Transfer becomes a real rail on the pay sheet. The e-transfer panel now carries one button that starts a Business Request Money request with the amount and the reference already in it, hands the payer to Interac to choose *their own* financial institution and approve from their own banking app, and then takes the answer back. Interac's rule is respected rather than worked around: a business gets Business Request Money through a participating financial institution (BMO, CIBC, DC Bank, Peoples Trust, Scotiabank today), so the merchant credential lives on the council's host and the button runs the same handshake as a labelled simulation until one exists — demo: true on every answer, nothing sent, no bank contacted. New src/lib/interac.ts (26 tests) holds the rules: the provider status vocabulary (seven states, unknown values refused rather than guessed), the institution list, the request builder with integer cents and a normalised payer contact, the gateway allow-list (https on Interac's own domains, or hosts the council's host names — anything else is never opened), and the return contract. Backend: backend/src/rails/interac.ts adds the DemoInteracProvider and the live HttpInteracProvider plus three routes (POST /api/v1/payments/interac/request, GET .../:requestId, POST .../:requestId/reported), INTERAC_* env, /rails/status publishing {configured, live}, and 21 tests. Two honesty rules are load-bearing and tested: a status arriving in a URL is a claim, so a return with no host to confirm it reads 'Returned from your bank — waiting for the council to confirm' and never 'paid'; and a request never moves backwards, so a replayed webhook cannot un-deposit a completed transfer or resurrect a stopped one. Verified in Chrome on the built artifact: all 40 lots (the dialog's amount must equal the lot's own), the three zero-balance lots (no button at all), decline and cancel, four return links, Escape, keyboard entry, 0 text below 4.5:1 in the dialog at 1280px and 390px in both themes with no overflow, and the live branch against a local stand-in host — a trusted gateway shows the Continue button, an untrusted one is refused with nothing opened, and a configured host that is unreachable says so instead of quietly rehearsing. 287 frontend tests, 1058 i18n keys x 9 locales, 250 backend tests."
 -  version: 0.3.30
 -  summary: "The one-lot pay sheet — the second of the four queued UI upgrades, picked by Cam. /pay is now a single sheet instead of a rail list: one amount in the largest type on the page, then three large choices (e-Transfer, Bitcoin, Lightning) as real radios under styled labels, then the picked rail in full (destination, exact BTC and sats, QR, steps). The 15-minute rate lock is a quiet stamp rather than a control, and when it expires the sheet stops pretending the numbers are live — the BTC/sats row switches to warning ink and a note offers the re-price. PAD and cheque are tucked under the sheet in a disclosure, along with a lot picker and deep links (/pay?unit=108&rail=bitcoin). A race found while building it, and the reason the sheet now has exactly one writer: reseeding the chosen rail from ?rail= in an effect looked harmless and was not — a click wrote the rail and started the URL write, the effect then re-ran against the URL as it still was and put the old rail back, so the tick and the URL said e-Transfer while the panel showed Lightning's invoice. The rail is owned by the sheet; the URL is an output and a one-time seed on arrival, and the rules (which three rails, what the clock reads, which rail a link may select — PAD and cheque fall back rather than rendering nothing) live in src/lib/pay-sheet.ts with 13 tests. Verified in Chrome: every choice in sequence, a rapid-click sequence (three and four picks with no wait between them), six deep links, all 40 lots (the shown amount must equal the option's own amount), the zero-balance lots (no destination rows, no QR, 'Nothing to collect on this lot.'), and 0 text below 4.5:1 at 1280px and 390px in both themes. 261 frontend tests, 1017 i18n keys x 9 locales, contrast audit 218 token pairs + 4 structural guards."
 -  version: 0.3.29
@@ -100,6 +102,83 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.31] — 2026-10-16
+
+### Added
+
+- **Interac e-Transfer as a real rail on the pay sheet.** The e-transfer panel
+  (still on `/pay?unit=305`, as asked) carries one button above the copy fallback:
+  **Open your bank and pay**. It starts a **Business Request Money** request with
+  the lot's amount and the sheet's reference already in it, hands the payer to
+  Interac to choose *their own* financial institution and approve from their own
+  banking app, and then takes the answer back with the request id in the URL.
+- **`src/lib/interac.ts`** (+ `interac.test.ts`, **26 tests**) — the rules, out of
+  the component so they are testable without a browser: the provider status
+  vocabulary (seven states; anything unrecognised is refused, never guessed), the
+  institution list, the request builder (integer cents, one normalised shape per
+  payer contact), the **gateway allow-list**, and the return contract.
+- **The institutional side, where it belongs:** `backend/src/rails/interac.ts`
+  (a labelled rehearsal provider and a live HTTP provider), three routes —
+  `POST /api/v1/payments/interac/request`, `GET …/:requestId`,
+  `POST …/:requestId/reported` (treasurer+) — `INTERAC_*` in `.env.example`,
+  `/api/v1/rails/status` publishing `interac: { configured, live }`, and
+  **21 backend tests**. Frontend wiring in `src/lib/api/interac.ts`.
+
+### Changed
+
+- **Honesty, in two places a payment page could lie.** A status that arrives in a
+  link is a **claim**: with no council host to confirm it, the card reads
+  *"Returned from your bank — waiting for the council to confirm"* and **never**
+  shows "paid" on a URL alone. And a request never moves backwards — a replayed
+  or out-of-order report cannot un-deposit a completed transfer or resurrect a
+  stopped one.
+- **A configured host that is unreachable is a failure, not a rehearsal.** Demo
+  mode (no host at all) runs the labelled simulation; a host that is configured
+  and does not answer says *"Your council's host could not be reached, so no
+  request was started."* The rehearsal is never used to paper over a broken host.
+- **Interac's real onboarding rule is stated, not worked around.** A business gets
+  Business Request Money **through a participating financial institution** (BMO,
+  CIBC, DC Bank, Peoples Trust, Scotiabank today), which is what issues the
+  merchant credential — so the credential lives on the council's host and the
+  button rehearses, clearly labelled, until one exists.
+
+### Fixed
+
+- **The card moved to the answer the moment the payer acted, and one build did
+  not.** After a simulated approval nothing further happened on screen while the
+  bank picker stayed up — a lie of omission found in the browser sweep, not by
+  reasoning. The card now moves to the answer on approval and the deposit beat
+  updates it in place.
+- **The dialog no longer prints "approved and deposited" on a link's word.** The
+  first version showed the URL's status in full; the headline is now the claim's
+  own wording until a host confirms.
+
+### Verified
+
+- Chrome, on the built artifact: **all 40 lots** (the dialog's amount must equal
+  the lot's own amount — 0 mismatches), the **three zero-balance lots** (no button
+  at all — nothing owed, nothing to send), the **decline** and **cancel** paths
+  (each lands on its own state and its own URL), **four return links**
+  (`deposited`, `approved`, `declined`, an unknown status), **Escape**, **keyboard
+  entry** (focus + Enter opens it), and **0 text below 4.5:1** inside the dialog at
+  1280px and 390px in both themes with no page overflow.
+- The **live branch against a local stand-in host** (self-signed HTTPS, the real
+  request shape): a trusted gateway shows **Continue to Interac** with no bank list
+  (that list is Interac's page, not ours); an untrusted gateway is **refused with
+  nothing opened**; an unreachable host produces the failure line, not a
+  rehearsal.
+- `check` **0/0** · **287 frontend tests** · `audit:i18n` **1058 keys × 9 locales**
+  · `audit:contrast` **218 token pairs + 4 guards** · build green · backend
+  `tsc` clean · **250 backend tests**.
+
+### Known issues
+
+- Nothing payable: every destination and QR payload on `/pay` is still a demo
+  string, and the rehearsal provider is what answers on the public demo.
+- A live request needs a council host **and a signed-in owner** (the API routes are
+  council-scoped like every other `/api/v1` route), so on the public demo the
+  button always rehearses.
 
 ## [0.3.30] — 2026-10-16
 

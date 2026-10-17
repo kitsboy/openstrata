@@ -17,6 +17,7 @@ import { PostgresPaymentRequestStore } from './rails/payment-store.js';
 import { PostgresAuthStore } from './auth/pg-store.js';
 import { LiveRateProvider } from './rails/rate-provider.js';
 import { buildServer } from './api/server.js';
+import { DemoInteracProvider, HttpInteracProvider } from './rails/interac.js';
 import { DEFAULT_UNITS } from './units/seed.js';
 import { PostgresUnitStore } from './units/pg-store.js';
 import { PostgresMemberStore } from './members/pg-store.js';
@@ -62,12 +63,27 @@ async function main(): Promise<void> {
     });
   }
 
+  // Interac e-Transfer: live only when the council's financial institution
+  // issued a credential. Otherwise the labelled rehearsal keeps the handshake
+  // exercisable end to end without pretending a bank was contacted.
+  const interac =
+    config.interac.enabled && config.interac.apiUrl && config.interac.merchantId && config.interac.apiKey
+      ? new HttpInteracProvider({
+          apiUrl: config.interac.apiUrl,
+          merchantId: config.interac.merchantId,
+          apiKey: config.interac.apiKey,
+          gatewayHosts: config.interac.gatewayHosts,
+          ttlMinutes: config.interac.requestTtlMinutes
+        })
+      : new DemoInteracProvider();
+
   const app = await buildServer({
     ledger,
     rosa,
     reconcile,
     payments,
     auth,
+    interac,
     resolver: new LiveRateProvider({
       fallbackRate: Number.isFinite(Number(process.env.CAD_PER_BTC))
         ? Number(process.env.CAD_PER_BTC)

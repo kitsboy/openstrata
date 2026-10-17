@@ -6,6 +6,21 @@
 
 import type { RailRegistry } from './rails/rails.js';
 
+/**
+ * Interac e-Transfer Business Request Money. Off by default: the credential is
+ * issued by the council's financial institution, not by us, and until it exists
+ * the API answers from the labelled rehearsal provider.
+ */
+export interface InteracConfig {
+  enabled: boolean;
+  apiUrl?: string;
+  merchantId?: string;
+  apiKey?: string;
+  /** Hosts a payer may be sent to. Empty = Interac's own only. */
+  gatewayHosts: string[];
+  requestTtlMinutes: number;
+}
+
 export interface BackendConfig {
   dbUrl: string;
   host: string;
@@ -26,6 +41,8 @@ export interface BackendConfig {
   authRateLimitWindowMs: number;
   /** Sovereign payment rails — which are enabled and where their daemons live. */
   rails: RailRegistry;
+  /** Interac e-Transfer Business Request Money (fiat rail, council's bank). */
+  interac: InteracConfig;
 }
 
 const int = (v: string | undefined, fallback: number): number => {
@@ -57,6 +74,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
       liquid: { enabled: env.LIQUID_RAIL_ENABLED === 'true', endpoint: env.LIQUID_URL },
       paynym_bip47: { enabled: env.PAYNYM_RAIL_ENABLED === 'true', endpoint: env.PAYNYM_NOTIFIER_URL },
       nostr: { enabled: env.NOSTR_RAIL_ENABLED === 'true', endpoint: env.NOSTR_RELAYS }
+    },
+    interac: {
+      enabled: env.INTERAC_RAIL_ENABLED === 'true',
+      apiUrl: env.INTERAC_API_URL,
+      merchantId: env.INTERAC_MERCHANT_ID,
+      apiKey: env.INTERAC_API_KEY,
+      gatewayHosts: (env.INTERAC_GATEWAY_HOSTS ?? '')
+        .split(',')
+        .map((host) => host.trim())
+        .filter(Boolean),
+      requestTtlMinutes: int(env.INTERAC_REQUEST_TTL_MINUTES, 30)
     }
   };
 }
