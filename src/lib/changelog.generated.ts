@@ -14,6 +14,41 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.36",
+    "date": "2026-10-17",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Read-only agent API: GET /api/v1/agent/manifest and GET /api/v1/agent/context require a member session. The context contains only aggregate occupancy/Form K counts, verified Operating/CRF balances and up to 50 deadlines. It omits contacts, payment references and transaction descriptions, and uses private, no-store + Vary: Authorization. The manifest lists only the dedicated context route and clarifies it does not grant access to other APIs.",
+          "Safe ledger retry keys: Idempotency-Key is validated, bound to a request fingerprint, safe for concurrent identical retries, and rejects changed-body reuse with 409. Cache capacity is bounded; successful results are not evicted early, new keys receive 503 under full capacity, and the single-process / 24-hour scope is documented."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Fastify rejects unknown schema fields, limits request bodies to 256 KiB and requests to 30 seconds; auth identity fields and Rosa's question/facts now have explicit shape and length limits.",
+          "Backend API version is independently bumped to 0.3.27; site version is 0.3.36."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "Form B/F and CRT HTML outputs escape council and request data and ship no-store, nosniff, and restrictive CSP headers.",
+          "JSON agent context preserves council names as text; HTML escaping occurs only at HTML rendering boundaries. Form B/F HTML titles, unit IDs, statuses and disclosures are escaped, and responses use restrictive security/cache headers.",
+          "The agent manifest advertises only the dedicated agent context route instead of implying that general API endpoints are part of its capabilities.",
+          "The idempotency operation starts only after pending state is installed. Zero-capacity caches fail safely, and successful results are never evicted before expiry; a full cache refuses new keys."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Backend typecheck clean; full backend suite: 301 passed, 6 skipped. Frontend suite: 309 passed; Svelte check: 0 errors / 0 warnings; production build green; i18n audit 1065 keys × 9 locales and contrast audit 218 pairs pass."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.35",
     "date": "2026-10-16",
     "groups": [

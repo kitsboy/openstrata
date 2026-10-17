@@ -37,8 +37,33 @@ site's `/docs` bootstrap steps describe.
 
 ## Version
 
-`backend/package.json` carries the backend version (`0.3.10`); the root
-`package.json` carries the project version (`0.3.10`). They are bumped together.
+The root `package.json` carries the site/project release version; the backend
+uses its own API release number in `backend/package.json`. They are independent
+semver tracks: update the backend version when backend behavior changes, and
+update the root version only when the site/product release ships.
+
+Current backend release: `0.3.27`.
+
+## API guardrails
+
+The Fastify server caps JSON request bodies at 256 KiB, rejects unknown schema
+properties, and times out requests after 30 seconds. Rosa question input is
+bounded and validated. Agent endpoints are member-authenticated, informational,
+and read-only: the context omits owner contact fields, payment references, and
+ledger descriptions. Do not give agents human admin/treasurer credentials;
+dedicated scoped agent credentials are not available yet.
+
+Ledger `Idempotency-Key` retries replay only when the request body matches;
+reusing a key for different data returns `409`, and concurrent identical
+requests coalesce. The cache is bounded at 10,000 keys, expires after 24 hours,
+and is process-local/in-memory. Successful results are not evicted before
+expiry; new keys get `503` while the cache is full. Multi-instance deployments
+need durable shared storage before scaling horizontally. Generated CRT and
+Form B/F HTML escapes dynamic values and is sent with `private, no-store`,
+`nosniff`, and restrictive CSP headers.
+
+The backend API release is currently `0.3.27`; the site/project release is
+tracked separately in the root `package.json`.
 
 ## Deployment model — self-hosted, Tailscale-first, per-user tailnet
 

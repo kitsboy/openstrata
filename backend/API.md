@@ -1,5 +1,7 @@
 # OpenStrata Backend API — `/api/v1`
 
+**Backend release:** `0.3.27` · **API protocol:** `v1` (stable path prefix).
+
 Versioned API surface for the Phase 3 core product. All endpoints are JSON
 (`application/json`). The API is a factory over injected dependencies
 (`buildServer` in `src/api/server.ts`) so it runs identically against Postgres
@@ -7,8 +9,9 @@ in production and the in-memory store in tests.
 
 ## Auth & tenancy
 
-Every `/api/v1/*` endpoint except `/health` and the Rosa KB (`/api/v1/rosa/*`)
-requires a Bearer token:
+Every `/api/v1/*` endpoint except the public Rosa knowledge-base routes
+(`/api/v1/rosa/*`) requires a Bearer token. `/health` is public and is outside
+that prefix.
 
 ```
 Authorization: Bearer <jwt>
@@ -25,7 +28,10 @@ and never trust a `community` field in the body. Roles:
 | `treasurer` | financial writes (ledger, billing, reconcile); no fines |
 | `member` | read-only + own-unit actions (quote/confirm, forms, voting) |
 
-Missing/invalid/expired token → `401`; insufficient role → `403`.
+Missing/invalid/expired token → `401`; insufficient role → `403`. Request bodies
+are capped at 256 KiB, unknown properties are rejected, and requests time out
+after 30 seconds. The public Rosa question route additionally limits question
+length to 1,000 characters and each supplied fact to 300 characters.
 
 ### `POST /api/v1/auth/register`
 Open signup: creates a council + its first user (admin) and returns a token.
@@ -77,6 +83,14 @@ sent with an `Idempotency-Key` header (replays return the cached result).
 ```
 Body validation via Fastify JSON schema: `required` = fund, amountBasis, kind,
 type; `amountBasis` must be a non-zero integer; `kind` is `credit|debit`.
+`Idempotency-Key` accepts 1–128 ASCII letters/digits plus `.`, `_`, `:` or `-`.
+The same council + key + identical JSON body replays the original result for
+24 hours; the same key with a different body returns `409`. Concurrent identical
+requests coalesce. This safeguard is bounded at 10,000 keys and is process-local:
+successful results are not evicted early, and a full cache returns `503` for new
+keys until entries expire. Use durable database-backed idempotency before
+running multiple API instances. Omitting the header preserves the existing
+non-deduplicated behavior.
 
 ## Units — canonical master data
 
@@ -213,11 +227,26 @@ dashboard charts.
 { "fund": "operating", "points": [{ "month": "2026-08", "incomeBasis": 420000, "expenseBasis": 120000, "netBasis": 300000 }] }
 ```
 
+## Read-only agent discovery
+
+### `GET /api/v1/agent/manifest` and `GET /api/v1/agent/context` (member+)
+The manifest advertises only the dedicated agent context route; it is not a
+grant of authority to call other APIs. The context endpoint returns unit
+counts/occupancy, Form K gaps, verified Operating/CRF balance summaries, and up
+to 50 deadlines.
+It omits owner contact details, payment references, ledger descriptions, and
+per-unit data. Both responses use `Cache-Control: private, no-store` and vary on
+`Authorization` so council data cannot be shared by an intermediary cache. The
+context is informational only; it cannot authorize payments, notices, votes, or
+legal decisions.
+
 ## Rosa — compliance RAG
 
 ### `POST /api/v1/rosa/query`
 Strict, citation-only answer with an `uncertain` flag when date/fact inputs are
-missing (Rosa fails closed, never fabricates a citation).
+missing (Rosa fails closed, never fabricates a citation). `question` is required
+and 1–1,000 non-whitespace characters; optional `facts` is limited to 24 string
+properties, each at most 300 characters. Unknown properties are rejected.
 
 Retrieval seam (two tiers, same `Retriever` contract):
 - **pgvector + Ollama (preferred):** when the `corpus_chunk` table (migration
@@ -433,6 +462,17 @@ unreadable, repeats the current state, or would move the request **backwards**
 live provider the route answers `{ ok: false, reason: 'the live provider reports
 its own status' }` — that provider is read through `GET`.
 
+## Agent access — read-only
+
+`GET /api/v1/agent/manifest` publishes machine-readable capabilities; `GET
+/api/v1/agent/context` returns an authenticated council snapshot. Both require at
+least the `member` role and return `Cache-Control: private, no-store` plus
+`Vary: Authorization`. The context includes aggregate unit occupancy/Form K
+counts, verified Operating/CRF balances, and up to 50 deadlines. It omits owner
+contacts, payment references, and transaction descriptions. Agents should not
+receive human admin/treasurer credentials; dedicated scoped credentials are not
+yet available. Agent access is informational only and cannot execute writes.
+
 ## Conveyancing — Form B / Form F
 
 ### `POST /api/v1/forms`
@@ -462,12 +502,13 @@ out. Rolls back on an unattainable threshold.
 ```json
 { "threshold": "three_quarter", "eligible": 40, "present": 30, "yes": 24, "no": 3, "abstain": 3 }
 ```
-
 ## Evidence, export & compliance
 
 ### `GET /api/v1/compliance/crt-export?fund=&months=`
 Print-ready HTML evidence bundle of the ledger hash chain (browser → PDF):
-fund balance, head tally, chain-verified badge, monthly rollup table.
+fund balance, head tally, chain-verified badge, monthly rollup table. HTML output
+escapes inserted values and is served with `private, no-store`, `nosniff`, and a
+restrictive CSP.
 
 ### `GET /api/v1/export/portable`
 Portable OpenStrata export (`openstrata-portable/v1`): council, units, accounts
@@ -484,7 +525,8 @@ client-side against api.satohash.io.
 
 ### `GET /api/v1/forms/b/:unitId` · `GET /api/v1/forms/f/:unitId`
 Print-ready HTML Form B (7-day statutory deadline) / Form F (WITHHELD while the
-unit's AR ledger balance > 0 — sale blocked).
+unit's AR ledger balance > 0 — sale blocked). Dynamic values are HTML-escaped;
+responses use `private, no-store`, `nosniff`, and a restrictive CSP.
 
 ### `GET|POST /api/v1/rails/xpub`
 Register (treasurer+) the council's watch-only xpub (`POST`) and read the

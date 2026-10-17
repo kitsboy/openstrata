@@ -51,6 +51,8 @@ import type { AuthUser, UserRole } from '../auth/model.js';
 import { ROLE_RANK, toPublicUser } from '../auth/model.js';
 import { RateLimiter, type RateLimitConfig } from '../auth/rate-limit.js';
 import { corsHeaders, mergeVary, parseCorsOrigins } from './cors.js';
+import { agentManifest, buildAgentContext } from './agent.js';
+import { IdempotencyCache, requestFingerprint } from './idempotency-cache.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -95,10 +97,9 @@ export interface ApiDeps {
   };
 }
 
-/** In-memory seen-set for Idempotency-Key on idempotent POSTs (ledger/billing). */
-const lastResults = new Map<string, unknown>();
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const escapeHtml = (value: unknown): string =>
+  String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
 
 type PreHandler = (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
 
@@ -129,7 +130,17 @@ export async function buildServer(
   deps: ApiDeps,
   opts: { logger?: boolean } = { logger: true }
 ): Promise<FastifyInstance> {
-  const app = Fastify({ logger: opts.logger ?? true });
+  const app = Fastify({
+    logger: opts.logger ?? true,
+    bodyLimit: 256 * 1024,
+    requestTimeout: 30_000,
+    // Reject unknown fields rather than silently stripping them. Silent
+    // mutation is especially surprising for signed/payment and AI request APIs.
+    ajv: { customOptions: { removeAdditional: false } }
+  });
+  // Process-local protection against lost-response retries and concurrent
+  // duplicate ledger posts. Durable cross-process idempotency belongs in the DB.
+  const idempotency = new IdempotencyCache();
 
   // -----------------------------------------------------------  Cross-origin
   // The site and the API are different origins in both documented deployment
@@ -207,6 +218,61 @@ export async function buildServer(
 
   app.get('/health', async () => ({ ok: true, service: 'openstrata-backend' }));
 
+  // Agent discovery and context are read-only and always scoped to the
+  // authenticated council. No agent endpoint can post a ledger entry or move
+  // funds; those operations continue to require the established role-gated APIs.
+  app.get('/api/v1/agent/manifest', { preHandler: [authenticate, requireRole('member')] }, async (_req, reply) => {
+    reply.header('cache-control', 'private, no-store');
+    reply.header('vary', mergeVary(reply.getHeader('vary'), 'Authorization'));
+    return agentManifest;
+  });
+  app.get('/api/v1/agent/context', { preHandler: [authenticate, requireRole('member')] }, async (req, reply) => {
+    const councilId = req.user!.councilId;
+    const council = await deps.auth.getCouncil(councilId);
+    if (!council) return reply.code(404).send({ ok: false, reason: 'council not found' });
+    const safeCouncil = { id: council.id, name: council.name };
+    const [units, operating, crf] = await Promise.all([
+      councilUnits(deps, councilId),
+      deps.ledger.balance(councilId, 'operating'),
+      deps.ledger.balance(councilId, 'crf')
+    ]);
+    const now = new Date();
+    const statutory = withDaysLeft(statutoryDeadlines(now), now);
+    const operational = [];
+    for (const unit of units) {
+      for (const request of await deps.payments.listByUnit(councilId, unit.unitRef)) {
+        if (request.status !== 'quoted') continue;
+        const expiresAt = request.expiresAt ? new Date(request.expiresAt) : null;
+        const validExpiry = expiresAt && Number.isFinite(expiresAt.getTime()) ? expiresAt : null;
+        const daysLeft = validExpiry ? Math.ceil((validExpiry.getTime() - now.getTime()) / 86_400_000) : 1;
+        operational.push({
+          id: `quote:${request.referenceCode}`,
+          kind: 'quote',
+          title: `Payment quote ${request.referenceCode} is open`,
+          dueAt: validExpiry?.toISOString() ?? now.toISOString(),
+          daysLeft,
+          severity: daysLeft <= 1 ? 'urgent' as const : 'soon' as const,
+          jurisdiction: 'BC'
+        });
+      }
+    }
+    const deadlines = sortDeadlines([...statutory, ...operational]);
+    // Financial and occupancy snapshots must never be retained by a browser or
+    // intermediary cache; preserve the CORS hook's Origin variance as well.
+    reply.header('cache-control', 'private, no-store');
+    reply.header('vary', mergeVary(reply.getHeader('vary'), 'Authorization'));
+    return buildAgentContext({
+      council: safeCouncil,
+      units,
+      deadlines,
+      funds: {
+        operating: { balanceBasis: operating.balanceBasis, entryCount: operating.entryCount, verifiedHead: operating.headTally || null },
+        crf: { balanceBasis: crf.balanceBasis, entryCount: crf.entryCount, verifiedHead: crf.headTally || null }
+      },
+      generatedAt: now.toISOString()
+    });
+  });
+
   // ----------------------------------------------------------------  Auth API
   // Open signup: anyone can create a council + its first admin. Councils are
   // the tenant boundary — every later request is scoped to the token's council.
@@ -221,10 +287,10 @@ export async function buildServer(
           required: ['councilName', 'email', 'password'],
           additionalProperties: false,
           properties: {
-            councilName: { type: 'string', minLength: 1 },
-            email: { type: 'string', minLength: 3 },
-            password: { type: 'string', minLength: 8 },
-            displayName: { type: 'string' }
+            councilName: { type: 'string', minLength: 1, maxLength: 120, pattern: '\\S' },
+            email: { type: 'string', minLength: 3, maxLength: 254, pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+            password: { type: 'string', minLength: 8, maxLength: 128 },
+            displayName: { type: 'string', maxLength: 120 }
           }
         }
       }
@@ -232,6 +298,8 @@ export async function buildServer(
     async (req, reply) => {
       const email = req.body.email.trim().toLowerCase();
       if (!EMAIL_RE.test(email)) return reply.code(400).send({ ok: false, reason: 'invalid email address' });
+      const councilName = req.body.councilName.trim();
+      if (!councilName) return reply.code(400).send({ ok: false, reason: 'council name must not be empty' });
       const registerThrottle = throttled(`register:ip:${req.ip}`);
       if (registerThrottle) {
         return reply
@@ -243,7 +311,7 @@ export async function buildServer(
       if (await deps.auth.getUserByEmail(email)) {
         return reply.code(409).send({ ok: false, reason: 'email already registered' });
       }
-      const council = await deps.auth.createCouncil(req.body.councilName.trim());
+      const council = await deps.auth.createCouncil(councilName);
       // Fresh council gets its own building: seed the default unit set into
       // its tenant-scoped unit table (no-op when running registry-only), then
       // seed the member layer from the building's owners (migration 0006).
@@ -298,7 +366,10 @@ export async function buildServer(
           type: 'object',
           required: ['email', 'password'],
           additionalProperties: false,
-          properties: { email: { type: 'string' }, password: { type: 'string', minLength: 1 } }
+          properties: {
+            email: { type: 'string', maxLength: 254, pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+            password: { type: 'string', minLength: 1, maxLength: 128 }
+          }
         }
       }
     },
@@ -352,8 +423,8 @@ export async function buildServer(
           required: ['email', 'role'],
           additionalProperties: false,
           properties: {
-            email: { type: 'string', minLength: 3 },
-            displayName: { type: 'string' },
+            email: { type: 'string', minLength: 3, maxLength: 254, pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+            displayName: { type: 'string', maxLength: 120 },
             role: { type: 'string', enum: ['treasurer', 'member'] }
           }
         }
@@ -677,28 +748,40 @@ export async function buildServer(
         }
       }
     },
-    async (req) => {
-      const idem = req.headers['idempotency-key'];
-      const idemKey = idem ? `ledger:${req.user!.councilId}:${idem}` : null;
-      if (idemKey) {
-        const cached = lastResults.get(idemKey);
-        if (cached) return cached;
+    async (req, reply) => {
+      const idemHeader = req.headers['idempotency-key'];
+      const idem = Array.isArray(idemHeader) ? idemHeader[0] : idemHeader;
+      if (idemHeader && (!idem || !/^[A-Za-z0-9._:-]{1,128}$/.test(idem))) {
+        return reply.code(400).send({ ok: false, reason: 'invalid Idempotency-Key' });
       }
-      const row = await deps.ledger.post(
-        req.user!.councilId,
-        req.body.fund,
-        req.body.amountBasis,
-        req.body.kind,
-        {
-          type: req.body.type,
-          description: req.body.description,
-          referenceCode: req.body.referenceCode,
-          reconRef: req.body.reconRef
-        }
+      const postLedger = async () => {
+        const row = await deps.ledger.post(
+          req.user!.councilId,
+          req.body.fund,
+          req.body.amountBasis,
+          req.body.kind,
+          {
+            type: req.body.type,
+            description: req.body.description,
+            referenceCode: req.body.referenceCode,
+            reconRef: req.body.reconRef
+          }
+        );
+        return { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
+      };
+      if (!idem) return postLedger();
+      const outcome = await idempotency.run(
+        `ledger:${req.user!.councilId}:${idem}`,
+        requestFingerprint(req.body),
+        postLedger
       );
-      const result = { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
-      if (idemKey) lastResults.set(idemKey, result);
-      return result;
+      if (outcome.status === 'conflict') {
+        return reply.code(409).send({ ok: false, reason: 'Idempotency-Key was already used with a different request' });
+      }
+      if (outcome.status === 'full') {
+        return reply.code(503).send({ ok: false, reason: 'idempotency cache is busy; retry shortly' });
+      }
+      return outcome.value;
     }
   );
 
@@ -1002,9 +1085,28 @@ export async function buildServer(
   // base behind the product and the site already publishes it.
   app.post<{ Body: { question: string; facts?: Record<string, string> } }>(
     '/api/v1/rosa/query',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['question'],
+          additionalProperties: false,
+          properties: {
+            question: { type: 'string', minLength: 1, maxLength: 1000, pattern: '\\S' },
+            facts: {
+              type: 'object',
+              maxProperties: 24,
+              additionalProperties: { type: 'string', maxLength: 300 }
+            }
+          }
+        }
+      }
+    },
     async (req) => {
-      const chunks = await deps.rosa.retrieve(req.body.question, 3);
-      const answer = composeAnswer(req.body.question, chunks, req.body.facts ?? {});
+      const question = req.body.question.trim();
+      if (!question) return { answer: 'No question was provided.', cited: [], uncertain: true, collection: deps.config.vectorCollection };
+      const chunks = await deps.rosa.retrieve(question, 3);
+      const answer = composeAnswer(question, chunks, req.body.facts ?? {});
       return {
         answer,
         cited: answer.cited,
@@ -1683,6 +1785,7 @@ export async function buildServer(
       const b = await deps.ledger.balance(councilId, fund);
       accounts[fund] = { balanceBasis: b.balanceBasis, entryCount: b.entryCount, headTally: b.headTally.slice(0, 4) };
     }
+
     const units = (await councilUnits(deps, councilId)).map((u) => ({
       unitRef: u.unitRef,
       floor: u.floor,
@@ -1716,13 +1819,18 @@ export async function buildServer(
         .filter((s) => s.incomeBasis !== 0 || s.expenseBasis !== 0)
         .map(
           (s) =>
-            `<tr><td>${s.month}</td><td>+$${(s.incomeBasis / 100).toFixed(2)}</td><td>$${(s.expenseBasis / 100).toFixed(2)}</td><td>$${(s.netBasis / 100).toFixed(2)}</td></tr>`
+            `<tr><td>${escapeHtml(s.month)}</td><td>+$${(s.incomeBasis / 100).toFixed(2)}</td><td>$${(s.expenseBasis / 100).toFixed(2)}</td><td>$${(s.netBasis / 100).toFixed(2)}</td></tr>`
         )
         .join('');
-      const html = `<!doctype html><html><head><meta charset="utf-8"><title>CRT Evidence — ${council?.name ?? councilId}</title>
+      reply.header('cache-control', 'private, no-store');
+      reply.header('x-content-type-options', 'nosniff');
+      reply.header('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
+      const safeCouncilName = escapeHtml(council?.name ?? 'Council');
+      const safeFund = escapeHtml(fund);
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>CRT Evidence — ${safeCouncilName}</title>
       <style>body{font-family:system-ui,sans-serif;margin:40px;color:#18232b}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #cbd5d9;padding:8px;text-align:left;font-size:13px}th{background:#eef2f3}code{font-family:ui-monospace,monospace;font-size:12px}.badge{display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700}.ok{background:#eaf8f2;color:#238c6b}.head{font-size:18px;font-weight:800}</style></head><body>
-      <p class="head">CRT Evidence Bundle — ${council?.name ?? 'Council'}</p>
-      <p>Fund: <strong>${fund}</strong> · Balance: <strong>$${(b.balanceBasis / 100).toFixed(2)}</strong> · ${b.entryCount} entries</p>
+      <p class="head">CRT Evidence Bundle — ${safeCouncilName}</p>
+      <p>Fund: <strong>${safeFund}</strong> · Balance: <strong>$${(b.balanceBasis / 100).toFixed(2)}</strong> · ${b.entryCount} entries</p>
       <p><span class="badge ok">Hash chain verified ✓</span> — head tally <code>${b.headTally.slice(0, 16) || '(empty)'}</code></p>
       <table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead><tbody>${rows || '<tr><td colspan="4">No activity in this window</td></tr>'}</tbody></table>
       </body></html>`;
@@ -1736,14 +1844,14 @@ export async function buildServer(
   const unitFormHtml = (
     form: ReturnType<typeof generateForm>,
     councilName: string
-  ) => `<!doctype html><html><head><meta charset="utf-8"><title>Form ${form.kind} — ${form.unitId}</title>
+  ) => `<!doctype html><html><head><meta charset="utf-8"><title>Form ${escapeHtml(form.kind)} — ${escapeHtml(form.unitId)}</title>
   <style>body{font-family:system-ui,sans-serif;margin:48px;color:#18232b;max-width:720px}.title{font-size:22px;font-weight:800;margin-bottom:4px}.meta{color:#6d7a82;font-size:13px;margin-bottom:24px}.box{border:1px solid #cbd5d9;border-radius:8px;padding:16px;margin-bottom:16px;font-size:14px}.warn{border-color:#f0b8b0;background:#fff5f2;color:#b3352b;font-weight:700}.okc{border-color:#b6dccb;background:#f1fbf6;color:#238c6b;font-weight:700}ul{margin:8px 0 0;padding-left:20px}.foot{margin-top:28px;color:#9aa6ab;font-size:11px}</style></head><body>
-  <p class="title">Form ${form.kind} — ${councilName}</p>
-  <p class="meta">Unit ${form.unitId} · Issued ${form.issuedAt}${form.dueDate ? ` · Due ${form.dueDate} (${form.status})` : ''}</p>
+  <p class="title">Form ${escapeHtml(form.kind)} — ${escapeHtml(councilName)}</p>
+  <p class="meta">Unit ${escapeHtml(form.unitId)} · Issued ${escapeHtml(form.issuedAt)}${form.dueDate ? ` · Due ${escapeHtml(form.dueDate)} (${escapeHtml(form.status)})` : ''}</p>
   <div class="box ${form.state === 'withheld' ? 'warn' : 'okc'}">
-    ${form.state === 'withheld' ? `WITHHELD — ${form.withheldReason ?? 'balance due'}` : 'Issued'}
+    ${form.state === 'withheld' ? `WITHHELD — ${escapeHtml(form.withheldReason ?? 'balance due')}` : 'Issued'}
   </div>
-  <div class="box">Balance: <strong>$${(form.balanceBasis / 100).toFixed(2)}</strong><ul>${form.disclosures.map((d) => `<li>${d}</li>`).join('')}</ul></div>
+  <div class="box">Balance: <strong>$${(form.balanceBasis / 100).toFixed(2)}</strong><ul>${form.disclosures.map((d) => `<li>${escapeHtml(d)}</li>`).join('')}</ul></div>
   <p class="foot">Statutory deadline per SPA ss.256–258. Professional review required before reliance.</p>
   </body></html>`;
 
@@ -1760,6 +1868,9 @@ export async function buildServer(
         { unitId, balanceBasis: bal.balanceBasis, arrearsBasis: bal.balanceBasis, crfBasis: (await deps.ledger.balance(req.user!.councilId, 'crf')).balanceBasis },
         new Date().toISOString().slice(0, 10)
       );
+      reply.header('cache-control', 'private, no-store');
+      reply.header('x-content-type-options', 'nosniff');
+      reply.header('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
       return reply.type('text/html; charset=utf-8').send(unitFormHtml(form, council?.name ?? 'Council'));
     }
   );
@@ -1777,6 +1888,9 @@ export async function buildServer(
         { unitId, balanceBasis: bal.balanceBasis, arrearsBasis: bal.balanceBasis },
         new Date().toISOString().slice(0, 10)
       );
+      reply.header('cache-control', 'private, no-store');
+      reply.header('x-content-type-options', 'nosniff');
+      reply.header('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
       return reply.type('text/html; charset=utf-8').send(unitFormHtml(form, council?.name ?? 'Council'));
     }
   );

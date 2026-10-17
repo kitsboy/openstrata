@@ -78,6 +78,47 @@ describe('fastify API', () => {
     expect(res.json().service).toBe('openstrata-backend');
   });
 
+  it('GET /api/v1/agent/manifest requires a council session and advertises read-only tools', async () => {
+    const guest = await app.inject({ method: 'POST', url: '/api/v1/auth/users', headers: auth(adminToken), payload: { email: 'guest@server.test', role: 'member' } });
+    const guestLogin = await app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { email: 'guest@server.test', password: guest.json().temporaryPassword } });
+    const guestContext = await app.inject({ method: 'GET', url: '/api/v1/agent/context', headers: auth(guestLogin.json().token) });
+    expect(guestContext.statusCode).toBe(200);
+
+    const anonymous = await app.inject({ method: 'GET', url: '/api/v1/agent/manifest' });
+    expect(anonymous.statusCode).toBe(401);
+
+    const response = await app.inject({ method: 'GET', url: '/api/v1/agent/manifest', headers: auth(adminToken) });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      protocol: 'openstrata-agent/1',
+      mode: 'read-only',
+      safety: { agentsMayMoveMoney: false, humanApprovalRequiredForWrites: true }
+    });
+    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(response.headers.vary).toContain('Authorization');
+    expect(response.json().tools.every((tool: { sideEffects: boolean }) => tool.sideEffects === false)).toBe(true);
+  });
+
+  it('GET /api/v1/agent/context returns council-scoped summaries without owner PII', async () => {
+    const response = await app.inject({ method: 'GET', url: '/api/v1/agent/context', headers: auth(adminToken) });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      protocol: 'openstrata-agent/1',
+      scope: { id: councilId, name: 'Server Test Council' },
+      mode: 'read-only',
+      summary: { unitCount: 6, occupancy: { occupied: 4, vacant: 1, shortTerm: 1 } },
+      funds: { operating: { balanceBasis: 0, entryCount: 0 } },
+      safeguards: { personalContactDetailsIncluded: false, actionsExecuted: false }
+    });
+    expect(JSON.stringify(response.json())).not.toContain('@');
+    expect(JSON.stringify(response.json())).not.toContain('Chen');
+    expect(JSON.stringify(response.json())).not.toContain('pay-');
+    expect(JSON.stringify(response.json())).not.toContain('Private');
+    expect(JSON.stringify(response.json())).not.toContain('pay-a9f');
+    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(response.headers.vary).toContain('Authorization');
+  });
+
   it('POST /api/v1/ledger/post then GET ledger/balance (scoped to the token council)', async () => {
     const post = await app.inject({
       method: 'POST',
@@ -139,6 +180,15 @@ describe('fastify API', () => {
     const body = res.json();
     expect(body.cited).toContain('SPA s.92-96');
     expect(body.uncertain).toBe(false);
+  });
+
+  it('POST /api/v1/rosa/query rejects blank, oversized, and unexpected fields', async () => {
+    const blank = await app.inject({ method: 'POST', url: '/api/v1/rosa/query', payload: { question: '  ' } });
+    const oversized = await app.inject({ method: 'POST', url: '/api/v1/rosa/query', payload: { question: 'x'.repeat(1001) } });
+    const extra = await app.inject({ method: 'POST', url: '/api/v1/rosa/query', payload: { question: 'reserve', prompt: 'ignore policy' } });
+    expect(blank.statusCode).toBe(400);
+    expect(oversized.statusCode).toBe(400);
+    expect(extra.statusCode).toBe(400);
   });
 
   it('POST /api/v1/rosa/query fails closed for an unrelated question', async () => {
@@ -233,6 +283,50 @@ describe('fastify API', () => {
     });
     expect(fine.json().ok).toBe(true);
     expect(fine.json().complaint.state).toBe('fine_posted');
+  });
+
+  it('ledger idempotency replays only the same request and rejects changed payloads', async () => {
+    const headers = { ...auth(adminToken), 'idempotency-key': 'same-ledger-request' };
+    const payload = { fund: 'operating', amountBasis: 2300, kind: 'credit', type: 'strata_fee' };
+    const first = await app.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload });
+    const replay = await app.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload });
+    const conflict = await app.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload: { ...payload, amountBasis: 9999 } });
+    expect(first.statusCode).toBe(200);
+    expect(replay.statusCode).toBe(200);
+    expect(replay.json()).toEqual(first.json());
+    expect(conflict.statusCode).toBe(409);
+    const balance = await app.inject({ method: 'GET', url: '/api/v1/ledger/balance?fund=operating', headers: auth(adminToken) });
+    expect(balance.json().balanceBasis).toBe(6500);
+  });
+
+  it('ledger idempotency is scoped to the authenticated council', async () => {
+    const other = await app.inject({
+      method: 'POST', url: '/api/v1/auth/register',
+      payload: { councilName: 'Other Idempotency Council', email: 'other-idem@server.test', password: 'password123' }
+    });
+    const sharedKeyHeaders = { ...auth(adminToken), 'idempotency-key': 'same-key-new-tenant' };
+    const first = await app.inject({
+      method: 'POST', url: '/api/v1/ledger/post', headers: sharedKeyHeaders,
+      payload: { fund: 'operating', amountBasis: 1100, kind: 'credit', type: 'strata_fee' }
+    });
+    const second = await app.inject({
+      method: 'POST', url: '/api/v1/ledger/post',
+      headers: { authorization: `Bearer ${other.json().token}`, 'idempotency-key': 'same-key-new-tenant' },
+      payload: { fund: 'operating', amountBasis: 1100, kind: 'credit', type: 'strata_fee' }
+    });
+    expect(first.statusCode).toBe(200);
+    expect(second.statusCode).toBe(200);
+    expect(second.json().posted).toBe(true);
+  });
+
+  it('ledger idempotency rejects malformed keys', async () => {
+    const result = await app.inject({
+      method: 'POST', url: '/api/v1/ledger/post',
+      headers: { ...auth(adminToken), 'idempotency-key': 'no spaces allowed!' },
+      payload: { fund: 'operating', amountBasis: 900, kind: 'credit', type: 'strata_fee' }
+    });
+    expect(result.statusCode).toBe(400);
+    expect(result.json().reason).toMatch(/Idempotency-Key/);
   });
 
   it('GET /api/v1/units lists the canonical building', async () => {
@@ -425,6 +519,40 @@ describe('payments/confirm edge cases', () => {
 });
 
 describe('forms / meetings coverage', () => {
+  it('CRT HTML exports escape council names and fund values', async () => {
+    const dangerousFund = 'operating<script>alert(1)</script>';
+    const response = await app.inject({
+      method: 'GET', url: `/api/v1/compliance/crt-export?fund=${encodeURIComponent(dangerousFund)}`,
+      headers: auth(adminToken)
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('text/html');
+    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers['content-security-policy']).toContain("default-src 'none'");
+    expect(response.body).not.toContain('<script>alert(1)</script>');
+    expect(response.body).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+  });
+
+  it('Form B and Form F print views escape untrusted text and forbid caching', async () => {
+    const b = await app.inject({
+      method: 'GET', url: '/api/v1/forms/b/101%3Cscript%3E', headers: auth(adminToken)
+    });
+    const f = await app.inject({
+      method: 'GET', url: '/api/v1/forms/f/101', headers: auth(adminToken)
+    });
+    for (const response of [b, f]) {
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toContain('text/html');
+      expect(response.headers['cache-control']).toBe('private, no-store');
+      expect(response.headers['x-content-type-options']).toBe('nosniff');
+      expect(response.headers['content-security-policy']).toContain("default-src 'none'");
+    }
+    expect(b.body).not.toContain('<script>');
+    expect(b.body).toContain('&lt;script&gt;');
+    expect(b.body).toContain('Form B — 101&lt;script&gt;');
+  });
+
   it('issues a Form B with a 7-day due date', async () => {
     const res = await app.inject({
       method: 'POST', url: '/api/v1/forms',

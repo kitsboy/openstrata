@@ -111,7 +111,16 @@ describe('register / login / me', () => {
       payload: { councilName: 'X', email: 'not-an-email', password: 'password123' }
     });
     expect(res.statusCode).toBe(400);
-    expect(res.json().reason).toMatch(/email/);
+    expect(res.json().message).toMatch(/email/);
+  });
+
+  it('register rejects blank council names and malformed or oversized input at the schema boundary', async () => {
+    const blankName = await app.inject({ method: 'POST', url: '/api/v1/auth/register', payload: { councilName: '   ', email: 'blank@register.test', password: 'password123' } });
+    const invalidEmail = await app.inject({ method: 'POST', url: '/api/v1/auth/register', payload: { councilName: 'X', email: 'bad', password: 'password123' } });
+    const longPassword = await app.inject({ method: 'POST', url: '/api/v1/auth/register', payload: { councilName: 'X', email: 'long@register.test', password: 'x'.repeat(129) } });
+    expect(blankName.statusCode).toBe(400);
+    expect(invalidEmail.statusCode).toBe(400);
+    expect(longPassword.statusCode).toBe(400);
   });
 
   it('register rejects a short password via schema (400)', async () => {

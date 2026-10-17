@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.36
+-  summary: "Backend API hardening + a read-only agent context endpoint. The API now rejects unknown request fields rather than silently stripping them, caps JSON bodies at 256 KiB and requests at 30 seconds, bounds auth identity fields and validates email shape in the schema, and constrains public Rosa questions/facts. A member-authenticated /api/v1/agent manifest and council snapshot reports verified Operating/CRF summaries, occupancy/Form K counts and up to 50 deadlines, but never owner contacts, payment refs or ledger descriptions; it is private no-store and varies on Authorization. Ledger Idempotency-Key retries replay only identical request bodies for 24h, concurrent duplicates coalesce, body mismatch returns 409, keys are bounded to 10,000, and the in-memory limitation is documented (single process only). CRT/Form B/F print HTML escapes council/user data and sends no-store, nosniff and restrictive CSP headers. Backend suite adds agent privacy/auth/cache, idempotency unit and route tests, validation, and HTML/XSS header checks. Current verification: backend typecheck clean; focused backend tests 60 passing, plus 26 existing auth/rate-limit tests passed."
 -  version: 0.3.35
 -  summary: "One host can serve both the site and the API, with no URL to write down. PUBLIC_API_BASE_URL=/ (or the word same-origin) now means 'the origin this page was served from', so a single-host deployment needs no absolute address to maintain, breaks nothing when the host's address changes, and involves no CORS at all — a same-origin request never asks. The origin is only knowable once the page is running, so before hydration the widgets render demo data and then settle on live, exactly as the runtime override already does; resolveApiBase() takes the origin as its third input and returns demo mode when there is none (SSR/prerender). The same pass closed a real hole found while thinking about the value's shape: a base that is neither an absolute http(s) URL nor a same-origin token is now IGNORED rather than used, because fetch('//evil.example/api/v1/units') is a protocol-relative redirect to somebody else — a mistyped or hostile configuration would have handed a council's bearer token to that host. A bare path (/api) and a javascript: URL are ignored the same way, and a URL with a path is still accepted for a reverse proxy in front of the API. Verified in Chrome on the built artifact against a single origin that served the site and proxied the API, with every openstrata-* key cleared and no runtime override: the signed bill link rendered its $921.00 and the council's reference. 15 frontend tests for the config rules, 303 frontend tests total, 285 backend tests, check 0/0, i18n 1065 keys x 9 locales, build green."
 -  version: 0.3.34
@@ -110,6 +112,31 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.36] — 2026-10-17
+
+### Added
+
+- **Read-only agent API:** `GET /api/v1/agent/manifest` and `GET /api/v1/agent/context` require a member session. The context contains only aggregate occupancy/Form K counts, verified Operating/CRF balances and up to 50 deadlines. It omits contacts, payment references and transaction descriptions, and uses `private, no-store` + `Vary: Authorization`. The manifest lists only the dedicated context route and clarifies it does not grant access to other APIs.
+- **Safe ledger retry keys:** `Idempotency-Key` is validated, bound to a request fingerprint, safe for concurrent identical retries, and rejects changed-body reuse with `409`. Cache capacity is bounded; successful results are not evicted early, new keys receive `503` under full capacity, and the single-process / 24-hour scope is documented.
+
+### Changed
+
+- Fastify rejects unknown schema fields, limits request bodies to 256 KiB and requests to 30 seconds; auth identity fields and Rosa's question/facts now have explicit shape and length limits.
+- Backend API version is independently bumped to `0.3.27`; site version is `0.3.36`.
+
+### Fixed
+
+- Form B/F and CRT HTML outputs escape council and request data and ship `no-store`, `nosniff`, and restrictive CSP headers.
+- JSON agent context preserves council names as text; HTML escaping occurs only at HTML rendering boundaries. Form B/F HTML titles, unit IDs, statuses and disclosures are escaped, and responses use restrictive security/cache headers.
+- The agent manifest advertises only the dedicated agent context route instead of implying that general API endpoints are part of its capabilities.
+- The idempotency operation starts only after pending state is installed. Zero-capacity caches fail safely, and successful results are never evicted before expiry; a full cache refuses new keys.
+
+### Verified
+
+- Backend typecheck clean; full backend suite: **301 passed, 6 skipped**. Frontend suite: **309 passed**; Svelte check: **0 errors / 0 warnings**; production build green; i18n audit **1065 keys × 9 locales** and contrast audit **218 pairs** pass.
+
+---
 
 ## [0.3.35] — 2026-10-16
 
