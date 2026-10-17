@@ -245,9 +245,21 @@ no rebuild needed.
 
 There are two exposure paths:
 
-**Both paths need the API to permit the site's origin.** The site is a static
-Cloudflare build and the API is your own host, so a browser treats them as two
-origins and blocks every `/api/v1/*` call until the API says otherwise. Set
+**Where the site and the API live decides everything.** Two different origins
+(a static Cloudflare build calling your own host) need the API to permit the
+site's origin through `CORS_ORIGINS`; one shared host needs nothing.
+
+**Option 0 — one host serves both (simplest).**
+```bash
+PUBLIC_API_BASE_URL=/ npm run build
+```
+The value `/` means *this same origin*: no URL to write down, no CORS to
+configure (a same-origin request never asks), and nothing to repoint when the
+host's address changes. The origin is only known once the page runs, so before
+hydration the widgets render demo data and then settle on live — the same shape
+as the runtime override.
+
+**Both other paths need the API to permit the site's origin.** Set
 `CORS_ORIGINS` to the exact origins the site is served from (comma-separated);
 leave it empty for a same-origin deployment and not one CORS header is added.
 `*` is refused rather than honoured, because this API carries bearer tokens.

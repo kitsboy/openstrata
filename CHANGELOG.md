@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.35
+-  summary: "One host can serve both the site and the API, with no URL to write down. PUBLIC_API_BASE_URL=/ (or the word same-origin) now means 'the origin this page was served from', so a single-host deployment needs no absolute address to maintain, breaks nothing when the host's address changes, and involves no CORS at all — a same-origin request never asks. The origin is only knowable once the page is running, so before hydration the widgets render demo data and then settle on live, exactly as the runtime override already does; resolveApiBase() takes the origin as its third input and returns demo mode when there is none (SSR/prerender). The same pass closed a real hole found while thinking about the value's shape: a base that is neither an absolute http(s) URL nor a same-origin token is now IGNORED rather than used, because fetch('//evil.example/api/v1/units') is a protocol-relative redirect to somebody else — a mistyped or hostile configuration would have handed a council's bearer token to that host. A bare path (/api) and a javascript: URL are ignored the same way, and a URL with a path is still accepted for a reverse proxy in front of the API. Verified in Chrome on the built artifact against a single origin that served the site and proxied the API, with every openstrata-* key cleared and no runtime override: the signed bill link rendered its $921.00 and the council's reference. 15 frontend tests for the config rules, 303 frontend tests total, 285 backend tests, check 0/0, i18n 1065 keys x 9 locales, build green."
 -  version: 0.3.34
 -  summary: "The API can now be called from the static site, which is the half the deployment docs had been promising without. The site is a Cloudflare static build and the API is a council's own host, so every /api/v1/* call was blocked by the browser before it left: both documented exposure paths (tailnet-only, and public HTTPS behind a tunnel) described live data working, and neither could work from a browser. backend/src/api/cors.ts holds the rules as a pure module — an exact allow-list from CORS_ORIGINS, echoed origin (never a wildcard), GET/POST/OPTIONS with authorization, content-type and idempotency-key, a 10-minute preflight cache, and Vary: Origin on every response that carried an Origin so a shared cache cannot hand one site the answer meant for another. Three decisions are load-bearing: it is OFF by default (no CORS_ORIGINS, no header at all, same-origin deployments unchanged), '*' is refused rather than honoured (this API carries bearer tokens; a wildcard would let any page in the world make authenticated calls from a visitor's browser, and the process logs a warning at boot), and a disallowed origin gets no permission headers rather than a 403, because a special status would only tell an attacker which origins a council allows. Preflights are answered 204 in an onRequest hook before any route runs, and the hook runs on error responses too, so a 401 is readable in the browser instead of surfacing as an opaque CORS failure. 17 backend tests; CORS_ORIGINS documented in .env.example, API.md, DEPLOYMENT.md and backend/README.md with the tailnet example. Verified on a real server: no header when unconfigured, preflight 204 for an allowed origin, exact echo for both a public origin and a MagicDNS one, no permission for a lookalike or a scheme/port mismatch, register + an authed /units call cross-origin, 401 still carrying the header, and a '*' configuration granting nothing."
 -  version: 0.3.33
@@ -108,6 +110,53 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.35] — 2026-10-16
+
+### Added
+
+- **`PUBLIC_API_BASE_URL=/` — one host serving both the site and the API.** The
+  value `/` (or the word `same-origin`) now means *the origin this page was served
+  from*, so a single-host deployment needs no absolute address written down, keeps
+  working when the host's address changes, and involves **no CORS at all** — a
+  same-origin request never asks.
+- **A wiring table in `SOURCE-OF-TRUTH.md`** and three documented shapes in
+  `.env.example` / `README.md` / `docs/DEPLOYMENT.md` (one host · tailnet · public
+  HTTPS behind a tunnel), each naming the two variables that have to agree.
+
+### Changed
+
+- **`resolveApiBase()` takes the origin as a third input** and returns demo mode
+  when there is none (SSR/prerender). The origin is only knowable once the page is
+  running, so before hydration the widgets render demo data and then settle on
+  live — the same shape the runtime override already had.
+
+### Fixed
+
+- **A base value that is not a real origin is now ignored instead of used.**
+  `fetch('//evil.example/api/v1/units')` is a **protocol-relative redirect to
+  somebody else**, so a mistyped — or hostile — `PUBLIC_API_BASE_URL` would have
+  handed a council's bearer token to that host. A bare path (`/api`) and a
+  `javascript:` URL are ignored the same way, and the site falls back to demo mode
+  rather than pointing somewhere untrusted. A URL with a path
+  (`https://host/openstrata`) is still accepted, for a reverse proxy in front of
+  the API.
+
+### Verified
+
+- **Chrome, built artifact, no runtime override of any kind** (every `openstrata-*`
+  key cleared): the site and the API were served from **one origin** (static build
+  at the root, `/api` proxied to a memory-backed host) and the signed bill link
+  rendered **$921.00**, `LMS2847-305-202610` and `305 · Evergreen House`.
+- The bundle for `PUBLIC_API_BASE_URL=/` inlines the same-origin rule; the CSP
+  keeps its documented fallback (`deriveOrigin('/')` is not an origin, and
+  `connect-src 'self'` already covers a same-origin call); `static/_headers` is
+  unchanged in git.
+- `src/lib/api/config.test.ts` — **15 tests** covering the rules, the same-origin
+  tokens, the SSR/prerender case, the override precedence, and the four values
+  that must never become a base.
+- `check` **0/0** · **303 frontend tests** · `audit:i18n` **1065 keys × 9 locales**
+  · `audit:contrast` pass · **285 backend tests** · build green.
 
 ## [0.3.34] — 2026-10-16
 

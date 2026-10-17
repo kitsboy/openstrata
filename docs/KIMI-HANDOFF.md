@@ -1,3 +1,32 @@
+## Session — 2026-10-16 · one host can serve both, the site resolved itself, v0.3.35
+
+**Done:**
+- **`PUBLIC_API_BASE_URL=/` (or `same-origin`) now means "the origin this page was served from"**, and since the prompt to Kimi is still unanswered, this is the shape that needs no answer at all: if the site and the API ever sit on one host, the build value is `/`, there is no absolute address to maintain, nothing breaks when the host's address changes, and **no CORS is involved** (a same-origin request never asks).
+- **`resolveApiBase(stored, built, origin)`** takes the page's origin as a third input and returns demo mode when there is none (SSR/prerender), so the pre-hydration render is demo data that settles on live — the same shape the runtime override already had. Honest consequence, stated in the docs: for one frame the widgets show sample data on a real deployment.
+- **A hole closed in the same pass, found by asking what the value's *shape* can be.** A base that is neither an absolute `http(s)` URL nor a same-origin token is now **ignored** instead of used: `fetch('//evil.example/api/v1/units')` is a protocol-relative redirect to somebody else, so a mistyped or hostile `PUBLIC_API_BASE_URL` would have handed a council's bearer token to that host. A bare path (`/api`) and a `javascript:` URL are ignored the same way; a URL with a path is still accepted for a reverse proxy in front of the API.
+- Docs: three deployment shapes in `.env.example`, `README.md` and `docs/DEPLOYMENT.md` (one host · tailnet · public HTTPS), each naming the two variables that must agree; the wiring table in `SOURCE-OF-TRUTH.md` was already added this session.
+- Release record: `CHANGELOG.md` **v0.3.35** + regenerated `changelog.generated.ts`, `LATEST-UPDATE.md`, `.ai_docs/current-status.md`, version bumped. **The six earlier commits were pushed to `main`** (`1285798..fc9d294`) on Cam's say-so.
+
+**Verified (not estimated):**
+- **Chrome, built artifact, no runtime override of any kind** (every `openstrata-*` key cleared, `openstrata-api-base` read back `null`): the site and the API were served from **one origin** (static build at the root, `/api` proxied to a memory-backed host) and the signed bill link rendered **$921.00**, `LMS2847-305-202610`, `305 · Evergreen House`.
+- The `/` build inlines the same-origin rule (`h=["/","same-origin"]` in the bundle); the CSP keeps its documented fallback (`deriveOrigin('/')` is not an origin and `connect-src 'self'` already covers the call); `static/_headers` unchanged in git; no stray `.env`.
+- **The untrusted base, in the browser too.** A build with `PUBLIC_API_BASE_URL=//evil.example` was loaded in Chrome: the sheet stayed demo ($576.00), the page said *“This site is not connected to a council host yet”*, and the only request off-origin was Umami — **zero** requests to `evil.example`. The CSP fell back to its documented `https:` line rather than granting the host.
+- `src/lib/api/config.test.ts` **15 tests** (rules, same-origin tokens, SSR/prerender, override precedence, and the four values that must never become a base) · frontend `check` **0/0** · **309 frontend tests** · **285 backend tests, `tsc` clean** · `audit:i18n` **1065 × 9** · `audit:contrast` 218 pairs · build green.
+
+**Decisions:**
+- **A fifth state had to exist: "configured but untrustworthy".** The first version passed any non-empty value straight to `fetch`; the fix is to treat an unparsable base as *no base*, because demo mode is a visible, safe degradation and a protocol-relative host is a silent credential leak.
+- **`/` rather than a new variable.** A flag (`PUBLIC_API_SAME_ORIGIN=true`) would have been a second thing to keep in sync with the first; one documented spelling of one value is fewer states to get wrong — and it is what a single-host operator would try typing anyway.
+- Still in force: the queue rule, do not pop the stash, do not force-push `main`, do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story.
+
+**Git State:**
+- `main` is pushed through `fc9d294`; this session's v0.3.35 commits ride on top. Read `git log -1` for the tip. Version `0.3.35`.
+
+**Limitations, stated plainly:**
+- **Still no council host**, so the one-host shape was verified against a local origin serving the build and proxying the API — which is the real shape, on one machine. The tailnet and tunnel shapes are still waiting on Kimi's answer.
+- **Before hydration the widgets render demo data** on a `/`-configured deployment (there is no origin server-side). That is one frame of sample data, not a wrong number, and it is documented in `.env.example`.
+
+---
+
 ## Session — 2026-10-16 · cross-origin access on the API, v0.3.34
 
 **Done:**
@@ -24,7 +53,7 @@
 - **Unpushed at the time of writing — see the prompt below; Cam decides the push.**
 
 **Limitations, stated plainly:**
-- **No council host is deployed, so no build has been pointed at a real one.** The browser-level proof for the build-time base (v0.3.33) and the header-level proof for CORS (v0.3.34) are against a local host on this machine. The tailnet and tunnel shapes need a running host — which is exactly what the prompt below asks Kimi for.
+- **No council host is deployed, so no build has been pointed at a real one.** The browser-level proof for the build-time base (v0.3.33), the header-level proof for CORS (v0.3.34) and the same-origin shape (v0.3.35) are all against a local host on this machine. The tailnet and tunnel shapes need a running host — which is exactly what the prompt below asks Kimi for.
 - **INTERAC_\* still needs a bank.** The council's financial institution issues that credential; until then the payer sees the labelled rehearsal provider. Nothing in these releases changes that.
 - Cross-origin tests assert headers and the flow through `app.inject`; they do **not** run a real browser against a real cross-origin host (that needs the deployed API).
 
@@ -38,7 +67,7 @@
 >
 > **The one question: is the Phase 3 backend (`backend/`, Node 22 + Fastify + Postgres/pgvector) running on any host right now?** If yes, please tell me exactly where and how to reach it: the machine, the Tailscale **MagicDNS name and port**, the output of `docker compose ps` (or however it runs), whether `npm run migrate` has been applied (migrations `0001`–`0006` — the member registry and unit store came in 0005/0006, and the bill-link routes need the latest), and whether `GET /health` answers with `{"ok":true,"service":"openstrata-backend"}` from a tailnet machine. If it is **not** running anywhere, say so plainly and tell me whether THOR has the headroom to take it (CPU/RAM/disk, and whether pgvector + Postgres 17 can live there) — a straight *“not deployed, and here is what it needs”* is more useful to me than a maybe.
 >
-> **Job 1 — the two values I need to build against.** Give me the exact string for `PUBLIC_API_BASE_URL` (the frontend build value) and the matching `CORS_ORIGINS` (the site's origin) for a real test. Rule of thumb: **the build value points at the host, `CORS_ORIGINS` points at the site.** With those two I can run the first honest end-to-end build on M3:
+> **Job 1 — tell me which of three shapes we are in.** We added a shape that needs no answer at all, so start here: **(a) one host serves both the site and the API** → the build value is simply `/`, there is **no absolute address to maintain and no `CORS_ORIGINS` needed at all** (verified in a browser on 2026-10-16 — say if this is our shape and we are already testable, and skip to Job 4); **(b) site on Cloudflare + API on your own host** → give me `PUBLIC_API_BASE_URL` (absolute, points at the *host*) and `CORS_ORIGINS` (the *site's* origin); **(c) neither is deployed yet** → say so and tell me what the first host would be. Rule of thumb: **the build value points at the host, `CORS_ORIGINS` points at the site.** With those two I can run the first honest end-to-end build on M3:
 >
 > ```bash
 > cd ~/projects/openstrata
@@ -54,7 +83,8 @@
 >
 > **Conflict-avoidance rules for the vault:** cross-reference the existing OpenStrata entries rather than adding a second copy, keep one dated section per session, and note where this and `MASTER-BRAIN.md` disagree rather than silently overwriting. If something here looks wrong to you, say so — you know the setup better than I do, and I would rather be corrected than consistent.
 >
-> **Back to me:** just answer in your next note. I will pick it up from `docs/KIMI-HANDOFF.md` in the repo, and Cam will carry it to you. Thanks, Kimi — this is the last thing standing between a verified local build and a real council host. \n>
+> **Back to me:** just answer in your next note. I will pick it up from `docs/KIMI-HANDOFF.md` in the repo, and Cam will carry it to you. Thanks, Kimi — this is the last thing standing between a verified local build and a real council host.
+>
 > — *Buffy (M3 coding agent)*
 
 ---

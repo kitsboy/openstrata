@@ -150,12 +150,21 @@ visitors. The app resolves its API base in this order
 1. `localStorage['openstrata-api-base']` — runtime override, no rebuild needed.
    In the app the operator affordance is the quiet **“Running your own host?”**
    link inside the demo notice on the dashboard.
-2. `PUBLIC_API_BASE_URL` — build-time env (Vite exposes `PUBLIC_*` to the client).
+2. `PUBLIC_API_BASE_URL` — build-time env, inlined into the bundle (see
+   `envPrefix` in `vite.config.ts`). Either an absolute origin, or `/` for
+   **one host serving both the site and the API** (then no CORS is involved).
 3. **Neither set → demo mode.** Every widget renders curated sample data, and
    the notice on the dashboard says so.
 
+A value that is neither an absolute `http(s)` URL nor `/` is **ignored** and the
+site stays in demo mode: appending `/api/v1/…` to an untrusted base would hand a
+council's bearer token to that host.
+
 ```bash
-# Local build pointed at your own backend
+# One host serves the site and the API (simplest)
+PUBLIC_API_BASE_URL=/ npm run build
+
+# Site on Cloudflare, API on your own host — the host then needs CORS_ORIGINS
 PUBLIC_API_BASE_URL=http://<tailscale-host>:8080 npm run build
 
 # On Cloudflare Pages (project `openstrata`) set the same value in

@@ -14,6 +14,40 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.35",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "PUBLIC_API_BASE_URL=/ — one host serving both the site and the API. The value / (or the word same-origin) now means *the origin this page was served from*, so a single-host deployment needs no absolute address written down, keeps working when the host's address changes, and involves no CORS at all — a same-origin request never asks.",
+          "A wiring table in SOURCE-OF-TRUTH.md and three documented shapes in .env.example / README.md / docs/DEPLOYMENT.md (one host · tailnet · public HTTPS behind a tunnel), each naming the two variables that have to agree."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "resolveApiBase() takes the origin as a third input and returns demo mode when there is none (SSR/prerender). The origin is only knowable once the page is running, so before hydration the widgets render demo data and then settle on live — the same shape the runtime override already had."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A base value that is not a real origin is now ignored instead of used. fetch('//evil.example/api/v1/units') is a protocol-relative redirect to somebody else, so a mistyped — or hostile — PUBLIC_API_BASE_URL would have handed a council's bearer token to that host. A bare path (/api) and a javascript: URL are ignored the same way, and the site falls back to demo mode rather than pointing somewhere untrusted. A URL with a path (https://host/openstrata) is still accepted, for a reverse proxy in front of the API."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Chrome, built artifact, no runtime override of any kind (every openstrata-* key cleared): the site and the API were served from one origin (static build at the root, /api proxied to a memory-backed host) and the signed bill link rendered $921.00, LMS2847-305-202610 and 305 · Evergreen House.",
+          "The bundle for PUBLIC_API_BASE_URL=/ inlines the same-origin rule; the CSP keeps its documented fallback (deriveOrigin('/') is not an origin, and connect-src 'self' already covers a same-origin call); static/_headers is unchanged in git.",
+          "src/lib/api/config.test.ts — 15 tests covering the rules, the same-origin tokens, the SSR/prerender case, the override precedence, and the four values that must never become a base.",
+          "check 0/0 · 303 frontend tests · audit:i18n 1065 keys × 9 locales · audit:contrast pass · 285 backend tests · build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.34",
     "date": "2026-10-16",
     "groups": [

@@ -47,6 +47,48 @@ describe('which host a build talks to', () => {
 		expect(resolveApiBase(undefined, undefined)).toBeNull();
 		expect(resolveApiBase('', '')).toBeNull();
 	});
+});
+
+describe('one host serving the site and the API', () => {
+	const ORIGIN = 'https://council.example';
+
+	it('resolves a build value of / to the origin the page was served from', () => {
+		expect(resolveApiBase(null, '/', ORIGIN)).toBe(ORIGIN);
+		expect(resolveApiBase(null, 'same-origin', ORIGIN)).toBe(ORIGIN);
+		expect(resolveApiBase(null, ' / ', `  ${ORIGIN}/  `)).toBe(ORIGIN);
+	});
+
+	it('is demo mode before it can know the origin (SSR/prerender)', () => {
+		expect(resolveApiBase(null, '/', null)).toBeNull();
+		expect(resolveApiBase(null, '/', undefined)).toBeNull();
+		expect(resolveApiBase(null, '/', '')).toBeNull();
+	});
+
+	it('still lets the runtime override win over /', () => {
+		expect(resolveApiBase('http://10.0.0.5:8787', '/', ORIGIN)).toBe('http://10.0.0.5:8787');
+	});
+
+	it('ignores a value that is not an absolute origin — including a protocol-relative one', () => {
+		// `//evil.example` is a redirect to somebody else, not a shorthand for here:
+		// appending /api/v1/... to it would send a bearer token to that host. Demo
+		// mode is the safe reading of a config we cannot trust.
+		expect(resolveApiBase(null, '//evil.example', ORIGIN)).toBeNull();
+		expect(resolveApiBase(null, '/api', ORIGIN)).toBeNull();
+		expect(resolveApiBase(null, 'javascript:alert(1)', ORIGIN)).toBeNull();
+		expect(resolveApiBase(null, 'not a url', ORIGIN)).toBeNull();
+	});
+
+	it('keeps an absolute origin, with a path if a proxy sits in front of the API', () => {
+		expect(resolveApiBase(null, 'https://api.example.com/', ORIGIN)).toBe('https://api.example.com');
+		expect(resolveApiBase(null, 'https://host.example/openstrata', ORIGIN)).toBe(
+			'https://host.example/openstrata'
+		);
+		expect(resolveApiBase(null, 'http://hermes:8787', ORIGIN)).toBe('http://hermes:8787');
+	});
+
+	it('falls through to an absolute value when the override is no good', () => {
+		expect(resolveApiBase('/ ', 'https://api.example.com', null)).toBe('https://api.example.com');
+	});
 
 	it('keeps the storage key the operator override document names', () => {
 		expect(API_BASE_KEY).toBe('openstrata-api-base');

@@ -129,7 +129,7 @@ Two settings have to agree with each other. Both are documented in `.env.example
 
 | Where | Variable | What it does |
 |-------|----------|--------------|
-| Frontend build (root) | `PUBLIC_API_BASE_URL` | The API base baked into the static build. Inlined at build time (v0.3.33 onward; before that only the runtime override worked). |
+| Frontend build (root) | `PUBLIC_API_BASE_URL` | The API base baked into the static build. Inlined at build time (v0.3.33 onward; before that only the runtime override worked). **`/` (or `same-origin`) means the page's own origin** — the one-host deployment, where `CORS_ORIGINS` is not needed (v0.3.35). |
 | Frontend runtime (browser) | `localStorage['openstrata-api-base']` | Repoints a deployed site without a rebuild. Wins over the build value. |
 | Backend (host) | `CORS_ORIGINS` | The **site's** origin(s) allowed to call the API from a browser. Empty = no cross-origin access at all. `*` is refused, not honoured. |
 | Backend (host) | `AUTH_SECRET` | Signs session JWTs. Required. |
@@ -139,6 +139,18 @@ Two settings have to agree with each other. Both are documented in `.env.example
 Rule of thumb: **the build value points at the host; `CORS_ORIGINS` points at the site.**
 A build pointed at a host that does not list the site's origin is a browser that
 blocks every call — that is what v0.3.34 fixed on the API side.
+
+Three shapes, pick one:
+
+| Shape | `PUBLIC_API_BASE_URL` | `CORS_ORIGINS` |
+|-------|----------------------|----------------|
+| One host serves site + API | `/` | not needed |
+| Site on Cloudflare, API on a tailnet/tunnel host | `https://<magicdns>:8080` | `https://openstrata.giveabit.io` |
+| Nothing deployed yet | unset (demo mode) | unset |
+
+A value that is not an absolute `http(s)` URL and not `/` / `same-origin` is
+**ignored** (demo mode), so a protocol-relative `//host` can never receive a
+bearer token.
 
 ## Next Actions for Kimi
 
