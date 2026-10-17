@@ -303,6 +303,62 @@ council-scoped — a council can never confirm another council's quote.
 { "referenceCode": "pay-fees-2026-02-U-101" }
 ```
 
+## Signed bill links — the owner path (no session)
+
+An owner paying strata fees is not signed in, and a council session must never
+be put in a URL. The link is the credential instead: a compact HMAC-signed
+statement that **this lot** owes **this amount** under **this reference** and
+**this payee**, until it expires. It is not a payment and posts nothing — the
+reference is the same one the ledger reconciles by.
+
+Tokens are `ospl1.<payload>.<sig>`: HMAC-SHA256 over the payload with a key
+derived from `PAY_LINK_SECRET` (or `AUTH_SECRET` when that is unset) under the
+domain-separation label `openstrata/pay-link/v1`. A link can never verify as a
+JWT and a JWT can never verify as a link. Default lifetime is
+`PAY_LINK_TTL_DAYS` (30); `0` is clamped to one day and anything above 120 days
+to 120.
+
+### `POST /api/v1/payments/link` (treasurer+)
+```json
+{
+  "unitRef": "U-305",
+  "amountBasis": 92100,
+  "referenceCode": "EVG-305-202610",
+  "payeeContact": "fees@lms2847.invalid",
+  "ttlDays": 30
+}
+```
+→ `{ ok, token, path, unitRef, amountBasis, referenceCode, councilName, expiresAt }`
+
+`unitRef` is canonicalised (`U-305` → `305`), so the link carries the same lot
+key the ledger does. `path` is the `/pay?unit=…&rail=etransfer&t=…` address to
+send (the treasurer's own origin, not ours). A zero or non-integer amount, an
+empty reference, or a payee that is not an email/mobile is refused at signing.
+
+### `POST /api/v1/payments/link/verify`
+Public by design — the token is the credential, so no session is needed or sent.
+```json
+{ "token": "ospl1…" }
+```
+→ `{ ok, unitRef, amountBasis, referenceCode, payeeContact, councilName, expiresAt }`
+
+Exactly the bill and nothing else: no balances, no ledger entries, no other
+lots. A bad signature, an expired link, an unknown version or a claim the server
+would not have signed answers `400 { ok: false, reason }`.
+
+### Using a link on the money routes
+Both `POST /api/v1/payments/interac/request` (without an `Authorization` header)
+and `GET …/interac/request/:requestId?t=<token>` accept a link in place of a
+session:
+
+- the request's amount, lot, reference and **payee** are taken from the link's
+  claims, so the payer's page cannot talk the amount up or down or redirect the
+  money;
+- the status read is scoped to the link's own bill: a link for lot 305 cannot
+  read a request for another lot (`404`), and cannot list the council's others;
+- the response carries `viaLink: true` so the payer's page can say why it was
+  allowed.
+
 ## Interac e-Transfer — Business Request Money (fiat rail)
 
 Interac does not issue this credential to a website: a business gets Business

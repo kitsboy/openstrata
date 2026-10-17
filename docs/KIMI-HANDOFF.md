@@ -1,3 +1,42 @@
+## Session — 2026-10-16 · the signed owner payment link, v0.3.32
+
+**Done:**
+- **A link replaces the login on the owner path.** `/pay` used to need a council session to start an Interac request, which the public page never had — so on the deployed site the button could only rehearse. A treasurer now issues one link per bill (`POST /api/v1/payments/link`, treasurer+) and the owner opens `/pay?unit=305&rail=etransfer&t=…` with no account at all. Nothing about the Interac rule changed: the host still starts the request and the bank still approves it.
+- **`backend/src/rails/pay-link.ts`** — the link is a signed statement, not a session: `ospl1.<payload>.<sig>`, HMAC-SHA256 under a key derived from `PAY_LINK_SECRET` (or `AUTH_SECRET`) with the label `openstrata/pay-link/v1`. Claims: version, council id + name, lot, amount (integer cents), reference, payee, issued/expiry. Every reason a link can be unusable is named and tested — `malformed`, `bad signature`, `expired`, `not yet valid`, `unknown version`, `incomplete claims` — and the signature is not the only check: a signed payload with a zero amount or a payee that is not an email is still refused. **A link can never verify as a JWT and a JWT never as a link.** TTL 30 days by default, clamped to 1–120 (a link is never forever).
+- **Three public/owner-aware routes.** `POST /api/v1/payments/link/verify` (public, returns the bill and **nothing else** — no balances, no ledger, no other lots; the token travels in the body because a signed bill is longer than Fastify's 100-byte path limit, which the first version found as a `414`). `POST /api/v1/payments/interac/request` and `GET …/interac/request/:requestId?t=…` now accept a link in place of a session: amount, lot, reference and **payee come from the link's claims**, so the payer's page cannot talk the amount up or down or redirect the money; the status read is scoped to that one bill; both answers carry `viaLink: true`.
+- **`/pay` renders the council's bill** in five explicit states (`none | checking | valid | invalid | offline`), with the lot fixed and the demo furniture hidden. **No amount is ever shown for a link that cannot be used** — showing the demo lot's balance beside an expired real link would be inventing a bill. The token survives rail and lot changes (`sheetSearch`) and is **stripped from the address handed to the bank** (`providerReturnHref`); it is remembered per request id in `sessionStorage` instead.
+- 6 new catalog keys × 9 locales (`payLink*`), `PAY_LINK_SECRET` / `PAY_LINK_TTL_DAYS` in `.env.example`, the three routes in `backend/API.md`, `ROADMAP.md` shipped note, `CHANGELOG.md` v0.3.32 + regenerated `changelog.generated.ts`, version bumped.
+
+**Verified (not estimated):**
+- **Chrome, built artifact, memory-backed host on the same origin, no session on the page** (`localStorage['openstrata-token'] = null`):
+  - The link renders **$921.00 · `LMS2847-305-202610` · `fees@lms2847.invalid`**, unit fixed (no picker), no receipt table.
+  - **The request starts with no session**: `viaLink: true`, `amountBasis: 92100`, `SIM-LMS2847-305-202610-0001` — while the body the page sent claimed `amountBasis: 1` and `unitRef: U-999`, and both were ignored.
+  - The payer reads that request back **with the link** (`200`); **another bill's link gets `404`**; **no credential gets `401`**.
+  - A **tampered** token shows *"This bill link cannot be used"* with reason `bad signature` and **no amount at all**. Switching to **Bitcoin** keeps the token in the URL and the council's $921.00 on screen. A plain `/pay` visit is still the demo sheet ($576, picker, receipts).
+- Gates: `check` **0/0** · `npm test` **293/293** (+6) · `audit:i18n` **pass (1064 keys × 9)** · `npm run build` green · backend **267 tests** (+17) · backend `tsc` clean.
+- **Three defects the browser found, all in code this feature touches:** (1) a host with **no Interac provider answered `200 { ok: false }`**, and the page rendered that as a started request with a **Live request badge on nothing** — the route is now **503** and the client refuses any body whose `ok` is not true before the dialog touches it; (2) `isTrustedGateway(undefined)` **threw** instead of refusing a missing gateway URL; (3) `assertRequestable` allowed `http://localhost` but not `http://127.0.0.1` — the code's own idea of "this machine" was half-implemented, so loopback (`localhost`, `127.0.0.1`, `[::1]`) is now one rule and every other host still must be https.
+
+**Decisions:**
+- **The link is a bill, not a login.** It authorises exactly one lot, one amount, one reference and one payee — the fields the treasurer printed — and it cannot read, list or write anything else. That is why `verify` returns six fields and why the status read 404s across bills.
+- **The payer's page is never trusted for the money fields.** When a link is present the host reads them from the claims, not the request body. The E2E proves it with a lying body rather than by reasoning.
+- **No amount for an unusable link.** The demo sheet's $576 is a demonstration; printing it next to a real expired link would be a fabricated bill. `checking`, `invalid` and `offline` get a card and take no money.
+- **The credential does not follow the payer to the bank.** `returnUrl` is stripped of the token, and the token is kept in `sessionStorage` per request id — Interac's logs have no use for it and no business holding it.
+- **The route that refuses must say so on the wire.** `200 { ok: false }` is what let a payer's page announce a request that never existed; refusals are now `503` and the client validates the envelope.
+- Still in force: the queue rule (offer four, wait for a pick, polish only those; this work was requested directly by Cam, outside the queue, which still has four waiting), do not pop the stash `stale-base layout rewrite before moving to v0.3.28`, do not force-push `main`, do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story, and nothing on `/pay` is payable without a real merchant credential.
+
+**Git State:**
+- Base: `1285798` (v0.3.31). This session's commits are on top of it; read `git log -1` for the docs SHA. Version `0.3.32`.
+- `npm run check:security` still fails exactly as recorded in the previous session (identical findings at the base commit, not wired into CI) — unchanged by this work and deliberately not touched.
+
+**Limitations, stated plainly:**
+- **The public demo still cannot start a real request.** With no Interac merchant credential the host answers from the labelled rehearsal provider, so the payer sees *Simulation — nothing was sent*. The link path is live end to end **up to that provider boundary**; a real bank round trip needs the council's financial institution to onboard it.
+- **`PUBLIC_API_BASE_URL` is not applied at build time.** `src/lib/api/config.ts` reads `import.meta.env.PUBLIC_API_BASE_URL`, which the production bundle compiles to an empty object (`const i = {}`), so only the runtime override (`localStorage['openstrata-api-base']`) points a build at a host. Found while verifying this release; **not fixed here** — it predates this work and deserves its own change with the deployment docs.
+- **No CORS on the backend.** The static site reaches `/api` same-origin in the deployment shape; a build pointed at another origin is blocked by the browser. That is true of every live widget, not just this one.
+- No screen-reader, zoom or disabled-user testing for the new card; no performance work was needed (one extra request on load, and none for a plain visit).
+- The link is a **bearer credential**: anyone who has the URL can pay (and read) that one bill until it expires. That is the intended trade for "no login", it is stated in `.env.example` and `API.md`, and there is no revocation list yet — issuing a new link is the current revocation.
+
+---
+
 ## Session — 2026-10-16 · Interac e-Transfer on the pay sheet, v0.3.31
 
 **Done:**

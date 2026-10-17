@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.32
+-  summary: "The signed owner payment link: /pay can now start a live Interac request with no council login. A treasurer issues one link per bill — POST /api/v1/payments/link — and what comes back is an HMAC-signed statement that this lot owes this amount under this reference to this payee, until it expires (ospl1.<payload>.<sig>, HMAC-SHA256 under a key derived from PAY_LINK_SECRET or AUTH_SECRET with its own domain-separation label, 30-day default clamped to 1..120). The owner opens /pay?unit=305&rail=etransfer&t=…, the page posts the token to the public POST /api/v1/payments/link/verify, and renders the council's bill — amount, reference, payee, expiry — in place of the demo lot, with the lot fixed and the demo furniture (receipt tape, vendor card, how-matching-works) gone because an anonymous payer has no business seeing other owners' rows. From there POST /api/v1/payments/interac/request and GET …/:requestId accept the link in place of a session: the amount, lot, reference and payee come from the link's claims, so a payer's page cannot talk the amount up or down or redirect the money, the status read is scoped to that one bill (404 for any other), and both answers carry viaLink: true. Three things the browser found that reasoning did not: a host with no Interac provider answered HTTP 200 { ok: false }, and the client rendered that as a started request with a 'Live request' badge on nothing — it is now 503, and apiFetch callers refuse a body whose ok is not true; isTrustedGateway threw on a missing gatewayUrl instead of refusing it; and assertRequestable allowed http://localhost but not http://127.0.0.1, so the code's own idea of 'this machine' was half-implemented. The token is carried through rail and lot changes in sheetSearch so a mid-payment URL rewrite cannot end the link, and providerReturnHref strips it from the address handed to the bank — the credential is remembered per request id in sessionStorage instead of being put in Interac's return URL. 6 new catalog keys x 9 locales. Verified in Chrome against a memory-backed host on the same origin: the bill renders with no session (token = null), the request starts with viaLink true and amountBasis 92100 taken from the link even when the browser body lies, the payer reads their own request back (200) and no other (404, and 401 with no credential), a tampered token shows the refusal card with no amount at all, switching to Bitcoin keeps both the token and the council's $921.00, and a plain visit is still the demo sheet ($576, picker, receipts). 293 frontend tests (+6), 267 backend tests (+17), 1064 i18n keys x 9 locales."
 -  version: 0.3.31
 -  summary: "Interac e-Transfer becomes a real rail on the pay sheet. The e-transfer panel now carries one button that starts a Business Request Money request with the amount and the reference already in it, hands the payer to Interac to choose *their own* financial institution and approve from their own banking app, and then takes the answer back. Interac's rule is respected rather than worked around: a business gets Business Request Money through a participating financial institution (BMO, CIBC, DC Bank, Peoples Trust, Scotiabank today), so the merchant credential lives on the council's host and the button runs the same handshake as a labelled simulation until one exists — demo: true on every answer, nothing sent, no bank contacted. New src/lib/interac.ts (26 tests) holds the rules: the provider status vocabulary (seven states, unknown values refused rather than guessed), the institution list, the request builder with integer cents and a normalised payer contact, the gateway allow-list (https on Interac's own domains, or hosts the council's host names — anything else is never opened), and the return contract. Backend: backend/src/rails/interac.ts adds the DemoInteracProvider and the live HttpInteracProvider plus three routes (POST /api/v1/payments/interac/request, GET .../:requestId, POST .../:requestId/reported), INTERAC_* env, /rails/status publishing {configured, live}, and 21 tests. Two honesty rules are load-bearing and tested: a status arriving in a URL is a claim, so a return with no host to confirm it reads 'Returned from your bank — waiting for the council to confirm' and never 'paid'; and a request never moves backwards, so a replayed webhook cannot un-deposit a completed transfer or resurrect a stopped one. Verified in Chrome on the built artifact: all 40 lots (the dialog's amount must equal the lot's own), the three zero-balance lots (no button at all), decline and cancel, four return links, Escape, keyboard entry, 0 text below 4.5:1 in the dialog at 1280px and 390px in both themes with no overflow, and the live branch against a local stand-in host — a trusted gateway shows the Continue button, an untrusted one is refused with nothing opened, and a configured host that is unreachable says so instead of quietly rehearsing. 287 frontend tests, 1058 i18n keys x 9 locales, 250 backend tests."
 -  version: 0.3.30
@@ -102,6 +104,92 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.32] — 2026-10-16
+
+### Added
+
+- **A signed bill link, so an owner can pay without a council login.** A
+  treasurer prints one link per bill (`POST /api/v1/payments/link`, treasurer+)
+  and sends it; the owner opens `/pay?unit=305&rail=etransfer&t=…` on their phone
+  and pays from their own bank. The link is the credential: `ospl1.<payload>.<sig>`,
+  HMAC-SHA256 under a key derived from `PAY_LINK_SECRET` (or `AUTH_SECRET` when
+  unset) with the label `openstrata/pay-link/v1`. It states one lot, one amount,
+  one reference and one payee, until it expires — 30 days by default, clamped to
+  1..120, and a link that has expired is refused rather than re-signed.
+- **`backend/src/rails/pay-link.ts`** — signing, verification and the bill a
+  payer sees, with every reason a link can be unusable named (`malformed`, `bad
+  signature`, `expired`, `not yet valid`, `unknown version`, `incomplete
+  claims`). A link can never verify as a JWT and a JWT never as a link.
+- **`POST /api/v1/payments/link/verify`** — public by design, because the token is
+  the credential. It returns the bill and **nothing else**: no balances, no ledger
+  entries, no other lots. The token travels in the body, not the path (a signed
+  bill is longer than Fastify's 100-byte path parameter limit — found by the 414
+  the first version answered).
+- **The link works on both money routes**: `POST /api/v1/payments/interac/request`
+  with no `Authorization` header, and `GET …/interac/request/:requestId?t=…`.
+  The amount, lot, reference and **payee** come from the link's claims, so the
+  payer's page cannot change them; the status read is scoped to that one bill
+  (`404` for any other, `401` with no credential); both answers carry
+  `viaLink: true`.
+- **`/pay` renders the council's bill** when a link verifies: amount, reference,
+  payee and expiry, the lot fixed (the council signed one lot), and none of the
+  demo furniture — receipt tape, vendor card and lots list are hidden, because an
+  anonymous payer has no business seeing other owners' rows. Five states
+  (`none | checking | valid | invalid | offline`) and **no amount is ever shown
+  for a link that cannot be used**.
+
+### Changed
+
+- **The link survives the sheet.** `sheetSearch()` carries the token through a
+  rail or lot change, so a URL rewrite mid-payment cannot silently end it, and
+  `providerReturnHref()` strips it from the address handed to the bank: the
+  credential is remembered per request id in `sessionStorage`, not put in
+  Interac's return URL.
+- **`PAY_LINK_SECRET` / `PAY_LINK_TTL_DAYS`** documented in `backend/.env.example`,
+  and the three new routes in `backend/API.md`.
+
+### Fixed
+
+- **A refusal that looked like success.** A host with no Interac provider answered
+  `200 { ok: false }`; the payer's page read that as a started request and showed a
+  *Live request* badge on nothing. The route now answers **503**, and
+  `startInteracRequest` / `interacRequestStatus` refuse any body whose `ok` is not
+  true before the dialog touches it.
+- **`isTrustedGateway(undefined)` threw** instead of refusing — a host that
+  answers without a gateway URL must send nobody away, and now does not crash.
+- **`http://127.0.0.1` was refused while `http://localhost` was allowed.** Loopback
+  is loopback: both, and `[::1]`, are allowed plain http; every other host still
+  must be https.
+
+### Verified
+
+- Chrome, built artifact, memory-backed host on the same origin, **no session on
+  the page** (`localStorage['openstrata-token'] = null`): the signed link renders
+  $921.00 / `LMS2847-305-202610` / `fees@lms2847.invalid` with the lot fixed and
+  the receipt table gone; starting the request answers `viaLink: true`,
+  `amountBasis: 92100`, request `SIM-LMS2847-305-202610-0001`, while the body it
+  sent claimed `amountBasis: 1` and `unitRef: U-999` and was ignored; the payer
+  reads that request back with the link (`200`), another bill's link gets `404`,
+  and no credential gets `401`. A tampered token shows *"This bill link cannot be
+  used"* with reason `bad signature` and **no amount**; switching to Bitcoin keeps
+  the token in the URL and the council's amount on screen; a plain `/pay` visit is
+  still the demo sheet.
+- `check` **0/0** · **293 frontend tests** · `audit:i18n` **1064 keys × 9 locales**
+  · **267 backend tests** (17 new for the link, plus the refusal and loopback
+  cases) · build green.
+
+### Known issues
+
+- **The public demo still cannot start a real request**: with no Interac merchant
+  credential the host answers from the labelled rehearsal provider, so the payer
+  sees *Simulation — nothing was sent*. The link path is live end to end up to that
+  provider boundary.
+- **`PUBLIC_API_BASE_URL` is not applied at build time.** `src/lib/api/config.ts`
+  reads `import.meta.env.PUBLIC_API_BASE_URL`, which the production bundle
+  compiles to an empty object, so only the runtime override
+  (`localStorage['openstrata-api-base']`) actually points a build at a host.
+  Found while verifying this release; not changed here.
 
 ## [0.3.31] — 2026-10-16
 
