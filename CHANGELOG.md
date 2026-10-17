@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.33
+-  summary: "PUBLIC_API_BASE_URL now reaches the browser. The variable was documented as the build-time way to point the static site at a council host, but src/lib/api/config.ts read it through import.meta.env, which Vite only populates for its own VITE_ prefix — the production bundle compiled to const i = {}, so the value was always undefined and only the runtime localStorage['openstrata-api-base'] override ever worked. That is why every earlier release verified live data through the override and said so. The fix is one line of real configuration: envPrefix: ['PUBLIC_', 'VITE_'] in vite.config.ts, which keeps the Sentry DSN (VITE_PUBLIC_SENTRY_DSN) exposed and adds the documented PUBLIC_ namespace. The precedence rule moved out of the browser-dependent function into a pure resolveApiBase(stored, built), and src/lib/api/config.test.ts (9 tests) pins both halves: the rules, and a contract test that fails if envPrefix loses PUBLIC_ (the guard no runtime test could have given, since the value was simply absent). The prebuild CSP script had the matching half-bug: it read process.env only, so an operator who put the base in .env — the documented workflow — got a bundle pointed at their host and a connect-src still allowing only https:, which the browser then blocks for a plain-http tailnet host. scripts/generate-csp.mjs now loads .env, .env.local, .env.production, .env.production.local in Vite's order (a shell variable still wins) via util.parseEnv. Verified on the built artifact with no runtime override of any kind — every openstrata-* key cleared, localStorage['openstrata-api-base'] null — the signed bill link rendered its $921.00 and the council's reference against a local host, where before it showed the offline card; the same build with PUBLIC_API_BASE_URL unset contains no baked origin, compiles back to the demo fallback, and serves the demo sheet; build/_headers pins connect-src to the configured origin and returns to the documented https: fallback when none is set; static/_headers is unchanged in git. 303 frontend tests, 1065 i18n keys x 9 locales."
 -  version: 0.3.32
 -  summary: "The signed owner payment link: /pay can now start a live Interac request with no council login. A treasurer issues one link per bill — POST /api/v1/payments/link — and what comes back is an HMAC-signed statement that this lot owes this amount under this reference to this payee, until it expires (ospl1.<payload>.<sig>, HMAC-SHA256 under a key derived from PAY_LINK_SECRET or AUTH_SECRET with its own domain-separation label, 30-day default clamped to 1..120). The owner opens /pay?unit=305&rail=etransfer&t=…, the page posts the token to the public POST /api/v1/payments/link/verify, and renders the council's bill — amount, reference, payee, expiry — in place of the demo lot, with the lot fixed and the demo furniture (receipt tape, vendor card, how-matching-works) gone because an anonymous payer has no business seeing other owners' rows. From there POST /api/v1/payments/interac/request and GET …/:requestId accept the link in place of a session: the amount, lot, reference and payee come from the link's claims, so a payer's page cannot talk the amount up or down or redirect the money, the status read is scoped to that one bill (404 for any other), and both answers carry viaLink: true. Three things the browser found that reasoning did not: a host with no Interac provider answered HTTP 200 { ok: false }, and the client rendered that as a started request with a 'Live request' badge on nothing — it is now 503, and apiFetch callers refuse a body whose ok is not true; isTrustedGateway threw on a missing gatewayUrl instead of refusing it; and assertRequestable allowed http://localhost but not http://127.0.0.1, so the code's own idea of 'this machine' was half-implemented. The token is carried through rail and lot changes in sheetSearch so a mid-payment URL rewrite cannot end the link, and providerReturnHref strips it from the address handed to the bank — the credential is remembered per request id in sessionStorage instead of being put in Interac's return URL. 6 new catalog keys x 9 locales. Verified in Chrome against a memory-backed host on the same origin: the bill renders with no session (token = null), the request starts with viaLink true and amountBasis 92100 taken from the link even when the browser body lies, the payer reads their own request back (200) and no other (404, and 401 with no credential), a tampered token shows the refusal card with no amount at all, switching to Bitcoin keeps both the token and the council's $921.00, and a plain visit is still the demo sheet ($576, picker, receipts). 293 frontend tests (+6), 267 backend tests (+17), 1064 i18n keys x 9 locales."
 -  version: 0.3.31
@@ -105,6 +107,50 @@ owner: Nova (Product Management & Documentation)
 
 # Changelog
 
+## [0.3.33] — 2026-10-16
+
+### Fixed
+
+- **`PUBLIC_API_BASE_URL` now actually reaches the browser.** The variable was
+  documented as the build-time way to point a static build at a council host, but
+  `src/lib/api/config.ts` read it through `import.meta.env`, which Vite populates
+  only for its own `VITE_` prefix. The production bundle compiled to `const i = {}`,
+  so the value was always `undefined` and only the runtime
+  `localStorage['openstrata-api-base']` override ever worked. Fixed by declaring
+  `envPrefix: ['PUBLIC_', 'VITE_']` in `vite.config.ts` — the documented
+  `PUBLIC_` namespace, with `VITE_PUBLIC_SENTRY_DSN` still exposed.
+- **The prebuild CSP had the other half of the same bug.** `scripts/generate-csp.mjs`
+  read `process.env` only, so an operator who followed the documented workflow and
+  put the base in `.env` got a bundle pointed at their host but a `connect-src`
+  that still allowed only `https:` — which the browser then blocks for a plain-http
+  tailnet host. It now loads `.env`, `.env.local`, `.env.production` and
+  `.env.production.local` in Vite’s precedence order (`util.parseEnv`), with an
+  explicit shell variable still winning.
+
+### Changed
+
+- **The precedence rule is a value, not a side effect.** `apiBaseUrl()` now
+  delegates to a pure `resolveApiBase(stored, built)`: a stored override wins, an
+  empty or absent value is demo mode, whitespace and trailing slashes are trimmed.
+  Behaviour is unchanged; the rule is now testable without a browser.
+
+### Verified
+
+- **The build-time base, end to end, with no runtime override of any kind:**
+  `PUBLIC_API_BASE_URL=http://127.0.0.1:4173 npm run build`, then in Chrome every
+  `openstrata-*` key cleared and `localStorage['openstrata-api-base']` **null** —
+  the signed bill link rendered **$921.00**, `LMS2847-305-202610` and `305 ·
+  Evergreen House` from the host. The same page on the previous build showed the
+  *“this site is not connected to a council host”* card.
+- **The unset path still degrades safely:** a build without the variable contains
+  no baked origin (`grep` finds none in `_app/immutable`), compiles the read back
+  to the undefined fallback, and serves the demo sheet as before.
+- **CSP both ways:** with the base set (shell **and** `.env`), `build/_headers`
+  pins `connect-src` to that origin; with none, it keeps the documented `https:`
+  fallback, and `static/_headers` is unchanged in git.
+- `check` **0/0** · **303 frontend tests** (9 new in `src/lib/api/config.test.ts`)
+  · `audit:i18n` **1065 keys × 9 locales** · `audit:contrast` pass · build green.
+
 ## [0.3.32] — 2026-10-16
 
 ### Added
@@ -189,7 +235,8 @@ owner: Nova (Product Management & Documentation)
   reads `import.meta.env.PUBLIC_API_BASE_URL`, which the production bundle
   compiles to an empty object, so only the runtime override
   (`localStorage['openstrata-api-base']`) actually points a build at a host.
-  Found while verifying this release; not changed here.
+  Found while verifying this release; **fixed in v0.3.33** (`envPrefix` in
+  `vite.config.ts`, plus `.env` loading in the prebuild CSP script).
 
 ## [0.3.31] — 2026-10-16
 

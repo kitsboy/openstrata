@@ -1,3 +1,37 @@
+## Session — 2026-10-16 · PUBLIC_API_BASE_URL reaches the browser, v0.3.33
+
+**Done:**
+- **The documented build-time wiring was dead, and now is not.** `PUBLIC_API_BASE_URL` was the way `.env.example`, `README.md`, `docs/DEPLOYMENT.md` and the Tailscale onboarding doc all told an operator to point a build at a council host. `src/lib/api/config.ts` read it through `import.meta.env`, which Vite populates **only** for its own `VITE_` prefix: the production bundle compiled to `const i = {}`, the value was always `undefined`, and the only working path was the runtime `localStorage['openstrata-api-base']` override. That is why every previous session's live-data verification used the override and said so.
+- **The fix is one line of real configuration**, not a workaround: `envPrefix: ['PUBLIC_', 'VITE_']` in `vite.config.ts`. `PUBLIC_` is the documented namespace; `VITE_` stays because `src/hooks.client.ts` reads `VITE_PUBLIC_SENTRY_DSN`.
+- **The precedence rule became a value.** `apiBaseUrl()` now delegates to a pure `resolveApiBase(stored, built)` (override wins; empty/absent is demo mode; whitespace and trailing slashes trimmed), so the rule is testable without a browser or a build.
+- **A guard for the half that no runtime test could see.** `src/lib/api/config.test.ts` (9 tests) covers the rules **and** reads `vite.config.ts` to fail if `envPrefix` loses `PUBLIC_`, if it loses `VITE_`, or if `config.ts` starts reading a renamed/re-prefixed variable. The old defect was invisible to every test in the suite because the value was simply absent — the contract test reads the two files that have to agree.
+- **The prebuild CSP script had the mirror-image bug.** `scripts/generate-csp.mjs` derived its origin from `process.env` only, so an operator who followed the documented workflow and put the base in **`.env`** got a bundle pointed at their host and a `connect-src` still allowing only `https:` — and the browser then blocks a plain-http tailnet host outright. It now loads `.env`, `.env.local`, `.env.production`, `.env.production.local` in Vite's precedence order (`util.parseEnv`), with an explicit shell variable still winning.
+- Docs and release record: `CHANGELOG.md` **v0.3.33** + regenerated `changelog.generated.ts`, `LATEST-UPDATE.md`, `.ai_docs/current-status.md`, the v0.3.32 note's known issue marked fixed, version bumped in `package.json`.
+
+**Verified (not estimated):**
+- **The build-time base, end to end, with no runtime override of any kind.** `PUBLIC_API_BASE_URL=http://127.0.0.1:4173 npm run build`; in Chrome every `openstrata-*` key was cleared and `localStorage['openstrata-api-base']` read back **null**; the signed bill link then rendered **$921.00**, `LMS2847-305-202610` and `305 · Evergreen House` from the host. The same page on the previous build showed the *“this site is not connected to a council host yet”* card — i.e. the defect and the fix were both observed, not inferred.
+- **The unset path still degrades safely.** A build with the variable unset contains no baked origin (searched `build/_app/immutable` for the literal), compiles the read back to the undefined fallback (`g(...void 0...)`), and serves the demo sheet as before.
+- **CSP both ways.** With the base set in the shell, `build/_headers` pins `connect-src` to that origin; with it set only in `.env`, same result (this is the case that used to fail); with none, the documented `https:` fallback. `static/_headers` is byte-identical to the committed version (`git diff` empty) because a build regenerates it.
+- Gates: `check` **0/0** · **303 frontend tests** (+9) · `audit:i18n` **1065 keys × 9** · `audit:contrast` pass · build green.
+
+**Decisions:**
+- **Fix Vite's prefix, not the docs.** The alternative was to tell operators to rename their variable to `VITE_PUBLIC_API_BASE_URL` — which would have meant editing `.env.example`, README, deployment docs, the Tailscale onboarding doc and `scripts/generate-csp.mjs` to work around a missing config line, and would have left `PUBLIC_` a documented lie. `envPrefix` is the supported mechanism; the docs were right.
+- **Guard the plumbing, not just the rule.** The rule was already covered by `src/lib/api/api.test.ts` (vitest leaves `import.meta.env` mutable, which is exactly why the suite could never catch this). The new test reads the config files, because the failure mode was a **build-time** absence.
+- **The CSP gets the same source of truth as the bundle.** Two halves of one setting reading two different environments is how this class of bug survives review; both now read the shell first, then the same `.env` files Vite loads.
+- Still in force: the queue rule (four offered, waiting for a pick), do not pop the stash, do not force-push `main`, do not replace `src/lib/units.ts` `demoUnits` with the 40-lot story.
+
+**Git State:**
+- Base: `e79ed49` (v0.3.32 docs). This session's commits sit on top; read `git log -1` for the tip. Version `0.3.33`.
+- `npm run check:security` is unchanged from the recorded baseline (not wired into CI); nothing here touched it.
+
+**Limitations, stated plainly:**
+- **`PUBLIC_API_BASE_URL` is inlined at build time, so it cannot be changed after the fact** — that is what the runtime `openstrata-api-base` override is for, and both are documented in `.env.example`. `resolveApiBase` checks the override first.
+- **No CORS on the backend still.** A build pointed at another origin now really does try that origin, and the browser will block it unless the site and API share an origin (the deployment shape) or CORS is added — unchanged by this release and true of every live widget.
+- **The replay test used a plain-http loopback host** (`http://127.0.0.1:4173`), which is the case the CSP change unblocks; no https/tailnet host was available in this session to exercise a MagicDNS build.
+- No new UI, so no contrast, screen-reader or performance work was in scope.
+
+---
+
 ## Session — 2026-10-16 · the signed owner payment link, v0.3.32
 
 **Done:**
@@ -30,7 +64,7 @@
 
 **Limitations, stated plainly:**
 - **The public demo still cannot start a real request.** With no Interac merchant credential the host answers from the labelled rehearsal provider, so the payer sees *Simulation — nothing was sent*. The link path is live end to end **up to that provider boundary**; a real bank round trip needs the council's financial institution to onboard it.
-- **`PUBLIC_API_BASE_URL` is not applied at build time.** `src/lib/api/config.ts` reads `import.meta.env.PUBLIC_API_BASE_URL`, which the production bundle compiles to an empty object (`const i = {}`), so only the runtime override (`localStorage['openstrata-api-base']`) points a build at a host. Found while verifying this release; **not fixed here** — it predates this work and deserves its own change with the deployment docs.
+- **`PUBLIC_API_BASE_URL` was not applied at build time** — found while verifying this release, and **fixed the same day in v0.3.33** (`envPrefix` in `vite.config.ts`, plus `.env` loading in the prebuild CSP script; see the session note above this one). Until v0.3.33 only the runtime override (`localStorage['openstrata-api-base']`) pointed a build at a host.
 - **No CORS on the backend.** The static site reaches `/api` same-origin in the deployment shape; a build pointed at another origin is blocked by the browser. That is true of every live widget, not just this one.
 - No screen-reader, zoom or disabled-user testing for the new card; no performance work was needed (one extra request on load, and none for a plain visit).
 - The link is a **bearer credential**: anyone who has the URL can pay (and read) that one bill until it expires. That is the intended trade for "no login", it is stated in `.env.example` and `API.md`, and there is no revocation list yet — issuing a new link is the current revocation.

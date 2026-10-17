@@ -14,6 +14,34 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.33",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Fixed",
+        "items": [
+          "PUBLIC_API_BASE_URL now actually reaches the browser. The variable was documented as the build-time way to point a static build at a council host, but src/lib/api/config.ts read it through import.meta.env, which Vite populates only for its own VITE_ prefix. The production bundle compiled to const i = {}, so the value was always undefined and only the runtime localStorage['openstrata-api-base'] override ever worked. Fixed by declaring envPrefix: ['PUBLIC_', 'VITE_'] in vite.config.ts — the documented PUBLIC_ namespace, with VITE_PUBLIC_SENTRY_DSN still exposed.",
+          "The prebuild CSP had the other half of the same bug. scripts/generate-csp.mjs read process.env only, so an operator who followed the documented workflow and put the base in .env got a bundle pointed at their host but a connect-src that still allowed only https: — which the browser then blocks for a plain-http tailnet host. It now loads .env, .env.local, .env.production and .env.production.local in Vite’s precedence order (util.parseEnv), with an explicit shell variable still winning."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The precedence rule is a value, not a side effect. apiBaseUrl() now delegates to a pure resolveApiBase(stored, built): a stored override wins, an empty or absent value is demo mode, whitespace and trailing slashes are trimmed. Behaviour is unchanged; the rule is now testable without a browser."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The build-time base, end to end, with no runtime override of any kind: PUBLIC_API_BASE_URL=http://127.0.0.1:4173 npm run build, then in Chrome every openstrata-* key cleared and localStorage['openstrata-api-base'] null — the signed bill link rendered $921.00, LMS2847-305-202610 and 305 · Evergreen House from the host. The same page on the previous build showed the *“this site is not connected to a council host”* card.",
+          "The unset path still degrades safely: a build without the variable contains no baked origin (grep finds none in _app/immutable), compiles the read back to the undefined fallback, and serves the demo sheet as before.",
+          "CSP both ways: with the base set (shell and .env), build/_headers pins connect-src to that origin; with none, it keeps the documented https: fallback, and static/_headers is unchanged in git.",
+          "check 0/0 · 303 frontend tests (9 new in src/lib/api/config.test.ts) · audit:i18n 1065 keys × 9 locales · audit:contrast pass · build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.32",
     "date": "2026-10-16",
     "groups": [
