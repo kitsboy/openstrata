@@ -56,6 +56,11 @@ export interface BackendConfig {
   interac: InteracConfig;
   /** Signed per-bill payment links sent to owners. */
   payLink: PayLinkConfig;
+  /**
+   * Origins allowed to call the API from a browser (the static site's own
+   * origins). Empty = no cross-origin access; `*` is refused, not honoured.
+   */
+  corsOrigins: string[];
 }
 
 const int = (v: string | undefined, fallback: number): number => {
@@ -102,6 +107,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     payLink: {
       secret: env.PAY_LINK_SECRET,
       ttlDays: int(env.PAY_LINK_TTL_DAYS, PAY_LINK_DEFAULT_TTL_DAYS)
-    }
+    },
+    corsOrigins: (env.CORS_ORIGINS ?? '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean)
   };
 }

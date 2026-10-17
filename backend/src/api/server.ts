@@ -50,6 +50,7 @@ import { DuplicateEmailError } from '../auth/store.js';
 import type { AuthUser, UserRole } from '../auth/model.js';
 import { ROLE_RANK, toPublicUser } from '../auth/model.js';
 import { RateLimiter, type RateLimitConfig } from '../auth/rate-limit.js';
+import { corsHeaders, mergeVary, parseCorsOrigins } from './cors.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -86,6 +87,11 @@ export interface ApiDeps {
     payLinkSecret?: string;
     /** How long a bill link lives. Default 30 days, capped at 120. */
     payLinkTtlDays?: number;
+    /**
+     * Origins the static site is served from (`CORS_ORIGINS`). Empty / absent
+     * means no cross-origin access at all — see `api/cors.ts` for the rules.
+     */
+    corsOrigins?: string[];
   };
 }
 
@@ -124,6 +130,34 @@ export async function buildServer(
   opts: { logger?: boolean } = { logger: true }
 ): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? true });
+
+  // -----------------------------------------------------------  Cross-origin
+  // The site and the API are different origins in both documented deployment
+  // shapes (a static Cloudflare build against a council's own host), so a
+  // browser refuses `/api/v1/*` until the API permits its origin. Opt-in and
+  // exact: with no configured list, not one header is added.
+  const cors = parseCorsOrigins(deps.config.corsOrigins);
+  if (cors.refusedWildcard) {
+    app.log.warn(
+      'CORS_ORIGINS contained "*" — ignored. List the exact site origins: this API carries bearer tokens.'
+    );
+  }
+  if (cors.origins.length > 0) {
+    app.log.info(`CORS enabled for ${cors.origins.length} origin(s): ${cors.origins.join(', ')}`);
+    app.addHook('onRequest', async (req, reply) => {
+      const headers = corsHeaders(req.headers.origin, cors.origins);
+      if (!headers.vary) return;
+      reply.header('vary', mergeVary(reply.getHeader('vary'), 'Origin'));
+      for (const [name, value] of Object.entries(headers)) {
+        if (name !== 'vary') reply.header(name, value);
+      }
+      // A preflight is answered here and never reaches a route: the route would
+      // want a body, and the browser only asks whether it may send one.
+      if (req.method === 'OPTIONS' && headers['access-control-allow-origin']) {
+        return reply.code(204).send();
+      }
+    });
+  }
 
   const defaultBudget = {
     fiscalYear: '2026',

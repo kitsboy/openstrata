@@ -102,7 +102,8 @@ async function main(): Promise<void> {
       authRateLimitMax: config.authRateLimitMax,
       authRateLimitWindowMs: config.authRateLimitWindowMs,
       payLinkSecret: config.payLink.secret,
-      payLinkTtlDays: config.payLink.ttlDays
+      payLinkTtlDays: config.payLink.ttlDays,
+      corsOrigins: config.corsOrigins
     }
   });
 

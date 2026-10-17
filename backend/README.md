@@ -86,6 +86,10 @@ docker compose run --rm api npm run migrate
 # 4. Point the frontend at the host's MagicDNS name
 #    PUBLIC_API_BASE_URL=https://openstrata-host.tailnet.ts.net   (build time)
 #    or localStorage['openstrata-api-base'] = '...'               (runtime)
+#
+# 5. And let the site's origin in: the site is a static build elsewhere, so
+#    without this a browser blocks every call (see CORS_ORIGINS in .env.example)
+#    CORS_ORIGINS=https://openstrata.giveabit.io
 ```
 
 ### Rosa Ollama on a different tailnet host

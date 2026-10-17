@@ -303,6 +303,29 @@ council-scoped — a council can never confirm another council's quote.
 { "referenceCode": "pay-fees-2026-02-U-101" }
 ```
 
+## Cross-origin access
+
+The site is a static build and the API is the council's own host, so a browser
+treats them as two origins and refuses every `/api/v1/*` call until the API
+permits the site's origin. That permission is **opt-in and exact**:
+
+- `CORS_ORIGINS` (comma-separated) lists the origins allowed to call this API
+  from a browser. With it empty or unset, **no CORS header is added at all** and
+a same-origin deployment behaves exactly as before.
+- An allowed origin is echoed back on the response (`Access-Control-Allow-Origin:
+  <the origin that asked>`), with `Access-Control-Allow-Methods: GET, POST,
+  OPTIONS`, `Access-Control-Allow-Headers: authorization, content-type,
+  idempotency-key` and `Access-Control-Max-Age: 600`.
+- A preflight (`OPTIONS`) from an allowed origin is answered `204` before any
+  route runs.
+- `Vary: Origin` is set on **every** response that carried an `Origin`, allowed
+  or not, so a shared cache can never hand one site the answer meant for another.
+- `*` is **refused, not honoured** (the process logs a warning at boot): a
+  wildcard would let any page make authenticated calls from a visitor's browser.
+- An origin that is not listed simply receives no permission headers. There is no
+  special failure status, because a 403 for the wrong origin would only tell an
+  attacker which origins the council allows.
+
 ## Signed bill links — the owner path (no session)
 
 An owner paying strata fees is not signed in, and a council session must never
