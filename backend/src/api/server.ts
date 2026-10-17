@@ -33,6 +33,7 @@ import { quotePayment, enabledRails, type RailRegistry, type Rail } from '../rai
 import { getOrCreateQuote, type PaymentRequestStore } from '../rails/payment-request.js';
 import { SITE_SLUG, receiveLabelFor } from '../rails/receive-label.js';
 import type { InteracProvider, InteracRequest } from '../rails/interac.js';
+import { payLinkPath, signPayLink, toPayLinkBill, verifyPayLink } from '../rails/pay-link.js';
 import type { RateProvider } from '../rails/rails.js';
 import { generateForm } from '../forms/forms.js';
 import { checkQuorum, checkQuorumRescheduled, countVote } from '../meetings/meetings.js';
@@ -81,6 +82,10 @@ export interface ApiDeps {
     authRateLimitMax: number;
     authRateLimitWindowMs: number;
     authTokenTtl: number; // seconds
+    /** Signing secret for bill links; falls back to `authSecret` (domain-separated). */
+    payLinkSecret?: string;
+    /** How long a bill link lives. Default 30 days, capped at 120. */
+    payLinkTtlDays?: number;
   };
 }
 
@@ -137,6 +142,22 @@ export async function buildServer(
     if (!claims) {
       return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
     }
+    req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
+  };
+
+  /**
+   * Auth for a route a payer reaches without an account: a valid Bearer token is
+   * honoured, and its absence is not an error here — the handler must then find
+   * a bill link (or refuse). An *invalid* Bearer token is still refused, so an
+   * expired session cannot quietly fall through to the link path.
+   */
+  const authenticateOptional: PreHandler = async (req, reply) => {
+    const header = req.headers.authorization;
+    if (!header) return;
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+    if (!token) return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
+    const claims = verifyJwt(token, deps.config.authSecret);
+    if (!claims) return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
     req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
   };
 
@@ -1120,12 +1141,111 @@ export async function buildServer(
     }
   );
 
+  // -------------------------------------------  Bill links (the owner path)
+  // An owner paying strata fees is not signed in, and a council session must
+  // never be put in a URL. The link is the credential instead: an HMAC-signed
+  // statement that this lot owes this amount under this reference until it
+  // expires. It is not a payment and it posts nothing — the reference is the
+  // same one the ledger reconciles by.
+  const payLinkSecret = (): string => deps.config.payLinkSecret ?? deps.config.authSecret;
+
+  app.post<{
+    Body: {
+      unitRef: string;
+      amountBasis: number;
+      referenceCode: string;
+      payeeContact: string;
+      ttlDays?: number;
+    };
+  }>(
+    '/api/v1/payments/link',
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['unitRef', 'amountBasis', 'referenceCode', 'payeeContact'],
+          additionalProperties: false,
+          properties: {
+            unitRef: { type: 'string', minLength: 1 },
+            amountBasis: { type: 'integer', minimum: 1 },
+            referenceCode: { type: 'string', minLength: 1 },
+            payeeContact: { type: 'string', minLength: 3 },
+            ttlDays: { type: 'integer', minimum: 1, maximum: 120 }
+          }
+        }
+      }
+    },
+    async (req) => {
+      const unitRef = normalizeUnitRef(req.body.unitRef);
+      if (!unitRef) return { ok: false, reason: 'invalid unitRef' };
+      const councilId = req.user!.councilId;
+      const council = await deps.auth.getCouncil(councilId);
+      try {
+        const token = signPayLink(
+          {
+            councilId,
+            councilName: council?.name ?? councilId,
+            unitRef,
+            amountBasis: req.body.amountBasis,
+            referenceCode: req.body.referenceCode,
+            payeeContact: req.body.payeeContact,
+            ttlDays: req.body.ttlDays ?? deps.config.payLinkTtlDays
+          },
+          payLinkSecret()
+        );
+        const claims = verifyPayLink(token, payLinkSecret());
+        return {
+          ok: true,
+          token,
+          // The treasurer's own origin, not ours: the host may be reached by a
+          // Tailscale name, a custom domain or localhost, and only the browser
+          // knows which one the owner will open.
+          path: payLinkPath(unitRef, token),
+          unitRef,
+          amountBasis: req.body.amountBasis,
+          referenceCode: req.body.referenceCode,
+          councilName: council?.name ?? councilId,
+          expiresAt: claims.ok ? new Date(claims.claims.exp * 1000).toISOString() : null
+        };
+      } catch (err) {
+        return { ok: false, reason: (err as Error).message };
+      }
+    }
+  );
+
+  // Public by design: the token is the credential. It returns the bill printed on
+  // the link and nothing else — no balances, no ledger, no other lots. The token
+  // travels in the body rather than the path because a signed bill is longer
+  // than most routers' path-parameter limit (Fastify's is 100 bytes).
+  app.post<{ Body: { token: string } }>(
+    '/api/v1/payments/link/verify',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['token'],
+          additionalProperties: false,
+          properties: { token: { type: 'string', minLength: 1 } }
+        }
+      }
+    },
+    async (req, reply) => {
+      const verified = verifyPayLink(req.body.token, payLinkSecret());
+      if (!verified.ok) {
+        reply.code(400);
+        return { ok: false, reason: verified.reason };
+      }
+      return { ok: true, ...toPayLinkBill(verified.claims) };
+    }
+  );
+
   // -------------------------------------------  Interac e-Transfer (Request Money)
   // The council's bank issues the merchant credential; this host starts the
   // request, hands back the provider's gateway URL, and reads the status the
   // payer returns with. Amounts are integer cents and the reference code is the
   // same one the ledger reconciles by, so an e-transfer still finds its lot.
-  const interacWire = (request: InteracRequest) => ({
+  const interacWire = (request: InteracRequest, viaLink = false) => ({
     ok: true,
     requestId: request.requestId,
     gatewayUrl: request.gatewayUrl,
@@ -1135,16 +1255,89 @@ export async function buildServer(
     referenceCode: request.referenceCode,
     unitRef: request.unitRef,
     expiresAt: request.expiresAt,
-    demo: request.demo
+    demo: request.demo,
+    viaLink
   });
+
+  interface PayerContext {
+    councilId: string;
+    unitRef: string;
+    amountBasis: number;
+    referenceCode: string;
+    payeeContact: string;
+    viaLink: boolean;
+  }
+
+  /**
+   * Who is paying, and under whose authority. A session's body is checked; a
+   * bill link's own claims win over anything the caller sent, so the page cannot
+   * talk an amount up or down, or redirect the money to a different payee.
+   */
+  const payerContext = async (
+    req: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<PayerContext | null> => {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    if (req.user) {
+      const unitRef = normalizeUnitRef(String(body.unitRef ?? ''));
+      const amountBasis = Number(body.amountBasis);
+      const referenceCode = String(body.referenceCode ?? '').trim();
+      const payeeContact = String(body.payeeContact ?? '').trim();
+      if (!unitRef) {
+        reply.code(400).send({ ok: false, reason: 'invalid unitRef' });
+        return null;
+      }
+      if (!Number.isInteger(amountBasis) || amountBasis <= 0) {
+        reply.code(400).send({ ok: false, reason: 'amount must be a positive number of cents' });
+        return null;
+      }
+      if (!referenceCode) {
+        reply.code(400).send({ ok: false, reason: 'reference is required' });
+        return null;
+      }
+      if (!payeeContact) {
+        reply.code(400).send({ ok: false, reason: 'a payee is required' });
+        return null;
+      }
+      return {
+        councilId: req.user.councilId,
+        unitRef,
+        amountBasis,
+        referenceCode,
+        payeeContact,
+        viaLink: false
+      };
+    }
+
+    const supplied = typeof body.payLink === 'string' ? body.payLink : undefined;
+    if (!supplied) {
+      reply.code(401).send({ ok: false, reason: 'authentication required' });
+      return null;
+    }
+    const verified = verifyPayLink(supplied, payLinkSecret());
+    if (!verified.ok) {
+      reply.code(400).send({ ok: false, reason: verified.reason });
+      return null;
+    }
+    return {
+      councilId: verified.claims.c,
+      unitRef: verified.claims.u,
+      amountBasis: verified.claims.a,
+      referenceCode: verified.claims.r,
+      payeeContact: verified.claims.p,
+      viaLink: true
+    };
+  };
 
   app.post<{
     Body: {
-      unitRef: string;
-      amountBasis: number;
-      referenceCode: string;
+      unitRef?: string;
+      amountBasis?: number;
+      referenceCode?: string;
+      payeeContact?: string;
+      /** A council session may post the lot it is paying for; a bill link may not. */
+      payLink?: string;
       payerContact: string;
-      payeeContact: string;
       returnUrl: string;
       cancelUrl?: string;
       language?: string;
@@ -1152,18 +1345,19 @@ export async function buildServer(
   }>(
     '/api/v1/payments/interac/request',
     {
-      preHandler: [authenticate],
+      preHandler: [authenticateOptional],
       schema: {
         body: {
           type: 'object',
-          required: ['unitRef', 'amountBasis', 'referenceCode', 'payerContact', 'payeeContact', 'returnUrl'],
+          required: ['payerContact', 'returnUrl'],
           additionalProperties: false,
           properties: {
             unitRef: { type: 'string', minLength: 1 },
             amountBasis: { type: 'integer', minimum: 1 },
             referenceCode: { type: 'string', minLength: 1 },
-            payerContact: { type: 'string', minLength: 3 },
             payeeContact: { type: 'string', minLength: 3 },
+            payLink: { type: 'string', minLength: 20 },
+            payerContact: { type: 'string', minLength: 3 },
             returnUrl: { type: 'string', minLength: 8 },
             cancelUrl: { type: 'string' },
             language: { type: 'string' }
@@ -1171,41 +1365,66 @@ export async function buildServer(
         }
       }
     },
-    async (req) => {
-      if (!deps.interac) return { ok: false, reason: 'Interac rail is not configured on this host' };
-      const unitRef = normalizeUnitRef(req.body.unitRef);
-      if (!unitRef) return { ok: false, reason: 'invalid unitRef' };
+    async (req, reply) => {
+      if (!deps.interac) {
+        reply.code(503);
+        return { ok: false, reason: 'Interac rail is not configured on this host' };
+      }
+      const payer = await payerContext(req, reply);
+      if (!payer) return reply; // the refusal is already on the wire
       try {
         const request = await deps.interac.create({
-          councilId: req.user!.councilId,
-          unitRef,
-          amountBasis: req.body.amountBasis,
-          referenceCode: req.body.referenceCode,
+          councilId: payer.councilId,
+          unitRef: payer.unitRef,
+          amountBasis: payer.amountBasis,
+          referenceCode: payer.referenceCode,
           payerContact: req.body.payerContact,
-          payeeContact: req.body.payeeContact,
+          payeeContact: payer.payeeContact,
           returnUrl: req.body.returnUrl,
           cancelUrl: req.body.cancelUrl,
           language: req.body.language
         });
-        return interacWire(request);
+        return interacWire(request, payer.viaLink);
       } catch (err) {
         return { ok: false, reason: (err as Error).message };
       }
     }
   );
 
-  app.get<{ Params: { requestId: string } }>(
+  // The payer returns from their bank with no session. A bill link may read its
+  // own bill's request and no other: a link for lot 305 cannot be turned into a
+  // window on the rest of the council's payments.
+  app.get<{ Params: { requestId: string }; Querystring: { t?: string } }>(
     '/api/v1/payments/interac/request/:requestId',
-    { preHandler: [authenticate] },
+    { preHandler: [authenticateOptional] },
     async (req, reply) => {
-      if (!deps.interac) return { ok: false, reason: 'Interac rail is not configured on this host' };
+      if (!deps.interac) {
+        reply.code(503);
+        return { ok: false, reason: 'Interac rail is not configured on this host' };
+      }
+      let councilId: string;
+      let bill: { unitRef: string; referenceCode: string } | null = null;
+      if (req.user) {
+        councilId = req.user.councilId;
+      } else {
+        const verified = verifyPayLink(req.query.t, payLinkSecret());
+        if (!verified.ok) {
+          reply.code(verified.reason === 'malformed' ? 401 : 400);
+          return { ok: false, reason: req.query.t ? verified.reason : 'authentication required' };
+        }
+        councilId = verified.claims.c;
+        bill = { unitRef: verified.claims.u, referenceCode: verified.claims.r };
+      }
       try {
-        const request = await deps.interac.status(req.user!.councilId, req.params.requestId);
-        if (!request) {
+        const request = await deps.interac.status(councilId, req.params.requestId);
+        const offBill =
+          bill !== null &&
+          (!request || request.unitRef !== bill.unitRef || request.referenceCode !== bill.referenceCode);
+        if (!request || offBill) {
           reply.code(404);
           return { ok: false, reason: 'unknown request' };
         }
-        return interacWire(request);
+        return interacWire(request, bill !== null);
       } catch (err) {
         return { ok: false, reason: (err as Error).message };
       }
@@ -1229,7 +1448,10 @@ export async function buildServer(
       }
     },
     async (req, reply) => {
-      if (!deps.interac) return { ok: false, reason: 'Interac rail is not configured on this host' };
+      if (!deps.interac) {
+        reply.code(503);
+        return { ok: false, reason: 'Interac rail is not configured on this host' };
+      }
       if (!deps.interac.report) {
         return { ok: false, reason: 'the live provider reports its own status' };
       }

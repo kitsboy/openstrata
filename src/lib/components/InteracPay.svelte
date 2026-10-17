@@ -42,12 +42,20 @@
 	import { ApiUnavailableError } from '$lib/api/client';
 	import { isApiConfigured } from '$lib/api/config';
 	import { interacRequestStatus, startInteracRequest } from '$lib/api/interac';
+	import { providerReturnHref } from '$lib/pay-sheet';
 
 	let {
 		cents,
 		reference,
 		unitId,
 		payee,
+		/**
+		 * The signed bill link this sheet was opened with, if any. It is the owner's
+		 * credential when no one is signed in, so it is what makes a live request
+		 * possible from an anonymous phone; the host reads the amount and payee
+		 * from the link rather than from this page.
+		 */
+		link = null,
 		/** A return parsed from the URL by the page that owns the address bar. */
 		returned = null
 	}: {
@@ -55,8 +63,33 @@
 		reference: string;
 		unitId: string;
 		payee: string;
+		link?: string | null;
 		returned?: ReturnSignal | null;
 	} = $props();
+
+	/**
+	 * A bill link is a bearer credential, and the bank handoff leaves the tab. So
+	 * the token is remembered per request id on this device rather than put in the
+	 * return URL the provider is given: the payer comes back with the request id,
+	 * and the token is recovered from here instead of from Interac's logs.
+	 */
+	const LINK_STORE = 'openstrata-pay-link:';
+
+	function rememberLink(requestId: string, token: string) {
+		try {
+			sessionStorage.setItem(`${LINK_STORE}${requestId}`, token);
+		} catch {
+			/* storage disabled: the return then reads the request as a claim only */
+		}
+	}
+
+	function rememberedLink(requestId: string): string | null {
+		try {
+			return sessionStorage.getItem(`${LINK_STORE}${requestId}`);
+		} catch {
+			return null;
+		}
+	}
 
 	let open = $state(false);
 	let stage = $state<'contact' | 'handoff' | 'result'>('contact');
@@ -120,7 +153,7 @@
 
 	async function confirm(id: string, signal: ReturnSignal) {
 		try {
-			const result = await interacRequestStatus(id);
+			const result = await interacRequestStatus(id, link ?? rememberedLink(id));
 			live = !result.demo;
 			status = normalizeStatus(result.status) ?? signal.status ?? 'requested';
 			confirmed = true;
@@ -185,7 +218,9 @@
 			unitRef: unitId,
 			payeeContact: payee,
 			payerContact: contact,
-			returnUrl: location.href
+			// The token is not handed to the provider: it is a credential for this
+			// bill, and the bank has no use for it.
+			returnUrl: providerReturnHref(location.href)
 		});
 		if (!built.ok) {
 			error = built.reason;
@@ -194,7 +229,8 @@
 
 		busy = true;
 		try {
-			const result = await startInteracRequest(built.body);
+			const result = await startInteracRequest(built.body, { payLink: link });
+			if (link) rememberLink(result.requestId, link);
 			live = !result.demo;
 			requestId = result.requestId;
 			gatewayUrl = result.gatewayUrl;
@@ -210,7 +246,10 @@
 			// is a failure, and saying so is the difference between a labelled
 			// rehearsal and a payer believing a live rail went quiet.
 			if (err instanceof ApiUnavailableError) {
-				if (isApiConfigured()) error = $copy.payInteracUnreachable;
+				// A real bill link is never rehearsed: simulating an approval of an
+				// amount a council actually printed would be the one lie this dialog
+				// must not tell.
+				if (isApiConfigured() || link) error = $copy.payInteracUnreachable;
 				else simulate();
 			} else {
 				error = err instanceof Error ? err.message : String(err);

@@ -2,13 +2,21 @@ import { describe, it, expect } from 'vitest';
 import {
 	DEFAULT_SHEET_RAIL,
 	LOCK_SECONDS,
+	PAY_LINK_PARAM,
 	SHEET_RAILS,
 	TUCKED_RAILS,
+	isPayLinkToken,
 	isSheetRail,
 	lockClock,
 	lockState,
-	sheetRail
+	payLinkFromSearch,
+	providerReturnHref,
+	sheetRail,
+	sheetSearch
 } from './pay-sheet';
+
+/** A link shaped like the backend's: `ospl1.<payload>.<signature>`. */
+const LINK = `ospl1.${'p'.repeat(120)}.${'s'.repeat(43)}`;
 
 describe('pay sheet rate lock', () => {
 	it('is locked while time remains and expired at the boundary', () => {
@@ -60,6 +68,56 @@ describe('pay sheet rails', () => {
 		expect(isSheetRail('')).toBe(false);
 		expect(isSheetRail(null)).toBe(false);
 		expect(isSheetRail(undefined)).toBe(false);
+	});
+});
+
+describe('a signed bill link on the sheet', () => {
+	it('is found in the address it arrives on', () => {
+		expect(payLinkFromSearch(`?unit=305&rail=etransfer&${PAY_LINK_PARAM}=${LINK}`)).toBe(LINK);
+		expect(payLinkFromSearch(`?${PAY_LINK_PARAM}=${LINK}`)).toBe(LINK);
+	});
+
+	it('is not invented from an ordinary visit', () => {
+		expect(payLinkFromSearch('')).toBeNull();
+		expect(payLinkFromSearch('?unit=305&rail=etransfer')).toBeNull();
+	});
+
+	it('refuses a ?t= that is not a signed link', () => {
+		// A campaign tag, a hand-typed value, or a token from another scheme: none
+		// of these may send the page looking for a bill it was never given.
+		expect(payLinkFromSearch('?t=campaign')).toBeNull();
+		expect(payLinkFromSearch('?t=ospl1.tooshort')).toBeNull();
+		expect(payLinkFromSearch('?t=eyJhbGciOiJIUzI1NiJ9.payload.sig')).toBeNull();
+		for (const value of [null, undefined, '', 'ospl1.', 42 as unknown as string]) {
+			expect(isPayLinkToken(value)).toBe(false);
+		}
+	});
+
+	it('survives a rail or lot change, so the payment is not interrupted', () => {
+		const search = sheetSearch('305', 'bitcoin', LINK);
+		const params = new URLSearchParams(search);
+		expect(params.get('unit')).toBe('305');
+		expect(params.get('rail')).toBe('bitcoin');
+		expect(params.get(PAY_LINK_PARAM)).toBe(LINK);
+	});
+
+	it('adds no token to a sheet that has none', () => {
+		const params = new URLSearchParams(sheetSearch('305', 'etransfer'));
+		expect(params.has(PAY_LINK_PARAM)).toBe(false);
+		expect(params.get('rail')).toBe('etransfer');
+	});
+
+	it('drops the token from the address handed to a bank', () => {
+		const href = providerReturnHref(`https://openstrata.giveabit.io/pay?unit=305&rail=etransfer&t=${LINK}`);
+		const url = new URL(href);
+		expect(url.searchParams.has(PAY_LINK_PARAM)).toBe(false);
+		expect(href).not.toContain(LINK);
+		// Still the same sheet, so the payer comes back to the right panel.
+		expect(url.searchParams.get('unit')).toBe('305');
+		expect(url.searchParams.get('rail')).toBe('etransfer');
+		// And the provider's own return parameters are not echoed back to it.
+		expect(url.searchParams.has('etransfer')).toBe(false);
+		expect(url.searchParams.has('status')).toBe(false);
 	});
 });
 

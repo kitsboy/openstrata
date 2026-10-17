@@ -5,6 +5,7 @@
  */
 
 import type { RailRegistry } from './rails/rails.js';
+import { PAY_LINK_DEFAULT_TTL_DAYS } from './rails/pay-link.js';
 
 /**
  * Interac e-Transfer Business Request Money. Off by default: the credential is
@@ -19,6 +20,16 @@ export interface InteracConfig {
   /** Hosts a payer may be sent to. Empty = Interac's own only. */
   gatewayHosts: string[];
   requestTtlMinutes: number;
+}
+
+/**
+ * Signed per-bill payment links — the owner path that needs no session. The
+ * secret is optional: without `PAY_LINK_SECRET` the key is derived from
+ * `AUTH_SECRET` with a domain-separation label, so the two can never be crossed.
+ */
+export interface PayLinkConfig {
+  secret?: string;
+  ttlDays: number;
 }
 
 export interface BackendConfig {
@@ -43,6 +54,8 @@ export interface BackendConfig {
   rails: RailRegistry;
   /** Interac e-Transfer Business Request Money (fiat rail, council's bank). */
   interac: InteracConfig;
+  /** Signed per-bill payment links sent to owners. */
+  payLink: PayLinkConfig;
 }
 
 const int = (v: string | undefined, fallback: number): number => {
@@ -85,6 +98,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
         .map((host) => host.trim())
         .filter(Boolean),
       requestTtlMinutes: int(env.INTERAC_REQUEST_TTL_MINUTES, 30)
+    },
+    payLink: {
+      secret: env.PAY_LINK_SECRET,
+      ttlDays: int(env.PAY_LINK_TTL_DAYS, PAY_LINK_DEFAULT_TTL_DAYS)
     }
   };
 }

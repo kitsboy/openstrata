@@ -26,10 +26,14 @@
 		SHEET_RAILS,
 		lockClock,
 		lockState,
+		payLinkFromSearch,
 		sheetRail,
+		sheetSearch,
 		type SheetRail
 	} from '$lib/pay-sheet';
 	import { parseReturn, type ReturnSignal } from '$lib/interac';
+	import { ApiUnavailableError } from '$lib/api/client';
+	import { verifyBillLink, type BillLinkBill } from '$lib/api/payments';
 
 	/** The sheet: one amount, three large choices, PAD and cheque tucked below. */
 	const railIcon: Record<SheetRail, 'mail' | 'bitcoin' | 'lightning'> = {
@@ -55,13 +59,53 @@
 	 * never does.
 	 */
 	let interacReturn = $state<ReturnSignal | null>(null);
+
+	/**
+	 * A signed bill link turns this sheet from a demonstration into one council's
+	 * bill. The token is the owner's credential — no session needed — so its
+	 * states are explicit and none of them shows an amount before the council's
+	 * host has verified the signature and said what the link covers. Showing the
+	 * demo lot's balance next to a real, unusable link would be inventing a bill.
+	 */
+	type LinkState = 'none' | 'checking' | 'valid' | 'invalid' | 'offline';
+	let linkState = $state<LinkState>('none');
+	let linkBill = $state<BillLinkBill | null>(null);
+	let linkReason = $state('');
+	let linkToken = $state<string | null>(null);
+
+	async function readLink(token: string) {
+		try {
+			const bill = await verifyBillLink(token);
+			linkBill = bill;
+			linkState = 'valid';
+			if (isUnitId(bill.unitRef)) payerUnitId.set(bill.unitRef);
+		} catch (err) {
+			// No host is not "bad link": it is a site that cannot check one, and the
+			// difference decides what the owner is told to do next.
+			if (err instanceof ApiUnavailableError) {
+				linkState = 'offline';
+			} else {
+				linkState = 'invalid';
+				linkReason = err instanceof Error ? err.message : '';
+			}
+		}
+	}
+
 	onMount(() => {
 		// A link arrives asking for the rail and the lot a treasurer agreed to.
 		const params = new URL(location.href).searchParams;
 		rail = sheetRail(params.get('rail'));
 		interacReturn = parseReturn(location.search);
-		const lot = params.get('unit');
-		if (lot && isUnitId(lot)) payerUnitId.set(lot);
+		const token = payLinkFromSearch(location.search);
+		if (token) {
+			// The link's own lot wins over `?unit=`: the council signed one lot.
+			linkToken = token;
+			linkState = 'checking';
+			void readLink(token);
+		} else {
+			const lot = params.get('unit');
+			if (lot && isUnitId(lot)) payerUnitId.set(lot);
+		}
 
 		const timer = setInterval(() => {
 			seconds = Math.max(0, seconds - 1);
@@ -71,8 +115,17 @@
 
 	const unit = $derived(getUnit($payerUnitId));
 	const due = $derived(balance(unit));
-	const quote = $derived(btcQuote(Math.max(due.total, 0), BTC_CAD_CENTS));
-	const reference = $derived(payReference(unit.id));
+	const bill = $derived(linkBill);
+	/** The amount, reference and payee a payer actually pays. A bill link owns all
+	 * three; without one this is the demo lot, as before. */
+	const amountDue = $derived(bill ? bill.amountBasis : due.total);
+	const payee = $derived(bill ? bill.payeeContact : building.payTo.etransfer);
+	const quote = $derived(btcQuote(Math.max(amountDue, 0), BTC_CAD_CENTS));
+	const reference = $derived(bill ? bill.referenceCode : payReference(unit.id));
+	/** A link stops being usable, and the page must not offer to take money for it. */
+	const linkBlocked = $derived(
+		linkState === 'checking' || linkState === 'invalid' || linkState === 'offline'
+	);
 	const clock = $derived(lockClock(seconds));
 	const lock = $derived(lockState(seconds));
 	const chosen = $derived(rails.find((item) => item.id === rail));
@@ -82,22 +135,31 @@
 		)
 	);
 	const tucked = $derived(rails.filter((item) => item.id === 'pad' || item.id === 'cheque'));
-	/** Only the parts that are actually owed: an empty lot should not list zeros. */
+	/**
+	 * Only the parts that are actually owed: an empty lot should not list zeros.
+	 * A bill link has no breakdown to show — the council printed one number, and
+	 * this demo lot's split of it would be a fabrication.
+	 */
 	const parts = $derived(
-		[
-			{ label: 'October fee', cents: due.october },
-			{ label: 'Fees behind', cents: due.arrears },
-			{ label: 'Late fee', cents: due.late },
-			{ label: 'Fine', cents: due.fine },
-			{ label: 'Parkade levy', cents: due.levy }
-		].filter((part) => part.cents !== 0)
+		bill
+			? []
+			: [
+					{ label: 'October fee', cents: due.october },
+					{ label: 'Fees behind', cents: due.arrears },
+					{ label: 'Late fee', cents: due.late },
+					{ label: 'Fine', cents: due.fine },
+					{ label: 'Parkade levy', cents: due.levy }
+				].filter((part) => part.cents !== 0)
 	);
 	const vendor = books.ap[0];
 
-	/** Deep-linkable, so a treasurer can send a lot the exact rail they agreed. */
+	/**
+	 * Deep-linkable, so a treasurer can send a lot the exact rail they agreed — and
+	 * so a bill link survives a rail change. `sheetSearch` carries the token; a
+	 * URL rewrite that dropped it would end the payment mid-sheet.
+	 */
 	function sync(nextUnit: string, nextRail: SheetRail) {
-		const params = new URLSearchParams({ unit: nextUnit, rail: nextRail });
-		void goto(`${$page.url.pathname}?${params.toString()}`, {
+		void goto(`${$page.url.pathname}?${sheetSearch(nextUnit, nextRail, linkToken)}`, {
 			replaceState: true,
 			keepFocus: true,
 			noScroll: true
@@ -138,24 +200,55 @@
 	<PageHeader
 		kicker="Same balance, five ways to pay it"
 		title="Pay a strata lot"
-		lede="One amount, then the rail the owner already trusts. Bitcoin and Lightning sit beside e-transfer on every bill — paying in bitcoin does not make an owner less of a full owner. PAD and cheque stay at the bottom for the people who use them. Every destination on this page is a demo and cannot be paid."
+		lede={bill
+			? $copy.payLinkLede.replace('{council}', bill.councilName).replace('{unit}', bill.unitRef)
+			: 'One amount, then the rail the owner already trusts. Bitcoin and Lightning sit beside e-transfer on every bill — paying in bitcoin does not make an owner less of a full owner. PAD and cheque stay at the bottom for the people who use them. Every destination on this page is a demo and cannot be paid.'}
 	/>
 
+	{#if linkBlocked}
+		<!-- A token arrived and could not be honoured. It says so, and takes no money. -->
+		<section class="sheet">
+			<div class="sheet-link" aria-live="polite">
+				{#if linkState === 'checking'}
+					<p class="sheet-link-title">
+						<Icon name="clock" class="h-4 w-4" /> {$copy.payLinkChecking}
+					</p>
+				{:else}
+					<p class="sheet-link-title">
+						<Icon name="alert" class="h-4 w-4" /> {$copy.payLinkInvalidTitle}
+					</p>
+					<p class="sheet-link-body">
+						{linkState === 'offline' ? $copy.payLinkOffline : $copy.payLinkInvalidBody}
+					</p>
+					{#if linkState === 'invalid' && linkReason}
+						<p class="sheet-link-reason">{$copy.payLinkReason} <code>{linkReason}</code></p>
+					{/if}
+				{/if}
+			</div>
+		</section>
+	{:else}
 	<!-- The sheet. One amount, three choices, and the picked one in full. -->
 	<section class="sheet" aria-labelledby="sheet-heading">
-		<h2 class="sr-only" id="sheet-heading">{$copy.payAmountDue} — {$copy.payLot} {unit.id}</h2>
+		<h2 class="sr-only" id="sheet-heading">
+			{$copy.payAmountDue} — {$copy.payLot} {bill ? bill.unitRef : unit.id}
+		</h2>
 
 		<div class="sheet-head">
 			<label class="sheet-lot">
 				<span>{$copy.payLot}</span>
-				<select
-					value={unit.id}
-					onchange={(event) => chooseUnit((event.currentTarget as HTMLSelectElement).value)}
-				>
-					{#each units as lot (lot.id)}
-						<option value={lot.id}>{lot.id} · {lot.owner} · {money(balance(lot).total)}</option>
-					{/each}
-				</select>
+				{#if bill}
+					<!-- One link, one lot: the council signed it, so it is not a choice. -->
+					<strong class="sheet-lot-fixed">{bill.unitRef}</strong>
+				{:else}
+					<select
+						value={unit.id}
+						onchange={(event) => chooseUnit((event.currentTarget as HTMLSelectElement).value)}
+					>
+						{#each units as lot (lot.id)}
+							<option value={lot.id}>{lot.id} · {lot.owner} · {money(balance(lot).total)}</option>
+						{/each}
+					</select>
+				{/if}
 			</label>
 
 			<!-- A stamp, not a control: it says how long the fiat amounts are good for. -->
@@ -177,13 +270,23 @@
 
 		<div class="sheet-amount">
 			<p class="sheet-amount-label">{$copy.payAmountDue}</p>
-			<p class="sheet-amount-value">{money(due.total)}</p>
+			<p class="sheet-amount-value">{money(amountDue)}</p>
 			<p class="sheet-amount-who">
-				{unit.id} · {unit.owner} · {building.plan} · {building.address}
+				{#if bill}
+					{bill.unitRef} · {bill.councilName}
+				{:else}
+					{unit.id} · {unit.owner} · {building.plan} · {building.address}
+				{/if}
 			</p>
 			<p class="sheet-amount-ref">
 				{$copy.payReference} <code>{reference}</code>
 			</p>
+			{#if bill}
+				<!-- The council's own expiry, not one this page picked. -->
+				<p class="sheet-amount-ref" data-link-expiry>
+					{$copy.payLinkExpires.replace('{date}', bill.expiresAt.slice(0, 10))}
+				</p>
+			{/if}
 			{#if parts.length}
 				<dl class="sheet-parts">
 					{#each parts as part (part.label)}
@@ -230,7 +333,7 @@
 				{chosen?.name}
 			</p>
 
-			{#if due.total === 0}
+			{#if amountDue === 0}
 				<p class="sheet-note" data-tone="ok">
 					<Icon name="check" class="h-4 w-4" /> {$copy.payNothingDue}
 				</p>
@@ -238,11 +341,11 @@
 				<dl class="sheet-rows">
 					<div class="sheet-row">
 						<dt>{$copy.paySendTo}</dt>
-						<dd class="mono">{building.payTo.etransfer}</dd>
+						<dd class="mono">{payee}</dd>
 					</div>
 					<div class="sheet-row">
 						<dt>{$copy.payAmountDue}</dt>
-						<dd class="amount">{money(due.total)}</dd>
+						<dd class="amount">{money(amountDue)}</dd>
 					</div>
 					<div class="sheet-row">
 						<dt>{$copy.payMessage}</dt>
@@ -255,7 +358,7 @@
 					onclick={() =>
 						copyPayload(
 							'etransfer',
-							`${building.payTo.etransfer} ${money(due.total)} ${reference}`
+							`${payee} ${money(amountDue)} ${reference}`
 						)}
 				>
 					<Icon name="file" class="h-3.5 w-3.5" />
@@ -266,17 +369,18 @@
 				     amount and reference already in it, and let the owner approve it in
 				     their own bank. -->
 				<InteracPay
-					cents={due.total}
+					cents={amountDue}
 					{reference}
-					unitId={unit.id}
-					payee={building.payTo.etransfer}
+					unitId={bill ? bill.unitRef : unit.id}
+					{payee}
+					link={linkToken}
 					returned={interacReturn}
 				/>
 			{:else}
 				<dl class="sheet-rows">
 					<div class="sheet-row">
 						<dt>{$copy.payAmountDue}</dt>
-						<dd class="amount">{money(due.total)}</dd>
+						<dd class="amount">{money(amountDue)}</dd>
 					</div>
 					<div class="sheet-row">
 						<dt>{rail === 'bitcoin' ? 'Exact bitcoin' : 'Exact lightning amount'}</dt>
@@ -308,7 +412,7 @@
 					</p>
 				{/if}
 
-				{#key `${rail}-${due.total}-${reference}`}
+				{#key `${rail}-${amountDue}-${reference}`}
 					<div class="sheet-qr">
 						<QrPay
 							rail={rail === 'bitcoin' ? 'onchain' : 'lightning'}
@@ -328,7 +432,11 @@
 			</ol>
 		</div>
 	</section>
+	{/if}
 
+	{#if !bill}
+	<!-- A demo lot is the only thing that gets the demo furniture below. An owner
+	     holding a council's link sees the bill, and nothing about other lots. -->
 	<!-- Tucked under the sheet: the two rails nobody has to be sold on. -->
 	<details class="sheet-more">
 		<summary>{$copy.payOtherWays}</summary>
@@ -399,6 +507,7 @@
 			A bitcoin payment would be a PSBT signed 3 of 5 on hardware wallets. This software watches. It does not hold a key.
 		</p>
 	</section>
+	{/if}
 </div>
 
 <style>
@@ -447,6 +556,47 @@
 		text-transform: uppercase;
 		color: var(--muted);
 	}
+	.sheet-lot-fixed {
+		color: var(--ink);
+		font-family: 'DM Mono', ui-monospace, monospace;
+		font-size: 13px;
+		font-weight: 800;
+		letter-spacing: normal;
+	}
+
+	/* A link that cannot be honoured: a card, not an amount. */
+	.sheet-link {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 24px 20px;
+	}
+	.sheet-link-title {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		margin: 0;
+		font-size: 16px;
+		font-weight: 800;
+		color: var(--warning-text);
+	}
+	.sheet-link-body {
+		margin: 0;
+		font-size: 13.5px;
+		line-height: 1.6;
+		color: var(--muted);
+		max-width: 58ch;
+	}
+	.sheet-link-reason {
+		margin: 2px 0 0;
+		font-size: 12px;
+		color: var(--muted);
+	}
+	.sheet-link-reason code {
+		color: var(--ink);
+		font-family: 'DM Mono', ui-monospace, monospace;
+	}
+
 	.sheet-lot select {
 		max-width: 100%;
 		padding: 7px 10px;

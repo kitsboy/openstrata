@@ -163,6 +163,13 @@ describe('gateway url', () => {
 		expect(isTrustedGateway('javascript:alert(1)')).toBe(false);
 	});
 
+	it('refuses a missing address rather than throwing on it', () => {
+		// A host that answers without a gateway URL is a refusal, not a crash.
+		expect(isTrustedGateway(undefined)).toBe(false);
+		expect(isTrustedGateway(null)).toBe(false);
+		expect(isTrustedGateway('')).toBe(false);
+	});
+
 	it('accepts the hosts a council host names for its own provider', () => {
 		expect(isTrustedGateway('https://pay.bmo.com/emt/1', ['bmo.com'])).toBe(true);
 		expect(isTrustedGateway('https://etransfer.interac.ca/x', ['bmo.com'])).toBe(false);

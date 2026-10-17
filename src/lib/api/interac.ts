@@ -7,7 +7,7 @@
  * a merchant secret from this static build — the secret stays on the host.
  */
 
-import { apiFetch } from './client';
+import { ApiError, apiFetch } from './client';
 import { getToken } from './token';
 import type { InteracRequestBody } from '$lib/interac';
 
@@ -28,14 +28,30 @@ export interface InteracRequestResult {
 	reason?: string;
 }
 
+/**
+ * Start the request. A signed-in council may post the lot it is paying for; an
+ * owner holding a bill link posts the link instead, and the host takes the
+ * amount, lot, reference and payee from the link's own claims — never from this
+ * body, which the owner's page could have altered.
+ */
 export async function startInteracRequest(
-	body: InteracRequestBody
+	body: InteracRequestBody,
+	options: { payLink?: string | null } = {}
 ): Promise<InteracRequestResult> {
-	return apiFetch<InteracRequestResult>('/api/v1/payments/interac/request', {
-		method: 'POST',
-		body,
-		token: getToken()
-	});
+	const result = await apiFetch<InteracRequestResult & { reason?: string }>(
+		'/api/v1/payments/interac/request',
+		{
+			method: 'POST',
+			body: options.payLink ? { ...body, payLink: options.payLink } : body,
+			token: getToken()
+		}
+	);
+	// A host that cannot start a request still answered. Treating that as a
+	// started request would put a "live" badge on nothing, so it is a failure.
+	if (result?.ok !== true || typeof result.requestId !== 'string' || !result.requestId) {
+		throw new ApiError(502, result?.reason ?? 'the council’s host did not start the request');
+	}
+	return result;
 }
 
 export interface InteracStatusResult {
@@ -49,9 +65,22 @@ export interface InteracStatusResult {
 	reason?: string;
 }
 
-export async function interacRequestStatus(requestId: string): Promise<InteracStatusResult> {
-	return apiFetch<InteracStatusResult>(
-		`/api/v1/payments/interac/request/${encodeURIComponent(requestId)}`,
-		{ token: getToken() }
-	);
+/**
+ * Read the status back. The same two credentials are accepted: a session, or the
+ * bill link the request was started with (as `?t=`), which only lets its own
+ * request be read.
+ */
+export async function interacRequestStatus(
+	requestId: string,
+	payLink?: string | null
+): Promise<InteracStatusResult> {
+	const path = `/api/v1/payments/interac/request/${encodeURIComponent(requestId)}`;
+	const query = payLink ? `?t=${encodeURIComponent(payLink)}` : '';
+	const result = await apiFetch<InteracStatusResult & { reason?: string }>(`${path}${query}`, {
+		token: getToken()
+	});
+	if (result?.ok !== true || typeof result.status !== 'string') {
+		throw new ApiError(502, result?.reason ?? 'the council’s host did not answer');
+	}
+	return result;
 }

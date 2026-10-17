@@ -194,6 +194,12 @@ export interface InteracProvider {
 	report?(councilId: string, requestId: string, reported: unknown): Promise<InteracRequest | null>;
 }
 
+/** `localhost`, `127.0.0.1` and `[::1]` are the same machine, and all are allowed http. */
+function isLoopbackHost(hostname: string): boolean {
+	const host = hostname.toLowerCase();
+	return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+}
+
 /** Validate what is about to be sent. Refused here rather than at the bank. */
 export function assertRequestable(input: InteracRequestInput): void {
 	if (!Number.isInteger(input.amountBasis) || input.amountBasis <= 0) {
@@ -209,7 +215,9 @@ export function assertRequestable(input: InteracRequestInput): void {
 	}
 	try {
 		const url = new URL(input.returnUrl);
-		if (url.protocol !== 'https:' && url.hostname !== 'localhost') {
+		// Loopback may be http: a council testing this on its own machine is not
+		// sending a payer over the open internet. Anything else must be https.
+		if (url.protocol !== 'https:' && !isLoopbackHost(url.hostname)) {
 			throw new InteracError('returnUrl must be https');
 		}
 	} catch (err) {

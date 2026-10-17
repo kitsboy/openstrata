@@ -129,6 +129,20 @@ describe('rehearsal provider', () => {
 		);
 	});
 
+	it('allows http only on the machine it is running on', async () => {
+		const provider = new DemoInteracProvider();
+		const now = new Date();
+		for (const host of ['localhost:4173', '127.0.0.1:4173', '[::1]:4173']) {
+			await expect(
+				provider.create({ ...request, returnUrl: `http://${host}/pay?unit=305` }, now)
+			).resolves.toBeTruthy();
+		}
+		// Still no plain http on any host a payer could be sent to.
+		await expect(
+				provider.create({ ...request, returnUrl: 'http://openstrata.giveabit.ca/pay' }, now)
+		).rejects.toThrow(/https/);
+	});
+
 	it('never lets the clock approve anything', async () => {
 		const provider = new DemoInteracProvider();
 		const created = await provider.create(request, now);
@@ -436,6 +450,9 @@ describe('interac provider absent', () => {
 				returnUrl: 'https://openstrata.giveabit.ca/pay'
 			}
 		});
+		// A refusal has to look like one on the wire: a 200 here is what let a payer's
+		// page treat "no rail" as "request started".
+		expect(created.statusCode).toBe(503);
 		expect(created.json()).toEqual({ ok: false, reason: 'Interac rail is not configured on this host' });
 		const status = await app.inject({ method: 'GET', url: '/api/v1/rails/status', headers: { authorization: `Bearer ${token}` } });
 		expect(status.json().interac).toEqual({ configured: false, live: false });

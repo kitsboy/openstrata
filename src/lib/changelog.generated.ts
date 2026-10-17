@@ -14,6 +14,51 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.32",
+    "date": "2026-10-16",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A signed bill link, so an owner can pay without a council login. A treasurer prints one link per bill (POST /api/v1/payments/link, treasurer+) and sends it; the owner opens /pay?unit=305&rail=etransfer&t=… on their phone and pays from their own bank. The link is the credential: ospl1.<payload>.<sig>, HMAC-SHA256 under a key derived from PAY_LINK_SECRET (or AUTH_SECRET when unset) with the label openstrata/pay-link/v1. It states one lot, one amount, one reference and one payee, until it expires — 30 days by default, clamped to 1..120, and a link that has expired is refused rather than re-signed.",
+          "backend/src/rails/pay-link.ts — signing, verification and the bill a payer sees, with every reason a link can be unusable named (malformed, bad signature, expired, not yet valid, unknown version, incomplete claims). A link can never verify as a JWT and a JWT never as a link.",
+          "POST /api/v1/payments/link/verify — public by design, because the token is the credential. It returns the bill and nothing else: no balances, no ledger entries, no other lots. The token travels in the body, not the path (a signed bill is longer than Fastify's 100-byte path parameter limit — found by the 414 the first version answered).",
+          "The link works on both money routes: POST /api/v1/payments/interac/request with no Authorization header, and GET …/interac/request/:requestId?t=…. The amount, lot, reference and payee come from the link's claims, so the payer's page cannot change them; the status read is scoped to that one bill (404 for any other, 401 with no credential); both answers carry viaLink: true.",
+          "/pay renders the council's bill when a link verifies: amount, reference, payee and expiry, the lot fixed (the council signed one lot), and none of the demo furniture — receipt tape, vendor card and lots list are hidden, because an anonymous payer has no business seeing other owners' rows. Five states (none | checking | valid | invalid | offline) and no amount is ever shown for a link that cannot be used."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The link survives the sheet. sheetSearch() carries the token through a rail or lot change, so a URL rewrite mid-payment cannot silently end it, and providerReturnHref() strips it from the address handed to the bank: the credential is remembered per request id in sessionStorage, not put in Interac's return URL.",
+          "PAY_LINK_SECRET / PAY_LINK_TTL_DAYS documented in backend/.env.example, and the three new routes in backend/API.md."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A refusal that looked like success. A host with no Interac provider answered 200 { ok: false }; the payer's page read that as a started request and showed a *Live request* badge on nothing. The route now answers 503, and startInteracRequest / interacRequestStatus refuse any body whose ok is not true before the dialog touches it.",
+          "isTrustedGateway(undefined) threw instead of refusing — a host that answers without a gateway URL must send nobody away, and now does not crash.",
+          "http://127.0.0.1 was refused while http://localhost was allowed. Loopback is loopback: both, and [::1], are allowed plain http; every other host still must be https."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Chrome, built artifact, memory-backed host on the same origin, no session on the page (localStorage['openstrata-token'] = null): the signed link renders $921.00 / LMS2847-305-202610 / fees@lms2847.invalid with the lot fixed and the receipt table gone; starting the request answers viaLink: true, amountBasis: 92100, request SIM-LMS2847-305-202610-0001, while the body it sent claimed amountBasis: 1 and unitRef: U-999 and was ignored; the payer reads that request back with the link (200), another bill's link gets 404, and no credential gets 401. A tampered token shows *\"This bill link cannot be used\"* with reason bad signature and no amount; switching to Bitcoin keeps the token in the URL and the council's amount on screen; a plain /pay visit is still the demo sheet.",
+          "check 0/0 · 293 frontend tests · audit:i18n 1064 keys × 9 locales · 267 backend tests (17 new for the link, plus the refusal and loopback cases) · build green."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The public demo still cannot start a real request: with no Interac merchant credential the host answers from the labelled rehearsal provider, so the payer sees *Simulation — nothing was sent*. The link path is live end to end up to that provider boundary.",
+          "PUBLIC_API_BASE_URL is not applied at build time. src/lib/api/config.ts reads import.meta.env.PUBLIC_API_BASE_URL, which the production bundle compiles to an empty object, so only the runtime override (localStorage['openstrata-api-base']) actually points a build at a host. Found while verifying this release; not changed here."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.31",
     "date": "2026-10-16",
     "groups": [

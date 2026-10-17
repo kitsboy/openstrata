@@ -100,7 +100,9 @@ async function main(): Promise<void> {
       authSecret: config.authSecret,
       authTokenTtl: config.authTokenTtl,
       authRateLimitMax: config.authRateLimitMax,
-      authRateLimitWindowMs: config.authRateLimitWindowMs
+      authRateLimitWindowMs: config.authRateLimitWindowMs,
+      payLinkSecret: config.payLink.secret,
+      payLinkTtlDays: config.payLink.ttlDays
     }
   });
 

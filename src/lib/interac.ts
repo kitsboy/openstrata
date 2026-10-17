@@ -308,10 +308,12 @@ function hostOf(url: string): string | null {
  * session is what is at stake, so an unexpected host means no navigation.
  */
 export function isTrustedGateway(
-	url: string,
+	url: string | null | undefined,
 	allowedHosts: readonly string[] = DEFAULT_GATEWAY_HOSTS
 ): boolean {
-	if (!url.startsWith('https://')) return false;
+	// The function's job is to distrust, so a missing address is a refusal, not
+	// a crash: a host that answers without a gateway URL must send nobody away.
+	if (typeof url !== 'string' || !url.startsWith('https://')) return false;
 	const host = hostOf(url);
 	if (!host) return false;
 	return allowedHosts.some((allowed) => {

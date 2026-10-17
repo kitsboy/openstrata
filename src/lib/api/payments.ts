@@ -13,6 +13,31 @@
 import { apiFetch } from './client';
 import { getToken } from './token';
 
+export interface BillLinkBill {
+  /** The lot the council printed on this link — canonical, so it is the one key. */
+  unitRef: string;
+  /** Integer cents, as the council's ledger holds it. */
+  amountBasis: number;
+  referenceCode: string;
+  /** Where the council receives e-transfer mail for this rail. */
+  payeeContact: string;
+  councilName: string;
+  expiresAt: string;
+}
+
+/**
+ * Ask the council's host what a signed bill link says. Public by design: the
+ * token is the credential, so no session is needed and none is sent. The answer
+ * is the bill the payer is about to pay and nothing else — no balances, no
+ * ledger, no other lots.
+ */
+export async function verifyBillLink(token: string): Promise<BillLinkBill> {
+  return apiFetch<{ ok: boolean } & BillLinkBill>('/api/v1/payments/link/verify', {
+    method: 'POST',
+    body: { token }
+  });
+}
+
 export type Rail = 'fiat' | 'onchain' | 'lightning' | 'liquid' | 'paynym_bip47' | 'nostr';
 
 export interface PaymentQuoteInput {
