@@ -7,8 +7,9 @@
  *   1. Runtime override  — localStorage `openstrata-api-base` (lets an operator
  *      repoint the site to a different host without rebuilding, e.g. a Tailscale
  *      IP that changes between networks).
- *   2. Build-time env    — `PUBLIC_API_BASE_URL` (Vite exposes PUBLIC_* to the
- *      client; set it in `.env` at build time).
+ *   2. Build-time env    — `PUBLIC_API_BASE_URL`, inlined by Vite at build time
+ *      (see `envPrefix` in vite.config.ts: without it Vite exposes only `VITE_`
+ *      and this value compiles to `undefined`).
  *   3. Fallback          — `null`: demo mode. Every dashboard widget keeps
  *      rendering curated sample data, so the public site never breaks.
  *
@@ -24,17 +25,27 @@ function trimBase(value: string): string {
 }
 
 /**
+ * The precedence rule, as a value: a stored override wins over the build-time
+ * base, and an empty or absent value is demo mode — never an empty-string URL.
+ * Kept pure and exported so the rule can be tested without a browser or a build.
+ */
+export function resolveApiBase(
+  stored: string | null | undefined,
+  built: string | null | undefined
+): string | null {
+  for (const candidate of [stored, built]) {
+    if (typeof candidate === 'string' && candidate.trim()) return trimBase(candidate);
+  }
+  return null;
+}
+
+/**
  * Resolve the configured backend base URL, or `null` for demo mode.
  * Safe to call during SSR/prerender (no localStorage there).
  */
 export function apiBaseUrl(): string | null {
-  if (typeof localStorage !== 'undefined') {
-    const stored = localStorage.getItem(API_BASE_KEY);
-    if (stored && stored.trim()) return trimBase(stored);
-  }
-  const env = import.meta.env?.PUBLIC_API_BASE_URL;
-  if (typeof env === 'string' && env.trim()) return trimBase(env);
-  return null;
+  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(API_BASE_KEY) : null;
+  return resolveApiBase(stored, import.meta.env?.PUBLIC_API_BASE_URL);
 }
 
 /** True when a backend base URL is configured (regardless of reachability). */
