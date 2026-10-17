@@ -82,7 +82,7 @@ Do not start a queued item before it is picked. Do not treat the queue as finish
 
 ### Shipped
 
-- **One-lot pay sheet** (`/pay`) — offered 2026-09-30, **picked by Cam**, shipped 2026-10-16 in v0.3.30. One amount, three large choices, the 15-minute rate lock as a quiet stamp, PAD and cheque tucked under the sheet. The queue was renumbered and one item added, so four are waiting again.
+- **One-lot pay sheet** (`/pay`) — offered 2026-09-30, **picked by Cam**, shipped 2026-10-16 in v0.3.30. One amount, three large choices, the 15-minute rate lock as a quiet stamp, PAD and cheque tucked under the sheet. The queue was renumbered and one item added, so four are waiting again. **Follow-up that shipped with it (v0.3.31):** the e-transfer panel now carries an Interac button that starts a **Business Request Money** request with the amount and reference already in it and hands the payer to Interac to pick their own bank and approve — live on a council host whose financial institution onboarded it, and a labelled simulation everywhere else (Interac issues that credential through a participating institution, not to a website). Rules in `src/lib/interac.ts` (26 tests), the institutional seam in `backend/src/rails/interac.ts` with three routes and 21 tests.
 
 ---
 
