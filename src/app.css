@@ -1228,3 +1228,4 @@ html.start-pending .start-choice { display: block !important; }
   background-repeat: no-repeat;
   transition: background-color .3s ease;
 }
+.rss-chip{display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(251,146,60,.45);background:rgba(251,146,60,.12);color:#fdba74;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;text-decoration:none}
