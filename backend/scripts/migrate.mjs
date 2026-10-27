@@ -183,12 +183,100 @@ export async function runMigrations(client, { checkOnly = false } = {}) {
   }
 }
 
-/** Remove standalone migration BEGIN/COMMIT lines while preserving SQL comments. */
+/**
+ * Remove standalone migration BEGIN/COMMIT wrapper statements while leaving
+ * comments, string literals, and quoted bodies untouched.
+ *
+ * A plain line filter is not enough. A plpgsql function body is written as
+ * `BEGIN ... END;` inside a dollar-quoted `$$ ... $$` block, and stripping that
+ * BEGIN leaves `RAISE EXCEPTION ...` with no block to belong to — exactly how
+ * 0009 first failed in CI (`syntax error at or near "RAISE"`, code 42601). So
+ * each line is classified using the quoting state carried in from the lines
+ * before it, and only a wrapper that begins in plain SQL context is dropped.
+ */
 export function stripTransactionWrappers(sql) {
-  return sql
-    .split(/\r?\n/)
-    .filter((line) => !/^\s*(?:BEGIN|COMMIT)\s*;?\s*$/i.test(line))
-    .join('\n');
+  const kept = [];
+  let state = { type: 'plain' };
+  for (const line of sql.split(/\r?\n/)) {
+    const isWrapper = state.type === 'plain' && /^\s*(?:BEGIN|COMMIT)\s*;?\s*$/i.test(line);
+    if (!isWrapper) kept.push(line);
+    state = scanLineState(line, state);
+  }
+  return kept.join('\n');
+}
+
+/** `$$`, `$body$` — the tagged form is legal too. `$1` is a placeholder, not a tag. */
+const DOLLAR_QUOTE_TAG = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/;
+
+/**
+ * Track SQL quoting state across one line and return the state at its end.
+ * Handles line comments, nestable block comments, single-quoted strings,
+ * double-quoted identifiers, and dollar-quoted bodies — the last of which is
+ * what keeps a function body opaque to the wrapper stripper.
+ */
+export function scanLineState(line, state = { type: 'plain' }) {
+  let current = state;
+  let i = 0;
+  while (i < line.length) {
+    if (current.type === 'line-comment') return { type: 'plain' };
+
+    if (current.type === 'block-comment') {
+      if (line.startsWith('/*', i)) {
+        current = { type: 'block-comment', depth: current.depth + 1 };
+        i += 2;
+      } else if (line.startsWith('*/', i)) {
+        i += 2;
+        current = current.depth === 1 ? { type: 'plain' } : { type: 'block-comment', depth: current.depth - 1 };
+      } else {
+        i += 1;
+      }
+      continue;
+    }
+
+    if (current.type === 'single' || current.type === 'double') {
+      const quote = current.type === 'single' ? "'" : '"';
+      if (line[i] !== quote) {
+        i += 1;
+      } else if (line[i + 1] === quote) {
+        i += 2; // doubled quote is an escaped quote, not a closer
+      } else {
+        current = { type: 'plain' };
+        i += 1;
+      }
+      continue;
+    }
+
+    if (current.type === 'dollar') {
+      if (line.startsWith(current.tag, i)) {
+        i += current.tag.length;
+        current = { type: 'plain' };
+      } else {
+        i += 1;
+      }
+      continue;
+    }
+
+    // Plain SQL context.
+    if (line.startsWith('--', i)) return { type: 'plain' }; // comments end at the newline
+    if (line.startsWith('/*', i)) {
+      current = { type: 'block-comment', depth: 1 };
+      i += 2;
+    } else if (line[i] === "'" || line[i] === '"') {
+      current = { type: line[i] === "'" ? 'single' : 'double' };
+      i += 1;
+    } else if (line[i] === '$') {
+      const tag = DOLLAR_QUOTE_TAG.exec(line.slice(i));
+      if (tag) {
+        current = { type: 'dollar', tag: tag[0] };
+        i += tag[0].length;
+      } else {
+        i += 1;
+      }
+    } else {
+      i += 1;
+    }
+  }
+  return current;
 }
 
 async function main() {

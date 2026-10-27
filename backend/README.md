@@ -43,7 +43,7 @@ uses its own API release number in `backend/package.json`. They are independent
 semver tracks: update the backend version when backend behavior changes, and
 update the root version only when the site/product release ships.
 
-Current backend release: `0.3.27`.
+Current backend release: `0.3.28`.
 
 ## API guardrails
 
