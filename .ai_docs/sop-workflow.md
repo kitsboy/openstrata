@@ -28,11 +28,33 @@ npm run migrate:check    read-only preflight: checksums, missing and orphan drif
 npm run seed             seed a demo community (idempotent)
 
 The Postgres E2E tests skip themselves when DATABASE_URL is unset, which is the normal
-state here — 8 of the suite skip, so a green run does not cover the durable paths
-(ledger idempotency, sessions, the audit table, and migration 0009 itself). CI's
-backend-e2e job starts pgvector, migrates, and runs that file: it is the only place
-those paths are executed. Sessions and the audit log are required deps of
-buildServer, so every API test builds them with `makeSessionDeps()` (tests/memstore.ts).
+state here — 8 of the suite skip (360 passed / 8 skipped), so a green run does not cover
+the durable paths (ledger idempotency, sessions, the audit table, or the migrations
+themselves). With `DATABASE_URL` set the run is **368/368**. Sessions and the audit log
+are required deps of buildServer, so every API test builds them with
+`makeSessionDeps()` (tests/memstore.ts).
+
+### Executing migrations locally (no Docker on M3)
+
+Migrations are DDL: until they run against a real Postgres, nothing about them is
+verified, and `main` is where that shows — the first attempt at `0009` failed in CI
+because the runner stripped the `BEGIN` out of a plpgsql function body (`d220d6f`).
+Homebrew PostgreSQL 17 + pgvector matches the CI image's major version:
+
+    brew install postgresql@17 pgvector
+    export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
+    initdb -D /tmp/openstrata-pgdata -U openstrata --auth=trust -E UTF8
+    pg_ctl -D /tmp/openstrata-pgdata -l /tmp/openstrata-pg.log -o "-p 5455 -k /tmp -c listen_addresses=127.0.0.1" start
+    createdb -h 127.0.0.1 -p 5455 -U openstrata openstrata
+    cd backend
+    export DATABASE_URL="postgres://openstrata@127.0.0.1:5455/openstrata"
+    npm run migrate && npm run migrate:check
+    npm test                       # 368/368, the Postgres paths included
+
+A throwaway cluster on port 5455 keeps the 5432 default free and is deleted with
+`pg_ctl -D /tmp/openstrata-pgdata stop`. `docker compose up -d db` does the same job
+where Docker exists. There is no committed harness for this yet — worth adding, so the
+next migration is not first executed in CI.
 
 Backend env vars added 2026-10-27: AUTH_REFRESH_TTL_DAYS (30 default, refresh/session
 lifetime) — AUTH_TOKEN_TTL now defaults to 1h rather than 12h, since a revoked session

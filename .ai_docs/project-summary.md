@@ -2,7 +2,7 @@
 
 **What:** A SvelteKit-based strata property management and compliance platform.
 **Domain:** openstrata.giveabit.io
-**Version:** v0.3.37 site / v0.3.27 backend API (SvelteKit 2 + Svelte 5, backend in `backend/`)
+**Version:** v0.3.37 site / v0.3.28 backend API (SvelteKit 2 + Svelte 5, backend in `backend/`)
 **Last Updated:** 2026-10-27
 
 ## One-Liner
@@ -36,5 +36,5 @@ Static SPA deployed to Cloudflare Pages
 - `npm test` at the repo root: **312** frontend tests as of 2026-10-27. Counts move; run `npm run audit:i18n` rather than trusting an old key number
 - `npm run audit:i18n` and `npm run audit:contrast` are live gates in CI; the hard-coded copy list inside `audit:i18n` is warning-level and currently long (six routes have no i18n import at all — see `current-status.md`)
 - `npm run build` passes via Cloudflare Pages auto-deploy from main
-- `backend/` — `npm test` inside `backend/`: **357 passed / 8 skipped** as of 2026-10-27 (the eight are the Postgres E2E file, skipped while `DATABASE_URL` is unset — so a green run does not cover the durable ledger, sessions, the audit table, or migration `0009` itself)
+- `backend/` — `npm test` inside `backend/`: **360 passed / 8 skipped** as of 2026-10-27 (the eight are the Postgres E2E file, skipped while `DATABASE_URL` is unset), and **368/368** once a Postgres is up. Migrations are DDL: they are only verified by being executed. `0009` has been executed against PostgreSQL 17.11 + pgvector 0.8.7 (`d220d6f`) and the exact commands are in `sop-workflow.md`, since there is no committed local-Postgres harness yet
 

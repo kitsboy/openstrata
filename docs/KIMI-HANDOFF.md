@@ -1,3 +1,29 @@
+## Session — 2026-10-27 · migration 0009 failed its first real run, and the migration runner is why
+
+**Done:**
+- **Corrected the previous session's central claim.** It said migration `0009` "was never executed anywhere". It *was* executed — CI's `Phase 3 backend — Postgres e2e smoke` job ran it on that push (run `40572300792`) and it **failed**: `FAILED 0009_audit_log_and_sessions.sql`, `syntax error at or near "RAISE"` (`42601`, `plpgsql_yyerror`, character 2577). So `main` was red, the smoke suite never ran, and the sessions/audit tables existed nowhere. The lesson worth carrying: with no database on M3, "I could not verify this" and "this passed" are not the only two outcomes — the push is the verification, and it needs checking the next morning.
+- **Fixed the runner, not the migration** (`d220d6f`). `scripts/migrate.mjs` strips standalone `BEGIN`/`COMMIT` lines so a migration's DDL and its version row commit in one transaction — with a line filter. A plpgsql body is `BEGIN … END;` inside `$$ … $$`, so the `BEGIN` opening the append-only trigger function was deleted and its `RAISE EXCEPTION` was left with no block. `0009` is the first migration with a function body, so the flaw was latent from `0008` on. The stripper now carries quoting state across lines — line comments, nestable block comments, single-quoted strings, double-quoted identifiers, dollar-quoted bodies including tagged `$body$` — and removes only a wrapper that begins in plain SQL context; `scanLineState` is exported beside it.
+- **Regression tests** (`backend/tests/migrate.test.ts`, 1 test → 4): the plpgsql-body case, `COMMIT` hidden in strings/identifiers/tagged bodies/comments, and an invariant over all nine shipped migrations that every quoted segment survives the stripper byte-identical, plus that no migration keeps its top-level wrapper.
+- **Executed `0009` for real.** Installed PostgreSQL **17.11** with **pgvector 0.8.7** locally (the CI image's major version), `initdb` on port 5455, fresh database, `npm run migrate` applied `0001..0009`, re-run reported `no pending migrations`, `npm run migrate:check` clean. Confirmed in the database: `audit_event` + `auth_session`, all 8 indexes, FK to `app_user` with `ON DELETE CASCADE`, role and refresh-hash CHECKs, `vector 0.8.7`, and the trigger refusing a live `UPDATE` (`audit_event is append-only (UPDATE is refused)`) and a live `DELETE`.
+- **Ran the suite CI never reached:** `npm run test -- e2e-smoke` is **8/8** against that database, including the two assertions written blind last session — a logout on one instance killing the token on another instance, and the append-only trigger refusing `UPDATE`/`DELETE`. Full backend suite **360 passed / 8 skipped** without `DATABASE_URL`, **368/368** with it; typecheck and build green.
+- **Bumped the backend to `0.3.28`** (`backend/package.json`, `backend/README.md`).
+
+**Decisions:**
+- Fixed the runner rather than rewriting `0009` to dodge it. The migration is legitimate — a trigger function is the correct way to make append-only a property rather than a convention — and the stripper would have mangled the next function body too. Rewriting the SQL would have hidden a bug that corrupts migrations silently.
+- Made the stripper quoting-aware instead of relaxing atomicity (applying migrations without stripping wrappers would let a migration's DDL and its version row commit separately).
+- Bumped `0.3.27 → 0.3.28` after last session flagged it as Cam's call. The README's rule is explicit and this change alters how migrations are applied; leaving a third release on a stale number was the worse default. Easy to revert if Cam disagrees.
+
+**Verified:** migration `0001..0009` applied on a fresh PostgreSQL 17.11 + pgvector 0.8.7; idempotent re-run; `migrate:check` clean; trigger observed refusing `UPDATE` and `DELETE`; `e2e-smoke` 8/8; backend **360 passed / 8 skipped** plain and **368/368** with `DATABASE_URL`; `backend` typecheck + build green. Nothing frontend changed, so no site gates were rerun and no screenshot applies.
+
+**Still to prove:** the fix is only confirmed publicly once `d220d6f` pushes and CI's `backend-e2e` job goes green on a fresh `pgvector/pgvector:pg17` container. **And the gap that caused this is still open:** nothing in the repo starts a Postgres for local runs, so "executed" this session meant a manual Homebrew install and `initdb` on port 5455. A committed `db:local` harness (or a documented `docker compose up db` path that someone can actually run) is what stops the next migration from being first executed in CI.
+
+**Git State:**
+- `d220d6f` — fix(migrations): stop the runner from deleting a function body's BEGIN.
+- Pushed to `origin/main`; working tree clean.
+- Backend API version `0.3.28`; site version `0.3.37`.
+
+---
+
 ## Session — 2026-10-27 · sessions a council can end, and a record of who did what
 
 **Done:**
@@ -14,13 +40,13 @@
 
 **Verified:** backend typecheck + build green, **357 passed / 8 skipped** (310 existing + 47 new; the skipped ones are the Postgres E2E file, which grew from 5 to 8 tests); frontend `check` 0 errors / 0 warnings, **312 passed**; `audit:i18n` 1075 keys × 9 locales; `audit:contrast` 218 pairs; production build green. Nothing visual changed, so no screenshot.
 
-**Not verified, and it is the thing to watch:** migration `0009` was **never executed anywhere** — there is no Postgres on this machine and Docker is unavailable — so the first real run of it is CI's `backend-e2e` job, which starts `pgvector/pgvector:pg17`, runs `npm run migrate`, and then the smoke suite. That suite now also asserts that a logout on one instance kills the token on another instance and that the append-only trigger refuses an `UPDATE` and a `DELETE`. If the migration is wrong, that job is where it shows.
+**Not verified at the time, and the thing to watch:** migration `0009` was **not executed on this machine** — there is no Postgres here and Docker is unavailable. *(Correction, later the same day, `d220d6f`: this paragraph originally said "never executed anywhere", which was false — CI's `backend-e2e` job ran it on this very push and it failed, because the migration runner deleted the `BEGIN` out of the trigger function's plpgsql body. It has since been executed successfully against PostgreSQL 17.11 + pgvector 0.8.7; see the session above.)* The first real run is CI's `backend-e2e` job, which starts `pgvector/pgvector:pg17`, runs `npm run migrate`, and then the smoke suite. That suite also asserts that a logout on one instance kills the token on another instance and that the append-only trigger refuses an `UPDATE` and a `DELETE`.
 
 **Git State:**
 - `8d5c6b4` — backend: server-side sessions and an append-only audit log.
 - `8bdf968` — site: `signOut()` ends the session on the server.
 - Both pushed to `origin/main`; working tree clean.
-- Backend API version stays `0.3.27`; site version stays `0.3.37`.
+- Backend API version `0.3.27` at the time; bumped to `0.3.28` in `d220d6f`. Site version stays `0.3.37`.
 
 ---
 
