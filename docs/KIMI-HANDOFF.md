@@ -1,7 +1,7 @@
 ## Session — 2026-10-26 · the i18n audit was blind to its own markup, and the release landed
 
 **Done:**
-- Landed the durable-ledger release that was sitting uncommitted from 2026-10-17 as `72acd9a` (21 files, +1371/−340): Postgres-backed ledger idempotency (migration `0007`), checksummed and serialized migrations (migration `0008`, `npm run migrate:check`), `/health/live` + `/health/ready`, fail-closed PSBT issuance/broadcast with UTXO reservation, tightened Bitcoin address checks. No version bump and **no `CHANGELOG.md` entry**, so `/changelog` does not list it — a deliberate continuation of the backend `0.3.27` track, not an oversight. Say the word if you want a 0.3.37 entry for it.
+- Landed the durable-ledger release that was sitting uncommitted from 2026-10-17 as `72acd9a` (21 files, +1371/−340): Postgres-backed ledger idempotency (migration `0007`), checksummed and serialized migrations (migration `0008`, `npm run migrate:check`), `/health/live` + `/health/ready`, fail-closed PSBT issuance/broadcast with UTXO reservation, tightened Bitcoin address checks. It then got the version it was missing as site release **`0.3.37`** (`fb3d60a`): the dated `CHANGELOG.md` section and front-matter summary are in, `src/lib/changelog.generated.ts` is regenerated (40 releases with notes, 283 items), and `/changelog` plus the footer stamp publish it. The backend API version stays `0.3.27` on its own track.
 - Fixed the translation audit's blind spot (`d4ef669`): it skipped **any line containing `{`**, and because this repo writes markup minified the whole footer is one line — so the hard-coded nav labels, the RSS chip's `title`/`aria-label` and the cookie notice were invisible while the audit reported clean. It now strips Svelte expressions and scans inside the line, and checks `title`/`aria-label`/`alt` the way it already checked text nodes.
 - Translated the home page chrome into all nine locales (10 keys, **1075** total): nav labels (Units / Accounting / Pay / Tax & CRA / Calendar / Meetings), "Pay fees", the chip's title and aria-label, the cookie notice, "Open the lot list".
 - Put the RSS chip on `--color-slab-accent` instead of its own `#fdba74` literals, which brings the fill inside the contrast audit (7.83:1 light, 9.63:1 dark) and lets it flip with the dark theme like the rest of the footer.
@@ -20,7 +20,8 @@
 **Git State:**
 - `d4ef669` — site: audit + chrome localization + Sentry hook.
 - `72acd9a` — backend: durable idempotency, checksummed migrations, fail-closed treasury.
-- Both pushed to `origin/main`; working tree clean.
+- `fb3d60a` — release `0.3.37`: changelog entry, version bump, regenerated module.
+- All pushed to `origin/main`; working tree clean.
 
 ---
 

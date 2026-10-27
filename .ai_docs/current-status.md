@@ -1,6 +1,6 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.36
+**Site/product version:** v0.3.37
 **Backend API version:** v0.3.27
 **Last Updated:** 2026-10-26
 **Domain:** openstrata.giveabit.io
@@ -12,6 +12,7 @@
 - The home page chrome is now translated in all nine locales — nav labels (Units / Accounting / Pay / Tax & CRA / Calendar / Meetings), "Pay fees", the RSS chip's `title` and `aria-label`, the cookie notice, "Open the lot list". 10 new keys, **1075** total, parity enforced across `fr es zh hi fil pl uk sw`.
 - The RSS chip moved off its `#fdba74` / `rgba(251,146,60,…)` literals onto `--color-slab-accent`. The fill is now *inside* the contrast audit (7.83:1 light, 9.63:1 dark, floor 4.5) and flips with the dark theme like the rest of the footer, which it previously did not. It also used to *darken* on hover, because `.footer-links a:hover` recoloured it to the accent the rest state was ignoring.
 - Sentry was initialised but never wired to SvelteKit: `src/hooks.client.ts` exported no `handleError`, so a configured DSN would have reported an empty project forever. It is now exported and guarded by a wiring contract test. The SDK's client entry imports `$app/stores`, which this project's vitest setup cannot resolve, so the guard reads the source — the same shape as the `envPrefix` contract test in `src/lib/api/config.test.ts`.
+- Site version is now `0.3.37` (`fb3d60a`): the durable-ledger release has the dated `CHANGELOG.md` section and front-matter summary it was missing, `src/lib/changelog.generated.ts` is regenerated (40 releases, 283 items), and both `/changelog` and the footer `v` stamp publish it. The backend API version stays `0.3.27` on its own track.
 
 ## Prior milestone — durable ledger retries and treasury safety (committed `72acd9a`, not deployed)
 
@@ -19,7 +20,7 @@
 - Added a serialized migration runner with SHA-256 drift checks and a read-only `npm run migrate:check` preflight. Legacy checksums are pinned from current migration files during upgrade, not independently verified historical proof; inspect/backup the schema before the first migration upgrade.
 - Added `/health/live` and dependency `/health/ready`; the production entrypoint exposes only a Postgres boolean probe.
 - Hardened Bitcoin plan issuance/broadcast: server recomputes council balance policy, validates address/network/input/fee rules, reserves UTXOs and binds broadcast to a server-issued plan. Live broadcast and ledger debit are refused pending a real PSBT builder and cryptographic verification; plan records/reservations remain process-local.
-- Landed 2026-10-26 as `72acd9a` (21 files). It carries no version bump and no `CHANGELOG.md` entry, so `/changelog` does not show it.
+- Landed 2026-10-26 as `72acd9a` (21 files) and published as site release `0.3.37` (`fb3d60a`).
 
 ## Prior milestone — backend safety and read-only agent context
 
