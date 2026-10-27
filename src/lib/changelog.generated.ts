@@ -14,6 +14,49 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.37",
+    "date": "2026-10-26",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Durable ledger idempotency (migration 0007): a ledger Idempotency-Key is now a row — council, key, request fingerprint, 24-hour expiry and the committed ledger_entry id — written in the same transaction as the append. A retry arriving after a restart replays the original result instead of issuing a second write, a reused key with a different body still answers 409, and concurrent identical retries coalesce. The bounded in-memory adapter stays for tests and development and refuses new keys with 503 rather than evicting a live one.",
+          "Migration checksums and a read-only preflight (migration 0008): _schema_version gains a checksum column, the runner serializes migrations behind an advisory lock, detects missing, orphaned and drifted migration files, and records a migration's checksum in the same transaction that applies it. npm run migrate:check reports all of that without writing anything.",
+          "Liveness and readiness split: GET /health/live answers whether the process is up; GET /health/ready reports sanitized boolean dependency probes and returns 503 when a configured dependency is unavailable. The production entrypoint wires the Postgres probe only."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Treasury plan issuance and broadcast fail closed. Authorization is recomputed from council ledger balances rather than trusted from the request, a plan carries an immutable server-issued token, address, network, fee and input totals are validated, UTXOs are reserved while a plan is live, and replay is refused. Live broadcast and ledger debit remain refused pending real PSBT construction and signature verification; the plan cache and its reservations are process-local.",
+          "Bitcoin address validation is tightened to network and checksum, and xpub test vectors use valid key serialization instead of placeholder text.",
+          "Backend API version stays 0.3.27; site version is 0.3.37."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A restarted process no longer risks a duplicate ledger write for a retry it has already seen; the last process-local assumption on the money path is gone, and the E2E smoke suite covers the second-instance case (it skips itself without DATABASE_URL, so that coverage did not execute in this environment).",
+          "A migration and its version row commit together, so a failed migration cannot leave the version table claiming schema the database does not have."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Backend typecheck and build clean; full backend suite: 310 passed, 6 skipped. The six skipped are the Postgres E2E tests — DATABASE_URL is unset and Docker is unavailable here, so the durable path was not exercised. Frontend suite: 311 passed; Svelte check: 0 errors / 0 warnings; production build green; i18n audit 1075 keys × 9 locales; contrast audit 218 pairs."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The first migration upgrade pins legacy checksums from the current migration files rather than verifying anything historical. Take a schema backup before running it.",
+          "No live Bitcoin broadcast and no ledger debit from a plan: both endpoints refuse rather than pretend. Signature verification, PSBT/change construction, and durable plan and reservation storage are all still missing.",
+          "The backend is not deployed. A green local suite is not a production check."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.36",
     "date": "2026-10-17",
     "groups": [

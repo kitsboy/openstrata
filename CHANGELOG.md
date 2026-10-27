@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.37
+-  summary: "Durable ledger idempotency lands on Postgres. Migration 0007 stores each Idempotency-Key as council + request fingerprint + 24-hour expiry + the committed ledger-entry id, in the same transaction as the append, so a retry that arrives after a restart replays the original result instead of issuing a second write; a reused key with a different body still returns 409, and the bounded in-memory adapter stays for tests and development. Money paths now fail closed instead of trusting the caller: treasury plan authorization is recomputed from council ledger balances, a plan carries an immutable server-issued token, address, network, fee and input totals are validated, UTXOs are reserved while a plan is live, and replays are refused — while live broadcast and ledger debit stay refused until cryptographic signature verification and real PSBT/change-output construction exist. Migrations gain checksums and a read-only preflight: migration 0008 adds the checksum column, the runner serializes behind an advisory lock, detects missing, orphaned and drifted files, and records a migration's checksum in the transaction that applies it, with npm run migrate:check reporting drift without writing a row. The first-upgrade baseline pins current file contents, which is deliberate and is not historical proof, so take a backup first. GET /health/live and a sanitized GET /health/ready dependency probe are wired, the production entrypoint probes Postgres only, Bitcoin address validation is tightened to network and checksum, and xpub test vectors now use valid key serialization. Verified: backend typecheck and build green, 310 passed / 6 skipped — the six are the Postgres E2E tests, skipped while DATABASE_URL is unset and Docker is unavailable, so the durable path was not exercised in this environment. Not deployed. Backend API version stays 0.3.27."
 -  version: 0.3.36
 -  summary: "Backend API hardening + a read-only agent context endpoint. The API now rejects unknown request fields rather than silently stripping them, caps JSON bodies at 256 KiB and requests at 30 seconds, bounds auth identity fields and validates email shape in the schema, and constrains public Rosa questions/facts. A member-authenticated /api/v1/agent manifest and council snapshot reports verified Operating/CRF summaries, occupancy/Form K counts and up to 50 deadlines, but never owner contacts, payment refs or ledger descriptions; it is private no-store and varies on Authorization. Ledger Idempotency-Key retries replay only identical request bodies for 24h, concurrent duplicates coalesce, body mismatch returns 409, keys are bounded to 10,000, and the in-memory limitation is documented (single process only). CRT/Form B/F print HTML escapes council/user data and sends no-store, nosniff and restrictive CSP headers. Backend suite adds agent privacy/auth/cache, idempotency unit and route tests, validation, and HTML/XSS header checks. Current verification: backend typecheck clean; focused backend tests 60 passing, plus 26 existing auth/rate-limit tests passed."
 -  version: 0.3.35
@@ -112,6 +114,37 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.37] — 2026-10-26
+
+### Added
+
+- **Durable ledger idempotency (migration `0007`):** a ledger `Idempotency-Key` is now a row — council, key, request fingerprint, 24-hour expiry and the committed `ledger_entry` id — written in the same transaction as the append. A retry arriving after a restart replays the original result instead of issuing a second write, a reused key with a different body still answers `409`, and concurrent identical retries coalesce. The bounded in-memory adapter stays for tests and development and refuses new keys with `503` rather than evicting a live one.
+- **Migration checksums and a read-only preflight (migration `0008`):** `_schema_version` gains a `checksum` column, the runner serializes migrations behind an advisory lock, detects missing, orphaned and drifted migration files, and records a migration's checksum in the same transaction that applies it. `npm run migrate:check` reports all of that without writing anything.
+- **Liveness and readiness split:** `GET /health/live` answers whether the process is up; `GET /health/ready` reports sanitized boolean dependency probes and returns `503` when a configured dependency is unavailable. The production entrypoint wires the Postgres probe only.
+
+### Changed
+
+- **Treasury plan issuance and broadcast fail closed.** Authorization is recomputed from council ledger balances rather than trusted from the request, a plan carries an immutable server-issued token, address, network, fee and input totals are validated, UTXOs are reserved while a plan is live, and replay is refused. Live broadcast and ledger debit remain refused pending real PSBT construction and signature verification; the plan cache and its reservations are process-local.
+- Bitcoin address validation is tightened to network and checksum, and xpub test vectors use valid key serialization instead of placeholder text.
+- Backend API version stays `0.3.27`; site version is `0.3.37`.
+
+### Fixed
+
+- A restarted process no longer risks a duplicate ledger write for a retry it has already seen; the last process-local assumption on the money path is gone, and the E2E smoke suite covers the second-instance case (it skips itself without `DATABASE_URL`, so that coverage did not execute in this environment).
+- A migration and its version row commit together, so a failed migration cannot leave the version table claiming schema the database does not have.
+
+### Verified
+
+- Backend typecheck and build clean; full backend suite: **310 passed, 6 skipped**. The six skipped are the Postgres E2E tests — `DATABASE_URL` is unset and Docker is unavailable here, so the durable path was not exercised. Frontend suite: **311 passed**; Svelte check: **0 errors / 0 warnings**; production build green; i18n audit **1075 keys × 9 locales**; contrast audit **218 pairs**.
+
+### Known issues
+
+- The first migration upgrade pins legacy checksums from the current migration files rather than verifying anything historical. Take a schema backup before running it.
+- No live Bitcoin broadcast and no ledger debit from a plan: both endpoints refuse rather than pretend. Signature verification, PSBT/change construction, and durable plan and reservation storage are all still missing.
+- The backend is not deployed. A green local suite is not a production check.
+
+---
 
 ## [0.3.36] — 2026-10-17
 
