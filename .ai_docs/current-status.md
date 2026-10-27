@@ -2,10 +2,19 @@
 
 **Site/product version:** v0.3.37
 **Backend API version:** v0.3.27
-**Last Updated:** 2026-10-26
+**Last Updated:** 2026-10-27
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the i18n audit was blind to this repo's own markup (site, `d4ef669`)
+## Recent milestone — sessions a council can end, and a record of who did what (backend, `8d5c6b4`, `8bdf968`)
+
+- **A token can be revoked now.** Every token carries a `sid` naming a row in `auth_session` (migration `0009`) that every request resolves: it must exist, be unrevoked and unexpired, belong to the claimed user and council, and still carry the token's role. `POST /auth/logout` ends a session immediately instead of at token expiry, a role change ends it, and a refresh token presented twice ends it as a stolen copy. Access tokens are short-lived (`AUTH_TOKEN_TTL`, default **1h**, was 12h) and renewed with a refresh token issued once, stored only as a SHA-256 hash, and rotated on every use (`AUTH_REFRESH_TTL_DAYS`, default 30). New: `GET /auth/sessions` (own sessions, current one marked) and `DELETE /auth/sessions` (sign out everywhere else).
+- **Privileged actions leave a row now.** Twenty routes were role-gated — ledger posts, billing runs, bylaw fines, unit and member deletion, user management — and none recorded the actor. `audit_event` (migration `0009`) holds actor, role, action, outcome, target, status, IP and user agent, written by one `onResponse` hook over one pure policy (`src/audit/policy.ts`). The default is to record, so a new endpoint is audited unless explicitly exempted; refusals are rows too; request bodies are never copied in; unattributable traffic is not recorded at all except the two rate-limited auth events. `GET /api/v1/audit/events` (admin) reads it back, tenant-scoped and cursor-paged.
+- **`PATCH /api/v1/auth/users/:id`** adds the admin role change — the demotion path that makes revocation matter — refusing a self-change (`409`) and leaving the council with no admin (`409`), and revoking the target's sessions on the change.
+- **The site's sign-out is real sign-out** (`8bdf968`): `signOut()` ended nothing on the backend before, so a cleared token stayed valid for its whole lifetime.
+- Verification at `8bdf968`: backend typecheck + build green, **357 passed / 8 skipped** (310 existing + 47 new); frontend `check` 0/0, **312 passed**; `audit:i18n` 1075 keys × 9 locales; `audit:contrast` 218 pairs; production build green.
+- **Not verified here:** migration `0009` has never been executed — no Postgres on this machine and Docker is unavailable. Its first real run is CI's `backend-e2e` job, whose smoke suite (now 8 tests, was 5) also asserts that a logout on one instance kills the token on another and that the append-only trigger refuses `UPDATE`/`DELETE`.
+
+## Prior milestone — the i18n audit was blind to this repo's own markup (site, `d4ef669`)
 
 - `scripts/audit-i18n.mjs` skipped **any line containing `{`**, and this repo writes markup minified — the entire site footer is a single line. One binding therefore hid every hard-coded string beside it. The scanner now strips Svelte expressions and scans *inside* the line, and checks `title`/`aria-label`/`alt` the way it already checked text nodes.
 - Reaching the warnings it was hiding moved the surface from a handful to **113** (warn-level, so CI stays green). The bulk is real, not noise: `/accounting` (47), `/units` (18), `/tax` (11), `/meetings` (8), `/pay` (7) and `/calendar` (4) have **no i18n import at all**. The "full interface localization across all routes" claim does not hold for those six.
@@ -42,7 +51,12 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 - Agent accounts are not a distinct identity class yet; the manifest explicitly warns against sharing admin/treasurer credentials. A dedicated scoped credential model remains future work.
 - The backend is not confirmed deployed; do not call local verification a production check.
 - Legal/statutory content requires current professional review. Payment rails and backend integrations must remain honestly labeled until real host credentials/providers exist.
-- The six dashboard routes listed under the current milestone render English in every locale, and the repaired audit now says so on every run.
+- The six dashboard routes listed under the i18n milestone render English in every locale, and the repaired audit now says so on every run.
+- **Migration `0009` is unexercised.** No Postgres or Docker on M3, so the sessions and audit tables have never been created anywhere; the first real run is CI's postgres job. Every session/audit test above runs against the in-memory adapters.
+- The audit row for a bylaw fine carries the amount and the council-minutes reference, but **not the unit** — the complaint is an opaque JSON string the policy deliberately does not parse. Traceability for a fine runs through the minutes, not the lot.
+- The site consumes `POST /auth/logout` but **not refresh tokens**: an access token simply expires after an hour and the next call 401s into a signed-out state. That is a UX decision left open, not a broken path.
+- There is no UI for the audit trail or the sessions list. Both are API-only, and an admin reads them with `curl` today.
+- `backend/package.json` is still `0.3.27` although the auth contract changed; the README's own rule says to bump it when backend behaviour changes. Two releases have now gone by without a bump — worth a decision rather than another silent pass.
 - `npm run check:security` is red at HEAD with **15 false positives**: test fixtures (`password: 'correct-horse-battery'`, `AUTH_SECRET = 'auth-test-secret-xyz'`), the `.env.example` dev placeholder, and CHANGELOG/handoff prose about the `ospl1.<payload>.<sig>` link token. No real credential is committed. The gate is not wired into CI, so nothing is blocked — but it cannot be used as a signal until the pattern tells a fixture from a secret.
 
 ## UI queue

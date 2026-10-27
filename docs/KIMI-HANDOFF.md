@@ -1,3 +1,29 @@
+## Session — 2026-10-27 · sessions a council can end, and a record of who did what
+
+**Done:**
+- Picked two upgrades off the six offered at the end of the last session and shipped both.
+- **Revocable sessions** (`8d5c6b4`, backend). A token was a stateless bearer credential with a 12h life and no way to end it: a treasurer removed at an evening meeting kept full write access until morning, and a token copied from a shared laptop could not be revoked at all. Every token now carries a `sid` naming a row in `auth_session` (migration `0009`) that every request resolves — it must exist, be unrevoked and unexpired, belong to the claimed user and council, and still carry the token's role. New routes: `POST /auth/logout`, `POST /auth/refresh` (rotating, with replay detection), `GET /auth/sessions`, `DELETE /auth/sessions` (sign out everywhere else), and `PATCH /auth/users/:id` (admin role change, which is the demotion path that made revocation matter in the first place). Access tokens are short-lived now (`AUTH_TOKEN_TTL`, default 1h) and renewed with a refresh token issued once, stored only as a SHA-256 hash, and rotated on every use; `AUTH_REFRESH_TTL_DAYS` (default 30) is how long a session may stay signed in.
+- **An append-only audit log** (`8d5c6b4`, backend). Twenty routes are role-gated — ledger posts, billing runs, bylaw fines, unit and member deletion, user management — and none of them left a trace of the actor, so "who authorized this" had no answer anywhere in the system. `audit_event` (migration `0009`) now holds actor, role, action, outcome, target, status, IP and user agent. One `onResponse` hook writes it over one pure function (`src/audit/policy.ts`) whose **default is to record**, so a new endpoint is audited unless it is explicitly exempted; refusals are rows too (the member who *tried* to post to the ledger is the row an investigation wants); request bodies are never copied in; and unattributable traffic is not recorded at all except the two rate-limited auth events, so a public route cannot be used to fill the log. The table refuses `UPDATE` and `DELETE` by trigger, so append-only is a property rather than a convention. `GET /api/v1/audit/events` (admin) reads it back, tenant-scoped and cursor-paged.
+- **Sign-out is now sign-out** (`8bdf968`, site). `src/lib/api/auth.ts` `signOut()` only cleared the stored token, which left it valid on the backend for the rest of its lifetime — precisely the window a shared laptop needs. It now ends the session server-side first, best-effort, with the local state cleared synchronously so nothing waits on the network.
+
+**Decisions:**
+- Took the two trust items rather than anything user-visible: revocation and provenance are the two things that cannot be added retroactively, and everything else on the list can wait.
+- Made `sessions` and `audit` **required** dependencies of `buildServer` instead of optional ones with in-memory defaults. An optional session store is the bug this fixes; an optional audit log silently loses the evidence it exists to keep. The cost was ~20 test call sites, paid once with a shared `makeSessionDeps()` helper.
+- Recorded logins and refused logins with the account address, and nothing else from a body. A refused attempt is attributed to the *council* but not named as an actor, because nobody proved they were that user.
+- Did **not** bump `backend/package.json` (still `0.3.27`). The README says to bump it when backend behaviour changes, and this changes the auth contract — but the durable-ledger release before it did not bump either, and version decisions here have been Cam's call. Flagged in `LATEST-UPDATE.md`.
+
+**Verified:** backend typecheck + build green, **357 passed / 8 skipped** (310 existing + 47 new; the skipped ones are the Postgres E2E file, which grew from 5 to 8 tests); frontend `check` 0 errors / 0 warnings, **312 passed**; `audit:i18n` 1075 keys × 9 locales; `audit:contrast` 218 pairs; production build green. Nothing visual changed, so no screenshot.
+
+**Not verified, and it is the thing to watch:** migration `0009` was **never executed anywhere** — there is no Postgres on this machine and Docker is unavailable — so the first real run of it is CI's `backend-e2e` job, which starts `pgvector/pgvector:pg17`, runs `npm run migrate`, and then the smoke suite. That suite now also asserts that a logout on one instance kills the token on another instance and that the append-only trigger refuses an `UPDATE` and a `DELETE`. If the migration is wrong, that job is where it shows.
+
+**Git State:**
+- `8d5c6b4` — backend: server-side sessions and an append-only audit log.
+- `8bdf968` — site: `signOut()` ends the session on the server.
+- Both pushed to `origin/main`; working tree clean.
+- Backend API version stays `0.3.27`; site version stays `0.3.37`.
+
+---
+
 ## Session — 2026-10-26 · the i18n audit was blind to its own markup, and the release landed
 
 **Done:**

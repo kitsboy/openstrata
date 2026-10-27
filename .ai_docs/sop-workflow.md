@@ -1,6 +1,6 @@
 # OpenStrata — Standard Operating Procedure
 
-Updated: 2026-10-26
+Updated: 2026-10-27
 
 ## Quick Commands (frontend, from repo root)
 npm run dev              SvelteKit dev server
@@ -28,7 +28,15 @@ npm run migrate:check    read-only preflight: checksums, missing and orphan drif
 npm run seed             seed a demo community (idempotent)
 
 The Postgres E2E tests skip themselves when DATABASE_URL is unset, which is the normal
-state here — 6 of the suite skip, so a green run does not cover the durable path.
+state here — 8 of the suite skip, so a green run does not cover the durable paths
+(ledger idempotency, sessions, the audit table, and migration 0009 itself). CI's
+backend-e2e job starts pgvector, migrates, and runs that file: it is the only place
+those paths are executed. Sessions and the audit log are required deps of
+buildServer, so every API test builds them with `makeSessionDeps()` (tests/memstore.ts).
+
+Backend env vars added 2026-10-27: AUTH_REFRESH_TTL_DAYS (30 default, refresh/session
+lifetime) — AUTH_TOKEN_TTL now defaults to 1h rather than 12h, since a revoked session
+kills its tokens immediately and a client renews with its refresh token.
 
 ## API Reference
 Fastify surface at `backend/API.md` — every /api/v1 endpoint + payload shapes.
