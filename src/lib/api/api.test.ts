@@ -307,11 +307,44 @@ describe('auth session', () => {
     expect(session.council?.name).toBe('Cedar Lane');
   });
 
-  it('signOut clears the token and the session', async () => {
+  it('signOut ends the session on the server and clears the token', async () => {
     import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
     stubLogin();
     await signIn('cam@example.com', 'correct');
-    signOut();
+
+    let seen: { url: string; init: RequestInit } | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: RequestInit) => {
+        seen = { url, init };
+        return new Response(JSON.stringify({ ok: true, revoked: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        });
+      })
+    );
+
+    await signOut();
+
+    // The token is a credential the backend can now end, not just one this
+    // browser forgot about.
+    expect(seen?.url).toBe('http://hermes:8787/api/v1/auth/logout');
+    expect(seen?.init.method).toBe('POST');
+    expect((seen?.init.headers as Record<string, string>).authorization).toBe('Bearer jwt-1');
+    expect(getToken()).toBeNull();
+    let session!: AuthSession;
+    auth.subscribe((s) => (session = s))();
+    expect(session.status).toBe('signed-out');
+  });
+
+  it('signs out locally even when the server cannot be reached', async () => {
+    import.meta.env.PUBLIC_API_BASE_URL = 'http://hermes:8787';
+    stubLogin();
+    await signIn('cam@example.com', 'correct');
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+
+    // A down host must not trap someone in a session they are trying to leave.
+    await expect(signOut()).resolves.toBeUndefined();
     expect(getToken()).toBeNull();
     let session!: AuthSession;
     auth.subscribe((s) => (session = s))();

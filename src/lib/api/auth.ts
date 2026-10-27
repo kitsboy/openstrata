@@ -136,8 +136,17 @@ export async function inviteUser(input: {
   );
 }
 
-/** Clear the token + session locally (the JWT simply expires server-side). */
-export function signOut(): void {
+/**
+ * Sign out: end the session on the server, then clear it here.
+ *
+ * Clearing the stored token was all this used to do, and that is not sign-out —
+ * the token stayed valid on the backend for the rest of its lifetime, which is
+ * precisely the window a shared laptop or a copied token needs. The server call
+ * is best-effort and never gates the local sign-out: a host that is unreachable
+ * must not keep someone signed in on a device they are trying to leave.
+ */
+export function signOut(): Promise<void> {
+  const token = getToken();
   setToken(null);
   auth.set({
     status: 'signed-out',
@@ -145,4 +154,12 @@ export function signOut(): void {
     user: null,
     council: null
   });
+  if (!token) return Promise.resolve();
+  return apiFetch('/api/v1/auth/logout', { method: 'POST', token })
+    .then(() => undefined)
+    .catch(() => {
+      // Offline, already revoked, or the host is down. Nothing else can be done
+      // from here, and the user is signed out locally either way.
+      console.warn('[auth] session could not be ended on the server');
+    });
 }
