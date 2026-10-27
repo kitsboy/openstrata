@@ -14,3 +14,11 @@ if (dsn) {
     environment: import.meta.env.MODE,
   });
 }
+
+// `Sentry.init` on its own captures nothing from a SvelteKit error: the framework
+// hands a thrown error to the `handleError` hook, and this file had no hook at
+// all, so every client-side error went unrecorded and a configured DSN would
+// have reported an empty project forever. Exporting the wrapped handler is what
+// connects the two. With no DSN the capture call is a no-op and the default
+// handler still runs, so a DSN-less build behaves exactly as it did before.
+export const handleError = Sentry.handleErrorWithSentry();

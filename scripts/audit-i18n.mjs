@@ -74,8 +74,26 @@ const ALLOWED_WORDS = new Set(
   ).split(' ')
 );
 
-// Lines that render dynamic content via bindings are not static copy.
-const BINDING = /\{|\$copy/;
+// Svelte expressions inside a line are dynamic, so they are REMOVED rather than
+// treated as a reason to skip the line. The line-level skip that used to live
+// here (`/\{|\$copy/`) meant one binding anywhere on a line hid every static
+// English word beside it. Markup in this repo is written minified — the whole
+// site footer is a single line — so that skip hid the hard-coded nav labels
+// (`Units`, `Accounting`, `Pay`, `Tax & CRA`, `Calendar`, `Meetings`), the RSS
+// chip's `title`/`aria-label` and the cookie notice, and all of them render
+// English in every one of the nine locales while this audit reported clean.
+// Scanning inside a line, never deciding about the line as a whole, is the only
+// version of this check that can see a minified template.
+function stripExpressions(line) {
+  let out = '';
+  let depth = 0;
+  for (const char of line) {
+    if (char === '{') depth += 1;
+    else if (char === '}') depth = Math.max(0, depth - 1);
+    else if (depth === 0) out += char;
+  }
+  return out;
+}
 
 function isEmail(text) {
   return /^[\w.+-]+@[\w-]+\.[\w.]+$/.test(text.trim());
@@ -122,9 +140,9 @@ for (const file of routeFiles) {
       if (/<\/script>|<\/style>|<\/pre>|<\/code>|<\/option>|<\/kbd>/.test(line)) inCodeBlock = false;
       continue;
     }
-    if (BINDING.test(line)) continue;
+    const staticLine = stripExpressions(line);
 
-    const textNodes = [...line.matchAll(/>([^<>{]*[A-Za-z]{3,}[^<>{]*)</g)].map((m) => m[1].trim());
+    const textNodes = [...staticLine.matchAll(/>([^<>{}]*[A-Za-z]{3,}[^<>{}]*)</g)].map((m) => m[1].trim());
     for (const node of textNodes) {
       if (isEmail(node)) continue;
       const tokens = meaningfulTokens(node);
@@ -134,11 +152,22 @@ for (const file of routeFiles) {
     }
   }
 
-  // 3. Static placeholder attributes (warn-level).
-  for (const match of source.matchAll(/placeholder="([^"]*)"/g)) {
-    const value = match[1];
-    if (/[A-Za-z]{3}/.test(value) && !value.includes('{')) {
-      warnings.push(`${relative}: hard-coded placeholder "${value}"`);
+  // 3. Static attributes that a reader actually hears or sees (warn-level):
+  //    `title`, `aria-label` and `alt` are read out by a screen reader, so an
+  //    English one in a translated page is a real defect, not a cosmetic gap.
+  //
+  //    The threshold is one meaningful token rather than the two used for text
+  //    nodes: an attribute value is a complete user-facing string ("Subscribe
+  //    via RSS"), while a bare text node is often a fragment that only reads as
+  //    copy in context. Brand and proper nouns are filtered by meaningfulTokens,
+  //    so `aria-label="OpenStrata"` stays quiet.
+  for (const match of source.matchAll(/\b(title|aria-label|alt|placeholder)="([^"]*)"/g)) {
+    const attribute = match[1];
+    const value = match[2].trim();
+    if (value.includes('{')) continue; // interpolated, so not static copy
+    if (isEmail(value)) continue;
+    if (meaningfulTokens(value).length >= 1) {
+      warnings.push(`${relative}: hard-coded ${attribute} "${value}"`);
     }
   }
 
