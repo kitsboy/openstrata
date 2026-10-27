@@ -25,6 +25,29 @@ export interface AccountId {
   currency: string;
 }
 
+export interface AtomicPostInput {
+  groupId: string;
+  fundCode: string;
+  amountBasis: number;
+  kind: EntryKind;
+  options: PostOptions;
+}
+
+export interface IdempotentPostInput {
+  groupId: string;
+  fundCode: string;
+  amountBasis: number;
+  kind: EntryKind;
+  options: PostOptions;
+  idempotencyKey: string;
+  fingerprint: string;
+  ttlMs: number;
+}
+
+export type IdempotentPostResult =
+  | { status: 'created' | 'replayed'; entry: LedgerEntryRow }
+  | { status: 'conflict' };
+
 export interface LedgerStore {
   getAccountByFund(groupId: string, fundCode: string): Promise<AccountId | null>;
   createAccount(
@@ -33,6 +56,10 @@ export interface LedgerStore {
     label: string,
     currency?: string
   ): Promise<AccountId>;
+  /** Durable implementations append the journal row under an account lock. */
+  postAtomic?(input: AtomicPostInput): Promise<LedgerEntryRow>;
+  /** Durable implementations perform the journal insert and key record atomically. */
+  postIdempotent?(input: IdempotentPostInput): Promise<IdempotentPostResult>;
   /** Next seq for an account inside the same transaction as the insert. */
   nextSeq(accountId: number): Promise<number>;
   insert(entry: LedgerEntryRow): Promise<void>;
@@ -74,6 +101,10 @@ export class LedgerEngine {
     assertValidAmount(amountBasis, kind);
     assertTransferRequiresResolution(opts.transferSeq, opts.resolutionId);
 
+    if (this.store.postAtomic) {
+      return this.store.postAtomic({ groupId, fundCode, amountBasis, kind, options: opts });
+    }
+
     const account = await this.account(groupId, fundCode);
     const seq = await this.store.nextSeq(account.id);
     const entries = await this.store.listEntries(account.id);
@@ -105,6 +136,39 @@ export class LedgerEngine {
     };
     await this.store.insert(entry);
     return entry;
+  }
+
+  /**
+   * Use the store's atomic durable idempotency path when available. A null
+   * result means this adapter has no durable implementation and callers may use
+   * the process-local fallback appropriate to tests/single-process dev.
+   */
+  async postIdempotent(
+    groupId: string,
+    fundCode: string,
+    amountBasis: number,
+    kind: EntryKind,
+    options: PostOptions,
+    idempotencyKey: string,
+    fingerprint: string,
+    ttlMs = 24 * 60 * 60 * 1000
+  ): Promise<IdempotentPostResult | null> {
+    if (!/^[A-Za-z0-9._:-]{1,128}$/.test(idempotencyKey)) throw new Error('invalid idempotency key');
+    if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0 || ttlMs > 120 * 24 * 60 * 60 * 1000) throw new Error('idempotency TTL must be in the range 1ms..120 days');
+    if (!/^[a-f0-9]{64}$/.test(fingerprint)) throw new Error('idempotency fingerprint must be a lowercase SHA-256 digest');
+    if (!this.store.postIdempotent) return null;
+    assertValidAmount(amountBasis, kind);
+    assertTransferRequiresResolution(options.transferSeq, options.resolutionId);
+    return this.store.postIdempotent({
+      groupId,
+      fundCode,
+      amountBasis,
+      kind,
+      options,
+      idempotencyKey,
+      fingerprint,
+      ttlMs
+    });
   }
 
   /**

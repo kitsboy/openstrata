@@ -1,3 +1,4 @@
+import { createECDH, createHash } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 import {
   validateOnchainAddress,
@@ -162,15 +163,38 @@ describe('rate provider', () => {
 });
 
 describe('deterministic unit addresses (xpub)', () => {
-  it('is deterministic for a unit and rejects private prefixes', () => {
-    const a = deriveUnitAddress('zpub6rm3p3cwhHdHmCmYm', 'unit-302');
-    const b = deriveUnitAddress('zpub6rm3p3cwhHdHmCmYm', 'unit-302');
-    expect(a.index).toBe(b.index);
-    expect(a.path).toMatch(/^m\/84'/);
+  it('requires a valid extended public key encoding and checks its network', () => {
+    expect(() => deriveUnitAddress('zpub6rm3p3cwhHdHmCmYm', 'unit-302')).toThrow(/checksum/);
+    expect(() => deriveUnitAddress('xprv9s21ZrQH143K24Mfq5z', 'unit-1')).toThrow(/extended public key/);
     expect(unitChildIndex('unit-101')).not.toBe(unitChildIndex('unit-302'));
-    expect(() => deriveUnitAddress('xprv9s21ZrQH143K24Mfq5z', 'unit-1')).toThrow(
-      /public prefix/
-    );
+  });
+
+  it('accepts checksum-valid public extended keys, detects testnet version bytes, and refuses xprv', () => {
+    const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const makeKey = (version: string) => {
+      const payload = Buffer.alloc(78);
+      Buffer.from(version, 'hex').copy(payload, 0);
+      payload[4] = 3;
+      payload[13] = 1;
+      const keyPair = createECDH('secp256k1');
+      keyPair.setPrivateKey(Buffer.alloc(32, 1));
+      payload.set(keyPair.getPublicKey(undefined, 'compressed'), 45);
+      const check = createHash('sha256').update(createHash('sha256').update(payload).digest()).digest().subarray(0, 4);
+      const bytes = Buffer.concat([payload, check]);
+      let n = BigInt(`0x${bytes.toString('hex')}`);
+      let encoded = '';
+      while (n > 0n) { encoded = alphabet[Number(n % 58n)] + encoded; n /= 58n; }
+      for (const byte of bytes) { if (byte !== 0) break; encoded = `1${encoded}`; }
+      return encoded;
+    };
+    const mainnet = deriveUnitAddress(makeKey('0488b21e'), '302');
+    expect(mainnet.network).toBe('mainnet');
+    expect(mainnet.path).toBe(`m/84'/0'/0'/${unitChildIndex('302')}`);
+    const testnet = deriveUnitAddress(makeKey('043587cf'), '302');
+    expect(testnet.network).toBe('testnet');
+    expect(testnet.path).toBe(`m/84'/1'/0'/${unitChildIndex('302')}`);
+    expect(() => deriveUnitAddress(makeKey('0488ade4'), '302')).toThrow(/extended public key/);
+    expect(() => deriveUnitAddress(makeKey('0488b21e'), '302', 'testnet')).toThrow(/network/);
   });
 });
 

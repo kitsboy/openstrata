@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "node scripts/migrate.mjs",
+    "migrate:check": "node scripts/migrate.mjs --check",
     "seed": "node scripts/seed.mjs"
   },
   "dependencies": {

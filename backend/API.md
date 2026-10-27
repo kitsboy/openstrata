@@ -54,9 +54,10 @@ returns a one-time `temporaryPassword` for the admin to share.
 
 ## Health
 
-`GET /health`
+`GET /health` is a compatibility liveness endpoint; `/health/live` is an explicit liveness check. `GET /health/ready` runs configured dependency probes, returns only boolean states, and answers `503` if any configured dependency is unavailable. No probes configured means ready (useful for in-memory development/tests); production wires a Postgres probe.
+
 ```json
-{ "ok": true, "service": "openstrata-backend" }
+{ "ok": true, "service": "openstrata-backend", "state": "ready", "dependencies": { "postgres": true } }
 ```
 
 ## Trust ledger
@@ -84,13 +85,16 @@ sent with an `Idempotency-Key` header (replays return the cached result).
 Body validation via Fastify JSON schema: `required` = fund, amountBasis, kind,
 type; `amountBasis` must be a non-zero integer; `kind` is `credit|debit`.
 `Idempotency-Key` accepts 1–128 ASCII letters/digits plus `.`, `_`, `:` or `-`.
-The same council + key + identical JSON body replays the original result for
-24 hours; the same key with a different body returns `409`. Concurrent identical
-requests coalesce. This safeguard is bounded at 10,000 keys and is process-local:
-successful results are not evicted early, and a full cache returns `503` for new
-keys until entries expire. Use durable database-backed idempotency before
-running multiple API instances. Omitting the header preserves the existing
-non-deduplicated behavior.
+On Postgres, `(council, key, fingerprint, entry, expiry)` is committed atomically
+with the ledger entry; an identical request replays for 24 hours across app
+restarts and instances, while a changed request returns `409`. In-memory
+adapters retain a process-local fallback bounded at 10,000 keys; successful
+results are not forcibly evicted, and a full cache returns `503` for new keys.
+Omitting the header preserves non-deduplicated behavior. Migration `0007` adds
+the durable key table. The serialized migration runner also records SHA-256
+checksums and `npm run migrate:check` refuses pending or drifted schemas; checksum
+baselining on upgrade cannot verify pre-runner history, so take a backup and
+review the schema before the first upgrade run.
 
 ## Units — canonical master data
 
@@ -178,45 +182,30 @@ percent of the annual operating budget.
 ```
 
 ### `POST /api/v1/treasury/psbt/plan` (treasurer+)
-Deterministic PSBT/multisig orchestration skeleton (3-of-5 threshold-gated;
-hardware-wallet signatures plug into the seam). Accepts an allowed `verdict`
-from `/treasury/authorize`, the spend in sats, UTXOs, and signer counts.
-Returns a `PsbtPlan` with `ready: false`; signatures are recorded via the
-signing room / `recordSignature` seam.
+Creates a 15-minute, tenant-bound server plan. The handler recomputes its
+authorization against verified ledger balances and server-side budget/CRF policy;
+a client-supplied positive verdict is not trusted. Plan requests are checked for
+address/network, fee ceiling, safe integer UTXOs, duplicate outpoints, and
+sufficient satoshis. Active inputs are reserved against another plan in the same
+process. Input reservations are rechecked against the plan registry before
+issuance. The response carries an opaque random `planToken`; plan policy fields
+are immutable at broadcast. The PSBT bytes and signature slots remain a scaffold,
+not cryptographic verification.
 
 ### `POST /api/v1/treasury/psbt/broadcast` (treasurer+)
-Marks a **ready** PSBT plan (threshold met) as broadcasted and optionally posts
-the authorized spend to the trust ledger as a debit on the fund it was pulled
-from — so the on-chain leg reconciles into the same hash chain Ziggy uses for
- e-transfers / rail quotes / billing.The real node client (bitcoind RPC / LND) broadcasts the spend; this endpoint
-owns the *ledger side*. When `BITCOIN_RAIL_ENABLED=true` and `BITCOIN_NODE_URL`
-is set (with `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS` matching the remote
-bitcoind), the endpoint broadcasts for real and returns the `txid`. Two node
-seams run in order:
+Accepts only a server-issued plan belonging to the authenticated council. It
+checks immutable plan fields/token, signature-slot count and syntax, network,
+recipient, input totals, fee ceiling, expiry, and single-use processing. This
+is **not a live-money path**: signatures are not cryptographically verified,
+PSBT construction/change outputs are not implemented, and the live Bitcoin
+endpoint returns `503` without RPC. `postToLedger: true` is rejected; no debit
+is recorded for an unverified/unbroadcast spend. With the rail disabled the
+route returns a deterministic demo placeholder tagged `placeholder: true`.
 
-1. **PSBT workflow (Path A, preferred)** — `walletprocesspsbt` (sign) →
-   `finalizepsbt` (extract) → `sendpsbt` → txid. This is the BIP174 path the
-   council's hardware-wallet signatures feed: when the signing coordinator has
-   aggregated real signatures into the plan's `psbtB64`, that PSBT is what the
-   node processes. The seam *never fabricates* — it throws when the wallet is
-   missing or `finalizepsbt` is not complete (below threshold), and the
-   endpoint falls back to the raw seam.
-2. **Raw-tx path (Path B, fallback)** — `sendrawtransaction` of the plan's
-   unsigned raw-tx skeleton; works with a watch-only node + an external
-   signer. On the rail path it **throws** on an unreachable or auth-failed
-   node — a placeholder never stands for an on-chain spend.
-
-**Broadcast honesty (tri-state):** on the real rail, the response carries
-`rail: 'live'` with the real node `txid`, or `txid: null` + `rail:
-'unavailable'` when the node could not be reached (a retry queue in a real
-deploy). Only in demo/bootstrap (`BITCOIN_RAIL_ENABLED != true`) does the
-endpoint return the deterministic placeholder txid (`psbt:<planId>:<shortHash>`)
-so receipts/reconcile can iterate — explicitly tagged `placeholder: true` so it
-can never be read as a spend that reached the chain. See `.env`
-`BITCOIN_RAIL_ENABLED` + `BITCOIN_NODE_URL` + `BITCOIN_RPC_USER`/`BITCOIN_RPC_PASS`.
-
-Rejects (returns `broadcasted: false`) when the plan is not ready — never
-broadcasts below threshold.
+The legacy helper seams in `src/ziggy/node-broadcast.ts` are not wired into this
+route and must not be treated as production spend execution. Persistent plan and
+UTXO reservation storage, dual approval, a real PSBT builder and independent
+signature verification are still required before enabling live use.
 
 ## Ledger series
 
@@ -529,9 +518,11 @@ unit's AR ledger balance > 0 — sale blocked). Dynamic values are HTML-escaped;
 responses use `private, no-store`, `nosniff`, and a restrictive CSP.
 
 ### `GET|POST /api/v1/rails/xpub`
-Register (treasurer+) the council's watch-only xpub (`POST`) and read the
-registered xpub + deterministic per-unit BIP32 receive paths (`GET`). Keys never
-leave council hardware wallets.
+Register a checksum/key-valid watch-only xpub (treasurer+) and inspect network
+plus deterministic per-unit path metadata. The xpub is never returned by GET.
+The current registration is process-local, not encrypted/durable; actual BIP32
+child address derivation is not implemented and the response explicitly says
+address bytes are not materialized. Do not use these paths to receive funds yet.
 
 ## Auth rate limiting
 

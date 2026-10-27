@@ -7,6 +7,15 @@ import { broadcastPsbtWorkflow, broadcastRawTx, planSummary, serializePsbtSkelet
 import { buildServer } from '../src/api/server.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { authorizeSpend } from '../src/ziggy/ziggy.js';
+import type { Budget } from '../src/ziggy/ziggy.js';
+
+const planBudget: Budget = { fiscalYear: '2026', totalOperatingBasis: 10_000_000, crfMandatoryPct: 10 };
+const approvedPlanVerdict = (amountBasis: number, fundCode = 'operating') => authorizeSpend(
+  planBudget,
+  { operating: 10_000_000, crf: 1_000_000, war_chest: amountBasis },
+  { amountBasis, fundCode, poRef: 'approved', category: 'approved' }
+);
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
@@ -72,8 +81,8 @@ describe('PSBT execution seam', () => {
       verdict,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -86,7 +95,7 @@ describe('PSBT execution seam', () => {
         verdict: { allow: false as const, reason: 'crf floor', blocked: 'crf-floor' },
         amountSats: 1,
         feeSats: 0,
-        recipient: 'x',
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
         inputs: [],
         totalSigners: 5,
         requiredSignatures: 3
@@ -100,12 +109,27 @@ describe('PSBT execution seam', () => {
         verdict,
         amountSats: 1_000_000,
         feeSats: 0,
-        recipient: 'x',
-        inputs: [{ txid: 'abc', vout: 0, sats: 100 }],
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 100 }],
         totalSigners: 5,
         requiredSignatures: 3
       })
     ).toThrow(/insufficient inputs/);
+  });
+
+  it('rejects invalid addresses, duplicate outpoints, and excessive fees', () => {
+    const input = {
+      verdict,
+      amountSats: 100_000,
+      feeSats: 1_000,
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', vout: 0, sats: 200_000 }],
+      totalSigners: 5,
+      requiredSignatures: 3
+    };
+    expect(() => buildPsbtPlan({ ...input, recipient: 'bc1qfake' })).toThrow(/invalid recipient/);
+    expect(() => buildPsbtPlan({ ...input, inputs: [input.inputs[0], input.inputs[0]] })).toThrow(/duplicate input/);
+    expect(() => buildPsbtPlan({ ...input, feeSats: 100_001 })).toThrow(/feeSats exceeds/);
   });
 
   it('becomes ready exactly at the signature threshold', () => {
@@ -113,8 +137,8 @@ describe('PSBT execution seam', () => {
       verdict,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -132,8 +156,8 @@ describe('PSBT execution seam', () => {
       verdict,
       amountSats: 100_000,
       feeSats: 1_000,
-      recipient: 'bc1x',
-      inputs: [{ txid: 't', vout: 0, sats: 200_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', vout: 0, sats: 200_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -149,8 +173,8 @@ describe('PSBT execution seam', () => {
       verdict,
       amountSats: 100_000,
       feeSats: 1_000,
-      recipient: 'bc1x',
-      inputs: [{ txid: 't', vout: 0, sats: 200_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', vout: 0, sats: 200_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -164,8 +188,8 @@ describe('PSBT execution seam', () => {
       verdict,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -186,8 +210,8 @@ describe('PSBT execution seam', () => {
       verdict: { allow: true, reason: 'ok', pulledFrom: 'operating', basis: 500_000 },
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1x',
-      inputs: [{ txid: 't', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -201,11 +225,14 @@ describe('PSBT execution seam', () => {
 describe('PSBT broadcast endpoint (item #15 continuation)', () => {
   let app: FastifyInstance;
   let token: string;
+  let councilId: string;
+  let ledger: LedgerEngine;
 
   beforeAll(async () => {
+    ledger = new LedgerEngine(new MemLedgerStore());
     app = await buildServer(
       {
-        ledger: new LedgerEngine(new MemLedgerStore()),
+        ledger,
         rosa: keywordRetriever([]),
         reconcile,
         payments: new MemPaymentRequestStore(),
@@ -232,11 +259,22 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     });
     expect(reg.statusCode).toBe(200);
     token = reg.json().token as string;
+    councilId = reg.json().council.id as string;
+    await ledger.post(councilId, 'operating', 10_000_000, 'credit', { type: 'seed' });
+    await ledger.post(councilId, 'crf', 1_000_000, 'credit', { type: 'seed' });
   });
 
   afterAll(async () => {
     await app.close();
   });
+
+  const signAndSubmit = async (plan: PsbtPlan) => {
+    const signatures = { '0': 'c2lnMA==', '1': 'c2lnMQ==', '2': 'c2lnMg==' };
+    return app.inject({
+      method: 'POST', url: '/api/v1/treasury/psbt/broadcast', headers: { authorization: `Bearer ${token}` },
+      payload: { planId: plan.id, readyPlan: { ...plan, signatures, ready: true }, postToLedger: false }
+    });
+  };
 
   it('builds a plan then broadcasts it (stub txid)', async () => {
     // Build the plan.
@@ -245,24 +283,24 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       url: '/api/v1/treasury/psbt/plan',
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        verdict: { allow: true, reason: 'approved', pulledFrom: 'operating', basis: 500_000 },
+        verdict: approvedPlanVerdict(500_000),
         amountSats: 490_000,
         feeSats: 5_000,
-        recipient: 'bc1qexample',
-        inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
         totalSigners: 5,
         requiredSignatures: 3
       }
     });
     expect(planRes.statusCode).toBe(200);
     const planBody = planRes.json();
-    expect(planBody.ok).toBe(true);
+    expect(planBody.ok, JSON.stringify(planBody)).toBe(true);
     expect(planBody.plan.ready).toBe(false);
 
     // Sign to threshold, then broadcast.
-    const signed = recordSignature(planBody.plan, 0, 'sig0');
-    const ready = recordSignature(signed.plan, 1, 'sig1');
-    const completed = recordSignature(ready.plan, 2, 'sig2');
+    const signed = recordSignature(planBody.plan, 0, 'c2lnMA==');
+    const ready = recordSignature(signed.plan, 1, 'c2lnMQ==');
+    const completed = recordSignature(ready.plan, 2, 'c2lnMg==');
     expect(completed.ready).toBe(true);
 
     const broadcastRes = await app.inject({
@@ -271,12 +309,12 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       headers: { authorization: `Bearer ${token}` },
       payload: {
         planId: completed.plan.id,
-        readyPlan: completed.plan,
+        readyPlan: { ...completed.plan, signatures: completed.plan.signatures, ready: completed.plan.ready },
         postToLedger: false,
         amountBasis: 500_000
       }
     });
-    expect(broadcastRes.statusCode).toBe(200);
+    expect(broadcastRes.statusCode, JSON.stringify(broadcastRes.json())).toBe(200);
     const b = broadcastRes.json();
     expect(b.ok).toBe(true);
     expect(b.broadcasted).toBe(true);
@@ -286,6 +324,14 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     expect(b.placeholder).toBe(true);
     expect(b.rail).toBeUndefined();
     expect(b.signedCount).toBe(3);
+
+    const replay = await app.inject({
+      method: 'POST',
+      url: '/api/v1/treasury/psbt/broadcast',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { planId: completed.plan.id, readyPlan: { ...completed.plan, signatures: completed.plan.signatures, ready: true }, postToLedger: false }
+    });
+    expect(replay.statusCode).toBe(409);
   });
 
   it('planSummary reflects plan state', () => {
@@ -294,12 +340,12 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
-    expect(planSummary(plan)).toMatchObject({ ready: false, signed: 0, required: 3, amountSats: 490_000, recipient: 'bc1qexample' });
+    expect(planSummary(plan)).toMatchObject({ ready: false, signed: 0, required: 3, amountSats: 490_000, recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT' });
     plan = recordSignature(plan, 0, 's0').plan;
     plan = recordSignature(plan, 1, 's1').plan;
     plan = recordSignature(plan, 2, 's2').plan;
@@ -312,8 +358,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -328,11 +374,11 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     // deterministic placeholder txid `psbt:<planId>:<shortHash>` plus the raw-tx
     // skeleton hex, so the endpoint/receipts/reconcile path can iterate before a
     // node is configured. The broadcast endpoint tags it placeholder:true.
-    const out = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }], { railEnabled: false });
+    const out = await broadcastRawTx(plan, btc, [{ address: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT', sats: 490_000 }], { railEnabled: false });
     expect(out.txid).toMatch(/^psbt:/);
     expect(out.hex).toMatch(/^[0-9a-f]+$/);
     // Deterministic: same plan + same outputs → same placeholder txid.
-    const again = await broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }], { railEnabled: false });
+    const again = await broadcastRawTx(plan, btc, [{ address: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT', sats: 490_000 }], { railEnabled: false });
     expect(again.txid).toBe(out.txid);
   });
 
@@ -342,8 +388,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -357,7 +403,7 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     // so the endpoint can report txid:null + rail:'unavailable'. The placeholder
     // must never be substituted on the rail-enabled path.
     await expect(
-      broadcastRawTx(plan, btc, [{ address: 'bc1qexample', sats: 490_000 }], { railEnabled: true })
+      broadcastRawTx(plan, btc, [{ address: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT', sats: 490_000 }], { railEnabled: true })
     ).rejects.toThrow();
   });
 
@@ -367,8 +413,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -411,8 +457,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -439,17 +485,23 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
   });
 
   it('rail ON + node unreachable → txid:null + rail:"unavailable" + placeholder:false (Lenny t_2fda9855)', async () => {
-    const v = { allow: true as const, reason: 'approved', pulledFrom: 'operating', basis: 200_000 };
-    let plan = buildPsbtPlan({
-      verdict: v,
-      amountSats: 195_000,
-      feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 300_000 }],
-      totalSigners: 5,
-      requiredSignatures: 3
+    const planRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/treasury/psbt/plan',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        verdict: approvedPlanVerdict(200_000),
+        amountSats: 195_000,
+        feeSats: 5_000,
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', vout: 0, sats: 300_000 }],
+        totalSigners: 5,
+        requiredSignatures: 3
+      }
     });
-    for (const i of [0, 1, 2]) plan = recordSignature(plan, i, `sig${i}`).plan;
+    expect(planRes.statusCode).toBe(200);
+    let plan = planRes.json().plan as PsbtPlan;
+    for (const i of [0, 1, 2]) plan = recordSignature(plan, i, `c2ln${i}==`).plan;
     expect(plan.ready).toBe(true);
 
     process.env.BITCOIN_RAIL_ENABLED = 'true';
@@ -459,18 +511,15 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
         method: 'POST',
         url: '/api/v1/treasury/psbt/broadcast',
         headers: { authorization: `Bearer ${token}` },
-        payload: { planId: plan.id, readyPlan: plan, postToLedger: false, amountBasis: 200_000 }
+        payload: {
+          planId: plan.id,
+          readyPlan: plan,
+          postToLedger: false,
+          amountBasis: 200_000
+        }
       });
-      expect(res.statusCode).toBe(200);
-      // The placeholder must NEVER escape the rail-enabled path — node down is
-      // reported as unavailable, not as a fake on-chain spend.
-      expect(res.json()).toMatchObject({
-        ok: true,
-        broadcasted: true,
-        txid: null,
-        rail: 'unavailable',
-        placeholder: false
-      });
+      expect(res.statusCode, JSON.stringify(res.json())).toBe(503);
+      expect(res.json()).toMatchObject({ ok: false, broadcasted: false, txid: null, rail: 'unavailable', placeholder: false });
     } finally {
       delete process.env.BITCOIN_RAIL_ENABLED;
       delete process.env.BITCOIN_NODE_URL;
@@ -478,17 +527,23 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
   });
 
   it('rail OFF + node unreachable → txid:"psbt:…" + placeholder:true (demo) — distinguishable tri-state', async () => {
-    const v = { allow: true as const, reason: 'approved', pulledFrom: 'operating', basis: 200_000 };
-    let plan = buildPsbtPlan({
-      verdict: v,
-      amountSats: 195_000,
-      feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 300_000 }],
-      totalSigners: 5,
-      requiredSignatures: 3
+    const planRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/treasury/psbt/plan',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        verdict: approvedPlanVerdict(200_000),
+        amountSats: 195_000,
+        feeSats: 5_000,
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', vout: 0, sats: 300_000 }],
+        totalSigners: 5,
+        requiredSignatures: 3
+      }
     });
-    for (const i of [0, 1, 2]) plan = recordSignature(plan, i, `sig${i}`).plan;
+    expect(planRes.statusCode).toBe(200);
+    let plan = planRes.json().plan as PsbtPlan;
+    for (const i of [0, 1, 2]) plan = recordSignature(plan, i, `c2ln${i}==`).plan;
     expect(plan.ready).toBe(true);
 
     process.env.BITCOIN_RAIL_ENABLED = 'false';
@@ -498,9 +553,14 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
         method: 'POST',
         url: '/api/v1/treasury/psbt/broadcast',
         headers: { authorization: `Bearer ${token}` },
-        payload: { planId: plan.id, readyPlan: plan, postToLedger: false, amountBasis: 200_000 }
+        payload: {
+          planId: plan.id,
+          readyPlan: plan,
+          postToLedger: false,
+          amountBasis: 200_000
+        }
       });
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode, JSON.stringify(res.json())).toBe(200);
       const b = res.json();
       // Demo/bootstrap keeps the placeholder but tags it explicitly.
       expect(b).toMatchObject({ ok: true, broadcasted: true, placeholder: true });
@@ -518,8 +578,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -548,8 +608,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -568,8 +628,8 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       verdict: v,
       amountSats: 490_000,
       feeSats: 5_000,
-      recipient: 'bc1qexample',
-      inputs: [{ txid: 'abc', vout: 0, sats: 600_000 }],
+      recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', vout: 0, sats: 600_000 }],
       totalSigners: 5,
       requiredSignatures: 3
     });
@@ -593,52 +653,92 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
     }
   });
 
-  it('broadcast with postToLedger posts the debit to the fund', async () => {
+  it('broadcast with postToLedger refuses an unverified spend without debiting the ledger', async () => {
     const planRes = await app.inject({
       method: 'POST',
       url: '/api/v1/treasury/psbt/plan',
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        verdict: { allow: true, reason: 'approved', pulledFrom: 'operating', basis: 250_000 },
+        verdict: approvedPlanVerdict(250_000),
         amountSats: 245_000,
         feeSats: 5_000,
-        recipient: 'bc1qexample',
-        inputs: [{ txid: 'abc', vout: 0, sats: 300_000 }],
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: '1111111111111111111111111111111111111111111111111111111111111111', vout: 0, sats: 300_000 }],
         totalSigners: 5,
         requiredSignatures: 3
       }
     });
     const planBody = planRes.json();
-
-    // Sign to threshold.
-    let plan = planBody.plan;
-    for (const i of [0, 1, 2]) {
-      plan = recordSignature(plan, i, `sig${i}`).plan;
-    }
+    const signatures = { '0': 'c2lnMA==', '1': 'c2lnMQ==', '2': 'c2lnMg==' };
 
     const broadcastRes = await app.inject({
       method: 'POST',
       url: '/api/v1/treasury/psbt/broadcast',
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        planId: plan.id,
-        readyPlan: plan,
+        planId: planBody.plan.id,
+        readyPlan: { ...planBody.plan, signatures, ready: true },
         postToLedger: true,
         amountBasis: 250_000
       }
     });
-    expect(broadcastRes.statusCode).toBe(200);
-    const b = broadcastRes.json();
-    expect(b.broadcasted).toBe(true);
-    expect(b.ledgerSeq).toBe(1);
-
-    // The debit landed on the operating fund.
+    expect(broadcastRes.statusCode).toBe(409);
+    expect(broadcastRes.json().reason).toContain('ledger posting is disabled');
     const bal = await app.inject({
       method: 'GET',
       url: '/api/v1/ledger/balance?fund=operating',
       headers: { authorization: `Bearer ${token}` }
     });
-    expect(bal.json().balanceBasis).toBe(-250_000);
+    expect(bal.json().balanceBasis).toBe(10_000_000);
+  });
+
+  it('rejects a second active plan that attempts to reserve the same council UTXO', async () => {
+    const planRequest = {
+      verdict: approvedPlanVerdict(200_000),
+      amountSats: 195_000, feeSats: 5_000, recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+      inputs: [{ txid: 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd', vout: 0, sats: 300_000 }],
+      totalSigners: 5, requiredSignatures: 3
+    };
+    const first = await app.inject({ method: 'POST', url: '/api/v1/treasury/psbt/plan', headers: { authorization: `Bearer ${token}` }, payload: planRequest });
+    expect(first.statusCode).toBe(200);
+    const second = await app.inject({ method: 'POST', url: '/api/v1/treasury/psbt/plan', headers: { authorization: `Bearer ${token}` }, payload: planRequest });
+    expect(second.statusCode).toBe(409);
+    expect(second.json().reason).toContain('already reserved');
+  });
+
+  it('broadcast rejects forged signatures and changed plans, and accepts signatures only in the plan field', async () => {
+    const planned = await app.inject({
+      method: 'POST', url: '/api/v1/treasury/psbt/plan', headers: { authorization: `Bearer ${token}` },
+      payload: {
+        verdict: approvedPlanVerdict(200_000),
+        amountSats: 195_000, feeSats: 5_000, recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: '9999999999999999999999999999999999999999999999999999999999999999', vout: 0, sats: 300_000 }],
+        totalSigners: 5, requiredSignatures: 3
+      }
+    });
+    expect(planned.statusCode).toBe(200);
+    const plan = planned.json().plan as PsbtPlan;
+    const signatures = { '0': 'c2lnMA==', '1': 'c2lnMQ==', '2': 'c2lnMg==' };
+    const readyPlan = { ...plan, signatures, ready: true };
+
+    const invalidExtra = await app.inject({
+      method: 'POST', url: '/api/v1/treasury/psbt/broadcast', headers: { authorization: `Bearer ${token}` },
+      payload: { planId: plan.id, readyPlan, signatures, postToLedger: false }
+    });
+    expect(invalidExtra.statusCode).toBe(400);
+
+    const forged = await app.inject({
+      method: 'POST', url: '/api/v1/treasury/psbt/broadcast', headers: { authorization: `Bearer ${token}` },
+      payload: { planId: plan.id, readyPlan: { ...readyPlan, authorization: { ...plan.authorization, amountBasis: 1 } }, postToLedger: false }
+    });
+    expect(forged.statusCode).toBe(409);
+
+    const accepted = await app.inject({
+      method: 'POST', url: '/api/v1/treasury/psbt/broadcast', headers: { authorization: `Bearer ${token}` },
+      payload: { planId: plan.id, readyPlan, postToLedger: false }
+    });
+    expect(accepted.statusCode).toBe(200);
+    expect(accepted.json()).toMatchObject({ broadcasted: true, placeholder: true });
   });
 
   it('broadcast rejects when the plan is not ready', async () => {
@@ -647,11 +747,11 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
       url: '/api/v1/treasury/psbt/plan',
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        verdict: { allow: true, reason: 'approved', pulledFrom: 'operating', basis: 100_000 },
+        verdict: approvedPlanVerdict(100_000),
         amountSats: 95_000,
         feeSats: 5_000,
-        recipient: 'bc1x',
-        inputs: [{ txid: 't', vout: 0, sats: 200_000 }],
+        recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+        inputs: [{ txid: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', vout: 0, sats: 200_000 }],
         totalSigners: 5,
         requiredSignatures: 3
       }
@@ -683,11 +783,11 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
         url: '/api/v1/treasury/psbt/plan',
         headers: { authorization: `Bearer ${token}` },
         payload: {
-          verdict: { allow: true, reason: 'approved', pulledFrom: 'operating', basis: 60_000 },
+          verdict: approvedPlanVerdict(60_000),
           amountSats: 55_000,
           feeSats: 5_000,
-          recipient: 'bc1qexample',
-          inputs: [{ txid: 'ff', vout: 0, sats: 100_000 }],
+          recipient: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT',
+          inputs: [{ txid: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', vout: 0, sats: 100_000 }],
           totalSigners: 5,
           requiredSignatures: 3
         }
@@ -703,16 +803,16 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
         headers: { authorization: `Bearer ${token}` },
         payload: { planId: plan.id, readyPlan: plan, postToLedger: false }
       });
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(503);
       const b = res.json();
-      expect(b.ok).toBe(true);
-      expect(b.broadcasted).toBe(true);
-      // Workflow seam failed (unreachable node) → raw seam also throws on the
+      expect(b.ok).toBe(false);
+      expect(b.broadcasted).toBe(false);
+      // Live signing/broadcast is fail-closed (unreachable node) → raw seam also throws on the
       // rail path → the placeholder must NOT escape: txid:null + rail:'unavailable'.
       expect(b.txid).toBeNull();
       expect(b.rail).toBe('unavailable');
       expect(b.placeholder).toBe(false);
-      expect(b.reason).toContain('broadcast seam failed');
+      expect(b.reason).toContain('verified signing and transaction construction are not implemented');
     } finally {
       if (origUrl === undefined) delete process.env.BITCOIN_NODE_URL;
       else process.env.BITCOIN_NODE_URL = origUrl;

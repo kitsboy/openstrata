@@ -21,8 +21,23 @@ export type IdempotencyOutcome<T> =
   | { status: 'conflict' }
   | { status: 'full' };
 
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((item) => item === undefined ? null : canonicalize(item));
+  if (value && typeof value === 'object') {
+    const object = value as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(object)
+        .filter((key) => object[key] !== undefined)
+        .sort()
+        .map((key) => [key, canonicalize(object[key])])
+    );
+  }
+  return value;
+}
+
+/** Stable across JSON object key order, which is not semantically significant. */
 export function requestFingerprint(value: unknown): string {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+  return createHash('sha256').update(JSON.stringify(canonicalize(value)) ?? 'null').digest('hex');
 }
 
 export class IdempotencyCache {

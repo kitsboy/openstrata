@@ -17,9 +17,9 @@ import { type Retriever, composeAnswer } from '../rosa/rosa.js';
 import { authorizeSpend } from '../ziggy/ziggy.js';
 import { planDca, type DcaFrequency } from '../ziggy/dca.js';
 import { buildPsbtPlan, type PsbtInputRef } from '../ziggy/psbt.js';
-import { broadcastPsbt, postSpendToLedger, signedCount } from '../ziggy/broadcast.js';
-import { broadcastPsbtWorkflow, broadcastRawTx, planSummary, type BitcoindRpcConfig } from '../ziggy/node-broadcast.js';
-import { deriveUnitAddress } from '../rails/rails.js';
+import { broadcastPsbt, signedCount } from '../ziggy/broadcast.js';
+import { planSummary } from '../ziggy/node-broadcast.js';
+import { deriveUnitAddress, validateOnchainAddress } from '../rails/rails.js';
 import type { Reconciler, UnitRefs } from '../trf/recon.js';
 import { runBilling, type UnitFee } from '../billing/billing.js';
 import {
@@ -76,6 +76,8 @@ export interface ApiDeps {
   memberStore?: MemberStore;
   /** Interac e-Transfer Business Request Money seam (demo provider when unset). */
   interac?: InteracProvider;
+  /** Optional dependency probes. Exposed only as boolean readiness states. */
+  readinessChecks?: Record<string, () => Promise<boolean>>;
   config: {
     crfMandatoryPct: number;
     vectorCollection: string;
@@ -98,6 +100,7 @@ export interface ApiDeps {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TREASURY_FUNDS = new Set(['operating', 'crf', 'war_chest']);
 const escapeHtml = (value: unknown): string =>
   String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
 
@@ -141,6 +144,9 @@ export async function buildServer(
   // Process-local protection against lost-response retries and concurrent
   // duplicate ledger posts. Durable cross-process idempotency belongs in the DB.
   const idempotency = new IdempotencyCache();
+  // Issued PSBT plans remain server-authoritative and tenant-bound. The token is
+  // opaque lookup material, not a signature or a client-editable authorization.
+  const psbtPlans = new Map<string, { councilId: string; plan: ReturnType<typeof buildPsbtPlan>; broadcasted: boolean; processing: boolean }>();
 
   // -----------------------------------------------------------  Cross-origin
   // The site and the API are different origins in both documented deployment
@@ -217,6 +223,21 @@ export async function buildServer(
   };
 
   app.get('/health', async () => ({ ok: true, service: 'openstrata-backend' }));
+  app.get('/health/live', async () => ({ ok: true, service: 'openstrata-backend', state: 'live' }));
+  app.get('/health/ready', async (_req, reply) => {
+    const checks = Object.entries(deps.readinessChecks ?? {});
+    const results = await Promise.all(checks.map(async ([name, probe]) => {
+      try {
+        return [name, await probe() === true] as const;
+      } catch {
+        return [name, false] as const;
+      }
+    }));
+    const dependencies = Object.fromEntries(results);
+    const ready = results.every(([, passed]) => passed);
+    if (!ready) reply.code(503);
+    return { ok: ready, service: 'openstrata-backend', state: ready ? 'ready' : 'not-ready', dependencies };
+  });
 
   // Agent discovery and context are read-only and always scoped to the
   // authenticated council. No agent endpoint can post a ledger entry or move
@@ -754,25 +775,42 @@ export async function buildServer(
       if (idemHeader && (!idem || !/^[A-Za-z0-9._:-]{1,128}$/.test(idem))) {
         return reply.code(400).send({ ok: false, reason: 'invalid Idempotency-Key' });
       }
+      const options = {
+        type: req.body.type,
+        description: req.body.description,
+        referenceCode: req.body.referenceCode,
+        reconRef: req.body.reconRef
+      };
       const postLedger = async () => {
         const row = await deps.ledger.post(
           req.user!.councilId,
           req.body.fund,
           req.body.amountBasis,
           req.body.kind,
-          {
-            type: req.body.type,
-            description: req.body.description,
-            referenceCode: req.body.referenceCode,
-            reconRef: req.body.reconRef
-          }
+          options
         );
         return { posted: true, seq: row.seq, tallyRoot: row.tallyRoot.slice(0, 8) };
       };
       if (!idem) return postLedger();
+      const fingerprint = requestFingerprint(req.body);
+      const durable = await deps.ledger.postIdempotent(
+        req.user!.councilId,
+        req.body.fund,
+        req.body.amountBasis,
+        req.body.kind,
+        options,
+        idem,
+        fingerprint
+      );
+      if (durable) {
+        if (durable.status === 'conflict') {
+          return reply.code(409).send({ ok: false, reason: 'Idempotency-Key was already used with a different request' });
+        }
+        return { posted: true, seq: durable.entry.seq, tallyRoot: durable.entry.tallyRoot.slice(0, 8) };
+      }
       const outcome = await idempotency.run(
         `ledger:${req.user!.councilId}:${idem}`,
-        requestFingerprint(req.body),
+        fingerprint,
         postLedger
       );
       if (outcome.status === 'conflict') {
@@ -852,22 +890,110 @@ export async function buildServer(
       inputs: PsbtInputRef[];
       totalSigners: number;
       requiredSignatures: number;
+      network?: 'mainnet' | 'testnet';
+      maxFeeSats?: number;
+      resolutionId?: string;
     };
   }>(
     '/api/v1/treasury/psbt/plan',
-    { preHandler: [authenticate, requireRole('treasurer')] },
-    async (req) => {
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object', required: ['verdict', 'amountSats', 'feeSats', 'recipient', 'inputs', 'totalSigners', 'requiredSignatures'], additionalProperties: false,
+          properties: {
+            verdict: { type: 'object', required: ['allow', 'reason', 'pulledFrom', 'basis'], additionalProperties: false, properties: { allow: { const: true }, reason: { type: 'string', maxLength: 300 }, pulledFrom: { type: 'string', minLength: 1, maxLength: 128 }, basis: { type: 'integer', minimum: 1 } } },
+            amountSats: { type: 'integer', minimum: 1, maximum: 2100000000000000 },
+            feeSats: { type: 'integer', minimum: 0, maximum: 2100000000000000 },
+            recipient: { type: 'string', minLength: 26, maxLength: 90 },
+            inputs: { type: 'array', minItems: 1, maxItems: 100, items: { type: 'object', required: ['txid', 'vout', 'sats'], additionalProperties: false, properties: { txid: { type: 'string', pattern: '^[0-9a-fA-F]{64}$' }, vout: { type: 'integer', minimum: 0, maximum: 4294967295 }, sats: { type: 'integer', minimum: 1, maximum: 2100000000000000 } } } },
+            totalSigners: { type: 'integer', minimum: 1, maximum: 15 },
+            requiredSignatures: { type: 'integer', minimum: 1, maximum: 15 },
+            network: { type: 'string', enum: ['mainnet', 'testnet'] },
+            maxFeeSats: { type: 'integer', minimum: 0, maximum: 2100000000000000 },
+            resolutionId: { type: 'string', minLength: 1, maxLength: 128 }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
       const b = req.body;
       try {
+        // Recompute policy from server-controlled ledger balances and budget;
+        // a client-provided `allow: true` object is never authorization.
+        const pulledFrom = b.verdict.pulledFrom;
+        if (!TREASURY_FUNDS.has(pulledFrom) || !Number.isSafeInteger(b.verdict.basis) || b.verdict.basis <= 0) {
+          return reply.code(403).send({ ok: false, reason: 'server-side treasury policy denied this plan' });
+        }
+        const budget = { ...defaultBudget, crfMandatoryPct: deps.config.crfMandatoryPct };
+        const [operatingBalance, crfBalance, selectedBalance] = await Promise.all([
+          deps.ledger.balance(req.user!.councilId, 'operating'),
+          deps.ledger.balance(req.user!.councilId, 'crf'),
+          deps.ledger.balance(req.user!.councilId, pulledFrom)
+        ]);
+        const accountBalances = {
+          operating: operatingBalance.balanceBasis,
+          crf: crfBalance.balanceBasis,
+          war_chest: selectedBalance.balanceBasis
+        };
+        if (pulledFrom === 'crf') accountBalances.operating = 0;
+        if (pulledFrom === 'war_chest') {
+          accountBalances.operating = 0;
+          accountBalances.crf = 0;
+        }
+        const verifiedAddress = validateOnchainAddress(b.recipient);
+        const verifiedNetwork = b.network ?? 'mainnet';
+        const recipientMatchesNetwork = verifiedNetwork === 'mainnet'
+          ? /^(bc1|[13])/.test(b.recipient)
+          : /^(tb1|[2mn])/.test(b.recipient);
+        if (!verifiedAddress.ok || !recipientMatchesNetwork) {
+          return reply.code(400).send({ ok: false, reason: 'recipient does not match the authorized network' });
+        }
+        const verdict = authorizeSpend(
+          budget,
+          accountBalances,
+          {
+            amountBasis: b.verdict.basis,
+            fundCode: pulledFrom,
+            poRef: b.verdict.reason,
+            category: b.verdict.reason
+          }
+        );
+        const availableBasis = selectedBalance.balanceBasis;
+        if (!verdict.allow || b.verdict.basis > availableBasis) {
+          return reply.code(403).send({ ok: false, reason: 'server-side treasury policy denied this plan' });
+        }
+        // CAD authorization basis and Bitcoin satoshis are different units;
+        // validating them arithmetically would be meaningless. Satoshi inputs/fee
+        // are independently checked by buildPsbtPlan below.
+        if (!Number.isSafeInteger(b.amountSats) || !Number.isSafeInteger(b.feeSats)) {
+          return { ok: false, reason: 'a positive allowed spend verdict and safe satoshi amounts are required' };
+        }
         const plan = buildPsbtPlan({
-          verdict: b.verdict,
+          verdict,
           amountSats: b.amountSats,
           feeSats: b.feeSats,
           recipient: b.recipient,
           inputs: b.inputs,
           totalSigners: b.totalSigners,
-          requiredSignatures: b.requiredSignatures
+          requiredSignatures: b.requiredSignatures,
+          network: b.network,
+          maxFeeSats: b.maxFeeSats,
+          resolutionId: b.resolutionId
         });
+        const now = Date.now();
+        for (const [token, issued] of psbtPlans) {
+          if (Date.parse(issued.plan.expiresAt) <= now) psbtPlans.delete(token);
+        }
+        const candidateOutpoints = new Set(plan.inputs.map((input) => `${input.txid.toLowerCase()}:${input.vout}`));
+        const alreadyReserved = [...psbtPlans.values()].some((issued) =>
+          issued.councilId === req.user!.councilId && !issued.broadcasted && issued.plan.inputs.some((input) =>
+            candidateOutpoints.has(`${input.txid.toLowerCase()}:${input.vout}`)
+          )
+        );
+        if (alreadyReserved) return reply.code(409).send({ ok: false, reason: 'one or more inputs are already reserved by another plan' });
+        if (psbtPlans.size >= 1000) return reply.code(503).send({ ok: false, reason: 'too many active plans; retry after expiry' });
+        psbtPlans.set(plan.planToken, { councilId: req.user!.councilId, plan, broadcasted: false, processing: false });
         return { ok: true, plan };
       } catch (err) {
         return { ok: false, reason: (err as Error).message };
@@ -875,13 +1001,9 @@ export async function buildServer(
     }
   );
 
-  // PSBT broadcast (item #15 continuation) — marks a ready plan broadcasted,
-  // optionally posts the spend to the trust ledger (on-chain leg reconciles into
-  // the same hash chain Ziggy uses for e-transfers / rail quotes / billing), and
-  // when the host has a bitcoind RPC configured (BITCOIN_RAIL_ENABLED=true +
-  // BITCOIN_NODE_URL + rpc auth), broadcasts the spend for real via the raw-tx
-  // seam and returns the txid. Otherwise the txid stays null (stub) until a node
-  // client is plugged in.
+  // PSBT broadcast checks the immutable server-issued authorization and refuses
+  // the live path while no cryptographic verifier/transaction builder exists.
+  // Demo responses are deterministic placeholders and never post a ledger debit.
   app.post<{
     Body: {
       planId: string;
@@ -895,20 +1017,155 @@ export async function buildServer(
         totalSigners: number;
         requiredSignatures: number;
         signatures: Record<string, string | undefined>;
+        issuedAt: string;
+        expiresAt: string;
+        policy: { network: 'mainnet' | 'testnet'; maxFeeSats: number; resolutionId?: string };
+        planToken: string;
         ready: boolean;
         psbtB64: string | null;
       };
+      signatures?: Record<string, string>;
       postToLedger: boolean;
       amountBasis?: number; // CAD basis for the ledger debit (from the verdict basis)
+      planToken?: string; // optional explicit token; must match the server-issued plan
     };
   }>(
     '/api/v1/treasury/psbt/broadcast',
-    { preHandler: [authenticate, requireRole('treasurer')] },
-    async (req) => {
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object', required: ['planId', 'readyPlan', 'postToLedger'], additionalProperties: false,
+          properties: {
+            planId: { type: 'string', minLength: 1, maxLength: 160 },
+            planToken: { type: 'string', minLength: 40, maxLength: 64 },
+            postToLedger: { type: 'boolean' },
+            amountBasis: { type: 'integer', minimum: 1 },
+            readyPlan: {
+              type: 'object', additionalProperties: false,
+              required: ['id', 'authorization', 'recipient', 'amountSats', 'feeSats', 'inputs', 'totalSigners', 'requiredSignatures', 'signatures', 'issuedAt', 'expiresAt', 'policy', 'planToken', 'ready', 'psbtB64'],
+              properties: {
+                id: { type: 'string', minLength: 1, maxLength: 160 },
+                authorization: { type: 'object', required: ['allowed', 'fundCode', 'amountBasis'], additionalProperties: false, properties: { allowed: { const: true }, fundCode: { type: 'string', minLength: 1, maxLength: 128 }, amountBasis: { type: 'integer', minimum: 1 } } },
+                recipient: { type: 'string', minLength: 26, maxLength: 90 },
+                amountSats: { type: 'integer', minimum: 1, maximum: 2100000000000000 },
+                feeSats: { type: 'integer', minimum: 0, maximum: 2100000000000000 },
+                inputs: { type: 'array', minItems: 1, maxItems: 100, items: { type: 'object', required: ['txid', 'vout', 'sats'], additionalProperties: false, properties: { txid: { type: 'string', pattern: '^[0-9a-fA-F]{64}$' }, vout: { type: 'integer', minimum: 0, maximum: 4294967295 }, sats: { type: 'integer', minimum: 1, maximum: 2100000000000000 } } } },
+                totalSigners: { type: 'integer', minimum: 1, maximum: 15 },
+                requiredSignatures: { type: 'integer', minimum: 1, maximum: 15 },
+                signatures: { type: 'object', maxProperties: 15, propertyNames: { pattern: '^(0|[1-9][0-9]*)$' }, additionalProperties: { type: 'string', minLength: 1, maxLength: 1024, pattern: '^[A-Za-z0-9+/_-]+={0,2}$' } },
+                issuedAt: { type: 'string', minLength: 1, maxLength: 40 },
+                expiresAt: { type: 'string', minLength: 1, maxLength: 40 },
+                policy: { type: 'object', required: ['network', 'maxFeeSats'], additionalProperties: false, properties: { network: { type: 'string', enum: ['mainnet', 'testnet'] }, maxFeeSats: { type: 'integer', minimum: 0, maximum: 2100000000000000 }, resolutionId: { type: 'string', minLength: 1, maxLength: 128 } } },
+                planToken: { type: 'string', minLength: 40, maxLength: 64 },
+                ready: { type: 'boolean' },
+                psbtB64: { type: ['string', 'null'], maxLength: 100000 }
+              }
+            }
+          }
+        }
+      }
+    },
+    async (req, reply) => {
       const b = req.body;
       const readyPlan = b.readyPlan;
+      const nodeEnabled = process.env.BITCOIN_RAIL_ENABLED === 'true';
+      const issued = psbtPlans.get(readyPlan.planToken);
+      if (b.planId !== readyPlan.id || !issued || issued.councilId !== req.user!.councilId ||
+          (b.planToken !== undefined && b.planToken !== readyPlan.planToken)) {
+        return reply.code(400).send({ ok: false, reason: 'plan identity check failed' });
+      }
+      if (issued.broadcasted || issued.processing) return reply.code(409).send({ ok: false, reason: 'plan was already processed' });
+      const immutable = (plan: typeof readyPlan) => requestFingerprint({
+        id: plan.id, authorization: plan.authorization, recipient: plan.recipient, amountSats: plan.amountSats,
+        feeSats: plan.feeSats, inputs: plan.inputs, totalSigners: plan.totalSigners,
+        requiredSignatures: plan.requiredSignatures, issuedAt: plan.issuedAt, expiresAt: plan.expiresAt,
+        policy: plan.policy, planToken: plan.planToken, psbtB64: plan.psbtB64
+      });
+      if (immutable(readyPlan) !== immutable(issued.plan)) {
+        return reply.code(409).send({ ok: false, reason: 'submitted plan does not match the server-issued authorization' });
+      }
+      const signatures = readyPlan.signatures ?? {};
+      const signerIndexes = Object.keys(signatures);
+      const slotsValid = signerIndexes.length <= issued.plan.totalSigners && signerIndexes.every((index) =>
+        /^(0|[1-9][0-9]*)$/.test(index) && Number(index) < issued.plan.totalSigners &&
+        typeof signatures[index] === 'string' && signatures[index]!.length > 0 && signatures[index]!.length <= 1024 && /^[A-Za-z0-9+/_-]+={0,2}$/.test(signatures[index]!)
+      );
+      const serverReady = slotsValid && signerIndexes.length >= issued.plan.requiredSignatures;
+      if (!slotsValid) return reply.code(400).send({ ok: false, reason: 'signature slots are invalid' });
+      if (readyPlan.ready !== serverReady) return reply.code(400).send({ ok: false, reason: 'plan readiness does not match signature count' });
+      if (typeof readyPlan.expiresAt !== 'string' || !Number.isFinite(Date.parse(readyPlan.expiresAt)) || Date.parse(readyPlan.expiresAt) <= Date.now()) {
+        return reply.code(410).send({ ok: false, reason: 'plan expired; create a fresh authorized plan' });
+      }
+      const planSlotsValid = Number.isInteger(readyPlan.totalSigners) && readyPlan.totalSigners >= 1 && readyPlan.totalSigners <= 15 && slotsValid;
+      const recipientValidation = typeof readyPlan.recipient === 'string' ? validateOnchainAddress(readyPlan.recipient) : { ok: false as const };
+      const network = readyPlan.policy?.network;
+      const recipientNetworkMatches = typeof readyPlan.recipient === 'string' &&
+        (network === 'mainnet' ? /^(bc1|[13])/.test(readyPlan.recipient) : network === 'testnet' ? /^(tb1|[2mn])/.test(readyPlan.recipient) : false);
+      if (typeof readyPlan.authorization.fundCode !== 'string' || !TREASURY_FUNDS.has(readyPlan.authorization.fundCode)) {
+        return reply.code(400).send({ ok: false, reason: 'plan fund is invalid' });
+      }
+      const [currentOperating, currentCrf, currentFund] = await Promise.all([
+        deps.ledger.balance(req.user!.councilId, 'operating'),
+        deps.ledger.balance(req.user!.councilId, 'crf'),
+        deps.ledger.balance(req.user!.councilId, readyPlan.authorization.fundCode)
+      ]);
+      const activeBudget = { ...defaultBudget, crfMandatoryPct: deps.config.crfMandatoryPct };
+      const availableBasis = currentFund.balanceBasis;
+      const policyBalances = {
+        operating: currentOperating.balanceBasis,
+        crf: currentCrf.balanceBasis,
+        war_chest: currentFund.balanceBasis
+      };
+      if (readyPlan.authorization.fundCode === 'crf') policyBalances.operating = 0;
+      if (readyPlan.authorization.fundCode === 'war_chest') {
+        policyBalances.operating = 0;
+        policyBalances.crf = 0;
+      }
+      const liveVerdict = authorizeSpend(activeBudget, policyBalances, {
+        amountBasis: readyPlan.authorization.amountBasis,
+        fundCode: readyPlan.authorization.fundCode,
+        poRef: 'server-issued PSBT authorization',
+        category: 'authorized treasury spend'
+      });
+      if (!liveVerdict.allow || readyPlan.authorization.amountBasis > availableBasis) {
+        return reply.code(409).send({ ok: false, reason: 'plan authorization is no longer valid against current balances or CRF policy' });
+      }
+      const seenOutpoints = new Set<string>();
+      const inputsValid = Array.isArray(readyPlan.inputs) && readyPlan.inputs.length >= 1 && readyPlan.inputs.length <= 100 && readyPlan.inputs.every((input) => {
+        if (!/^[0-9a-f]{64}$/i.test(input.txid) || !Number.isInteger(input.vout) || input.vout < 0 || input.vout > 0xffffffff || !Number.isSafeInteger(input.sats) || input.sats <= 0) return false;
+        const outpoint = `${input.txid.toLowerCase()}:${input.vout}`;
+        if (seenOutpoints.has(outpoint)) return false;
+        seenOutpoints.add(outpoint);
+        return true;
+      });
+      const totalInputSats = inputsValid ? readyPlan.inputs.reduce((sum, input) => sum + input.sats, 0) : 0;
+      const issuedAtMs = typeof readyPlan.issuedAt === 'string' ? Date.parse(readyPlan.issuedAt) : Number.NaN;
+      const expiresAtMs = typeof readyPlan.expiresAt === 'string' ? Date.parse(readyPlan.expiresAt) : Number.NaN;
+      if (!readyPlan.authorization.allowed || !planSlotsValid ||
+          !Number.isInteger(readyPlan.requiredSignatures) || readyPlan.requiredSignatures < 1 || readyPlan.requiredSignatures > readyPlan.totalSigners ||
+          !Number.isSafeInteger(readyPlan.amountSats) || readyPlan.amountSats <= 0 || !Number.isSafeInteger(readyPlan.feeSats) || readyPlan.feeSats < 0 ||
+          !Number.isSafeInteger(readyPlan.policy?.maxFeeSats) || readyPlan.feeSats > readyPlan.policy.maxFeeSats ||
+          !inputsValid || !Number.isSafeInteger(totalInputSats) || totalInputSats < readyPlan.amountSats + readyPlan.feeSats || !recipientValidation.ok || !recipientNetworkMatches ||
+          !Number.isFinite(issuedAtMs) || issuedAtMs > Date.now() + 60_000 ||
+          !Number.isFinite(expiresAtMs) || expiresAtMs <= issuedAtMs) {
+        return reply.code(400).send({ ok: false, reason: 'plan policy validation failed' });
+      }
+      if (b.postToLedger) {
+        return reply.code(409).send({ ok: false, reason: 'ledger posting is disabled until a verified live transaction can be recorded' });
+      }
+      if (nodeEnabled && serverReady) {
+        return reply.code(503).send({ ok: false, broadcasted: false, txid: null, rail: 'unavailable', placeholder: false, reason: 'live broadcast disabled: verified signing and transaction construction are not implemented' });
+      }
+      if (issued.processing || issued.broadcasted) {
+        return reply.code(409).send({ ok: false, reason: 'plan was already processed' });
+      }
+      // No awaits follow this in-flight claim: concurrent retries cannot both
+      // pass the one-time processing guard after the balance checks above.
+      issued.processing = true;
+      issued.plan = { ...issued.plan, signatures, ready: serverReady };
       const result = broadcastPsbt({
-        plan: readyPlan as any,
+        plan: { ...issued.plan, signatures, ready: serverReady },
         ledger: deps.ledger,
         communityId: req.user!.councilId
       });
@@ -930,76 +1187,17 @@ export async function buildServer(
         // signatures feed. If the node has no signing wallet, fall back to the
         // raw-tx seam (watch-only + external signer); if that fails too, txid
         // stays null and the response notes it (ledger post already succeeded).
-        if (b.postToLedger && b.amountBasis) {
-          try {
-            const posted = await postSpendToLedger(
-              readyPlan as any,
-              deps.ledger,
-              req.user!.councilId,
-              b.amountBasis,
-              `PSBT broadcast ${readyPlan.id}`
-            );
-            ledgerSeq = posted.seq;
-          } catch (err) {
-            return { ok: false, reason: (err as Error).message, broadcasted: true, ledgerSeq: null, txid };
-          }
-        }
-
-        const nodeUrl = process.env.BITCOIN_NODE_URL;
-        const nodeEnabled = process.env.BITCOIN_RAIL_ENABLED === 'true';
         if (nodeEnabled) {
-          // Real rail path — this branch is where the system proves an on-chain
-          // spend. The placeholder must NEVER escape it: an unreachable or
-          // auth-failed node yields txid:null + rail:'unavailable', and only a
-          // real node-provided txid upgrades broadcasted to a claim.
-          // The PSBT workflow seam (walletprocesspsbt → finalizepsbt → sendpsbt)
-          // runs first — the BIP174 path hardware-wallet signatures feed; the
-          // raw-tx seam (watch-only + external signer) is the fallback.
           rail = 'unavailable';
-          if (nodeUrl && readyPlan.recipient) {
-            const btc: BitcoindRpcConfig = {
-              url: nodeUrl,
-              user: process.env.BITCOIN_RPC_USER ?? undefined,
-              pass: process.env.BITCOIN_RPC_PASS ?? undefined
-            };
-            try {
-              // Path A — wallet-backed node. Throws when the wallet is missing
-              // or finalizepsbt is not complete (below threshold); the fallback
-              // covers watch-only host shapes.
-              const tx = await broadcastPsbtWorkflow(readyPlan as any, btc);
-              txid = tx.txid;
-              rail = 'live';
-            } catch {
-              // Path B — railEnabled:true → broadcastRawTx throws on node
-              // failure instead of substituting a placeholder, so this catch
-              // stays reachable.
-              try {
-                const tx = await broadcastRawTx(readyPlan as any, btc, [
-                  { address: readyPlan.recipient, sats: readyPlan.amountSats }
-                ], { railEnabled: true });
-                txid = tx.txid;
-                rail = 'live';
-              } catch (err) {
-                // Node unavailable / auth failure — leave txid null + rail
-                // unavailable. (In a real deploy this would be a retry queue.)
-                txid = null;
-                rail = 'unavailable';
-                seamReason = `broadcast seam failed: ${(err as Error).message}`;
-              }
-            }
-          }
-          // rail enabled but no node / no recipient → txid stays null, rail stays
-          // 'unavailable', placeholder stays false.
+          seamReason = 'live broadcast disabled: verified signing and transaction construction are not implemented';
         } else {
           // Demo/bootstrap — rail NOT enabled. Keep the no-node placeholder so
           // the seam can iterate, but tag it explicitly so it can never be read
           // as a spend that reached the chain.
           placeholder = true;
           if (readyPlan.recipient && readyPlan.amountSats) {
-            const demo = await broadcastRawTx(readyPlan as any, { url: '' }, [
-              { address: readyPlan.recipient, sats: readyPlan.amountSats }
-            ], { railEnabled: false });
-            txid = demo.txid;
+            const demoDigest = createHash('sha256').update(JSON.stringify({ id: readyPlan.id, recipient: readyPlan.recipient, amountSats: readyPlan.amountSats })).digest('hex').slice(0, 16);
+            txid = `psbt:${readyPlan.id}:${demoDigest}`;
           }
         }
       }
@@ -1009,12 +1207,18 @@ export async function buildServer(
       // (inputs/outputs mismatch) overrides the stub reason too.
       const reason = seamReason ?? (txid ? undefined : result.reason);
 
+      if (result.broadcasted && !nodeEnabled) {
+        issued.broadcasted = true;
+        issued.plan = { ...issued.plan, signatures, ready: serverReady };
+      } else {
+        issued.processing = false;
+      }
       return {
         ok: true,
         broadcasted: result.broadcasted,
-        plan: { ...readyPlan, ready: result.broadcasted },
-        summary: planSummary(readyPlan),
-        signedCount: signedCount(readyPlan),
+        plan: { ...issued.plan, signatures, ready: result.broadcasted },
+        summary: planSummary({ ...issued.plan, signatures, ready: result.broadcasted }),
+        signedCount: signedCount({ ...issued.plan, signatures, ready: result.broadcasted }),
         requiredSignatures: readyPlan.requiredSignatures,
         txid,
         ledgerSeq,
@@ -1052,32 +1256,45 @@ export async function buildServer(
   // --------------------------------------------------  Watch-only xpub
   // Item #16 — register the council's watch-only xpub (keys never leave the
   // hardware wallets); per-unit BIP32 receive paths derive deterministically.
-  const councilXpubs = new Map<string, string>();
+  const councilXpubs = new Map<string, { xpub: string; network: 'mainnet' | 'testnet' }>();
   app.post<{ Body: { xpub: string } }>(
     '/api/v1/rails/xpub',
-    { preHandler: [authenticate, requireRole('treasurer')] },
+    {
+      preHandler: [authenticate, requireRole('treasurer')],
+      schema: {
+        body: {
+          type: 'object', required: ['xpub'], additionalProperties: false,
+          properties: { xpub: { type: 'string', minLength: 100, maxLength: 120 } }
+        }
+      }
+    },
     async (req, reply) => {
       try {
         const xpub = req.body.xpub.trim();
-        // Validate the prefix via the derivation seam (throws on bad input).
-        deriveUnitAddress(xpub, '1');
-        councilXpubs.set(req.user!.councilId, xpub);
-        return { ok: true, registered: true };
+        // The version bytes determine the network; retain that server-side and
+        // return only path metadata (never the sensitive public derivation root).
+        const validated = deriveUnitAddress(xpub, '1');
+        const network = validated.network;
+        councilXpubs.set(req.user!.councilId, { xpub, network });
+        return { ok: true, registered: true, network };
       } catch (err) {
         return reply.code(400).send({ ok: false, reason: (err as Error).message });
       }
     }
   );
 
-  app.get('/api/v1/rails/xpub', { preHandler: [authenticate] }, async (req) => {
-    const xpub = councilXpubs.get(req.user!.councilId);
-    if (!xpub) return { ok: true, registered: false };
+  app.get('/api/v1/rails/xpub', { preHandler: [authenticate, requireRole('treasurer')] }, async (req) => {
+    const registered = councilXpubs.get(req.user!.councilId);
+    if (!registered) return { ok: true, registered: false };
     const units = (await councilUnits(deps, req.user!.councilId)).slice(0, 20);
     return {
       ok: true,
       registered: true,
-      xpub,
-      addresses: units.map((u) => deriveUnitAddress(xpub, u.unitRef))
+      network: registered.network,
+      addresses: units.map((u) => {
+        const derived = deriveUnitAddress(registered.xpub, u.unitRef, registered.network);
+        return { unitId: derived.unitId, path: derived.path, index: derived.index, note: derived.note };
+      })
     };
   });
 

@@ -1,3 +1,4 @@
+import { createECDH, createHash } from 'node:crypto';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
@@ -72,10 +73,103 @@ afterAll(async () => {
 });
 
 describe('fastify API', () => {
-  it('GET /health', async () => {
+  it('GET /health and /health/live stay live while readiness reports configured dependencies', async () => {
     const res = await app.inject({ method: 'GET', url: '/health' });
+    const live = await app.inject({ method: 'GET', url: '/health/live' });
     expect(res.statusCode).toBe(200);
     expect(res.json().service).toBe('openstrata-backend');
+    expect(live.json()).toMatchObject({ state: 'live' });
+
+    const readyApp = await buildServer({
+      ledger: new LedgerEngine(new MemLedgerStore()),
+      rosa: keywordRetriever(corpus),
+      reconcile,
+      payments: new MemPaymentRequestStore(),
+      auth: new MemAuthStore(),
+      readinessChecks: { postgres: async () => true, vector: async () => false },
+      config: {
+        crfMandatoryPct: 10,
+        vectorCollection: 'bc_spa_rta_crt',
+        authSecret: AUTH_SECRET,
+        authTokenTtl: 3600,
+        authRateLimitMax: 1000,
+        authRateLimitWindowMs: 60_000
+      }
+    }, { logger: false });
+    const ready = await readyApp.inject({ method: 'GET', url: '/health/ready' });
+    expect(ready.statusCode).toBe(503);
+    expect(ready.json()).toEqual({
+      ok: false,
+      service: 'openstrata-backend',
+      state: 'not-ready',
+      dependencies: { postgres: true, vector: false }
+    });
+    await readyApp.close();
+
+    const healthyApp = await buildServer({
+      ledger: new LedgerEngine(new MemLedgerStore()),
+      rosa: keywordRetriever(corpus),
+      reconcile,
+      payments: new MemPaymentRequestStore(),
+      auth: new MemAuthStore(),
+      readinessChecks: { postgres: async () => true },
+      config: { crfMandatoryPct: 10, vectorCollection: 'bc', authSecret: AUTH_SECRET, authTokenTtl: 3600, authRateLimitMax: 1000, authRateLimitWindowMs: 60000 }
+    }, { logger: false });
+    const healthy = await healthyApp.inject({ method: 'GET', url: '/health/ready' });
+    expect(healthy.statusCode).toBe(200);
+    expect(healthy.json().dependencies).toEqual({ postgres: true });
+    await healthyApp.close();
+  });
+
+  it('xpub registry is treasurer-only, validates keys, and never returns the xpub to ordinary members', async () => {
+    const member = await app.inject({ method: 'POST', url: '/api/v1/auth/users', headers: auth(adminToken), payload: { email: 'xpub-member@server.test', role: 'member' } });
+    const memberLogin = await app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { email: 'xpub-member@server.test', password: member.json().temporaryPassword } });
+    const denied = await app.inject({ method: 'GET', url: '/api/v1/rails/xpub', headers: auth(memberLogin.json().token) });
+    expect(denied.statusCode).toBe(403);
+    const invalid = await app.inject({ method: 'POST', url: '/api/v1/rails/xpub', headers: auth(adminToken), payload: { xpub: 'xpub-invalid-but-long-enough'.padEnd(110, '1') } });
+    expect(invalid.statusCode).toBe(400);
+    const missing = await app.inject({ method: 'GET', url: '/api/v1/rails/xpub', headers: auth(adminToken) });
+    expect(missing.statusCode).toBe(200);
+    expect(missing.json()).toEqual({ ok: true, registered: false });
+
+    const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const payload = Buffer.alloc(78);
+    Buffer.from('043587cf', 'hex').copy(payload, 0);
+    payload[4] = 3;
+    payload[13] = 1;
+    const keyPair = createECDH('secp256k1');
+    keyPair.setPrivateKey(Buffer.alloc(32, 1));
+    payload.set(keyPair.getPublicKey(undefined, 'compressed'), 45);
+    const checksum = createHash('sha256').update(createHash('sha256').update(payload).digest()).digest().subarray(0, 4);
+    const bytes = Buffer.concat([payload, checksum]);
+    let encodedNumber = BigInt(`0x${bytes.toString('hex')}`);
+    let tpub = '';
+    while (encodedNumber > 0n) { tpub = alphabet[Number(encodedNumber % 58n)] + tpub; encodedNumber /= 58n; }
+    for (const byte of bytes) { if (byte !== 0) break; tpub = `1${tpub}`; }
+    const stored = await app.inject({ method: 'POST', url: '/api/v1/rails/xpub', headers: auth(adminToken), payload: { xpub: tpub } });
+    expect(stored.statusCode).toBe(200);
+    expect(stored.json()).toEqual({ ok: true, registered: true, network: 'testnet' });
+    const returned = await app.inject({ method: 'GET', url: '/api/v1/rails/xpub', headers: auth(adminToken) });
+    expect(returned.statusCode).toBe(200);
+    expect(returned.json().network).toBe('testnet');
+    expect(returned.json().addresses[0].path).toMatch(/^m\/84'\/1'\/0'\/\d+$/);
+    expect(returned.json().addresses[0].note).toMatch(/require a BIP32.*library to materialize/i);
+    expect(JSON.stringify(returned.json())).not.toContain('address:');
+    expect(JSON.stringify(returned.json())).not.toContain(tpub);
+  });
+
+  it('readiness is false when a dependency probe throws and does not leak its error', async () => {
+    const failing = await buildServer({
+      ledger: new LedgerEngine(new MemLedgerStore()), rosa: keywordRetriever(corpus), reconcile,
+      payments: new MemPaymentRequestStore(), auth: new MemAuthStore(),
+      readinessChecks: { postgres: async () => { throw new Error('secret db password'); } },
+      config: { crfMandatoryPct: 10, vectorCollection: 'bc', authSecret: AUTH_SECRET, authTokenTtl: 3600, authRateLimitMax: 1000, authRateLimitWindowMs: 60_000 }
+    }, { logger: false });
+    const response = await failing.inject({ method: 'GET', url: '/health/ready' });
+    expect(response.statusCode).toBe(503);
+    expect(JSON.stringify(response.json())).not.toContain('secret db password');
+    expect(response.json().dependencies).toEqual({ postgres: false });
+    await failing.close();
   });
 
   it('GET /api/v1/agent/manifest requires a council session and advertises read-only tools', async () => {
@@ -154,6 +248,21 @@ describe('fastify API', () => {
     expect(points).toHaveLength(3);
     // The credit just posted lands in the current month.
     expect(points[points.length - 1].incomeBasis).toBe(4200);
+  });
+
+  it('ledger idempotency fingerprints requests independent of object key order', async () => {
+    const headers = { ...auth(adminToken), 'idempotency-key': 'canonical-order' };
+    const first = await app.inject({
+      method: 'POST', url: '/api/v1/ledger/post', headers,
+      payload: { fund: 'operating', amountBasis: 2300, kind: 'credit', type: 'strata_fee', referenceCode: 'canon' }
+    });
+    const replay = await app.inject({
+      method: 'POST', url: '/api/v1/ledger/post', headers,
+      payload: { referenceCode: 'canon', type: 'strata_fee', kind: 'credit', amountBasis: 2300, fund: 'operating' }
+    });
+    expect(first.statusCode).toBe(200);
+    expect(replay.statusCode).toBe(200);
+    expect(replay.json()).toEqual(first.json());
   });
 
   it('POST /api/v1/treasury/authorize hard-blocks a CRF breach', async () => {
@@ -296,7 +405,7 @@ describe('fastify API', () => {
     expect(replay.json()).toEqual(first.json());
     expect(conflict.statusCode).toBe(409);
     const balance = await app.inject({ method: 'GET', url: '/api/v1/ledger/balance?fund=operating', headers: auth(adminToken) });
-    expect(balance.json().balanceBasis).toBe(6500);
+    expect(balance.json().balanceBasis).toBe(8800);
   });
 
   it('ledger idempotency is scoped to the authenticated council', async () => {

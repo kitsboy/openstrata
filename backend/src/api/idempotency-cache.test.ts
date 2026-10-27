@@ -15,6 +15,12 @@ describe('IdempotencyCache', () => {
     expect(conflict).toEqual({ status: 'conflict' });
   });
 
+  it('fingerprints JSON objects independently of key insertion order', () => {
+    expect(requestFingerprint({ fund: 'operating', meta: { b: 2, a: 1 } })).toBe(
+      requestFingerprint({ meta: { a: 1, b: 2 }, fund: 'operating' })
+    );
+  });
+
   it('coalesces concurrent retries onto one side effect', async () => {
     const cache = new IdempotencyCache();
     const operation = vi.fn(async () => {

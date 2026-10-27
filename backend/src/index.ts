@@ -92,6 +92,17 @@ async function main(): Promise<void> {
     units: DEFAULT_UNITS, // registry fallback for legacy seams
     unitStore: units,
     memberStore: members,
+    readinessChecks: {
+      postgres: async () => {
+        const probe = new Pool({ connectionString: config.dbUrl, connectionTimeoutMillis: 1500, max: 1 });
+        try {
+          await probe.query('SELECT 1');
+          return true;
+        } finally {
+          await probe.end();
+        }
+      }
+    },
     config: {
       crfMandatoryPct: config.crfMandatoryPct,
       vectorCollection: config.vectorCollection,

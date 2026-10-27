@@ -104,21 +104,56 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     await unitStore.close();
   });
 
-  it('persists a ledger post and reads a verified balance back', async () => {
-    const post = await app.inject({
-      method: 'POST', url: '/api/v1/ledger/post',
-      headers: auth(token),
-      payload: { fund: 'operating', amountBasis: 4_200, kind: 'credit', type: 'strata_fee' }
-    });
+  it('persists a ledger post, replays it idempotently across app restarts, and reads a verified balance back', async () => {
+    const headers = { ...auth(token), 'idempotency-key': `e2e-durable-${Date.now()}` };
+    const payload = { fund: 'operating', amountBasis: 4_200, kind: 'credit', type: 'strata_fee' };
+    const post = await app.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload });
+    expect(post.statusCode).toBe(200);
     expect(post.json().posted).toBe(true);
     expect(post.json().seq).toBeGreaterThan(0);
-
-    const bal = await app.inject({
-      method: 'GET', url: '/api/v1/ledger/balance?fund=operating', headers: auth(token)
+    const replay = await app.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload });
+    expect(replay.statusCode).toBe(200);
+    expect(replay.json()).toEqual(post.json());
+    const reorderedReplay = await app.inject({
+      method: 'POST', url: '/api/v1/ledger/post', headers,
+      payload: { type: 'strata_fee', kind: 'credit', amountBasis: 4_200, fund: 'operating' }
     });
+    expect(reorderedReplay.statusCode).toBe(200);
+    expect(reorderedReplay.json()).toEqual(post.json());
+    const conflict = await app.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload: { ...payload, amountBasis: 4_201 } });
+    expect(conflict.statusCode).toBe(409);
+
+    const bal = await app.inject({ method: 'GET', url: '/api/v1/ledger/balance?fund=operating', headers: auth(token) });
     expect(bal.statusCode).toBe(200);
     expect(bal.json().balanceBasis).toBe(4_200);
     expect(bal.json().headTally.length).toBe(8); // hash chain verified on read
+
+    // The second API instance has no process cache; only Postgres can replay this key.
+    const restartedLedgerStore = new PostgresLedgerStore(URL!);
+    const restartedPaymentsStore = new PostgresPaymentRequestStore(URL!);
+    const restartedAuthStore = new PostgresAuthStore(URL!);
+    const restartedUnitStore = new PostgresUnitStore(URL!);
+    const restartedApp = await buildServer({
+      ledger: new LedgerEngine(restartedLedgerStore),
+      rosa: keywordRetriever(corpus), reconcile,
+      payments: restartedPaymentsStore, auth: restartedAuthStore,
+      units: DEFAULT_UNITS, unitStore: restartedUnitStore,
+      config: {
+        crfMandatoryPct: 10, vectorCollection: 'bc_spa_rta_crt',
+        authSecret: AUTH_SECRET, authTokenTtl: 3600, authRateLimitMax: 1000, authRateLimitWindowMs: 60_000
+      }
+    }, { logger: false });
+    try {
+      const afterRestart = await restartedApp.inject({ method: 'POST', url: '/api/v1/ledger/post', headers, payload });
+      expect(afterRestart.statusCode).toBe(200);
+      expect(afterRestart.json()).toEqual(post.json());
+    } finally {
+      await restartedApp.close();
+      await restartedLedgerStore.close();
+      await restartedPaymentsStore.close();
+      await restartedAuthStore.close();
+      await restartedUnitStore.close();
+    }
   });
 
   it('runs a billing cycle that posts per-unit AR charges to Postgres', async () => {

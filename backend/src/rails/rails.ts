@@ -20,6 +20,7 @@
  * travels alongside it as `railName`.
  */
 
+import { ECDH, createHash } from 'node:crypto';
 import { SITE_SLUG, receiveLabelFor } from './receive-label.js';
 
 export type Rail = 'fiat' | 'onchain' | 'lightning' | 'liquid' | 'paynym_bip47' | 'nostr';
@@ -81,8 +82,9 @@ const BECH32 = /^(bc1|lnbc|lntb|lnurl|lnbcrt|belnp|blnb)[0-9a-z]{4,}$/i;
 export function validateOnchainAddress(addr: string): ValidateResult {
   const a = addr.trim();
   if (!a) return { ok: false, reason: 'empty address' };
-  // Legacy P2PKH (1...) / P2SH (3...) — format-only (base58check is wallet-side).
-  if (/^[13][1-9A-HJ-NP-Za-km-z]{25,40}$/.test(a)) return { ok: true };
+  // Legacy P2PKH/P2SH — format-only (base58check is wallet-side).
+  // Mainnet prefixes are 1/3; testnet prefixes are m/n/2.
+  if (/^[13mn2][1-9A-HJ-NP-Za-km-z]{25,40}$/.test(a)) return { ok: true };
   // Bech32 / bech32m with real BIP-173 checksum.
   if (/^(bc1|tb1)/i.test(a)) {
     const dec = decodeBech32(a);
@@ -402,10 +404,59 @@ export class StaticRateProvider implements RateProvider {
 // Deterministic per-unit receive addresses from a BIP-32 xpub (watch-only)
 // ---------------------------------------------------------------------------
 
-const PUBLIC_XPUB_PREFIXES = new Set(['xpub', 'ypub', 'zpub', 'tpub', 'vpub']);
+const PUBLIC_XPUB_VERSIONS = new Map([
+  ['0488b21e', { network: 'mainnet' }], // xpub
+  ['049d7cb2', { network: 'mainnet' }], // ypub
+  ['04b24746', { network: 'mainnet' }], // zpub
+  ['0295b43f', { network: 'mainnet' }], // Ypub
+  ['02aa7ed3', { network: 'mainnet' }], // Zpub
+  ['02facafd', { network: 'mainnet' }], // xpub multisig
+  ['04b2430c', { network: 'mainnet' }], // zpub multisig
+  ['043587cf', { network: 'testnet' }], // tpub
+  ['044a5262', { network: 'testnet' }], // upub
+  ['045f1cf6', { network: 'testnet' }], // vpub
+  ['024289ef', { network: 'testnet' }], // Upub
+  ['02575483', { network: 'testnet' }] // Ypub testnet multisig
+]);
+
+function decodeExtendedPublicKey(value: string): { network: RailNetwork } | null {
+  if (value.length < 100 || value.length > 120) return null;
+  const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let number = 0n;
+  for (const char of value) {
+    const digit = alphabet.indexOf(char);
+    if (digit < 0) return null;
+    number = number * 58n + BigInt(digit);
+  }
+  const bytes: number[] = [];
+  while (number > 0n) {
+    bytes.unshift(Number(number & 0xffn));
+    number >>= 8n;
+  }
+  for (let i = 0; i < value.length && value[i] === '1'; i++) bytes.unshift(0);
+  const decoded = Buffer.from(bytes);
+  if (decoded.length !== 82) return null;
+  const body = decoded.subarray(0, 78);
+  const checksum = createHash('sha256').update(createHash('sha256').update(body).digest()).digest().subarray(0, 4);
+  if (!checksum.equals(decoded.subarray(78))) return null;
+  const version = PUBLIC_XPUB_VERSIONS.get(body.subarray(0, 4).toString('hex'));
+  const chainCode = body.subarray(13, 45);
+  const compressedKey = body.subarray(45, 78);
+  if (!version || chainCode.length !== 32 || chainCode.every((byte) => byte === 0) ||
+      (compressedKey[0] !== 0x02 && compressedKey[0] !== 0x03)) return null;
+  try {
+    const converted = ECDH.convertKey(compressedKey, 'secp256k1', undefined, undefined, 'compressed');
+    if (!converted.equals(compressedKey)) return null;
+  } catch {
+    return null;
+  }
+  return { network: version.network as RailNetwork };
+}
 
 export interface XpubDeriveResult {
+  /** Returned only from the pure validator; never serialize through a route. */
   xpub: string;
+  network: RailNetwork;
   unitId: string;
   /** BIP32 path for the deterministic child index. */
   path: string;
@@ -425,24 +476,25 @@ export function unitChildIndex(unitRef: string): number {
 }
 
 /**
- * Build the watch-only receive descriptor for a unit. Validates the xpub
- * prefix and returns a BIP32 path (m/84'/0'/0'/0/<index>). Full address
- * derivation needs a secp256k1/BIP32 lib — this is the deterministic seam.
+ * Validate the serialized extended public key and return a deterministic
+ * path selected from the unit reference. This does not derive an address:
+ * hardened BIP-84 account derivation cannot be performed from an account xpub.
  */
 export function deriveUnitAddress(
   xpub: string,
   unitRef: string,
-  network: RailNetwork = 'mainnet'
+  expectedNetwork?: RailNetwork
 ): XpubDeriveResult {
-  const prefix = xpub.slice(0, 4);
-  if (!PUBLIC_XPUB_PREFIXES.has(prefix)) {
-    throw new Error('invalid xpub: expected a public prefix (xpub/ypub/zpub/tpub/vpub)');
-  }
+  const decoded = decodeExtendedPublicKey(xpub);
+  if (!decoded) throw new Error('invalid extended public key or checksum');
+  if (expectedNetwork && decoded.network !== expectedNetwork) throw new Error(`extended public key network does not match ${expectedNetwork}`);
+  const network = decoded.network as RailNetwork;
   const index = unitChildIndex(unitRef);
   const hardening = "84'"; // BIP-84 native segwit across mainnet/testnet
   const coin = network === 'mainnet' ? 0 : 1;
   return {
     xpub,
+    network,
     unitId: unitRef,
     index,
     path: `m/${hardening}/${coin}'/0'/${index}`,

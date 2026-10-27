@@ -4,7 +4,7 @@ Ranked by expected trust, user value, and unlock potential. Items are proposals,
 
 ## Foundation: trust, deployment, and data safety
 
-1. **Durable ledger idempotency** — store idempotency key, council, fingerprint, result, and expiry transactionally beside the ledger write; survive restarts and multiple API instances.
+1. **Durable ledger idempotency** — implemented: `ledger_idempotency` records council/key/fingerprint/entry/expiry in the same Postgres transaction as the append; retries survive process restarts and multiple instances. Migration 0007; Postgres E2E coverage is added but not run in this environment because no `DATABASE_URL` or Docker is available.
 2. **Deploy the Phase 3 backend** — establish a documented, backed-up host, TLS/Tailscale access, health monitoring, and verified migrations 0001–0006; currently no production host is confirmed.
 3. **Database-backed sessions and revocation** — refresh tokens or opaque sessions, explicit logout/revoke, password changes, and per-user active-session review.
 4. **Dedicated agent principals** — scoped, revocable, short-lived credentials with read-only capability scopes; avoid handing AI agents human admin/treasurer tokens.
@@ -17,8 +17,8 @@ Ranked by expected trust, user value, and unlock potential. Items are proposals,
 11. **Secrets lifecycle** — secret rotation without invalidating all users unexpectedly, key IDs, separate signing keys by purpose, and a rotation playbook.
 12. **Audit log for privileged actions** — append-only actor, action, target, timestamp, source, and outcome records; never store secrets or unnecessary personal data.
 13. **API schema contract** — publish OpenAPI from actual route schemas, add compatibility tests, and generate typed clients from the canonical contract.
-14. **Database migration guardrails** — migration status endpoint/CLI, checksum tracking, backup-before-migrate checks, and preflight compatibility verification.
-15. **Health/readiness split** — separate liveness from dependency readiness and report sanitized database/vector/payment-provider states.
+14. **Database migration guardrails** — checksum tracking, advisory-lock serialization, and read-only `npm run migrate:check` preflight implemented. Legacy checksum baselining is not historical proof; backup-before-migrate checks and production-schema validation remain open.
+15. **Health/readiness split** — `/health/live` and `/health/ready` implemented; readiness reports sanitized boolean dependency probes and returns 503 when a configured dependency is unavailable. Only the Postgres probe is wired in the production entrypoint.
 
 ## Money paths: correctness before connecting real rails
 
@@ -29,8 +29,8 @@ Ranked by expected trust, user value, and unlock potential. Items are proposals,
 20. **Reconciliation exception desk** — match bank/rail settlements to quotes and ledger entries, surface unmatched/partial/duplicate amounts, and require human resolution.
 21. **Payment refunds and reversals** — model refunds as new compensating ledger entries with approval, evidence, and provider-status confirmation.
 22. **Per-council rail capability settings** — replace global/config-only enablement with council-controlled, permissioned, audited setup and clear demo/live state.
-23. **Bitcoin address derivation persistence** — store xpub metadata encrypted, derive addresses with network/path validation, and never return an xpub through ordinary member APIs.
-24. **PSBT broadcast hardening** — validate network, fee ceilings, recipient/output totals, change, signer thresholds, expiry, and replay at the server boundary before any RPC.
+23. **Bitcoin address derivation persistence** — path/network validation and treasurer-only xpub registration/read responses implemented; responses no longer return the xpub. Actual BIP32 child-address materialization and encrypted durable xpub storage remain blocked on choosing/provisioning a derivation/key-management approach.
+24. **PSBT broadcast hardening** — server-issued council-bound plan tokens, immutable plan checks, network/address/fee/input-total/threshold/expiry validation, in-process UTXO reservation, and replay refusal implemented. Cryptographic signature verification, real PSBT construction/change handling, durable plans/reservations, and live broadcast remain explicitly blocked; the endpoint refuses live sends and ledger debits.
 25. **Treasury approval workflow** — dual control for large spends, policy thresholds, meeting-resolution linkage, and a human-readable approval packet.
 26. **CAD/BTC rate provenance** — record source, timestamp, freshness, spread, and fallback state for every quote; refuse stale rates above policy thresholds.
 27. **Per-unit payment privacy** — minimize what bill links reveal, add secure revocation, and offer optional additional verification for sensitive statements.

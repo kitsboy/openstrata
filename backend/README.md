@@ -54,13 +54,25 @@ ledger descriptions. Do not give agents human admin/treasurer credentials;
 dedicated scoped agent credentials are not available yet.
 
 Ledger `Idempotency-Key` retries replay only when the request body matches;
-reusing a key for different data returns `409`, and concurrent identical
-requests coalesce. The cache is bounded at 10,000 keys, expires after 24 hours,
-and is process-local/in-memory. Successful results are not evicted before
-expiry; new keys get `503` while the cache is full. Multi-instance deployments
-need durable shared storage before scaling horizontally. Generated CRT and
-Form B/F HTML escapes dynamic values and is sent with `private, no-store`,
+reusing a key for different data returns `409`. Postgres commits the key,
+fingerprint, linked ledger entry and expiry atomically, so retries survive app
+restarts/instances (migration `0007`). In-memory adapters use a process-local
+fallback bounded at 10,000 keys/24 hours. The database-backed path is covered by
+a Postgres E2E suite and requires a configured `DATABASE_URL` to run. Migration runner `npm run migrate:check`
+provides a read-only pending/drift preflight; `npm run migrate` serializes
+migrators and records SHA-256 checksums (migration `0008`). It does not replace
+a backup/restore plan. `/health/live` and `/health/ready` separate liveness from
+configured dependency readiness; production wires the Postgres probe. Generated
+CRT and Form B/F HTML escapes dynamic values and is sent with `private, no-store`,
 `nosniff`, and restrictive CSP headers.
+
+Treasury plan authorization is recomputed from council ledger balances; clients
+cannot supply an `allow: true` verdict as authority. PSBT plans and UTXO
+reservations are currently process-local. The endpoint verifies ownership,
+immutability, network/amount/fee/signature-slot shape and replay, but **does not
+cryptographically verify signatures or build PSBT/change outputs**. Live
+broadcast and ledger debit are refused until those pieces exist. Treat the demo
+placeholder as non-payment.
 
 The backend API release is currently `0.3.27`; the site/project release is
 tracked separately in the root `package.json`.
@@ -178,7 +190,10 @@ backend uses `npm run typecheck` / `npm test` / `npm run build` from `backend/`.
 5. **Integer math** — amounts stored in basis points (100 bp = 1.00 CAD).
 
 Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
-(repeatable, idempotent). The `docker-compose.yml` `db` service also mounts
+(repeatable, checksummed and serialized). `npm run migrate:check` performs a
+read-only check for pending migrations and checksum drift. Checksums for legacy
+migration records are baselined on first runner upgrade; review against a backup
+before production migration. The `docker-compose.yml` `db` service also mounts
 `src/ledger/schema.sql` into Postgres `initdb` for fresh volumes.
 
 ## Auth (multi-tenant councils)
@@ -261,9 +276,11 @@ is supplied to the API to convert CAD to sats for BTC-denominated rails.
 - **Pluggable rate provider** — the `RateProvider` seam behind `cadPerBtc`
   resolves a live rate (env-seeded, cached) with the static `CAD_PER_BTC`
   config as fallback.
-- **Watch-only xpub** — `deriveUnitAddress(xpub, unit)` derives a deterministic
-  BIP32 child index per unit (hash → index) from a public key only. Full child
-  public-key derivation is the seam for a BIP32 lib; the path + index are real.
+- **Watch-only xpub** — validates extended-public-key checksum, network and
+  curve point, then returns deterministic path/index metadata. It does **not**
+  materialize child public keys or addresses; registration is process-local and
+  no encrypted durable xpub store is implemented. Do not use it to receive
+  funds until derivation and persistence are complete.
 
 Full payload + response shapes for every endpoint live in [`API.md`](API.md).
 

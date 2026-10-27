@@ -32,6 +32,7 @@
 
 import { createHash } from 'node:crypto';
 import type { PsbtPlan } from './psbt.js';
+import { validateOnchainAddress } from '../rails/rails.js';
 
 export interface BitcoindRpcConfig {
   url: string; // e.g. http://127.0.0.1:8332 or the RPC host the operator exposes
@@ -126,9 +127,22 @@ export async function broadcastRawTx(
   outputs: { address: string; sats: number }[],
   opts: { railEnabled?: boolean } = {}
 ): Promise<BroadcastOutput> {
+  if (!plan.ready) throw new Error('plan not ready: signature threshold not met');
+  if (!plan.expiresAt || !Number.isFinite(Date.parse(plan.expiresAt)) || Date.parse(plan.expiresAt) <= Date.now()) throw new Error('plan expired or invalid');
+  if (!outputs.length || outputs.length > 20) throw new Error('outputs must contain 1..20 destinations');
+  if (!Array.isArray(plan.inputs) || plan.inputs.length < 1 || plan.inputs.length > 100 || plan.inputs.some((input) => !/^[0-9a-f]{64}$/i.test(input.txid) || !Number.isInteger(input.vout) || input.vout < 0 || input.vout > 0xffffffff || !Number.isSafeInteger(input.sats) || input.sats <= 0)) throw new Error('plan inputs are invalid');
+  if (!Number.isSafeInteger(plan.amountSats) || plan.amountSats <= 0 || !Number.isSafeInteger(plan.feeSats) || plan.feeSats < 0 || !Number.isSafeInteger(plan.policy?.maxFeeSats) || plan.feeSats > plan.policy.maxFeeSats) throw new Error('plan amount or fee is invalid');
+  if (!Number.isInteger(plan.totalSigners) || plan.totalSigners < 1 || !Number.isInteger(plan.requiredSignatures) || plan.requiredSignatures < 1 || plan.requiredSignatures > plan.totalSigners) throw new Error('plan signer threshold is invalid');
   const totalIn = plan.inputs.reduce((s, u) => s + u.sats, 0);
   const totalOut = outputs.reduce((s, o) => s + o.sats, 0);
-  if (totalOut > totalIn) throw new Error(`outputs ${totalOut} > inputs ${totalIn}`);
+  if (!Number.isSafeInteger(totalIn) || !Number.isSafeInteger(totalOut)) throw new Error('input/output totals must be safe integers');
+  if (outputs.some((output) => !Number.isSafeInteger(output.sats) || output.sats <= 0)) throw new Error('each output must be a positive integer amount');
+  if (totalOut > totalIn - plan.feeSats) throw new Error(`outputs plus fee ${totalOut + plan.feeSats} > inputs ${totalIn}`);
+  if (outputs[0]?.address !== plan.recipient || outputs[0]?.sats !== plan.amountSats) throw new Error('first output does not match the authorized recipient and amount');
+  if (outputs.slice(1).some((output) => output.address === plan.recipient)) throw new Error('recipient may only appear once in outputs');
+  if (new Set(plan.inputs.map((u) => `${u.txid.toLowerCase()}:${u.vout}`)).size !== plan.inputs.length) throw new Error('duplicate input outpoint');
+  if (plan.feeSats < 0 || plan.feeSats > plan.policy.maxFeeSats) throw new Error('plan fee exceeds its authorized ceiling');
+  if (outputs.some((output) => !validAddressForNetwork(output.address, plan.policy.network))) throw new Error('output address does not match the authorized network');
 
   const hex = buildRawTxHex(plan, outputs); // placeholder skeleton
 
@@ -136,6 +150,7 @@ export async function broadcastRawTx(
     // Real-rail path: prove an on-chain spend or fail loudly. sendRawTransaction
     // throws on an unreachable / auth-failed node — never substitute a
     // placeholder here, so the caller can report txid:null + rail:'unavailable'.
+    if (!plan.psbtB64) throw new Error('live broadcast requires a hardware-wallet verified aggregated PSBT');
     const txid = await sendRawTransaction(hex, btc);
     return { txid, hex };
   }
@@ -156,10 +171,20 @@ async function sendRawTransaction(hex: string, btc: BitcoindRpcConfig): Promise<
 
 /** Minimal JSON-RPC POST to bitcoind (Basic auth). */
 async function rpc(method: string, params: unknown[], btc: BitcoindRpcConfig): Promise<unknown> {
+  if (Boolean(btc.user) !== Boolean(btc.pass)) throw new Error('bitcoind RPC requires both username and password');
   const body = JSON.stringify({ jsonrpc: '1.0', id: 'openstrata', method, params });
   const auth = btc.user && btc.pass ? `Basic ${Buffer.from(`${btc.user}:${btc.pass}`).toString('base64')}` : undefined;
-  const res = await fetch(btc.url, {
+  let endpoint: URL;
+  try {
+    endpoint = new URL(btc.url);
+  } catch {
+    throw new Error('bitcoind RPC URL must be an absolute HTTP(S) URL');
+  }
+  if (endpoint.protocol !== 'http:' && endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.hash) throw new Error('bitcoind RPC URL must use HTTP(S) without embedded credentials or a fragment');
+  const res = await fetch(endpoint, {
     method: 'POST',
+    signal: AbortSignal.timeout(5_000),
+    redirect: 'error',
     headers: { 'Content-Type': 'application/json', ...(auth ? { Authorization: auth } : {}) },
     body
   });
@@ -374,6 +399,11 @@ function b58decode(addr: string): Buffer {
 }
 
 /** Hex string → reversed (little-endian txid). */
+function validAddressForNetwork(address: string, network: 'mainnet' | 'testnet'): boolean {
+  if (network === 'mainnet') return validateOnchainAddress(address).ok && /^(bc1|[13])/.test(address);
+  return validateOnchainAddress(address).ok && /^(tb1|[2mn])/.test(address);
+}
+
 function reverseHex(h: string): string {
   const buf = Buffer.from(h, 'hex');
   return Buffer.from(buf.reverse()).toString('hex');
