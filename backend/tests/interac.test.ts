@@ -13,7 +13,7 @@ import {
 	type InteracRequest
 } from '../src/rails/interac.js';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
@@ -282,7 +282,7 @@ describe('interac API routes', () => {
 				rosa: keywordRetriever(corpus),
 				reconcile,
 				payments: new MemPaymentRequestStore(),
-				auth: new MemAuthStore(),
+				auth: new MemAuthStore(), ...makeSessionDeps(),
 				units: DEFAULT_UNITS,
 				interac: new DemoInteracProvider(),
 				config: {
@@ -291,7 +291,7 @@ describe('interac API routes', () => {
 					rails: { fiat: { enabled: true } },
 					cadPerBtc: 50_000,
 					authSecret: 'test-secret-0123456789',
-					authTokenTtl: 3600,
+					authTokenTtl: 3600, authRefreshTtlDays: 30,
 					authRateLimitMax: 1000,
 					authRateLimitWindowMs: 60_000
 				}
@@ -415,7 +415,7 @@ describe('interac provider absent', () => {
 				rosa: keywordRetriever(corpus),
 				reconcile,
 				payments: new MemPaymentRequestStore(),
-				auth: new MemAuthStore(),
+				auth: new MemAuthStore(), ...makeSessionDeps(),
 				units: DEFAULT_UNITS,
 				config: {
 					crfMandatoryPct: 10,
@@ -423,7 +423,7 @@ describe('interac provider absent', () => {
 					rails: { fiat: { enabled: true } },
 					cadPerBtc: 50_000,
 					authSecret: 'test-secret-0123456789',
-					authTokenTtl: 3600,
+					authTokenTtl: 3600, authRefreshTtlDays: 30,
 					authRateLimitMax: 1000,
 					authRateLimitWindowMs: 60_000
 				}

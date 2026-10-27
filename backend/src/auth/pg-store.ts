@@ -105,6 +105,16 @@ export class PostgresAuthStore implements AuthStore {
     );
     return res.rows.map((r) => this.toUser(r));
   }
+
+  async updateUserRole(id: string, role: UserRole): Promise<UserRecord> {
+    const res = await this.pool.query<UserRow>(
+      `UPDATE app_user SET role = $2 WHERE id = $1
+       RETURNING id, council_id, email, display_name, password_hash, role, created_at`,
+      [id, role]
+    );
+    if (!res.rows[0]) throw new Error(`unknown user: ${id}`);
+    return this.toUser(res.rows[0]);
+  }
 }
 
 function randomId(prefix: string): string {

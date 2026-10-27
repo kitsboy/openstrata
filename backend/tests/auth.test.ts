@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { bech32Encode } from '../src/rails/rails.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
@@ -63,7 +63,7 @@ beforeAll(async () => {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
-      auth: new MemAuthStore(),
+      auth: new MemAuthStore(), ...makeSessionDeps(),
       units: DEFAULT_UNITS,
       config: {
         crfMandatoryPct: 10,
@@ -74,7 +74,7 @@ beforeAll(async () => {
         },
         cadPerBtc: 50_000,
         authSecret: AUTH_SECRET,
-        authTokenTtl: 3600,
+        authTokenTtl: 3600, authRefreshTtlDays: 30,
         authRateLimitMax: 1000,
         authRateLimitWindowMs: 60_000
       }
@@ -203,13 +203,21 @@ describe('token hygiene', () => {
   });
 
   it('rejects a token signed with the wrong secret', async () => {
-    const forged = signJwt({ sub: 'u-x', cid: 'c-x', role: 'admin' }, 'attacker-secret', 3600);
+    const forged = signJwt(
+      { sub: 'u-x', cid: 'c-x', role: 'admin', sid: 's-forged' },
+      'attacker-secret',
+      3600
+    );
     const res = await app.inject({ method: 'GET', url: '/api/v1/units', headers: auth(forged) });
     expect(res.statusCode).toBe(401);
   });
 
   it('rejects an expired token', async () => {
-    const expired = signJwt({ sub: 'u-x', cid: 'c-x', role: 'admin' }, AUTH_SECRET, -10);
+    const expired = signJwt(
+      { sub: 'u-x', cid: 'c-x', role: 'admin', sid: 's-expired' },
+      AUTH_SECRET,
+      -10
+    );
     const res = await app.inject({ method: 'GET', url: '/api/v1/units', headers: auth(expired) });
     expect(res.statusCode).toBe(401);
   });

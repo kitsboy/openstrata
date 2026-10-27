@@ -19,7 +19,7 @@ import {
 } from '../src/rails/interac.js';
 import { signJwt, verifyJwt } from '../src/auth/jwt.js';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
@@ -156,7 +156,7 @@ describe('bill link signing', () => {
 		// A link is not a JWT.
 		expect(verifyJwt(token, SECRET)).toBeNull();
 		// And a session JWT is not a link.
-		const jwt = signJwt({ sub: 'u1', cid: 'c', role: 'admin' }, SECRET, 3600);
+		const jwt = signJwt({ sub: 'u1', cid: 'c', role: 'admin', sid: 's-separation' }, SECRET, 3600);
 		expect(verifyPayLink(jwt, SECRET)).toEqual({ ok: false, reason: 'malformed' });
 	});
 });
@@ -233,7 +233,7 @@ describe('bill link routes', () => {
 				rosa: keywordRetriever(corpus),
 				reconcile,
 				payments: new MemPaymentRequestStore(),
-				auth: new MemAuthStore(),
+				auth: new MemAuthStore(), ...makeSessionDeps(),
 				units: DEFAULT_UNITS,
 				interac: provider,
 				config: {
@@ -242,7 +242,7 @@ describe('bill link routes', () => {
 					rails: { fiat: { enabled: true } },
 					cadPerBtc: 50_000,
 					authSecret: 'test-secret-0123456789',
-					authTokenTtl: 3600,
+					authTokenTtl: 3600, authRefreshTtlDays: 30,
 					authRateLimitMax: 1000,
 					authRateLimitWindowMs: 60_000,
 					payLinkSecret: SECRET,

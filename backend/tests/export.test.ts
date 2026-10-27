@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
@@ -29,7 +29,7 @@ describe('export + evidence endpoints', () => {
         rosa: keywordRetriever(corpus),
         reconcile,
         payments: new MemPaymentRequestStore(),
-        auth: new MemAuthStore(),
+        auth: new MemAuthStore(), ...makeSessionDeps(),
         units: DEFAULT_UNITS,
         config: {
           crfMandatoryPct: 10,
@@ -37,7 +37,7 @@ describe('export + evidence endpoints', () => {
           rails: { fiat: { enabled: true } },
           cadPerBtc: 50_000,
           authSecret: AUTH_SECRET,
-          authTokenTtl: 3600,
+          authTokenTtl: 3600, authRefreshTtlDays: 30,
           authRateLimitMax: 1000,
           authRateLimitWindowMs: 60_000
         }

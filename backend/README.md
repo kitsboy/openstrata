@@ -15,7 +15,8 @@ site's `/docs` bootstrap steps describe.
 | **Billing** | Automated monthly strata-fee billing + late notices (posts charges to the ledger). | `src/billing/` |
 | **Enforcement** | CRT-proof bylaw enforcement state machine (`BLOCK_FINE_ACTIONS`, fine caps). | `src/enforcement/` |
 | **Rails** | Sovereign payment rails — Bitcoin on-chain, Lightning (LNURL/BOLT-12), Liquid, PayNym (BIP-47), Nostr. Recipient validation + quoting (LNURL 15-min CAD lock). Interac e-Transfer Business Request Money (fiat) with a labelled rehearsal provider when no merchant credential is configured. | `src/rails/` |
-| **Auth** | Multi-tenant councils — zero-dependency HS256 JWTs (node:crypto), scrypt password hashing, admin/treasurer/member role gates. Every `/api/v1/*` route except `/health` + Rosa derives its tenant from the token. | `src/auth/` |
+| **Auth** | Multi-tenant councils — zero-dependency HS256 JWTs (node:crypto), scrypt password hashing, admin/treasurer/member role gates. Every `/api/v1/*` route except `/health` + Rosa derives its tenant from the token. Tokens name a **server-side session** (migration `0009`), so a revoke ends a credential inside its lifetime. | `src/auth/` |
+| **Audit** | Append-only `audit_event` (migration `0009`): who did what, from where, and whether it was refused. UPDATE/DELETE are refused by a database trigger. | `src/audit/` |
 | **API** | Fastify wire-up exposing `/api/v1/*` + `/health`. | `src/api/server.ts` |
 
 ## Stack
@@ -205,10 +206,33 @@ it and ignore body `community` fields. Roles: `admin` (all writes incl. fines +
 user management), `treasurer` (financial writes, no fines), `member`
 (read-only + own-unit actions). Open signup via `POST /api/v1/auth/register`.
 
+**Sessions are server-side and revocable.** Every token carries a `sid` claim
+naming a row in `auth_session` (migration `0009`), and each request resolves that
+row: it must exist, be unrevoked and unexpired, belong to the claimed user and
+council, and still carry the token's role. So `POST /auth/logout` ends a session
+immediately rather than at token expiry, a role change ends it too, and a refresh
+token presented twice ends it (the signature of a stolen copy). Access tokens are
+short-lived (`AUTH_TOKEN_TTL`, default 1h) and renewed with a refresh token that
+is issued once, stored only as a SHA-256 hash, and rotated on every use
+(`AUTH_REFRESH_TTL_DAYS`, default 30). A council member can see their own
+sessions with `GET /api/v1/auth/sessions` and sign the others out with
+`DELETE /api/v1/auth/sessions`.
+
+**Privileged actions are audited.** Every state-changing route writes an
+append-only row (actor, action, outcome, target, status, IP) — including the
+refusals, which are the ones an investigation usually wants. `GET
+/api/v1/audit/events` (admin) reads them back, tenant-scoped and cursor-paged.
+The rules live in one pure function, `src/audit/policy.ts`; the default is to
+record, and request bodies are never copied into a row. See `API.md` for what is
+and is not recorded.
+
 ## API surface (scaffold)
 
 - `GET  /health`
-- `POST /api/v1/auth/register` | `/login` | `GET /auth/me` | `GET|POST /auth/users` (admin)
+- `POST /api/v1/auth/register` | `/login` | `/refresh` | `/logout` | `GET /auth/me`
+- `GET|POST /api/v1/auth/users`, `PATCH /auth/users/:id` (admin) — roles + revocation on change
+- `GET|DELETE /api/v1/auth/sessions` — see your own sessions / sign out everywhere else
+- `GET /api/v1/audit/events` — the council's own audit trail (admin)
 - `GET  /api/v1/units` — canonical unit/lot master data + AR fund codes
 - `GET  /api/v1/ledger/balance?fund=`
 - `POST /api/v1/ledger/post`

@@ -15,6 +15,8 @@ import { vectorRetriever, vectorStoreReady } from './rosa/vector-retriever.js';
 import { reconcile } from './trf/recon.js';
 import { PostgresPaymentRequestStore } from './rails/payment-store.js';
 import { PostgresAuthStore } from './auth/pg-store.js';
+import { PostgresSessionStore } from './auth/session-pg-store.js';
+import { PostgresAuditLog } from './audit/pg-store.js';
 import { LiveRateProvider } from './rails/rate-provider.js';
 import { buildServer } from './api/server.js';
 import { DemoInteracProvider, HttpInteracProvider } from './rails/interac.js';
@@ -29,6 +31,8 @@ async function main(): Promise<void> {
   const ledger = new LedgerEngine(store);
   const payments = new PostgresPaymentRequestStore(config.dbUrl);
   const auth = new PostgresAuthStore(config.dbUrl);
+  const sessions = new PostgresSessionStore(config.dbUrl);
+  const audit = new PostgresAuditLog(config.dbUrl);
   const units = new PostgresUnitStore(config.dbUrl);
   const members = new PostgresMemberStore(config.dbUrl);
 
@@ -83,6 +87,8 @@ async function main(): Promise<void> {
     reconcile,
     payments,
     auth,
+    sessions,
+    audit,
     interac,
     resolver: new LiveRateProvider({
       fallbackRate: Number.isFinite(Number(process.env.CAD_PER_BTC))
@@ -110,6 +116,7 @@ async function main(): Promise<void> {
       cadPerBtc: Number(process.env.CAD_PER_BTC ?? 0) || 0,
       authSecret: config.authSecret,
       authTokenTtl: config.authTokenTtl,
+      authRefreshTtlDays: config.authRefreshTtlDays,
       authRateLimitMax: config.authRateLimitMax,
       authRateLimitWindowMs: config.authRateLimitWindowMs,
       payLinkSecret: config.payLink.secret,
@@ -126,6 +133,8 @@ async function main(): Promise<void> {
     await store.close();
     await payments.close();
     await auth.close();
+    await sessions.close();
+    await audit.close();
     await units.close();
     await members.close();
   }) as typeof app.close;

@@ -44,8 +44,14 @@ export interface BackendConfig {
   reconScanDays: number;
   /** HS256 JWT signing secret — MUST be a strong random value in production. */
   authSecret: string;
-  /** Bearer token lifetime in seconds (default 12h). */
+  /**
+   * Bearer token lifetime in seconds (default 1h). Short is now safe: a token
+   * dies the moment its session is revoked, and a client can renew it with a
+   * refresh token instead of asking the user to sign in again.
+   */
   authTokenTtl: number;
+  /** How long a session may stay signed in before a fresh login (default 30d). */
+  authRefreshTtlDays: number;
   /** Auth brute-force throttling: attempts per window (per email + per IP). */
   authRateLimitMax: number;
   /** Auth throttle window in milliseconds (default 15 min). */
@@ -82,7 +88,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     crfMandatoryPct: int(env.CRF_MANDATORY_PCT, 10),
     reconScanDays: int(env.RECON_SCAN_DAYS, 90),
     authSecret: env.AUTH_SECRET ?? 'dev-only-insecure-secret-change-me',
-    authTokenTtl: int(env.AUTH_TOKEN_TTL, 12 * 60 * 60),
+    authTokenTtl: int(env.AUTH_TOKEN_TTL, 60 * 60),
+    authRefreshTtlDays: int(env.AUTH_REFRESH_TTL_DAYS, 30),
     authRateLimitMax: int(env.AUTH_RATE_LIMIT_MAX, 10),
     authRateLimitWindowMs: int(env.AUTH_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
     rails: {

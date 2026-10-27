@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, MemUnitStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, MemUnitStore, makeSessionDeps } from './memstore.js';
 import { bech32Encode } from '../src/rails/rails.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
@@ -29,7 +29,7 @@ function makeDeps(unitStore?: MemUnitStore, units?: UnitRegistry) {
     rosa: keywordRetriever(corpus),
     reconcile,
     payments: new MemPaymentRequestStore(),
-    auth: new MemAuthStore(),
+    auth: new MemAuthStore(), ...makeSessionDeps(),
     units,
     unitStore,
     config: {
@@ -41,7 +41,7 @@ function makeDeps(unitStore?: MemUnitStore, units?: UnitRegistry) {
       },
       cadPerBtc: 50_000,
       authSecret: AUTH_SECRET,
-      authTokenTtl: 3600,
+      authTokenTtl: 3600, authRefreshTtlDays: 30,
       authRateLimitMax: 1000,
       authRateLimitWindowMs: 60_000
     }

@@ -261,3 +261,21 @@ export class MemMemberStore implements MemberStore {
 
 export { MemAuthStore } from '../src/auth/mem-store.js';
 export type { Council, UserRecord, UserRole } from '../src/auth/model.js';
+
+export { MemSessionStore } from '../src/auth/session.js';
+export { MemAuditLog } from '../src/audit/store.js';
+
+import { MemSessionStore as SessionStoreImpl } from '../src/auth/session.js';
+import { MemAuditLog as AuditLogImpl } from '../src/audit/store.js';
+
+/**
+ * Sessions + audit log for a `buildServer` deps object.
+ *
+ * Both are required by `ApiDeps` because neither can be reconstructed after the
+ * fact, but almost no test is *about* them: this keeps twenty-odd call sites
+ * one line longer instead of two. A test that does care builds its own
+ * instances so it can inspect the rows.
+ */
+export function makeSessionDeps(): { sessions: SessionStoreImpl; audit: AuditLogImpl } {
+  return { sessions: new SessionStoreImpl(), audit: new AuditLogImpl() };
+}

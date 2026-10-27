@@ -58,6 +58,13 @@ export class MemAuthStore implements AuthStore {
   async listUsers(councilId: string): Promise<UserRecord[]> {
     return [...this.usersById.values()].filter((u) => u.councilId === councilId);
   }
+
+  async updateUserRole(id: string, role: UserRole): Promise<UserRecord> {
+    const user = this.usersById.get(id);
+    if (!user) throw new Error(`unknown user: ${id}`);
+    user.role = role;
+    return { ...user };
+  }
 }
 
 export type { UserRole };

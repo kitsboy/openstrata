@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { RateLimiter } from '../src/auth/rate-limit.js';
 import { buildServer } from '../src/api/server.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
@@ -71,7 +71,7 @@ async function buildThrottleApp(): Promise<FastifyInstance> {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
-      auth: new MemAuthStore(),
+      auth: new MemAuthStore(), ...makeSessionDeps(),
       units: DEFAULT_UNITS,
       config: {
         crfMandatoryPct: 10,
@@ -79,7 +79,7 @@ async function buildThrottleApp(): Promise<FastifyInstance> {
         rails: { fiat: { enabled: true } },
         cadPerBtc: 50_000,
         authSecret: AUTH_SECRET,
-        authTokenTtl: 3600,
+        authTokenTtl: 3600, authRefreshTtlDays: 30,
         // Small ceiling so the test can trip the throttle quickly.
         authRateLimitMax: 3,
         authRateLimitWindowMs: 60_000

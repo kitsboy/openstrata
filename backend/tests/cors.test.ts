@@ -11,7 +11,7 @@ import {
 	parseCorsOrigins
 } from '../src/api/cors.js';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
@@ -124,7 +124,7 @@ async function build(configured: string | undefined): Promise<FastifyInstance> {
 			rosa: keywordRetriever(corpus),
 			reconcile,
 			payments: new MemPaymentRequestStore(),
-			auth: new MemAuthStore(),
+			auth: new MemAuthStore(), ...makeSessionDeps(),
 			units: DEFAULT_UNITS,
 			config: {
 				crfMandatoryPct: 10,
@@ -132,7 +132,7 @@ async function build(configured: string | undefined): Promise<FastifyInstance> {
 				rails: { fiat: { enabled: true } },
 				cadPerBtc: 50_000,
 				authSecret: 'test-secret-0123456789',
-				authTokenTtl: 3600,
+				authTokenTtl: 3600, authRefreshTtlDays: 30,
 				authRateLimitMax: 1000,
 				authRateLimitWindowMs: 60_000,
 				corsOrigins: configured === undefined ? undefined : [configured]

@@ -33,17 +33,60 @@ are capped at 256 KiB, unknown properties are rejected, and requests time out
 after 30 seconds. The public Rosa question route additionally limits question
 length to 1,000 characters and each supplied fact to 300 characters.
 
+**A token is not sufficient on its own.** Every token carries a `sid` claim
+naming a row in `auth_session` (migration 0009), and each request resolves that
+row: it must exist, be unrevoked and unexpired, belong to the claimed user and
+council, and still carry the token's role. So a session can be *ended* while its
+token is still inside its lifetime — the property a stateless bearer token could
+not have:
+
+```
+401 { "ok": false, "reason": "session ended; sign in again" }
+```
+
+The role in the session is pinned at login, so a promotion or demotion cannot be
+outrun by a token minted a moment earlier. Access tokens are short-lived
+(`AUTH_TOKEN_TTL`, default 1 hour) and a client renews them with its **refresh
+token**, which is issued once at login, stored only as a SHA-256 hash, and
+rotated on every use. Presenting a rotated-away refresh token is treated as a
+stolen copy: the session ends instead of a third token being issued.
+
 ### `POST /api/v1/auth/register`
-Open signup: creates a council + its first user (admin) and returns a token.
+Open signup: creates a council + its first user (admin) and starts a session.
 ```json
 { "councilName": "Cedar Point", "email": "admin@cedar.example", "password": "correct-horse" }
 ```
+→ `{ ok, token, refreshToken, refreshExpiresAt, council, user }`
 
 ### `POST /api/v1/auth/login`
 ```json
 { "email": "admin@cedar.example", "password": "correct-horse" }
 ```
-→ `{ ok, token, user }`
+→ `{ ok, token, refreshToken, refreshExpiresAt, user }`. Each sign-in is its own
+session, so signing out on one device leaves the others alone.
+
+### `POST /api/v1/auth/refresh`
+```json
+{ "refreshToken": "<from login>" }
+```
+→ `{ ok, token, refreshToken, refreshExpiresAt, user }`. The refresh token is
+**rotated on every call**; the previous one is kept only so a replay can be
+recognised. A replay → `401` *and* the session ends (`refresh_reuse`). This route
+is unauthenticated by design — the refresh token is the credential.
+
+### `POST /api/v1/auth/logout`
+Ends the session this token belongs to. The token stops working on the next
+request, not at its expiry. Idempotent at the session level; a second call
+carries an already-dead token and is refused like any other.
+→ `{ ok, revoked }`
+
+### `GET /api/v1/auth/sessions`
+The caller's own sessions, newest first, with the current one marked — the
+"signed in on the treasurer's laptop since Tuesday" view. Never returns a hash
+or a token.
+
+### `DELETE /api/v1/auth/sessions`
+Signs out everywhere *else*, keeping the caller signed in. → `{ ok, revoked }`
 
 ### `GET /api/v1/auth/me`
 Returns the authenticated user + their council.
@@ -51,6 +94,43 @@ Returns the authenticated user + their council.
 ### `GET|POST /api/v1/auth/users` (admin only)
 List the council's users, or create a `treasurer`/`member` account. Creation
 returns a one-time `temporaryPassword` for the admin to share.
+
+### `PATCH /api/v1/auth/users/:id` (admin only)
+Change a council member's role: `{ "role": "admin" | "treasurer" | "member" }`.
+Guards: you cannot change your own role (`409`), the council must keep at least
+one admin (`409`), and the target's sessions end immediately (`sessionsRevoked`)
+so a token minted under the old role cannot outlive the change.
+
+## Audit trail
+
+Every state-changing `/api/v1/*` request leaves an append-only row in
+`audit_event` (migration 0009): actor, role, council, action, outcome, target,
+status, IP and user agent. The decisions are in `src/audit/policy.ts`:
+
+- **The default is to record.** Only pure calculators are exempt
+  (`/treasury/authorize`, `/treasury/dca/plan`, `/meetings/quorum`,
+  `/meetings/vote`, `/api/v1/forms`, `/bylaw/status`) and only reads of data that
+  leaves the building are recorded on the GET side (`/export/portable`,
+  `/agent/context`, `/audit/events`). A new endpoint is audited by default, so
+  exempting one is a visible edit rather than an oversight.
+- **Refusals are rows too.** A `member` trying to post to the ledger writes
+  `ledger.post` with `outcome: "denied"` — the row that answers "who tried".
+- **Unattributable traffic is never recorded**, except `login` and `register`
+  (both rate-limited), so a public route cannot be used to fill the log.
+- **Request bodies are never copied in.** Only whitelisted identifiers are read  (`fund`, `amountBasis`, `unitRef`, `role`, `councilMinutesRef`, …). The sole
+  exception is the account email on the auth actions whose subject *is* the
+  address; a password, a bylaw complaint payload or a PSBT can never appear.
+
+The table refuses `UPDATE` and `DELETE` at the database level, so "append-only"
+is a property rather than a convention.
+
+### `GET /api/v1/audit/events?limit=&before=&action=` (admin only)
+Newest first, tenant-scoped, cursor-paged by `seq` (`before=<seq>`), filterable
+by exact `action` (e.g. `action=ledger.post`). `limit` defaults to 50, caps at
+200. Action ids are derived from the route template —
+`{segments}.{verb}` (e.g. `units.delete`, `auth.users.update`), with the verb
+dropped when the last segment already reads as an action (`ledger.post`).
+Reading this log is itself recorded as `audit.events.read`.
 
 ## Health
 

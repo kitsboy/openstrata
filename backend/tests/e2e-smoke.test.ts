@@ -8,10 +8,10 @@
  *   DATABASE_URL=postgres://… npm run test -- e2e-smoke
  *
  * It exercises the production adapters (PostgresLedgerStore,
- * PostgresPaymentRequestStore, PostgresAuthStore) through the full product
- * flow: register council -> ledger -> billing -> payments -> forms -> meetings,
- * plus cross-council isolation. The ledger `balance` call verifies the hash
- * chain (tamper evidence) on real data.
+ * PostgresPaymentRequestStore, PostgresAuthStore, PostgresSessionStore,
+ * PostgresAuditLog) through the full product flow: register council -> ledger ->
+ * billing -> payments -> forms -> meetings, plus cross-council isolation. The
+ * ledger `balance` call verifies the hash chain (tamper evidence) on real data.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -21,11 +21,14 @@ import { PostgresLedgerStore } from '../src/ledger/store.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { PostgresPaymentRequestStore } from '../src/rails/payment-store.js';
 import { PostgresAuthStore } from '../src/auth/pg-store.js';
+import { PostgresSessionStore } from '../src/auth/session-pg-store.js';
+import { PostgresAuditLog } from '../src/audit/pg-store.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
 import { PostgresUnitStore } from '../src/units/pg-store.js';
 import { bech32Encode } from '../src/rails/rails.js';
+import pg from 'pg';
 
 const URL = process.env.DATABASE_URL;
 const AUTH_SECRET = 'e2e-smoke-secret';
@@ -46,8 +49,11 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
   let paymentsStore: PostgresPaymentRequestStore;
   let authStore: PostgresAuthStore;
   let unitStore: PostgresUnitStore;
+  let sessionStore: PostgresSessionStore;
+  let auditLog: PostgresAuditLog;
   let token: string;
   let councilId: string;
+  let email: string;
 
   const auth = (t: string) => ({ authorization: `Bearer ${t}` });
 
@@ -56,6 +62,8 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     paymentsStore = new PostgresPaymentRequestStore(URL!);
     authStore = new PostgresAuthStore(URL!);
     unitStore = new PostgresUnitStore(URL!);
+    sessionStore = new PostgresSessionStore(URL!);
+    auditLog = new PostgresAuditLog(URL!);
 
     app = await buildServer(
       {
@@ -64,6 +72,8 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
         reconcile,
         payments: paymentsStore,
         auth: authStore,
+        sessions: sessionStore,
+        audit: auditLog,
         units: DEFAULT_UNITS,
         unitStore,
         config: {
@@ -75,7 +85,7 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
           },
           cadPerBtc: 50_000,
           authSecret: AUTH_SECRET,
-          authTokenTtl: 3600,
+          authTokenTtl: 3600, authRefreshTtlDays: 30,
           authRateLimitMax: 1000,
           authRateLimitWindowMs: 60_000
         }
@@ -84,7 +94,7 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     );
     await app.ready();
 
-    const email = `e2e-${Date.now()}@smoke.test`;
+    email = `e2e-${Date.now()}@smoke.test`;
     const reg = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/register',
@@ -102,6 +112,8 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     await paymentsStore.close();
     await authStore.close();
     await unitStore.close();
+    await sessionStore.close();
+    await auditLog.close();
   });
 
   it('persists a ledger post, replays it idempotently across app restarts, and reads a verified balance back', async () => {
@@ -133,14 +145,17 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
     const restartedPaymentsStore = new PostgresPaymentRequestStore(URL!);
     const restartedAuthStore = new PostgresAuthStore(URL!);
     const restartedUnitStore = new PostgresUnitStore(URL!);
+    const restartedSessionStore = new PostgresSessionStore(URL!);
+    const restartedAuditLog = new PostgresAuditLog(URL!);
     const restartedApp = await buildServer({
       ledger: new LedgerEngine(restartedLedgerStore),
       rosa: keywordRetriever(corpus), reconcile,
       payments: restartedPaymentsStore, auth: restartedAuthStore,
+      sessions: restartedSessionStore, audit: restartedAuditLog,
       units: DEFAULT_UNITS, unitStore: restartedUnitStore,
       config: {
         crfMandatoryPct: 10, vectorCollection: 'bc_spa_rta_crt',
-        authSecret: AUTH_SECRET, authTokenTtl: 3600, authRateLimitMax: 1000, authRateLimitWindowMs: 60_000
+        authSecret: AUTH_SECRET, authTokenTtl: 3600, authRefreshTtlDays: 30, authRateLimitMax: 1000, authRateLimitWindowMs: 60_000
       }
     }, { logger: false });
     try {
@@ -153,6 +168,116 @@ describe.skipIf(!URL)('e2e smoke against live Postgres', () => {
       await restartedPaymentsStore.close();
       await restartedAuthStore.close();
       await restartedUnitStore.close();
+      await restartedSessionStore.close();
+      await restartedAuditLog.close();
+    }
+  });
+
+  it('ends a session in Postgres, so one instance can log a token out on them all', async () => {
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      payload: { email, password: 'password123' }
+    });
+    expect(login.statusCode).toBe(200);
+    const secondToken = login.json().token as string;
+    const refreshToken = login.json().refreshToken as string;
+    expect(refreshToken).toBeTruthy();
+
+    // A second API process, sharing only Postgres.
+    const otherSessionStore = new PostgresSessionStore(URL!);
+    const otherAuditLog = new PostgresAuditLog(URL!);
+    const otherAuthStore = new PostgresAuthStore(URL!);
+    const otherApp = await buildServer(
+      {
+        ledger: new LedgerEngine(new PostgresLedgerStore(URL!)),
+        rosa: keywordRetriever(corpus),
+        reconcile,
+        payments: new PostgresPaymentRequestStore(URL!),
+        auth: otherAuthStore,
+        sessions: otherSessionStore,
+        audit: otherAuditLog,
+        units: DEFAULT_UNITS,
+        config: {
+          crfMandatoryPct: 10,
+          vectorCollection: 'bc_spa_rta_crt',
+          authSecret: AUTH_SECRET,
+          authTokenTtl: 3600,
+          authRefreshTtlDays: 30,
+          authRateLimitMax: 1000,
+          authRateLimitWindowMs: 60_000
+        }
+      },
+      { logger: false }
+    );
+    try {
+      // The token was minted by the other instance; the session it names is a
+      // row, so this one accepts it.
+      const across = await otherApp.inject({ method: 'GET', url: '/api/v1/auth/me', headers: auth(secondToken) });
+      expect(across.statusCode).toBe(200);
+
+      // Log out here, and the instance that minted it refuses it immediately.
+      const logout = await otherApp.inject({ method: 'POST', url: '/api/v1/auth/logout', headers: auth(secondToken) });
+      expect(logout.statusCode).toBe(200);
+      expect(logout.json().revoked).toBe(true);
+
+      const dead = await app.inject({ method: 'GET', url: '/api/v1/auth/me', headers: auth(secondToken) });
+      expect(dead.statusCode).toBe(401);
+
+      // The refresh token cannot resurrect a revoked session.
+      const refresh = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+        payload: { refreshToken }
+      });
+      expect(refresh.statusCode).toBe(401);
+
+      // The original session is untouched by the other one's logout.
+      const mine = await app.inject({ method: 'GET', url: '/api/v1/auth/me', headers: auth(token) });
+      expect(mine.statusCode).toBe(200);
+    } finally {
+      await otherApp.close();
+      await otherSessionStore.close();
+      await otherAuditLog.close();
+      await otherAuthStore.close();
+    }
+  });
+
+  it('records privileged actions in Postgres and reads them back for the council', async () => {
+    const post = await app.inject({
+      method: 'POST',
+      url: '/api/v1/ledger/post',
+      headers: auth(token),
+      payload: { fund: 'crf', amountBasis: 1_100, kind: 'credit', type: 'crf_contribution' }
+    });
+    expect(post.statusCode).toBe(200);
+
+    const events = await app.inject({ method: 'GET', url: '/api/v1/audit/events', headers: auth(token) });
+    expect(events.statusCode).toBe(200);
+    const rows = events.json().events as Array<{
+      seq: number;
+      action: string;
+      outcome: string;
+      target: string | null;
+    }>;
+    const ledgerRow = rows.find((row) => row.action === 'ledger.post');
+    expect(ledgerRow).toBeDefined();
+    expect(ledgerRow!.outcome).toBe('success');
+    expect(ledgerRow!.target).toContain('fund=crf');
+
+    // The log is append-only in the database, not only in the code: an UPDATE
+    // against a row is refused by the trigger even for the owning connection.
+    const client = new pg.Client({ connectionString: URL! });
+    await client.connect();
+    try {
+      await expect(
+        client.query('UPDATE audit_event SET outcome = $1 WHERE seq = $2', ['error', ledgerRow!.seq])
+      ).rejects.toThrow(/append-only/);
+      await expect(
+        client.query('DELETE FROM audit_event WHERE seq = $1', [ledgerRow!.seq])
+      ).rejects.toThrow(/append-only/);
+    } finally {
+      await client.end();
     }
   });
 

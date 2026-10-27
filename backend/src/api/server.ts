@@ -44,11 +44,16 @@ import type { MemberStore } from '../members/store.js';
 import { normalizeEmail, toMemberWire } from '../members/model.js';
 import { statutoryDeadlines, withDaysLeft, sortDeadlines } from '../deadlines/deadlines.js';
 import { hashPassword, verifyPassword } from '../auth/passwords.js';
-import { signJwt, verifyJwt } from '../auth/jwt.js';
+import { signJwt, verifyJwt, type JwtClaims } from '../auth/jwt.js';
 import type { AuthStore } from '../auth/store.js';
 import { DuplicateEmailError } from '../auth/store.js';
-import type { AuthUser, UserRole } from '../auth/model.js';
-import { ROLE_RANK, toPublicUser } from '../auth/model.js';
+import type { AuthUser, UserRecord, UserRole } from '../auth/model.js';
+import { ROLE_RANK, USER_ROLES, toPublicUser } from '../auth/model.js';
+import type { SessionStore } from '../auth/session.js';
+import { hashRefreshToken, isSessionActive, newRefreshToken, toSessionWire } from '../auth/session.js';
+import type { AuditLog } from '../audit/store.js';
+import { AUDIT_ACTIONS_RE } from '../audit/store.js';
+import { planAudit } from '../audit/policy.js';
 import { RateLimiter, type RateLimitConfig } from '../auth/rate-limit.js';
 import { corsHeaders, mergeVary, parseCorsOrigins } from './cors.js';
 import { agentManifest, buildAgentContext } from './agent.js';
@@ -57,6 +62,17 @@ import { IdempotencyCache, requestFingerprint } from './idempotency-cache.js';
 declare module 'fastify' {
   interface FastifyRequest {
     user?: AuthUser;
+    /** Id of the session this request's token belongs to. */
+    sessionId?: string;
+    /**
+     * Who to attribute an audit row to when there is no session yet. A handler
+     * that authenticates outside the `authenticate` hook (login, register)
+     * declares the actor itself, so a successful sign-in and a failed one are
+     * both visible in the log of the council they belong to.
+     */
+    auditActor?: AuthUser;
+    /** Council attribution without naming an actor (a refused sign-in attempt). */
+    auditCouncilId?: string;
   }
 }
 
@@ -66,6 +82,17 @@ export interface ApiDeps {
   reconcile: Reconciler;
   payments: PaymentRequestStore;
   auth: AuthStore;
+  /**
+   * Server-side sessions, consulted on every authenticated request. Required,
+   * not optional: a bearer token that no store can revoke is the exact gap this
+   * closes, so building the API without it would be building the bug again.
+   */
+  sessions: SessionStore;
+  /**
+   * Append-only record of privileged actions. Required for the same reason:
+   * evidence for last Tuesday's bylaw fine cannot be reconstructed later.
+   */
+  audit: AuditLog;
   resolver?: RateProvider;
   /** Canonical unit/lot master data. Resolves every unitRef in the product. */
   units?: UnitRegistry;
@@ -87,6 +114,8 @@ export interface ApiDeps {
     authRateLimitMax: number;
     authRateLimitWindowMs: number;
     authTokenTtl: number; // seconds
+    /** Refresh-token lifetime in days; how long a session may stay signed in. */
+    authRefreshTtlDays: number;
     /** Signing secret for bill links; falls back to `authSecret` (domain-separated). */
     payLinkSecret?: string;
     /** How long a bill link lives. Default 30 days, capped at 120. */
@@ -183,6 +212,36 @@ export async function buildServer(
   };
 
   // -------------------------------------------------------------  Auth hooks
+
+  /**
+   * Resolve a signature-valid token to a live session and attach the identity.
+   *
+   * A valid signature is deliberately not enough any more: the session row must
+   * exist, be unrevoked and unexpired, belong to the claimed user and council,
+   * and still carry the token's role. Anything else is refused with a reason the
+   * client can act on, and the request stays unauthenticated.
+   */
+  const attachSession = async (claims: JwtClaims, req: FastifyRequest): Promise<string | null> => {
+    const session = await deps.sessions.get(claims.sid);
+    if (!session) return 'session ended; sign in again';
+    if (!isSessionActive(session)) return 'session expired; sign in again';
+    if (session.userId !== claims.sub || session.councilId !== claims.cid) {
+      return 'session does not match this token; sign in again';
+    }
+    // The role is pinned at login, so a demotion cannot be outrun by an access
+    // token minted moments earlier.
+    if (session.role !== claims.role) return 'your role changed; sign in again';
+    req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
+    req.sessionId = session.id;
+    try {
+      // Activity tracking is a nicety; it must never be why a request fails.
+      await deps.sessions.touch(session.id, new Date());
+    } catch (err) {
+      req.log.warn({ err }, 'session activity write failed');
+    }
+    return null;
+  };
+
   const authenticate: PreHandler = async (req, reply) => {
     const header = req.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
@@ -193,14 +252,15 @@ export async function buildServer(
     if (!claims) {
       return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
     }
-    req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
+    const refused = await attachSession(claims, req);
+    if (refused) return reply.code(401).send({ ok: false, reason: refused });
   };
 
   /**
    * Auth for a route a payer reaches without an account: a valid Bearer token is
    * honoured, and its absence is not an error here — the handler must then find
-   * a bill link (or refuse). An *invalid* Bearer token is still refused, so an
-   * expired session cannot quietly fall through to the link path.
+   * a bill link (or refuse). An *invalid or revoked* Bearer token is still
+   * refused, so an expired session cannot quietly fall through to the link path.
    */
   const authenticateOptional: PreHandler = async (req, reply) => {
     const header = req.headers.authorization;
@@ -209,7 +269,8 @@ export async function buildServer(
     if (!token) return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
     const claims = verifyJwt(token, deps.config.authSecret);
     if (!claims) return reply.code(401).send({ ok: false, reason: 'invalid or expired token' });
-    req.user = { userId: claims.sub, councilId: claims.cid, role: claims.role };
+    const refused = await attachSession(claims, req);
+    if (refused) return reply.code(401).send({ ok: false, reason: refused });
   };
 
   /** Role gate: admits the role and anything above it (treasurer gate admits admin). */
@@ -221,6 +282,74 @@ export async function buildServer(
       return reply.code(403).send({ ok: false, reason: `requires role '${min}' or higher` });
     }
   };
+
+  // ---------------------------------------------------------------  Sessions
+  /**
+   * Begin a session and mint its first access token. The refresh token is
+   * returned once and stored only as a SHA-256 hash, so a database read yields
+   * no usable credential.
+   */
+  const startSession = async (
+    user: UserRecord,
+    req: FastifyRequest
+  ): Promise<{ token: string; refreshToken: string; refreshExpiresAt: string }> => {
+    const refreshToken = newRefreshToken();
+    const userAgent = req.headers['user-agent'];
+    const session = await deps.sessions.create({
+      userId: user.id,
+      councilId: user.councilId,
+      role: user.role,
+      refreshHash: hashRefreshToken(refreshToken),
+      ttlSeconds: deps.config.authRefreshTtlDays * 24 * 60 * 60,
+      ip: req.ip ?? null,
+      userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 300) : null
+    });
+    return {
+      token: signJwt(
+        { sub: user.id, cid: user.councilId, role: user.role, sid: session.id },
+        deps.config.authSecret,
+        deps.config.authTokenTtl
+      ),
+      refreshToken,
+      refreshExpiresAt: session.expiresAt
+    };
+  };
+
+  // ------------------------------------------------------------  Audit trail
+  // One hook instead of sixty edits, and it runs for endpoints that do not
+  // exist yet. `planAudit` decides what is worth a row (see audit/policy.ts):
+  // everything that changes or exposes something, by default. The write is
+  // awaited so a response implies its row is durable — the whole point is that
+  // the record is there afterwards — but a failure is logged and never changes
+  // a response the client has already been sent.
+  app.addHook('onResponse', async (req, reply) => {
+    const actor: AuthUser | undefined = req.user ?? req.auditActor;
+    const plan = planAudit({
+      method: req.method,
+      routeUrl: req.routeOptions?.url,
+      params: req.params as Record<string, unknown> | undefined,
+      body: req.body,
+      status: reply.statusCode,
+      attributed: actor !== undefined || req.auditCouncilId !== undefined
+    });
+    if (!plan) return;
+    const userAgent = req.headers['user-agent'];
+    try {
+      await deps.audit.record({
+        councilId: actor?.councilId ?? req.auditCouncilId ?? null,
+        actorId: actor?.userId ?? null,
+        actorRole: actor?.role ?? null,
+        action: plan.action,
+        outcome: plan.outcome,
+        target: plan.target,
+        httpStatus: reply.statusCode,
+        ip: req.ip ?? null,
+        userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 300) : null
+      });
+    } catch (err) {
+      req.log.error({ err, action: plan.action }, 'audit log write failed');
+    }
+  });
 
   app.get('/health', async () => ({ ok: true, service: 'openstrata-backend' }));
   app.get('/health/live', async () => ({ ok: true, service: 'openstrata-backend', state: 'live' }));
@@ -354,14 +483,14 @@ export async function buildServer(
         passwordHash,
         role: 'admin'
       });
-      const token = signJwt(
-        { sub: user.id, cid: council.id, role: user.role },
-        deps.config.authSecret,
-        deps.config.authTokenTtl
-      );
+      // The account did not exist a moment ago, so the caller is its own actor.
+      req.auditActor = { userId: user.id, councilId: council.id, role: user.role };
+      const session = await startSession(user, req);
       return {
         ok: true,
-        token,
+        token: session.token,
+        refreshToken: session.refreshToken,
+        refreshExpiresAt: session.refreshExpiresAt,
         council: { id: council.id, name: council.name },
         user: toPublicUser(user)
       };
@@ -405,17 +534,24 @@ export async function buildServer(
       }
       const user = await deps.auth.getUserByEmail(email);
       if (!user || !(await verifyPassword(req.body.password, user.passwordHash))) {
+        // A refused attempt is attributed to the council when the account
+        // exists, so it shows up in that council's log — but it does not name
+        // the account as the *actor*: nobody proved they were that user.
+        if (user) req.auditCouncilId = user.councilId;
         rateLimiter.record(`login:email:${email}`);
         rateLimiter.record(`login:ip:${req.ip}`);
         return reply.code(401).send({ ok: false, reason: 'invalid email or password' });
       }
       rateLimiter.clear(`login:email:${email}`);
-      const token = signJwt(
-        { sub: user.id, cid: user.councilId, role: user.role },
-        deps.config.authSecret,
-        deps.config.authTokenTtl
-      );
-      return { ok: true, token, user: toPublicUser(user) };
+      req.auditActor = { userId: user.id, councilId: user.councilId, role: user.role };
+      const session = await startSession(user, req);
+      return {
+        ok: true,
+        token: session.token,
+        refreshToken: session.refreshToken,
+        refreshExpiresAt: session.refreshExpiresAt,
+        user: toPublicUser(user)
+      };
     }
   );
 
@@ -467,6 +603,159 @@ export async function buildServer(
         role: req.body.role
       });
       return { ok: true, user: toPublicUser(user), temporaryPassword };
+    }
+  );
+
+  // End the session this token belongs to. The revoke is idempotent (a session
+  // that already ended stays ended), and the token stops working on the very
+  // next request instead of at its expiry. A second call carries an already
+  // dead token, so it is refused at the door like any other.
+  app.post('/api/v1/auth/logout', { preHandler: [authenticate] }, async (req) => {
+    const revoked = await deps.sessions.revoke(req.sessionId!, 'logout', new Date());
+    return { ok: true, revoked };
+  });
+
+  // Exchange a refresh token for a fresh access token. The refresh token is
+  // rotated on every use, and a token that was already rotated away ends the
+  // session outright: that is either a stolen copy or a retry whose answer the
+  // client never received, and the only safe reading is theft.
+  app.post<{ Body: { refreshToken: string } }>(
+    '/api/v1/auth/refresh',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['refreshToken'],
+          additionalProperties: false,
+          properties: { refreshToken: { type: 'string', minLength: 20, maxLength: 200 } }
+        }
+      }
+    },
+    async (req, reply) => {
+      const presented = hashRefreshToken(req.body.refreshToken);
+      const session = await deps.sessions.findByRefreshHash(presented);
+      if (!session) return reply.code(401).send({ ok: false, reason: 'invalid refresh token' });
+      if (!isSessionActive(session)) {
+        return reply.code(401).send({ ok: false, reason: 'session ended; sign in again' });
+      }
+      if (session.refreshHash !== presented) {
+        await deps.sessions.revoke(session.id, 'refresh_reuse', new Date());
+        return reply
+          .code(401)
+          .send({ ok: false, reason: 'refresh token was already used; session ended' });
+      }
+      const user = await deps.auth.getUserById(session.userId);
+      if (!user || user.role !== session.role || user.councilId !== session.councilId) {
+        await deps.sessions.revoke(session.id, 'role_change', new Date());
+        return reply.code(401).send({ ok: false, reason: 'account changed; sign in again' });
+      }
+      const next = newRefreshToken();
+      await deps.sessions.rotate(session.id, hashRefreshToken(next), new Date());
+      return {
+        ok: true,
+        token: signJwt(
+          { sub: user.id, cid: user.councilId, role: user.role, sid: session.id },
+          deps.config.authSecret,
+          deps.config.authTokenTtl
+        ),
+        refreshToken: next,
+        refreshExpiresAt: session.expiresAt,
+        user: toPublicUser(user)
+      };
+    }
+  );
+
+  // The caller's own sessions, newest first, so "signed in on the treasurer's
+  // laptop since Tuesday" is something an owner can see and end.
+  app.get('/api/v1/auth/sessions', { preHandler: [authenticate] }, async (req) => {
+    const now = new Date();
+    const sessions = await deps.sessions.listForUser(req.user!.userId);
+    return {
+      ok: true,
+      sessions: sessions.map((session) => ({
+        ...toSessionWire(session, req.sessionId),
+        active: isSessionActive(session, now)
+      }))
+    };
+  });
+
+  // Sign out everywhere else — the shared-laptop and lost-phone case.
+  app.delete('/api/v1/auth/sessions', { preHandler: [authenticate] }, async (req) => {
+    const revoked = await deps.sessions.revokeAllForUser(
+      req.user!.userId,
+      'logout_all',
+      new Date(),
+      req.sessionId
+    );
+    return { ok: true, revoked };
+  });
+
+  // Change a council member's role (admin only). Three guards, because this is
+  // the privilege-change surface: you cannot change your own role, the council
+  // must keep at least one admin, and the target's sessions end here so a token
+  // minted under the old role cannot outlive the change.
+  app.patch<{ Params: { id: string }; Body: { role: UserRole } }>(
+    '/api/v1/auth/users/:id',
+    {
+      preHandler: [authenticate, requireRole('admin')],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['role'],
+          additionalProperties: false,
+          properties: { role: { type: 'string', enum: [...USER_ROLES] } }
+        }
+      }
+    },
+    async (req, reply) => {
+      if (req.params.id === req.user!.userId) {
+        return reply.code(409).send({ ok: false, reason: 'you cannot change your own role' });
+      }
+      const target = await deps.auth.getUserById(req.params.id);
+      if (!target || target.councilId !== req.user!.councilId) {
+        return reply.code(404).send({ ok: false, reason: 'unknown user' });
+      }
+      if (target.role === req.body.role) {
+        return { ok: true, user: toPublicUser(target), unchanged: true, sessionsRevoked: 0 };
+      }
+      if (target.role === 'admin') {
+        const admins = (await deps.auth.listUsers(target.councilId)).filter(
+          (user) => user.role === 'admin'
+        );
+        if (admins.length <= 1) {
+          return reply.code(409).send({ ok: false, reason: 'a council needs at least one admin' });
+        }
+      }
+      const updated = await deps.auth.updateUserRole(target.id, req.body.role);
+      const sessionsRevoked = await deps.sessions.revokeAllForUser(
+        target.id,
+        'role_change',
+        new Date()
+      );
+      return { ok: true, user: toPublicUser(updated), sessionsRevoked };
+    }
+  );
+
+  // The council's own audit trail (admin only). Reading the log is itself an
+  // audited read, so "who looked at the log, and when" has an answer too.
+  app.get<{ Querystring: { limit?: string; before?: string; action?: string } }>(
+    '/api/v1/audit/events',
+    { preHandler: [authenticate, requireRole('admin')] },
+    async (req, reply) => {
+      const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+      const before = Number(req.query.before);
+      if (req.query.before !== undefined && (!Number.isSafeInteger(before) || before <= 0)) {
+        return reply.code(400).send({ ok: false, reason: 'before must be a positive integer cursor' });
+      }
+      if (req.query.action !== undefined && !AUDIT_ACTIONS_RE.test(req.query.action)) {
+        return reply.code(400).send({ ok: false, reason: 'invalid action filter' });
+      }
+      const events = await deps.audit.list(req.user!.councilId, {
+        limit,
+        before: req.query.before === undefined ? undefined : before,
+        action: req.query.action
+      });
+      return { ok: true, events };
     }
   );
 

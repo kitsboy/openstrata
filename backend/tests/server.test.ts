@@ -2,7 +2,7 @@ import { createECDH, createHash } from 'node:crypto';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { bech32Encode } from '../src/rails/rails.js';
 import { DEFAULT_UNITS } from '../src/units/seed.js';
 
@@ -36,7 +36,7 @@ beforeAll(async () => {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
-      auth: new MemAuthStore(),
+      auth: new MemAuthStore(), ...makeSessionDeps(),
       units: DEFAULT_UNITS,
       config: {
         crfMandatoryPct: 10,
@@ -48,7 +48,7 @@ beforeAll(async () => {
         },
         cadPerBtc: 50_000,
         authSecret: AUTH_SECRET,
-        authTokenTtl: 3600,
+        authTokenTtl: 3600, authRefreshTtlDays: 30,
         authRateLimitMax: 1000,
         authRateLimitWindowMs: 60_000
       }
@@ -85,13 +85,13 @@ describe('fastify API', () => {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
-      auth: new MemAuthStore(),
+      auth: new MemAuthStore(), ...makeSessionDeps(),
       readinessChecks: { postgres: async () => true, vector: async () => false },
       config: {
         crfMandatoryPct: 10,
         vectorCollection: 'bc_spa_rta_crt',
         authSecret: AUTH_SECRET,
-        authTokenTtl: 3600,
+        authTokenTtl: 3600, authRefreshTtlDays: 30,
         authRateLimitMax: 1000,
         authRateLimitWindowMs: 60_000
       }
@@ -111,9 +111,9 @@ describe('fastify API', () => {
       rosa: keywordRetriever(corpus),
       reconcile,
       payments: new MemPaymentRequestStore(),
-      auth: new MemAuthStore(),
+      auth: new MemAuthStore(), ...makeSessionDeps(),
       readinessChecks: { postgres: async () => true },
-      config: { crfMandatoryPct: 10, vectorCollection: 'bc', authSecret: AUTH_SECRET, authTokenTtl: 3600, authRateLimitMax: 1000, authRateLimitWindowMs: 60000 }
+      config: { crfMandatoryPct: 10, vectorCollection: 'bc', authSecret: AUTH_SECRET, authTokenTtl: 3600, authRefreshTtlDays: 30, authRateLimitMax: 1000, authRateLimitWindowMs: 60000 }
     }, { logger: false });
     const healthy = await healthyApp.inject({ method: 'GET', url: '/health/ready' });
     expect(healthy.statusCode).toBe(200);
@@ -161,9 +161,9 @@ describe('fastify API', () => {
   it('readiness is false when a dependency probe throws and does not leak its error', async () => {
     const failing = await buildServer({
       ledger: new LedgerEngine(new MemLedgerStore()), rosa: keywordRetriever(corpus), reconcile,
-      payments: new MemPaymentRequestStore(), auth: new MemAuthStore(),
+      payments: new MemPaymentRequestStore(), auth: new MemAuthStore(), ...makeSessionDeps(),
       readinessChecks: { postgres: async () => { throw new Error('secret db password'); } },
-      config: { crfMandatoryPct: 10, vectorCollection: 'bc', authSecret: AUTH_SECRET, authTokenTtl: 3600, authRateLimitMax: 1000, authRateLimitWindowMs: 60_000 }
+      config: { crfMandatoryPct: 10, vectorCollection: 'bc', authSecret: AUTH_SECRET, authTokenTtl: 3600, authRefreshTtlDays: 30, authRateLimitMax: 1000, authRateLimitWindowMs: 60_000 }
     }, { logger: false });
     const response = await failing.inject({ method: 'GET', url: '/health/ready' });
     expect(response.statusCode).toBe(503);

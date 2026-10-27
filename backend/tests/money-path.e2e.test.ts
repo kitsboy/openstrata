@@ -15,7 +15,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/api/server.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
 import { reconcile } from '../src/trf/recon.js';
@@ -53,7 +53,7 @@ describe('money-path journey (HTTP, real server)', () => {
         rosa: keywordRetriever(corpus),
         reconcile,
         payments: new MemPaymentRequestStore(),
-        auth: new MemAuthStore(),
+        auth: new MemAuthStore(), ...makeSessionDeps(),
         units: createRegistry(units),
         config: {
           crfMandatoryPct: 10,
@@ -65,7 +65,7 @@ describe('money-path journey (HTTP, real server)', () => {
           },
           cadPerBtc: 50_000,
           authSecret: AUTH_SECRET,
-          authTokenTtl: 3600,
+          authTokenTtl: 3600, authRefreshTtlDays: 30,
           authRateLimitMax: 1000,
           authRateLimitWindowMs: 60_000
         }

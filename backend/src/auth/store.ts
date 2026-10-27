@@ -22,6 +22,12 @@ export interface AuthStore {
   getUserByEmail(email: string): Promise<UserRecord | null>;
   getUserById(id: string): Promise<UserRecord | null>;
   listUsers(councilId: string): Promise<UserRecord[]>;
+  /**
+   * Set a user's role. The caller is responsible for the policy (the council
+   * keeps at least one admin) and for ending the user's sessions; this is the
+   * storage step only. Returns the updated record.
+   */
+  updateUserRole(id: string, role: UserRole): Promise<UserRecord>;
 }
 
 /** Raised by createUser on a duplicate (global-unique) email. */

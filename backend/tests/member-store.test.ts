@@ -6,7 +6,8 @@ import {
   MemPaymentRequestStore,
   MemAuthStore,
   MemUnitStore,
-  MemMemberStore
+  MemMemberStore,
+  makeSessionDeps
 } from './memstore.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
 import { keywordRetriever, type SourceRecord } from '../src/rosa/rosa.js';
@@ -32,7 +33,7 @@ function makeDeps() {
     rosa: keywordRetriever(corpus),
     reconcile,
     payments: new MemPaymentRequestStore(),
-    auth: new MemAuthStore(),
+    auth: new MemAuthStore(), ...makeSessionDeps(),
     units: DEFAULT_UNITS,
     unitStore: new MemUnitStore(),
     memberStore: new MemMemberStore(),
@@ -42,7 +43,7 @@ function makeDeps() {
       rails: { fiat: { enabled: true }, lightning: { enabled: true, endpoint: 'grpc://127.0.0.1:10009' } },
       cadPerBtc: 50_000,
       authSecret: AUTH_SECRET,
-      authTokenTtl: 3600,
+      authTokenTtl: 3600, authRefreshTtlDays: 30,
       authRateLimitMax: 1000,
       authRateLimitWindowMs: 60_000
     }

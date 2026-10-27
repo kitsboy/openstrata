@@ -6,7 +6,7 @@ import { broadcastPsbt, postSpendToLedger, signedCount } from '../src/ziggy/broa
 import { broadcastPsbtWorkflow, broadcastRawTx, planSummary, serializePsbtSkeleton, type BitcoindRpcConfig } from '../src/ziggy/node-broadcast.js';
 import { buildServer } from '../src/api/server.js';
 import { LedgerEngine } from '../src/ledger/ledger.js';
-import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore } from './memstore.js';
+import { MemLedgerStore, MemPaymentRequestStore, MemAuthStore, makeSessionDeps } from './memstore.js';
 import { authorizeSpend } from '../src/ziggy/ziggy.js';
 import type { Budget } from '../src/ziggy/ziggy.js';
 
@@ -236,7 +236,7 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
         rosa: keywordRetriever([]),
         reconcile,
         payments: new MemPaymentRequestStore(),
-        auth: new MemAuthStore(),
+        auth: new MemAuthStore(), ...makeSessionDeps(),
         units: DEFAULT_UNITS,
         config: {
           crfMandatoryPct: 10,
@@ -244,7 +244,7 @@ describe('PSBT broadcast endpoint (item #15 continuation)', () => {
           rails: { fiat: { enabled: true } },
           cadPerBtc: 50_000,
           authSecret: 'broadcast-test-secret',
-          authTokenTtl: 3600,
+          authTokenTtl: 3600, authRefreshTtlDays: 30,
           authRateLimitMax: 1000,
           authRateLimitWindowMs: 60_000
         }
@@ -833,7 +833,7 @@ describe('compliance/stamp endpoint', () => {
         rosa: keywordRetriever(corpus),
         reconcile,
         payments: new MemPaymentRequestStore(),
-        auth: new MemAuthStore(),
+        auth: new MemAuthStore(), ...makeSessionDeps(),
         units: DEFAULT_UNITS,
         config: {
           crfMandatoryPct: 10,
@@ -841,7 +841,7 @@ describe('compliance/stamp endpoint', () => {
           rails: { fiat: { enabled: true } },
           cadPerBtc: 50_000,
           authSecret: AUTH_SECRET,
-          authTokenTtl: 3600,
+          authTokenTtl: 3600, authRefreshTtlDays: 30,
           authRateLimitMax: 1000,
           authRateLimitWindowMs: 60_000
         }
