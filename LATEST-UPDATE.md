@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-26 by Buffy — the i18n audit was blind to its own markup, and the release landed
+
+Commits: `d4ef669` (site) and `72acd9a` (backend: durable ledger retries and fail-closed treasury), both pushed to `origin/main`.
+
+> **The translation audit was blind to this repo's own markup, and what it hid was bigger than what it caught.** `scripts/audit-i18n.mjs` skipped *any line containing `{`* — and because this repo writes markup minified, the entire site footer is a single line, so one binding hid the hard-coded nav labels, the RSS chip's `title`/`aria-label` and the cookie notice while the audit reported clean. It now strips Svelte expressions and scans inside the line, and checks `title`/`aria-label`/`alt` the way it already checked text nodes. Reaching that content took the warning surface from a handful to **113** (warn-level, CI stays green), and most of it is real rather than noise: `/accounting` (47), `/units` (18), `/tax` (11), `/meetings` (8), `/pay` (7) and `/calendar` (4) have **no i18n import at all**, so the "full interface localization across all routes" claim does not hold for those six. The home page chrome is the part translated here, in all nine locales — 10 new keys, 1075 total. The RSS chip also moved off its own `#fdba74` / `rgba(251,146,60,…)` literals onto `--color-slab-accent`: its fill is now inside the contrast audit (7.83:1 light, 9.63:1 dark) and flips with the dark theme like the rest of the footer, which it previously did not. Finally, Sentry was initialised but never wired to SvelteKit — `src/hooks.client.ts` exported no `handleError`, so a configured DSN would have reported an empty project.
+>
+> **Verified:** `check` **0 errors / 0 warnings**; frontend **311 passed**; backend typecheck + build green, **310 passed / 6 skipped** (the six are Postgres E2E — `DATABASE_URL` unset, Docker unavailable, so the durable path is not exercised here); production build green; `audit:i18n` **1075 keys × 9 locales**; `audit:contrast` **218 pairs**. `npm run check:security` is red at HEAD with 15 false positives (test fixtures, the `.env.example` dev placeholder, and prose quoting the link token) — pre-existing, not CI-gated, and useless as a signal until the pattern can tell a fixture from a secret.
+
+---
+
+# openstrata — Last Updated 2026-10-17 by Buffy — durable ledger retries and fail-closed treasury (committed 2026-10-26 as `72acd9a`, not deployed)
+
+Commit: `72acd9a` — durable ledger retries and fail-closed treasury (21 files). Written while uncommitted; landed 2026-10-26.
+
+> **This backend change keeps money paths honest while adding durable retries.** Postgres stores ledger idempotency keys with their request fingerprints and ledger entry in one transaction; matching retries replay across restarts, changed payloads return `409`, migration `0007` adds the table, and the smoke suite exercises a second server instance. PSBT plan authorization is recomputed from council ledger balances; plan tokens bind immutable authorization; requests validate address/network, fees, UTXOs and signatures’ syntax, reserve inputs, and reject replay. The endpoint still refuses live broadcast and ledger debit: signature verification, PSBT/change construction, and durable plan storage are not implemented. The migration runner serializes migrations, checks checksums, and has a read-only `migrate:check`; first-upgrade baseline is current-file pinning, not historic validation. `/health/live` and `/health/ready` are wired; only Postgres is probed in production. Bitcoin address checks were tightened and xpub test vectors now use valid key serialization.
+>
+> **Verified locally:** backend `typecheck` and `build` pass; backend tests **310 passed / 6 skipped**. The skipped six are Postgres E2E tests: `DATABASE_URL` is unset and Docker is unavailable. `git diff --check` is clean. No production database/host was contacted, and no deployment was performed — only the commit was pushed, on 2026-10-26.
+
+---
+
 # openstrata — Last Updated 2026-10-17 by Buffy — backend safety and read-only agent context (site v0.3.36 · backend v0.3.27)
 
 Commit: `a576b86` — Harden council API boundaries and add a safe agent read surface.

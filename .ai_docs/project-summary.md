@@ -31,7 +31,8 @@ Static SPA deployed to Cloudflare Pages
 
 ## Quality gates
 - `npm run check` passes (0 errors, 0 warnings) as of the Evergreen House commit
-- `npm test` at the repo root: 248 frontend tests as of 2026-09-30. Key count moves; run `npm run audit:i18n` rather than trusting an old number
+- `npm test` at the repo root: **311** frontend tests as of 2026-10-26. Counts move; run `npm run audit:i18n` rather than trusting an old key number
+- `npm run audit:i18n` and `npm run audit:contrast` are live gates in CI; the hard-coded copy list inside `audit:i18n` is warning-level and currently long (six routes have no i18n import at all — see `current-status.md`)
 - `npm run build` passes via Cloudflare Pages auto-deploy from main
-- `backend/` — `npm test` inside `backend/`. Last recorded count was 229 at v0.3.26; re-run before quoting it
+- `backend/` — `npm test` inside `backend/`: **310 passed / 6 skipped** as of 2026-10-26 (the six are Postgres E2E, skipped while `DATABASE_URL` is unset)
 

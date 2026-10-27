@@ -1,3 +1,50 @@
+## Session — 2026-10-26 · the i18n audit was blind to its own markup, and the release landed
+
+**Done:**
+- Landed the durable-ledger release that was sitting uncommitted from 2026-10-17 as `72acd9a` (21 files, +1371/−340): Postgres-backed ledger idempotency (migration `0007`), checksummed and serialized migrations (migration `0008`, `npm run migrate:check`), `/health/live` + `/health/ready`, fail-closed PSBT issuance/broadcast with UTXO reservation, tightened Bitcoin address checks. No version bump and **no `CHANGELOG.md` entry**, so `/changelog` does not list it — a deliberate continuation of the backend `0.3.27` track, not an oversight. Say the word if you want a 0.3.37 entry for it.
+- Fixed the translation audit's blind spot (`d4ef669`): it skipped **any line containing `{`**, and because this repo writes markup minified the whole footer is one line — so the hard-coded nav labels, the RSS chip's `title`/`aria-label` and the cookie notice were invisible while the audit reported clean. It now strips Svelte expressions and scans inside the line, and checks `title`/`aria-label`/`alt` the way it already checked text nodes.
+- Translated the home page chrome into all nine locales (10 keys, **1075** total): nav labels (Units / Accounting / Pay / Tax & CRA / Calendar / Meetings), "Pay fees", the chip's title and aria-label, the cookie notice, "Open the lot list".
+- Put the RSS chip on `--color-slab-accent` instead of its own `#fdba74` literals, which brings the fill inside the contrast audit (7.83:1 light, 9.63:1 dark) and lets it flip with the dark theme like the rest of the footer.
+- Wired Sentry to SvelteKit: `src/hooks.client.ts` exported no `handleError`, so a configured DSN would have reported an empty project forever.
+
+**Decisions:**
+- Bounded the localization to the chrome instead of dragging the six unlocalized routes into the same commit. The audit now names them, and paying that down is a project rather than a diff.
+- Two commits, both staged by path, so the release and the site work could not entangle.
+
+**What the audit now reports (warn-level — CI stays green): 113 warnings.** `/accounting` 47, `/units` 18, `/tax` 11, `/meetings` 8, `/pay` 7, `/calendar` 4 have **no i18n import at all**, so the "full interface localization across all routes" line in `WORKPLAN.md` does not hold for those six.
+
+**Verified:** backend typecheck + build green, **310 passed / 6 skipped** (the six are Postgres E2E: `DATABASE_URL` unset, Docker unavailable, so the durable path is not exercised in this environment); frontend **311 passed**; `check` 0 errors / 0 warnings; `audit:i18n` 1075 keys × 9 locales; `audit:contrast` 218 pairs; production build green.
+
+**Open, and wanting a decision:** `npm run check:security` is **red at HEAD with 15 false positives** — test fixtures (`password: 'correct-horse-battery'`, `AUTH_SECRET = '…-xyz'`), the `.env.example` dev placeholder, and CHANGELOG/handoff prose quoting the `ospl1.<payload>.<sig>` link token. No real credential is committed, and the gate is not wired into CI, so nothing is blocked — but it cannot be used as a signal until the pattern can tell a fixture from a secret.
+
+**Git State:**
+- `d4ef669` — site: audit + chrome localization + Sentry hook.
+- `72acd9a` — backend: durable idempotency, checksummed migrations, fail-closed treasury.
+- Both pushed to `origin/main`; working tree clean.
+
+---
+
+## Session — 2026-10-17 · durable ledger retries and fail-closed treasury (uncommitted local continuation — landed 2026-10-26 as `72acd9a`)
+
+**Done:**
+- Added Postgres-backed ledger idempotency: migration `0007` links council/key/fingerprint/expiry to the committed ledger entry in the same transaction, with Postgres restart/replay/conflict coverage in the E2E suite.
+- Added migration checksum tracking (`0008`), advisory-lock serialization, read-only `npm run migrate:check`, missing/orphan/drift detection, and rollback-safe migration recording. Legacy baseline records use the exact local migration file contents; this is not historical proof and should only run after an operator backup/schema review.
+- Hardened treasury PSBT handling: recompute policy from council balances, validate network/address/fee/UTXOs, reserve active inputs, bind broadcast to server-issued plan tokens, and reject replays. Live node broadcast and ledger debits remain refused pending cryptographic signature verification and real PSBT/change-output construction. The plan cache/reservations are process-local.
+- Added live/readiness health endpoints and a sanitized Postgres readiness probe. Updated backend documentation/backlog and corrected xpub fixture serialization.
+
+**Verified:** backend `npm run typecheck`, `npm run build`, and `npm test`: **309 passed / 6 skipped**. Six Postgres E2E tests were skipped because `DATABASE_URL` is unset and Docker is unavailable. `git diff --check` was clean at the time of review. No production host or database was contacted.
+
+**Decisions / caveats:**
+- No real Bitcoin send or ledger debit: implementation fails closed until signed transaction verification/building exists.
+- No release version bump; this continues backend-only work on top of the current `0.3.27` API track. UI queue is untouched.
+- This continuation is uncommitted and unpushed. Do not deploy based on local checks alone.
+
+**Git State:**
+- Base: `a576b86` (`Harden council API boundaries and add a safe agent read surface`). Read `git status`/`git log` for current local state.
+- No commit or push was requested or performed.
+
+---
+
 ## Session — 2026-10-17 · backend safety and read-only agent context (site v0.3.36 · backend v0.3.27)
 
 **Done:**
