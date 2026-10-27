@@ -15,10 +15,13 @@
 
 **Verified:** migration `0001..0009` applied on a fresh PostgreSQL 17.11 + pgvector 0.8.7; idempotent re-run; `migrate:check` clean; trigger observed refusing `UPDATE` and `DELETE`; `e2e-smoke` 8/8; backend **360 passed / 8 skipped** plain and **368/368** with `DATABASE_URL`; `backend` typecheck + build green. Nothing frontend changed, so no site gates were rerun and no screenshot applies.
 
-**Still to prove:** the fix is only confirmed publicly once `d220d6f` pushes and CI's `backend-e2e` job goes green on a fresh `pgvector/pgvector:pg17` container. **And the gap that caused this is still open:** nothing in the repo starts a Postgres for local runs, so "executed" this session meant a manual Homebrew install and `initdb` on port 5455. A committed `db:local` harness (or a documented `docker compose up db` path that someone can actually run) is what stops the next migration from being first executed in CI.
+**Confirmed in CI:** run `40603079531` on `06e0553` is green in all three jobs — `backend-e2e` applied `0001..0009` on a fresh `pgvector/pgvector:pg17` container (`applied 0009_audit_log_and_sessions.sql`) and passed the smoke suite **8/8** there, `backend` ran **360 passed / 8 skipped**, and the site job ran **312 tests** with both audits and the production build green. The red run it replaces is `40572300792`.
+
+**The gap that caused this is still open:** nothing in the repo starts a Postgres for local runs, so "executed" this session meant a manual Homebrew install and `initdb` on port 5455 — the exact commands are now written down in `.ai_docs/sop-workflow.md` so they are not rediscovered. A committed `db:local` harness (or a `docker compose up db` path someone can actually run, now that Docker is not the only option) is what stops the next migration from being first executed in CI. Still open from earlier sessions, unchanged: no UI for the sessions list or the audit trail beyond the API, the site consumes `POST /auth/logout` but not refresh tokens, and `npm run check:security` is red on 15 fixtures.
 
 **Git State:**
 - `d220d6f` — fix(migrations): stop the runner from deleting a function body's BEGIN.
+- `06e0553` — docs: correct the handoff (this session's record, plus the CI result above).
 - Pushed to `origin/main`; working tree clean.
 - Backend API version `0.3.28`; site version `0.3.37`.
 

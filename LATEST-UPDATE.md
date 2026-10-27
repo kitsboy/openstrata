@@ -1,6 +1,6 @@
 # openstrata — Last Updated 2026-10-27 by Buffy — migration 0009 failed its first real run, and the migration runner is why
 
-Commit: `d220d6f` (backend fix + regression tests + version `0.3.28`). The previous handoff said migration `0009` "has never been executed"; that was wrong, and this session found out how.
+Commits: `d220d6f` (backend fix + regression tests + version `0.3.28`) and `06e0553` (handoff corrections). The previous handoff said migration `0009` "has never been executed"; that was wrong — CI ran it on the previous push and it failed, and this session found out how. It executes cleanly now, locally and in CI.
 
 > **The push that was supposed to prove migration `0009` actually rejected it.** CI's `backend-e2e` job ran it and failed: `FAILED 0009_audit_log_and_sessions.sql` / `syntax error at or near "RAISE"` (`42601`, `plpgsql_yyerror`). So `main` was red, the smoke suite never ran, the sessions and audit tables existed nowhere, and the previous session's central claim — six paragraphs of it across the handoff chain — described a state that had already changed. "Never executed" and "executed and rejected" are different failures and the difference is invisible from a local machine with no Postgres.
 >
@@ -8,7 +8,7 @@ Commit: `d220d6f` (backend fix + regression tests + version `0.3.28`). The previ
 >
 > **Migration `0009` has now actually run.** PostgreSQL 17.11 + pgvector 0.8.7 (the CI image's major version) installed locally; a fresh cluster took `npm run migrate` through `0001..0009`; the re-run said `no pending migrations`; `migrate:check` came back clean. In the database: both tables, all 8 indexes, the FK to `app_user` with `ON DELETE CASCADE`, the role and refresh-hash CHECKs, and the trigger seen refusing a live `UPDATE` and a live `DELETE`. The suite CI never reached is **8/8** there — including the two assertions written blind last session, where a logout on one instance kills a token on another. Backend suite: **360 passed / 8 skipped** without `DATABASE_URL`, **368/368** with it; typecheck and build green.
 >
-> **Still to prove:** this fix is only confirmed once `d220d6f` pushes and `backend-e2e` goes green on a fresh `pgvector/pgvector:pg17`. And nothing in the repo starts a Postgres for local runs, so "executed" here meant a manual Homebrew `initdb` on port 5455 — worth a committed harness so the next migration isn't first run in CI again. Backend version is now `0.3.28` (README rule: bump when backend behaviour changes); site version stays `0.3.37`.
+> **Confirmed in CI:** run `40603079531` on `06e0553` is green in all three jobs — `backend-e2e` applied `0001..0009` on a fresh `pgvector/pgvector:pg17` container (`applied 0009_audit_log_and_sessions.sql`) and the smoke suite passed **8/8** there, the backend job ran **360 passed / 8 skipped**, and the site job ran **312 tests** with both audits and the production build green. **The one real gap left is local:** nothing in the repo starts a Postgres for on-machine runs, so "executed" here meant a manual Homebrew `initdb` on port 5455, now written down step by step in `sop-workflow.md` — a committed `db:local` harness is what would stop the next migration from being first executed in CI again. Backend version is now `0.3.28` (README rule: bump when backend behaviour changes); site version stays `0.3.37`.
 
 ---
 
