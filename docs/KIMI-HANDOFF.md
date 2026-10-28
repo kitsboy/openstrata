@@ -1,3 +1,21 @@
+## Session — 2026-10-28 (second)
+
+**Done:**
+- Shipped the queue's last pick: a release trail on `/changelog` (`0.3.43`). Running build + distance from the newest note, `You are here` on the release that is actually running, and a `since vX · N changes` step on every release.
+- `src/lib/release-trail.ts` (11 tests): numeric version compare (`0.3.9` before `0.3.10`), placement in three states, change counts, step between releases.
+- Verified all three states in a browser by moving `package.json`; geometry and contrast measured at 1440/620 in both themes.
+
+**Decisions:**
+- A build whose version has no note is a stated state (`ahead`), never a marker on the nearest release.
+- The trail counts bullets, not commits — the only number a reader can check against the page.
+- The queue ended, so three new offers replace the pick: ledger-as-a-ledger (`/accounting`), workspace search (`Cmd/Ctrl+K`), the AGM packet (`/meetings`), beside the floor walk still waiting.
+
+**Git State:**
+- SHA: `2105165`
+- Unpushed: see `git log --oneline origin/main..HEAD` after the push.
+
+---
+
 ## Session — 2026-10-28
 
 **Done:**

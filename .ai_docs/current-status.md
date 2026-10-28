@@ -1,9 +1,19 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.42
+**Site/product version:** v0.3.43
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — `/changelog` says where you are (site, `0.3.43`, the queue's last pick and a refreshed queue)
+
+- **The queue's last item shipped: a release trail.** `/changelog` opens with the build you are running and its distance from the newest note — `You are running v0.3.43 — the newest release.`, or `— 1 release and 12 changes since.` when it is behind — then marks that release `You are here` and gives every release a step naming the one it followed and counting what changed (`since v0.3.42 · 10 changes`). It reads as a trail rather than a list of versions.
+- **`src/lib/release-trail.ts` holds the rules, with 11 tests.** Versions compare as numbers, not strings: `0.3.9` is older than `0.3.10`, and a page that sorted them the other way would put a fix above the release that made it necessary. `parseVersion` drops `-rc.1` / `+build.7` so a tagged build is placed by its core version.
+- **A build with no note is a state, not an error.** The site is published from `package.json` while the notes are hand-written, so a build can be newer than the newest note or older than every note on the page. Neither renders a marker pointing at the wrong release: the placement is `null` and the page says what it knows (`This build is v0.3.99, newer than the newest note here.`).
+- **All three states verified in a browser by moving `package.json`:** newest (chip in the newest card), one release behind (`You are running v0.3.41 — 1 release and 12 changes since.`, exactly one marked row `v0.3.41`), and ahead of every note (no marker). French: `Vous utilisez la v0.3.42 — la version la plus récente.`, `Vous êtes ici`, `depuis la v0.3.41 · 12 changements`.
+- **Measured, not eyeballed:** geometry at `1440` and `620` in both themes with no overflow on the trail; the new ink at **5.47:1** light and **6.59:1** dark at its worst, against the 4.5 floor.
+- **The queue is refreshed, per the standing rule.** Three new offers replace the pick — a ledger you can read as a ledger (`/accounting`), search that reaches the workspace (`Cmd/Ctrl+K`), and the AGM packet (`/meetings`) — alongside the floor walk that is still waiting, so four are always waiting. Updated in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md`, `docs/PRODUCT-PLAN.md` and here.
+- 9 catalog keys × 9 locales; site `0.3.43`, `changelog.generated.ts` regenerated (**46 releases with notes, 337 items**). Verification: frontend **352 passed**, `check` **0/0**, i18n **1,331 keys × 9 locales**, build green with `v0.3.43` in `build/index.html`.
 
 ## Recent milestone — the last five routes speak French, and the money does too (site, `0.3.42`)
 
@@ -132,4 +142,4 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 
 ## UI queue
 
-The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **The September close (`0.3.40`) and the next-30-days strip (`0.3.41`) both shipped, so one is left:** the release trail on `/changelog`. The `0.3.42` localization pass was requested work, not a queue item — the queue is about UI, and no one picked it.
+The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **All three picks from the 2026-10-16 offer have shipped** — the September close (`0.3.40`), the next-30-days strip (`0.3.41`) and the release trail (`0.3.43`) — and three new offers replaced the last, so four are waiting: **a floor you can walk** (`/units`), **a ledger you can read as a ledger** (`/accounting`), **search that reaches the workspace** (`Cmd/Ctrl+K`) and **the AGM packet** (`/meetings`), offered 2026-10-28. The `0.3.42` localization pass was requested work, not a queue item — the queue is about UI, and no one picked it.

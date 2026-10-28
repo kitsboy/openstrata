@@ -1,3 +1,21 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — /changelog says where you are
+
+Commit: `2105165` (site `0.3.43`). Backend API version stays `0.3.28`.
+
+> **The queue's last item shipped: a release trail.** `/changelog` now opens with the build you are running and how far it is from the newest note — `You are running v0.3.43 — the newest release.`, or `— 1 release and 12 changes since.` when it is behind. The running release is marked `You are here`, and every release carries the step into it, naming the one it followed and counting what changed: `since v0.3.42 · 10 changes`. The page reads as a trail instead of a list of versions.
+>
+> **Two decisions carry the rules, and both are in `src/lib/release-trail.ts` with 11 tests.** Versions compare as numbers, not strings — `0.3.9` is older than `0.3.10`, and a page that sorted them the other way would put a fix above the release that made it necessary. And a build whose version has no note is a normal state, not an error: the site is published from `package.json` while the notes are written by hand, so a build can be newer than the newest note or older than every note on the page. Neither draws a marker pointing at the wrong release; the placement is `null` and the page says what it knows — `This build is v0.3.99, newer than the newest note here.`
+>
+> **All three states were checked in a browser by moving `package.json`**, not by reading the code: on the newest release (chip in the newest card), one release behind (`You are running v0.3.41 — 1 release and 12 changes since.`, with exactly one marked row, `v0.3.41`), and ahead of every note (no marker at all). French reads `Vous utilisez la v0.3.43 — la version la plus récente.` / `Vous êtes ici` / `depuis la v0.3.42 · 10 changements`.
+>
+> **Measured rather than eyeballed:** no overflow on the trail at `1440` or `620` in either theme, and the new ink at **5.47:1** light and **6.59:1** dark at its worst, against the 4.5 floor.
+>
+> **The queue is refreshed, because it ended.** Three new offers replace the pick — a ledger you can read as a ledger (`/accounting`), search that reaches the workspace (`Cmd/Ctrl+K`) and the AGM packet (`/meetings`) — beside the floor walk still waiting, so four are always waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md`, `docs/PRODUCT-PLAN.md` and `.ai_docs/current-status.md`.
+>
+> **Verified:** frontend **352 passed**, `check` **0 errors / 0 warnings**, translation audit **1,331 keys × 9 locales** (9 new), production build green with `v0.3.43` in `build/index.html`, `changelog.generated.ts` regenerated (**46 releases with notes, 337 items**). The CDP probes live in `/tmp`; none is in the tree. One thing to know: the running version is the one baked into the build, so a tab left open across a deploy reports the build it loaded — a reload corrects it.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the last five routes speak the reader's language, and the money does too
 
 Commit: `703c20c` (site `0.3.42`). Backend API version stays `0.3.28`.
