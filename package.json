@@ -13,6 +13,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:security": "node scripts/check-secret-hygiene.mjs",
+    "hooks:install": "git config core.hooksPath .githooks && echo 'Git hooks enabled: pre-push applies the migrations before they reach main.'",
+    "db:check": "node backend/scripts/prepush-db-check.mjs",
+    "db:up": "node backend/scripts/db-local.mjs up",
+    "db:down": "node backend/scripts/db-local.mjs down",
+    "db:status": "node backend/scripts/db-local.mjs status",
+    "db:url": "node backend/scripts/db-local.mjs url",
     "audit:contrast": "node scripts/audit-contrast.mjs",
     "icons": "node scripts/generate-icons.mjs"
   },

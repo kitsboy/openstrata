@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Pre-push gate: a migration has to have been applied before it is pushed.
+#
+# Migration 0009 was executed for the first time on a CI runner and broke `main`
+# there, so the schema is verified here instead — against a local Postgres that
+# matches the CI image's major version (pgvector/pgvector:pg17).
+#
+# Enabled with `npm run hooks:install` (sets core.hooksPath to .githooks).
+# Escape hatches, both deliberate:
+#
+#   OPENSTRATA_SKIP_DB_CHECK=1 git push
+#   git push --no-verify
+#
+# Details and the two migration paths it proves: backend/scripts/prepush-db-check.mjs
+
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+if [ "${OPENSTRATA_SKIP_DB_CHECK:-0}" = "1" ]; then
+  echo "pre-push: migration gate skipped (OPENSTRATA_SKIP_DB_CHECK=1)"
+  exit 0
+fi
+
+if [ ! -f backend/scripts/prepush-db-check.mjs ]; then
+  echo "pre-push: backend/scripts/prepush-db-check.mjs is missing — migration gate skipped"
+  exit 0
+fi
+
+if [ ! -d backend/node_modules ]; then
+  echo "pre-push: backend dependencies are not installed (cd backend && npm ci) — migration gate skipped"
+  exit 0
+fi
+
+echo "pre-push: applying migrations before this push…"
+exec node backend/scripts/prepush-db-check.mjs

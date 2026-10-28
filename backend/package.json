@@ -14,6 +14,12 @@
     "test:watch": "vitest",
     "migrate": "node scripts/migrate.mjs",
     "migrate:check": "node scripts/migrate.mjs --check",
+    "db:check": "node scripts/prepush-db-check.mjs",
+    "db:up": "node scripts/db-local.mjs up",
+    "db:down": "node scripts/db-local.mjs down",
+    "db:status": "node scripts/db-local.mjs status",
+    "db:url": "node scripts/db-local.mjs url",
+    "db:reset": "node scripts/db-local.mjs reset",
     "seed": "node scripts/seed.mjs"
   },
   "dependencies": {

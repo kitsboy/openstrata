@@ -14,3 +14,6 @@ backend/node_modules/
 backend/dist/
 backend/.env
 backend/*.log
+
+# Local Postgres harness: disposable cluster started by backend/scripts/db-local.mjs
+backend/.pgdata/
