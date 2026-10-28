@@ -156,7 +156,7 @@ HTTPS (e.g. behind Tailscale Funnel or an entrypoint you control), use
 cp .env.example .env            # then edit secrets
 
 # 2. Bring up Postgres (+pgvector) and the API
-docker compose up -d
+docker compose up -d             # no Docker? npm run db:up (see Local Postgres below)
 
 # 3. Apply the trust-ledger migrations (idempotent)
 docker compose run --rm api npm run migrate
@@ -180,6 +180,37 @@ The root workspace keeps frontend and backend scripts separate: frontend
 `npm run check` / `npm test` / `npm run build` target the SvelteKit site; the
 backend uses `npm run typecheck` / `npm test` / `npm run build` from `backend/`.
 
+### Local Postgres and the migration gate
+
+The Postgres tests skip themselves without a database, and a migration that has
+never been applied is not verified by anything — migration `0009` was first
+executed on a CI runner and failed there (`syntax error at or near "RAISE"`,
+because the runner had stripped the `BEGIN` out of a plpgsql function body;
+fixed in `d220d6f`). A harness in the repo runs a cluster that matches the CI
+image's major version, in `backend/.pgdata`:
+
+```bash
+npm run db:up                    # PostgreSQL 17 + pgvector on 127.0.0.1:5455
+npm run migrate                  # apply pending migrations
+npm run migrate:check            # read-only preflight: drift, orphans, pending
+npm test                         # 377/377 with DATABASE_URL, not 369/8 skipped
+npm run db:down                  # stop it; the data directory is kept
+```
+
+`npm run db:check` is the gate CI cannot run for you: it applies pending
+migrations to the development database (the upgrade path), drops and recreates a
+scratch `<db>_gate` and applies every migration from zero (the CI path), proves a
+second run is a no-op, then runs the suite against the scratch database and
+requires nothing skipped. It takes ~3s. `db:status`, `db:url` and `db:reset`
+round it out; it needs `brew install postgresql@17 pgvector` (or
+`OPENSTRATA_PG_BIN`), listens on loopback only, and an explicit `DATABASE_URL`
+always wins — a remote one is refused rather than migrated.
+
+`.githooks/pre-push` runs that gate, so a broken migration cannot reach `main`.
+Enable it once per clone with `npm run hooks:install` from the repository root;
+`OPENSTRATA_SKIP_DB_CHECK=1 git push` (or `git push --no-verify`) is the
+deliberate bypass.
+
 ## Trust ledger model (invariants)
 
 1. **Append-only** — `ledger_entry` is insert-only; every change is a new row.
@@ -192,7 +223,8 @@ backend uses `npm run typecheck` / `npm test` / `npm run build` from `backend/`.
 
 Migrations: `src/ledger/migrations/*.sql`, applied by `scripts/migrate.mjs`
 (repeatable, checksummed and serialized). `npm run migrate:check` performs a
-read-only check for pending migrations and checksum drift. Checksums for legacy
+read-only check for pending migrations and checksum drift, and `npm run db:check`
+applies the whole set — from zero and as an upgrade — before a push. Checksums for legacy
 migration records are baselined on first runner upgrade; review against a backup
 before production migration. The `docker-compose.yml` `db` service also mounts
 `src/ledger/schema.sql` into Postgres `initdb` for fresh volumes.

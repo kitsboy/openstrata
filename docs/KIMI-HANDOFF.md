@@ -1,3 +1,32 @@
+## Session — 2026-10-27 · migrations now run before a push, not on a runner
+
+**Done:**
+- **Closed the gap the last session named.** It ended with *"nothing in the repo starts a Postgres for local runs, so 'executed' here meant a manual Homebrew `initdb` on port 5455"*, which left the next migration to be first executed on a CI runner — exactly how `0009` turned `main` red. There is now a harness in the repo (`4da0332`).
+- **A local cluster the repo owns** (`backend/scripts/lib/pg-local.mjs`, `backend/scripts/db-local.mjs`): `npm run db:up` / `db:down` / `db:status` / `db:url` / `db:reset`, data in gitignored `backend/.pgdata`, loopback only, port **5455** so 5432 stays free. It discovers PostgreSQL 17 through `OPENSTRATA_PG_BIN`, the Homebrew keg, or `pg_config`, and **refuses a different major** — the gate has to run the server CI runs (`pgvector/pgvector:pg17`). pgvector is checked against that server's own `sharedir`, not a name on `PATH`.
+- **`npm run db:check`, the gate, in about three seconds.** Two migration paths, because they fail differently: apply pending migrations to the persistent development database (**upgrade path** — checksum drift, DDL that is not repeatable, the ALTER path a deployment takes), then drop and recreate a scratch `<db>_gate` and apply every migration **from zero** (**the CI path**, the one that failed). Then a second `migrate` must report `no pending migrations`, `migrate:check` clean, and the backend suite must pass against the scratch database with **0 skipped** — that last one is the point, since an unset or wrong `DATABASE_URL` is how the durable paths (ledger idempotency, sessions, the audit table) go untested while the suite still reports green.
+- **`.githooks/pre-push` runs it**, armed once per clone with `npm run hooks:install` (`core.hooksPath=.githooks`). **Tested by trying to break it:** a temporary `0010` migration with a `RAISE` outside a plpgsql block — the incident's own defect class — made `git push --dry-run` fail with `FAILED 0010_gate_proof.sql`, `syntax error at or near "RAISE"` (`42601`, `plpgsql_yyerror`) and `error: failed to push some refs`, after the gate had applied the migrations, run the suite and dropped its scratch database. Deleting the file restored green.
+- **Nine tests** (`backend/tests/db-local.test.ts`) for the rules a single run would not isolate: port validation, target resolution, the remote-host guard, connection-string parsing and scratch naming, the identifier guard on `CREATE`/`DROP DATABASE`, discovery order and version gating, one-time cluster initialisation, and starting only when nothing is already listening.
+- Docs updated in the same push: `.ai_docs/sop-workflow.md` (the manual `initdb` recipe is replaced by the harness commands and the hook), `backend/README.md` (a "Local Postgres and the migration gate" section), `.ai_docs/current-status.md` and `LATEST-UPDATE.md`.
+
+**Decisions:**
+- **Made the gate two-phase rather than one.** A fresh scratch database proves a migration applies, but it cannot catch an *earlier* migration edited after the fact — on a fresh database every file is new, so checksum drift is invisible. The persistent development database is what records history and catches that. CI has the same blindness, which is why the local gate is worth having.
+- **Required 0 skipped in the suite step.** `npm test` exits 0 with a database missing; it just skips the 8 Postgres tests. A gate that can pass while the durable paths are untested is the bug this whole session is about.
+- **Refused a remote `DATABASE_URL` instead of migrating it.** An explicit `DATABASE_URL` still wins over the harness, so CI and `docker compose` share one gate — but creating and dropping scratch databases on a shared server is not a decision a git hook should make. It stops before touching anything and says why.
+- **Fail-closed when nothing is installed.** No PostgreSQL 17 means the push is refused with `brew install postgresql@17 pgvector` rather than passing vacuously. The bypasses are explicit and documented (`OPENSTRATA_SKIP_DB_CHECK=1 git push`, `git push --no-verify`); whether that is too strict for another machine is Cam's call.
+- **Did not bump the version.** The README rule is backend *behaviour*; this release adds local tooling and one hook, and the service is unchanged. Backend stays `0.3.28`, site `0.3.37`. Flagged rather than skipped, because the two releases before it drew a correction for *not* bumping.
+- **No `prepare` script to arm the hook on `npm install`.** Setting `core.hooksPath` silently during an install would override a contributor's own hooks; `npm run hooks:install` is explicit and idempotent instead.
+
+**Verified:** `db:up` initialised a cluster from nothing; `db:reset` did it again from nothing; the gate passed on a cluster with no history (`upgrade path: applied 8 migration(s)`, `from zero: applied 8 migration(s)`) and on one with history; `db:down` left nothing listening on 5455. Migration records on the upgrade database: **9 rows, all with checksums**. Backend **369 passed / 8 skipped** without a database and **377/377** with one; `npm run typecheck` clean; the gate itself run from both `backend/` and the repo root. Nothing frontend changed, so the site gates were not rerun and no screenshot applies.
+
+**What is still open:** the hook is armed in **this clone only** — another clone or machine (Kimi on M4) needs `npm run hooks:install` once, and git hooks never run in CI, so `main`'s protection is still CI's `backend-e2e` job. The harness is Homebrew-shaped: `OPENSTRATA_PG_BIN` or a `DATABASE_URL` pointing at `docker compose`'s `db` service are the non-macOS paths, and both are untested here because Docker is unavailable on M3. Unchanged from earlier sessions: no UI for the sessions list or the audit trail, the site consumes `POST /auth/logout` but not refresh tokens, the audit row for a bylaw fine still omits the lot, and `npm run check:security` is red on 15 fixtures.
+
+**Git State:**
+- `4da0332` — feat(tooling): apply migrations before a push, not on a CI runner.
+- Pushed to `origin/main`; working tree clean.
+- Backend API version `0.3.28`; site version `0.3.37`.
+
+---
+
 ## Session — 2026-10-27 · migration 0009 failed its first real run, and the migration runner is why
 
 **Done:**
