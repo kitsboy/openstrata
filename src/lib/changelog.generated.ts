@@ -14,6 +14,39 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.38",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Changed",
+        "items": [
+          "The band that closes the dashboard now lays out like a card, not a strip. Each card is a two-row grid: the icon and the copy sit side by side, and the link drops to its own baseline underneath them. The effect is the one the copy was missing — the first card's two sentences get the column's full width and set in two even lines instead of a narrow stack, and the three links line up because the cards share a height.",
+          "The headline is 12.5px and the body 10.5px at 1.5 leading, up from 11.5px and 9.5px; the pastel marks, hairline border, radius and shadow are untouched, and the band still closes the page above the footer.",
+          "The three-column layout is kept only while there is room for a readable measure. Between 620px and 1180px the band goes two-up with the third card spanning the row, and below 620px it is one card per row with the mark stepped down to 36px."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "The copy was capped at 28ch — about 145px at 9.5px type — while a nowrap link took the rest of the card and overflow: hidden hid the result. That cap is gone; the body column is the space the card actually has, and the link's padding is offset so its text sits on the same left edge as the copy above it."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Measured in Chrome on the running dashboard at 1440, 1181, 1100, 620 and 380 wide, in both themes: no card reports horizontal or vertical overflow, every mark, copy block and link stays inside its card bounds, and the cards in a row share an exact height. Copy lines: two at 1440 and at 1100 (two-up), one per card at full width, two at 380.",
+          "Frontend 318 passed, Svelte check 0 errors / 0 warnings, contrast audit 218 pairs, i18n audit unchanged. No backend code touched; backend API version stays 0.3.28."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The key that closes the first card still reads \"Compliance health on the dashboard.\" — the catalog supplies the phrase and the page appends the rest, so the sentence is assembled in two places. It reads correctly; it is not one string."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.37",
     "date": "2026-10-26",
     "groups": [

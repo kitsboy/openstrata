@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.38
+-  summary: "The dashboard's closing band reads properly. The three cards above the footer are now a two-row grid per card — icon beside the copy, the link on its own baseline under it — so the long line in the first card wraps inside the width the card actually has instead of being squeezed into a 28ch cap at 9.5px next to a nowrap link, and all three links sit on one baseline because the cards share a height. The headline is 12.5px and the body 10.5px with 1.5 leading, the hairlines and borders are unchanged; the band keeps three columns only while there is room for a readable measure, goes two-up with the third card spanning between 620 and 1180, and one card per row on a phone. Measured at 1440, 1181, 1100, 620 and 380 in both themes: zero horizontal or vertical overflow, every child inside its card, and per-card copy at two lines or fewer wherever the band is multi-column. Frontend 318 tests, check 0/0, contrast audit 218 pairs."
 -  version: 0.3.37
 -  summary: "Durable ledger idempotency lands on Postgres. Migration 0007 stores each Idempotency-Key as council + request fingerprint + 24-hour expiry + the committed ledger-entry id, in the same transaction as the append, so a retry that arrives after a restart replays the original result instead of issuing a second write; a reused key with a different body still returns 409, and the bounded in-memory adapter stays for tests and development. Money paths now fail closed instead of trusting the caller: treasury plan authorization is recomputed from council ledger balances, a plan carries an immutable server-issued token, address, network, fee and input totals are validated, UTXOs are reserved while a plan is live, and replays are refused — while live broadcast and ledger debit stay refused until cryptographic signature verification and real PSBT/change-output construction exist. Migrations gain checksums and a read-only preflight: migration 0008 adds the checksum column, the runner serializes behind an advisory lock, detects missing, orphaned and drifted files, and records a migration's checksum in the transaction that applies it, with npm run migrate:check reporting drift without writing a row. The first-upgrade baseline pins current file contents, which is deliberate and is not historical proof, so take a backup first. GET /health/live and a sanitized GET /health/ready dependency probe are wired, the production entrypoint probes Postgres only, Bitcoin address validation is tightened to network and checksum, and xpub test vectors now use valid key serialization. Verified: backend typecheck and build green, 310 passed / 6 skipped — the six are the Postgres E2E tests, skipped while DATABASE_URL is unset and Docker is unavailable, so the durable path was not exercised in this environment. Not deployed. Backend API version stays 0.3.27."
 -  version: 0.3.36
@@ -114,6 +116,29 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.38] — 2026-10-28
+
+### Changed
+
+- **The band that closes the dashboard now lays out like a card, not a strip.** Each card is a two-row grid: the icon and the copy sit side by side, and the link drops to its own baseline underneath them. The effect is the one the copy was missing — the first card's two sentences get the column's full width and set in two even lines instead of a narrow stack, and the three links line up because the cards share a height.
+- The headline is `12.5px` and the body `10.5px` at `1.5` leading, up from `11.5px` and `9.5px`; the pastel marks, hairline border, radius and shadow are untouched, and the band still closes the page above the footer.
+- The three-column layout is kept only while there is room for a readable measure. Between `620px` and `1180px` the band goes two-up with the third card spanning the row, and below `620px` it is one card per row with the mark stepped down to `36px`.
+
+### Fixed
+
+- The copy was capped at `28ch` — about 145px at `9.5px` type — while a nowrap link took the rest of the card and `overflow: hidden` hid the result. That cap is gone; the body column is the space the card actually has, and the link's padding is offset so its text sits on the same left edge as the copy above it.
+
+### Verified
+
+- Measured in Chrome on the running dashboard at `1440`, `1181`, `1100`, `620` and `380` wide, in both themes: no card reports horizontal or vertical overflow, every mark, copy block and link stays inside its card bounds, and the cards in a row share an exact height. Copy lines: two at `1440` and at `1100` (two-up), one per card at full width, two at `380`.
+- Frontend **318 passed**, Svelte check **0 errors / 0 warnings**, contrast audit **218 pairs**, i18n audit unchanged. No backend code touched; backend API version stays `0.3.28`.
+
+### Known issues
+
+- The key that closes the first card still reads "Compliance health on the dashboard." — the catalog supplies the phrase and the page appends the rest, so the sentence is assembled in two places. It reads correctly; it is not one string.
+
+---
 
 ## [0.3.37] — 2026-10-26
 

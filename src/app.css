@@ -670,22 +670,35 @@ kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; color
 .event-date.blue { color: var(--blue-text); background: #eff6ff; }
 
 /* ---------- Proof band: closes the page with a single honest row. ---------- */
-.proof-band { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 16px; margin-top: 30px; padding: 0; }
-@media (max-width: 1050px) { .proof-band { grid-template-columns: 1fr; }
-  .proof-card { flex-direction: row; }
-  .proof-card .proof-body { max-width: 100%; margin-right: 16px; }
-  .proof-card .proof-cta { margin-left: 0; margin-right: auto; } }
-.proof-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
-.proof-mark { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; font-size: 21px; }
+/* Each card is two rows — icon and copy, then the link on its own baseline —
+   so the long line in the first card wraps inside its own column instead of
+   being squeezed against a 28ch cap and a nowrap link, and all three links sit
+   on the same baseline because the cards share a height. */
+.proof-band { display: grid; grid-template-columns: 1.15fr .925fr .925fr; align-items: stretch; gap: 16px; margin-top: 30px; padding: 0; }
+.proof-card { display: grid; grid-template-columns: 42px minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 14px; align-items: start; padding: 18px 20px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+.proof-mark { grid-column: 1; grid-row: 1; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; font-size: 21px; }
 .proof-mark.orange { color: var(--orange-text); background: color-mix(in srgb, var(--orange) 14%, transparent); }
 .proof-mark.green { color: var(--success-text); background: #e9f7f1; }
 .proof-mark.blue { color: var(--blue-text); background: #eff6ff; }
-.proof-body { min-width: 0; max-width: 28ch; }
-.proof-body strong { display: block; color: var(--ink); font-size: 11.5px; font-weight: 800; letter-spacing: -.2px; margin-bottom: 3px; line-height: 1.25; }
-.proof-body span { color: var(--muted); font-size: 9.5px; font-weight: 500; line-height: 1.45; }
-.proof-card .proof-cta { margin-left: auto; flex: 0 0 auto; color: var(--orange-text); font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 7px; padding: 6px 10px; transition: gap .2s ease, background .2s ease; white-space: nowrap; }
+.proof-body { grid-column: 2; grid-row: 1; min-width: 0; }
+.proof-body strong { display: block; color: var(--ink); font-size: 12.5px; font-weight: 800; letter-spacing: -.2px; line-height: 1.3; margin-bottom: 5px; text-wrap: balance; }
+.proof-body span { display: block; color: var(--muted); font-size: 10.5px; font-weight: 500; line-height: 1.5; text-wrap: pretty; }
+.proof-card .proof-cta { grid-column: 2; grid-row: 2; align-self: end; justify-self: start; margin-top: 14px; margin-left: -9px; color: var(--orange-text); font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 7px; padding: 6px 9px; transition: gap .2s ease, background .2s ease; white-space: nowrap; }
 .proof-card .proof-cta:hover { color: var(--orange-deep); background: rgba(249,115,72,.08); gap: 9px; }
-@media (max-width: 1050px) { .proof-card .proof-cta { margin-left: 0; margin-right: auto; } }
+/* Three columns only while there is room for a readable measure. Narrower, it
+   goes two up with the last card spanning, so no card is left with a 4-line
+   column of copy; on a phone it is one card per row. */
+@media (max-width: 1180px) { .proof-band { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .proof-card:nth-child(3) { grid-column: 1 / -1; }
+  .proof-card { padding: 16px 18px 14px; }
+  .proof-card .proof-cta { margin-top: 10px; } }
+
+@media (max-width: 620px) { .proof-band { grid-template-columns: 1fr; }
+  .proof-card:nth-child(3) { grid-column: auto; }
+  .proof-card { grid-template-columns: 36px minmax(0, 1fr); column-gap: 12px; }
+  .proof-mark { width: 36px; height: 36px; border-radius: 10px; }
+  .proof-body strong { font-size: 12px; }
+  .proof-body span { font-size: 10px; } }
 
 /* Host connect strip sits above the content, not competing with it. */
 .host-connect-row { padding: 16px 36px 4px; }
