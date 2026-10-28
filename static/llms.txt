@@ -59,9 +59,11 @@ The interface keeps being refined as the product grows. After every push that ch
 
 Shipped 2026-10-16: the one-lot pay sheet on `/pay` (v0.3.30) — offered 2026-09-30, picked by the owner. One amount, three large choices, the rate lock as a quiet stamp, PAD and cheque tucked under the sheet. It was replaced, so four are waiting again.
 
-Offered 2026-10-16, not started:
+Offered 2026-10-28, not started:
 
 1. A floor you can walk — `/units`. A plan of four floors, lots sized by square footage, a corridor, color for arrears, a missing Form K, or a levy balance.
-2. September close — `/accounting`. Reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.
-3. The next 30 days, once — one strip shared by `/tax` and `/calendar`. T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.
-4. You are here — `/changelog`. A release trail: the version you are running is marked on the timeline, and each release says what changed for you since the one before it.
+2. A ledger you can read as a ledger — `/accounting`. The journal as a statement: a running balance beside every entry, and a drawer per entry with its hash, who posted it and what evidence came with it.
+3. Search that reaches the workspace — Cmd/Ctrl+K. The index finds pages and documents today, not the building: add lot records, ledger entries and tax sections, each result opening the row it names.
+4. The AGM packet — `/meetings`. One printable packet per meeting: notice, agenda, last minutes and the quorum maths on one page, checked at print size rather than shrunk to fit.
+
+Shipped from that offer: the September close on `/accounting` (v0.3.40), the next-30-days strip on `/tax` and `/calendar` (v0.3.41), and the release trail on `/changelog` (v0.3.43). The queue was refreshed each time, so four are waiting again.

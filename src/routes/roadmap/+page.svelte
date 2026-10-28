@@ -25,10 +25,10 @@
 		{ name: 'BCFSA', url: 'bcfsa.ca', status: 'Regulator', role: 'Audit-ready exports' }
 	];
 
-	/** Offered 2026-10-16. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
+	/** Offered 2026-10-28. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. The one-lot pay sheet on Pay was picked from the September 30 offer and shipped on October 16, 2026; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. The September close, the next-30-days strip and the release trail were picked from the October 16 offer and shipped; these four are what is waiting now.';
 	const uiQueue = [
 		{
 			name: 'A floor you can walk',
@@ -37,22 +37,22 @@
 				'Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.'
 		},
 		{
-			name: 'September close',
+			name: 'A ledger you can read as a ledger',
 			where: '/accounting',
 			detail:
-				'A short close on Accounting: reconcile the three bank accounts, confirm the funds tie, list who is blocked from Form F, and release the T2.'
+				'The journal tab as a statement: a running balance beside every entry, and a drawer per entry with its hash, who posted it and what evidence came with it.'
 		},
 		{
-			name: 'The next 30 days, once',
-			where: '/tax and /calendar',
+			name: 'Search that reaches the workspace',
+			where: 'Cmd/Ctrl+K',
 			detail:
-				'One strip shared by Tax and Calendar: T2 tonight, fees tomorrow, Form B for lot 201 on October 5, the fire inspection on October 8, council on October 20. The long tax sections stay underneath.'
+				'Today the search index finds pages and documents, not the building. Add lot records, ledger entries and tax sections, each result opening the row it names.'
 		},
 		{
-			name: 'You are here',
-			where: '/changelog',
+			name: 'The AGM packet',
+			where: '/meetings',
 			detail:
-				'A release trail: the version you are running is marked on the timeline, and each release says what changed for you since the one before it, rather than a flat list of versions.'
+				'One printable packet per meeting: the notice, the agenda, the last minutes and the quorum maths on one page, checked at print size rather than shrunk to fit.'
 		}
 	];
 </script>

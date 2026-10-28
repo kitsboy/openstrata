@@ -14,6 +14,42 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.43",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A release trail on /changelog. The page opens with where this build sits: You are running v0.3.43 — the newest release. A build that is behind says how far (— 2 releases and 19 changes since.), and each release on the timeline carries the step into it — since v0.3.42 · 12 changes — so the page reads as a trail rather than a list of versions.",
+          "You are here marks the running release, in the newest-release card when this build is the newest and on its own timeline row when it is not.",
+          "src/lib/release-trail.ts, the rules as a pure module: 11 tests covering version parsing and ordering, the running-build placement in all three states, the change counts, and the step between two releases."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Versions are compared as numbers, not strings. 0.3.9 is older than 0.3.10; a page that ordered them lexically would put a fix above the release that made it necessary. parseVersion also drops -rc.1 and +build.7, so a tagged build is placed by its core version."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "All three states, in a browser, by moving package.json. Newest: You are running v0.3.42 — the newest release. with the chip in the newest card. Behind: You are running v0.3.41 — 1 release and 12 changes since. with exactly one marked row, v0.3.41. Ahead: This build is v0.3.99, newer than the newest note here. and no marker — the page does not point at a release it has no notes for.",
+          "Geometry at 1440 and 620 in both themes: no horizontal overflow on the trail, nothing narrower than its content. The new ink measures 5.47:1 light and 6.59:1 dark at its worst, against the 4.5 floor.",
+          "French: Vous utilisez la v0.3.42 — la version la plus récente., Vous êtes ici, depuis la v0.3.41 · 12 changements.",
+          "Frontend 352 passed, Svelte check 0 errors / 0 warnings, translation audit 1,331 keys × 9 locales, production build green."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The trail says only what the notes say. A release with no bullet about a fix cannot claim it, and the count is bullets, not commits — which is the number a reader can check on the page.",
+          "The running version is the one baked into the build. A tab left open across a deploy reports the build it loaded, not the newest one on the host; a reload corrects it."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.42",
     "date": "2026-10-28",
     "groups": [

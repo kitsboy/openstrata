@@ -14,7 +14,26 @@
   import Icon from '$lib/components/Icon.svelte';
   import Card from '$lib/components/Card.svelte';
   import HeroArt from '$lib/components/HeroArt.svelte';
-  import { copy, locale, formatDate, formatNumber } from '$lib/i18n';
+  import { copy, fill, locale, formatDate, formatNumber } from '$lib/i18n';
+  import packageJson from '../../../package.json';
+  import { placeOnTrail, trailStep } from '$lib/release-trail';
+
+  /**
+   * The release trail: this build's own version, marked where it sits.
+   *
+   * `packageJson.version` is what the footer stamps and what the build was made
+   * from, so it is the honest answer to "which version am I running" — not the
+   * newest note, which during a release is briefly a different thing. The two
+   * are allowed to disagree, and `placeOnTrail` says so instead of guessing.
+   */
+  const appVersion = packageJson.version;
+  const place = placeOnTrail(changelogReleases, appVersion);
+  /** The first step on the trail: the newest release, and what it followed. */
+  const newestStep = trailStep(changelogReleases, 0);
+
+  /** "6 changes" / "1 change", from one place so the counts agree across the page. */
+  const changesLabel = (n: number) =>
+    n === 1 ? $copy.changelogTrailChangeOne : fill($copy.changelogTrailChangeMany, { n });
 
   // Groups the page knows how to label; anything else renders its raw markdown
   // heading. Tones reuse badge classes already proven readable elsewhere on the
@@ -106,6 +125,30 @@
 </section>
 
 <div class="mx-auto max-w-5xl px-6 py-12">
+  <!-- Release trail: where this build sits, before the notes themselves.
+       A build newer than the newest note says that once, and never claims a
+       release it has no notes for. -->
+  <div class="trail" data-state={place.state}>
+    <span class="trail-pin" aria-hidden="true"></span>
+    <p class="trail-copy">
+      {#if place.state === 'ahead'}
+        {fill($copy.changelogTrailAhead, { version: place.version })}
+      {:else}
+        {fill($copy.changelogTrailRunning, { version: place.version })}
+        {#if place.state === 'latest'}
+          {$copy.changelogTrailUpToDate}
+        {:else if place.newerReleases === 1}
+          {fill($copy.changelogTrailBehindOne, { changes: changesLabel(place.changesSince) })}
+        {:else}
+          {fill($copy.changelogTrailBehindMany, {
+            releases: place.newerReleases,
+            changes: changesLabel(place.changesSince)
+          })}
+        {/if}
+      {/if}
+    </p>
+  </div>
+
   <!-- Group filter -->
   <div class="mb-8 flex flex-wrap items-center gap-2" role="group" aria-label={$copy.changelogFilterLabel}>
     {#each filters as id}
@@ -131,7 +174,16 @@
           {formatDate(latest.date, $locale, { year: 'numeric', month: 'long', day: 'numeric' })}
         </time>
       {/if}
+      {#if place.index === 0}
+        <span class="trail-chip">{$copy.changelogTrailYouAreHere}</span>
+      {/if}
     </div>
+    {#if newestStep.previous}
+      <p class="trail-step">
+        {fill($copy.changelogTrailSince, { version: newestStep.previous ?? '' })} ·
+        {changesLabel(newestStep.changes)}
+      </p>
+    {/if}
     <div class="mt-5 space-y-5">
       {#each visibleGroups(latest) as group}
         <div>
@@ -156,10 +208,12 @@
 
   <!-- Older releases as a timeline -->
   <ul class="timeline">
-    {#each rest as release}
+    {#each rest as release, index}
       {@const shown = visibleGroups(release)}
       {#if shown.length > 0}
-        <li class="release">
+        {@const step = trailStep(rest, index)}
+        {@const isRunning = place.index === index + 1}
+        <li class="release" data-running={isRunning}>
           <div class="release-head">
             <span class="release-node" aria-hidden="true"></span>
             <span class="font-mono text-sm font-bold text-slate-900">v{release.version}</span>
@@ -167,6 +221,15 @@
               <time class="text-xs text-slate-400" datetime={release.date}>
                 {formatDate(release.date, $locale, { year: 'numeric', month: 'short', day: 'numeric' })}
               </time>
+            {/if}
+            {#if isRunning}
+              <span class="trail-chip">{$copy.changelogTrailYouAreHere}</span>
+            {/if}
+            {#if step.previous}
+              <span class="trail-step">
+                {fill($copy.changelogTrailSince, { version: step.previous })} ·
+                {changesLabel(step.changes)}
+              </span>
             {/if}
             {#if shown.reduce((n, group) => n + group.items.length, 0) > 2}
               <button class="toggle inline" type="button" onclick={() => toggleExpanded(release.version)}>
@@ -246,6 +309,62 @@
     height: 5px;
     border-radius: 50%;
     background: color-mix(in srgb, var(--line) 90%, var(--muted));
+  }
+
+  /* The trail line above the notes: one hairline block, the same tokens as the
+     rest of the page so it flips with the theme and stays inside the contrast
+     audit. The pin is the timeline's node, larger, in the same brand ink. */
+  .trail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+  }
+  .trail-pin {
+    width: 9px;
+    height: 9px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
+  }
+  .trail-copy {
+    flex: 1 1 320px;
+    min-width: 0;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .trail[data-state='behind'] .trail-pin { background: var(--warning-text); }
+  .trail-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
+    color: var(--brand-text);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .trail-step {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+  .release[data-running='true'] .release-node {
+    background: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
   }
 
   .toggle {

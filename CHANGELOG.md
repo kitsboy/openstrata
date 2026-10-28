@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.43
+-  summary: "The changelog now says where you are. /changelog opens with a release trail instead of a flat list: one line naming the build you are running and how far it is from the newest note, a 'You are here' marker on the release that is actually running, and a step on every release that names the one it followed and counts what it changed — 'since v0.3.41 · 12 changes'. src/lib/release-trail.ts holds the rules as a pure module with 11 tests, and two decisions are load-bearing. Versions are compared as numbers, not strings: 0.3.9 is older than 0.3.10, and a page that sorted them the other way would put a fix above the release that made it necessary. And a build whose version has no note is a normal state, not an error — the site is published from package.json while the notes are written by hand, so a build can be newer than the newest note or older than every note on the page. Neither renders a marker pointing at the wrong release: the placement is null and the page says what it knows ('This build is v0.3.99, newer than the newest note here'). Verified in the browser in all three states by moving package.json: on the newest release, one release behind ('You are running v0.3.41 — 1 release and 12 changes since', with the v0.3.41 row marked), and ahead of every note. Geometry clean at 1440 and 620 in both themes, no overflow, and the new ink measures 5.47:1 light / 6.59:1 dark at its worst against the 4.5 floor. 9 catalog keys x 9 locales. Shipped from the queue offered 2026-10-16; the queue is refreshed with three new offers so four are waiting again."
 -  version: 0.3.42
 -  summary: "The five remaining demo routes speak the reader's language, and their money does too. /units, /calendar, /tax, /meetings and /pay move their own copy into the catalog — 149 keys across nine locales in this release — which takes the audit's hard-coded surface on those routes to zero and the catalog to 1,322 keys at full parity. Money and dates now follow the interface locale rather than a fixed en-CA: money(), moneyCompact() and satsLabel() read the active locale at call time, so a French page shows 904,58 $ instead of $904.58, and month names, weekday heads, the selected-day heading and the receipt-tape date chips come from Intl instead of hard-coded English lists. Two defects were found by doing it. formatDate() never matched its own YYYY-MM-DD regex — it was written with a doubled backslash, so a bare calendar day parsed as UTC midnight and rendered as the day before for every reader west of UTC; the day strings are now anchored at noon UTC, and a test takes the path a page takes rather than the one that hid the bug. The audit's locale-parity guard read a French value ending in ' :' as a key, so it failed on a translation that was correct; keys are now only read where a property can sit. A new test requires every locale to carry the same {slots} as the English source, because fill() leaves a missing slot visible as {amount}. Verified in the browser: all five routes in French with no unfilled slot, back to English unchanged, and the calendar reading septembre 2026 / mercredi 30 septembre / 1 sept. 5 sept."
 -  version: 0.3.41
@@ -124,6 +126,32 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.43] — 2026-10-28
+
+### Added
+
+- **A release trail on `/changelog`.** The page opens with where this build sits: `You are running v0.3.43 — the newest release.` A build that is behind says how far (`— 2 releases and 19 changes since.`), and each release on the timeline carries the step into it — `since v0.3.42 · 12 changes` — so the page reads as a trail rather than a list of versions.
+- **`You are here` marks the running release**, in the newest-release card when this build is the newest and on its own timeline row when it is not.
+- **`src/lib/release-trail.ts`**, the rules as a pure module: 11 tests covering version parsing and ordering, the running-build placement in all three states, the change counts, and the step between two releases.
+
+### Changed
+
+- **Versions are compared as numbers, not strings.** `0.3.9` is older than `0.3.10`; a page that ordered them lexically would put a fix above the release that made it necessary. `parseVersion` also drops `-rc.1` and `+build.7`, so a tagged build is placed by its core version.
+
+### Verified
+
+- **All three states, in a browser, by moving `package.json`.** Newest: `You are running v0.3.42 — the newest release.` with the chip in the newest card. Behind: `You are running v0.3.41 — 1 release and 12 changes since.` with exactly one marked row, `v0.3.41`. Ahead: `This build is v0.3.99, newer than the newest note here.` and no marker — the page does not point at a release it has no notes for.
+- Geometry at `1440` and `620` in both themes: no horizontal overflow on the trail, nothing narrower than its content. The new ink measures **5.47:1** light and **6.59:1** dark at its worst, against the 4.5 floor.
+- French: `Vous utilisez la v0.3.42 — la version la plus récente.`, `Vous êtes ici`, `depuis la v0.3.41 · 12 changements`.
+- Frontend **352 passed**, Svelte check **0 errors / 0 warnings**, translation audit **1,331 keys × 9 locales**, production build green.
+
+### Known issues
+
+- **The trail says only what the notes say.** A release with no bullet about a fix cannot claim it, and the count is bullets, not commits — which is the number a reader can check on the page.
+- **The running version is the one baked into the build.** A tab left open across a deploy reports the build it loaded, not the newest one on the host; a reload corrects it.
+
+---
 
 ## [0.3.42] — 2026-10-28
 
