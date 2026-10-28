@@ -10,11 +10,13 @@ npm run check            SvelteKit type checking
 npm run test             Vitest run (frontend)
 npm run audit:i18n       locale parity (error) + hard-coded copy scan (warning)
 npm run audit:contrast   WCAG contrast for every token pair, plus fill-literal and var() guards
-npm run check:security   secret-hygiene gate — currently red on 15 fixtures, see current-status.md
+npm run check:security   secret-hygiene gate — every tracked file, base64 decoded, fixtures classified (CI)
 
-CI runs check, audit:i18n, audit:contrast and build on every push. The two audits and
-check:security also run locally; only the audits are live gates. audit:i18n's hard-coded
-copy list is informational today (113 entries — six routes are not localized at all).
+CI runs check:security, check, audit:i18n, audit:contrast, the tests and the production build
+on every push, and `backend-e2e` runs the migration gate. check:security is a live gate now:
+a real credential fails the build, while a fixture value is classified and COUNTED in the log
+rather than reported. audit:i18n's hard-coded copy list is informational today (113 entries
+— six routes are not localized at all).
 
 ## Quick Commands (backend, from backend/)
 npm run typecheck        tsc --noEmit

@@ -1,3 +1,21 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the secret gate is green, so CI can run it
+
+Commits: `7a3878e` (gate fix + 6 tests + CI step) and `ccde02b` (the fix that CI forced). Site version `0.3.37` and backend version `0.3.28` are both unchanged: this release makes a repo check usable, and no service or interface behaviour changed.
+
+> **`npm run check:security` was red at HEAD on 17 false positives, so it was not a gate.** Every finding was a fixture or a sentence, none was a credential: 13 backend test constants (`AUTH_SECRET = 'auth-test-secret-xyz'` and siblings), two quoted test fixtures (`password: 'correct-horse-battery'`), the `.env.example` dev password, three prose lines calling the payment link "the credential" and quoting its format `ospl1.<payload>.<sig>`, and one Tailwind class in the contrast audit's token table. It was not wired into CI, so nothing was blocked — and nothing was checked either. A gate that cries wolf is switched off, and a switched-off gate manufactures the belief that scanning happens.
+>
+> **The fix classifies the value, not the path.** A real credential pasted into a test file is the most common way a secret leaks, so `tests/` is not evidence of anything. `scripts/check-secret-hygiene.mjs` now reads the matched value against three tells — a **marker segment** (`test`, `dev`, `example`, `smoke`, `xyz`), a **placeholder slot** (`<payload>`, `<opacity>`), or a **written-out slug** (lowercase words joined by `-`/`_`/`.`, optional short numeric tail, no letter+digit run) — with a **danger segment** (`prod`, `production`, `live`, `real`, `staging`, `actual`, `private`, `mainnet`, `release`) vetoing all three. `prod-db-password-2026` reads like a fixture and names a real environment, so it still fails; so does `Summer2024!Secure`, a random mixed-case key, a hex-and-dash key, and a base64 blob that decodes to `ghp_…`.
+>
+> **Measured, not asserted.** Six tests (`src/lib/secret-hygiene.test.ts`) run the real script over temp files: the tracked tree passes, four fixture shapes pass, prose quoting the link-token format and a CSS class passes, five real-looking values fail by rule, and four fixture-shaped production credentials fail anyway. The first attempt judged "the last quoted string on the line" and mis-classified the prose — the value now comes from the rule's own `(?<value>…)` capture, which is what that test caught.
+>
+> **Classifications are counted, never silent:** each run prints `Fixture-shaped literals classified as test/dev values: 21 in 18 files`. The residual miss is written in the script — a real key written as a friendly slug with no danger word (`internal-db-passphrase-2026`) is classified rather than reported — and the count is what makes a change in that surface visible.
+>
+> **CI runs it** as the first step after `npm ci` in the site job. Verified locally: frontend **318 passed** (312 + 6), `check` **0 errors / 0 warnings**, gate green over every tracked file; the backend and its suite are untouched by this change.
+>
+> **CI immediately failed the new step, and was right.** The gate scans *tracked* files, and the adversarial literals in the new test were only untracked — so the local run never saw them, while the first push did: `src/lib/secret-hygiene.test.ts:79 [quoted-credential-literal]`, `:85 [github-token]`, `:87 [base64-wrapped-credential]`. The fix was not an exemption: each adversarial value is now assembled from pieces shorter than the 16-character floor and written to a temp file, so the tree carries no credential-shaped literal and the gate still sees exactly what a commit would. **Run `40695863063` on `ccde02b` is green in all three jobs**, with `0 credential findings`, `28 in 19 files` classified, and **318** frontend tests.
+
+---
+
 # openstrata — Last Updated 2026-10-27 by Buffy — migrations are applied before a push now, not on a runner
 
 Commit: `4da0332` (backend tooling + pre-push gate). Site version `0.3.37` and backend version `0.3.28` are both unchanged: this release adds a local harness and one hook, and the service behaves exactly as it did.

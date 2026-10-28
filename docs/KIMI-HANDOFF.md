@@ -1,3 +1,32 @@
+## Session — 2026-10-28 · the secret gate was red, so it was not a gate
+
+**Done:**
+- **Picked up the item that had been carried as "wants a decision" for five sessions.** `npm run check:security` failed at HEAD on **17 hand-read false positives** and was not wired into CI: nothing was blocked, nothing was checked, and the only thing the gate produced was a reason to ignore it. Every finding was a fixture or a sentence — 13 backend test constants (`AUTH_SECRET = 'auth-test-secret-xyz'` and siblings), two quoted fixtures (`password: 'correct-horse-battery'`, `'other-password-123'`), `.env.example`'s `POSTGRES_PASSWORD=openstrata-dev-only`, three prose lines calling the payment link "the credential" and quoting `ospl1.<payload>.<sig>`, and one Tailwind class (`token: 'text-white/<opacity>'`) in the contrast audit's token table.
+- **The fix classifies the VALUE, never the path.** A real credential pasted into a test file is the most common way a secret leaks, so "it lives under `tests/`" is not evidence of anything. Three tells: a **marker segment** (`test`, `dev`, `example`, `smoke`, `xyz`, `changeme`…), a **placeholder slot** (`<payload>`), or a **written-out slug** — lowercase words joined by `-`/`_`/`.`, optional short numeric tail, no letter+digit run (`correct-horse-battery`, `member-store-secret-0123456789`). A **danger segment** (`prod`, `production`, `live`, `real`, `staging`, `actual`, `private`, `mainnet`, `release`) vetoes all three before they are considered.
+- **The value comes from the rule's own capture group** (`(?<value>…)` on `quoted-credential-literal` and `env-credential-literal`). The first attempt judged "the last quoted string on the line" and mis-classified the prose — the sentence "the link *is* the credential: `ospl1.<payload>.<sig>`" has several quoted runs in it. The new test caught that, which is why the tests exist.
+- **Classifications are counted, never silent.** Every run prints `Fixture-shaped literals classified as test/dev values: 21 in 18 files` — a jump is the signal that something changed. (21 rather than 17 because two fixture constants were already being skipped by the old placeholder heuristic and are now counted too.)
+- **Six tests** (`src/lib/secret-hygiene.test.ts`) run the real script over temp files rather than re-implementing its patterns: the tracked tree passes; four fixture shapes pass; prose quoting the link-token format and a CSS class passes; five real-looking values fail by rule (`quoted-credential-literal`, `env-credential-literal`, `github-token`, and a base64 blob that decodes to `ghp_…`); and four fixture-shaped production credentials fail despite their friendly names.
+- **CI runs it** — `.github/workflows/ci.yml`, first step after `npm ci` in the site job.
+
+**Decisions:**
+- **Did not allowlist the 17 by path.** The script already supports path+line-shape allowlists, and that would have been a two-minute green. It would also have immunised every future credential in those 17 files and in 13 test files, which is exactly backwards: the value is the evidence, not the location.
+- **Kept the old "placeholder" intent and widened it rather than adding a second switch.** `.env.example` exists to be filled in; a gate that fails on it is a gate that gets `|| true` appended.
+- **Veto beats heuristic.** A fixture-shaped value naming production is a real credential with a friendly name, so `DANGER_MARKER` is checked first and returns "not a fixture".
+- **No version bump.** Site `0.3.37`, backend `0.3.28`: nothing a user or an API client sees changed. This is repo tooling and the tests around it.
+
+**Verified:** gate green over every tracked file (`0 credential findings`, `21 in 18 files` classified locally); frontend **318 passed** (312 + 6), `check` **0 errors / 0 warnings**. The negative cases were proved by running the gate on temp files in the test — not by reasoning about the regexes.
+
+**CI caught the mistake this session would otherwise have shipped** (`40695292695` on `7a3878e`, red): the new test contained its own adversarial literals, the gate scans **tracked** files, and the file was untracked when the local run happened — so `git ls-files` never listed it and the run was green. The first push failed on `src/lib/secret-hygiene.test.ts:79 [quoted-credential-literal]`, `:85 [github-token]`, `:87 [base64-wrapped-credential]`, exactly as the gate should. Fixed in `ccde02b` by assembling each adversarial value from pieces shorter than the 16-character floor (`value('ghp_', '0123…', …)`) and writing the finished line to a temp file: the gate sees what a commit would carry, and no path gets an exemption — which matters, because "exempt this file" was the move this whole session argued against. **Run `40695863063` on `ccde02b` is green in all three jobs**: the gate step passes with `0 credential findings` and `28 in 19 files` classified, the site job runs **318 tests** plus both audits and the build, `backend` passes, and `backend-e2e` applies the migrations from zero with **377 passed, 0 skipped**.
+
+**What is still open:** the residual miss is stated in the script — a real key written as a friendly slug with no danger word (`internal-db-passphrase-2026`) is classified, not reported; the count printed on every run is what makes that surface visible. Unchanged from earlier sessions: no UI for the sessions list or the audit trail, the site consumes `POST /auth/logout` but not refresh tokens, the audit row for a bylaw fine still omits the lot, and CI's "upgrade path" step starts from an empty container so checksum drift is still only caught by the local persistent database.
+
+**Git State:**
+- `7a3878e` — fix(security): tell a fixture value from a credential, then gate CI on it.
+- `ccde02b` — fix(test): assemble the gate's adversarial values instead of shipping them.
+- Pushed to `origin/main`; backend API version `0.3.28`, site version `0.3.37`.
+
+---
+
 ## Session — 2026-10-27 · migrations now run before a push, not on a runner
 
 **Done:**
