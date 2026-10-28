@@ -261,6 +261,12 @@
 			>
 				{$copy.unitsPayThisLot}
 			</a>
+			<a
+				href="/units/{selected.id}"
+				class="mt-2 flex items-center justify-center rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-sm font-semibold text-slate-700 no-underline"
+			>
+				{$copy.lotSheetOpen}
+			</a>
 		</aside>
 	</div>
 </div>

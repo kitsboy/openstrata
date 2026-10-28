@@ -2,14 +2,18 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
-	import { copy, fill } from '$lib/i18n';
+	import { copy, fill, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
 	import { cashEffect, statement } from '$lib/ledger-statement';
-	import { balance, building, depreciation, formF, units } from '$lib/demo/building';
+	import { age, summarise } from '$lib/arrears';
+	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
+	import { building, depreciation, formF, units } from '$lib/demo/building';
 
 	let tab = $state<'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'journal'>('overview');
-	let onlyPastDue = $state(false);
+	// The ladder opens on what is actually late. A book where every lot is current
+	// still has a total, and the toggle brings the other 36 lots back into view.
+	let onlyPastDue = $state(true);
 	let openEntry = $state<string | null>(null);
 
 	const chart = books.monthly.map((month) => ({
@@ -18,15 +22,50 @@
 		value2: month.expenses / 100
 	}));
 
-	const rows = units
-		.map((unit) => {
-			const due = balance(unit);
-			const past = due.arrears + due.late + due.fine + due.levy;
-			return { unit, due, past };
-		})
-		.sort((a, b) => b.past - a.past || a.unit.lot - b.unit.lot);
+	// Receivables are aged from the day each charge fell due, not from a status
+	// field. `demo/arrears` supplies the dates; `lib/arrears` owns the counting.
+	const aged = age(charges(), building.asOf).map((row) => ({
+		...row,
+		unit: units.find((candidate) => candidate.id === row.unitId)!
+	}));
+	const summary = summarise(aged);
 
-	const shown = $derived(onlyPastDue ? rows.filter((row) => row.past > 0) : rows);
+	// A lot with nothing on the books has no charges, so the ladder has no row for
+	// it. "Show every lot" still owes a row: the building has 40, not the 37 that
+	// happen to owe something.
+	const agedById = new Map(aged.map((row) => [row.unitId, row]));
+	const everyLot = units.map(
+		(unit) =>
+			agedById.get(unit.id) ?? {
+				unitId: unit.id,
+				buckets: { current: 0, age30: 0, age60: 0, age90: 0, over90: 0 },
+				total: 0,
+				pastDue: 0,
+				planned: 0,
+				oldest: null,
+				oldestDays: 0,
+				unit
+			}
+	);
+	const ladder = $derived(onlyPastDue ? aged.filter((row) => row.pastDue > 0) : everyLot);
+	const planned = $derived(aged.filter((row) => row.planned > 0));
+
+	// The cards above are the whole book; the table's own total is only the rows on
+	// screen, so a turned-on filter cannot leave a footer that adds up to more than
+	// the reader can see.
+	const shownTotals = $derived.by(() => {
+		const buckets = { current: 0, age30: 0, age60: 0, age90: 0, over90: 0 };
+		let total = 0;
+		for (const row of ladder) {
+			buckets.current += row.buckets.current;
+			buckets.age30 += row.buckets.age30;
+			buckets.age60 += row.buckets.age60;
+			buckets.age90 += row.buckets.age90;
+			buckets.over90 += row.buckets.over90;
+			total += row.total;
+		}
+		return { buckets, total };
+	});
 
 	// The statement closes on the cash the Three funds tab reports, so the opening
 	// balance is the closing cash less everything the journal moved. Both figures
@@ -206,44 +245,95 @@
 	{/if}
 
 	{#if tab === 'receivables'}
+		<div class="mb-4 grid gap-3 sm:grid-cols-3">
+			<div class="rounded-2xl border border-border bg-surface-2 p-4">
+				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{$copy.accAgePastDue}</p>
+				<p class="mt-1 text-2xl font-bold tabular-nums text-rose-700">{money(summary.pastDue)}</p>
+				<p class="mt-1 text-xs text-slate-500">{fill($copy.accAgePastDueLots, { lots: summary.pastDueLots, all: units.length })}</p>
+			</div>
+			<div class="rounded-2xl border border-border bg-surface-2 p-4">
+				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{$copy.accAgeOver90Label}</p>
+				<p class="mt-1 text-2xl font-bold tabular-nums">{money(summary.buckets.over90)}</p>
+				<p class="mt-1 text-xs text-slate-500">{fill($copy.accAgeShare, { share: formatNumber(summary.over90Share, $locale, { style: 'percent', maximumFractionDigits: 0 }) })}</p>
+			</div>
+			<div class="rounded-2xl border border-border bg-surface-2 p-4">
+				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{$copy.accAgeOldestLabel}</p>
+				{#if summary.oldest}
+					<p class="mt-1 text-2xl font-bold tabular-nums">{summary.oldest.unitId}</p>
+					<p class="mt-1 text-xs text-slate-500">{fill($copy.accAgeOldestDays, { days: summary.oldest.oldestDays })}</p>
+				{:else}
+					<p class="mt-1 text-2xl font-bold text-emerald-700">—</p>
+				{/if}
+			</div>
+		</div>
+
 		<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-			<p class="min-w-0 flex-1 basis-[24rem] text-sm text-slate-500">{$copy.accReceivablesHint}</p>
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm text-slate-500">{$copy.accAgeHint}</p>
 			<button class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold" onclick={() => (onlyPastDue = !onlyPastDue)}>
 				{onlyPastDue ? $copy.accShowEveryLot : $copy.accPastDueOnly}
 			</button>
 		</div>
 		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
-			<table class="w-full min-w-[760px] text-sm">
+			<table class="w-full min-w-[820px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
 						<th class="px-3 py-3">{$copy.payLot}</th>
 						<th class="px-3 py-3">{$copy.accColOwner}</th>
-						<th class="px-3 py-3 text-right">{$copy.accColOctober}</th>
-						<th class="px-3 py-3 text-right">{$copy.accColBehind}</th>
-						<th class="px-3 py-3 text-right">{$copy.accColLate}</th>
-						<th class="px-3 py-3 text-right">{$copy.accColFine}</th>
-						<th class="px-3 py-3 text-right">{$copy.accColLevy}</th>
+						<th class="px-3 py-3 text-right">{$copy.accAgeCurrent}</th>
+						<th class="px-3 py-3 text-right">{fill($copy.accAgeBucketDays, { n: $copy.accAge30 })}</th>
+						<th class="px-3 py-3 text-right">{fill($copy.accAgeBucketDays, { n: $copy.accAge60 })}</th>
+						<th class="px-3 py-3 text-right">{fill($copy.accAgeBucketDays, { n: $copy.accAge90 })}</th>
+						<th class="px-3 py-3 text-right">{$copy.accAgeOver90}</th>
 						<th class="px-3 py-3 text-right">{$copy.accColTotal}</th>
 						<th class="px-3 py-3">{$copy.accColFormF}</th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each shown as row}
+					{#each ladder as row (row.unitId)}
 						<tr class="border-b border-border">
-							<td class="px-3 py-2 font-semibold"><a class="text-brand-700 no-underline" href="/units?lot={row.unit.id}">{row.unit.id}</a></td>
+							<td class="px-3 py-2 font-semibold"><a class="text-brand-700 no-underline" href="/units/{row.unitId}">{row.unitId}</a></td>
 							<td class="px-3 py-2">{row.unit.owner}</td>
-							<td class="px-3 py-2 text-right tabular-nums">{money(row.due.october)}</td>
-							<td class="px-3 py-2 text-right tabular-nums">{money(row.due.arrears)}</td>
-							<td class="px-3 py-2 text-right tabular-nums">{money(row.due.late)}</td>
-							<td class="px-3 py-2 text-right tabular-nums">{money(row.due.fine)}</td>
-							<td class="px-3 py-2 text-right tabular-nums">{money(row.due.levy)}</td>
-							<td class="px-3 py-2 text-right font-semibold tabular-nums">{money(row.due.total)}</td>
+							<td class="px-3 py-2 text-right tabular-nums text-slate-500">{row.buckets.current ? money(row.buckets.current) : '—'}</td>
+							<td class="px-3 py-2 text-right tabular-nums">{row.buckets.age30 ? money(row.buckets.age30) : '—'}</td>
+							<td class="px-3 py-2 text-right tabular-nums">{row.buckets.age60 ? money(row.buckets.age60) : '—'}</td>
+							<td class="px-3 py-2 text-right tabular-nums">{row.buckets.age90 ? money(row.buckets.age90) : '—'}</td>
+							<td class="px-3 py-2 text-right font-semibold tabular-nums {row.buckets.over90 ? 'text-rose-700' : 'text-slate-400'}">{row.buckets.over90 ? money(row.buckets.over90) : '—'}</td>
+							<td class="px-3 py-2 text-right font-semibold tabular-nums">{money(row.total)}</td>
 							<td class="px-3 py-2 {formF(row.unit) === 'withheld' ? 'text-rose-700 font-semibold' : 'text-slate-500'}">{formF(row.unit)}</td>
 						</tr>
 					{/each}
 				</tbody>
+				<tfoot>
+					<tr class="border-t border-border bg-slate-50">
+						<td class="px-3 py-2 font-bold" colspan="2">{$copy.accColTotal}</td>
+						<td class="px-3 py-2 text-right font-bold tabular-nums text-slate-500">{money(shownTotals.buckets.current)}</td>
+						<td class="px-3 py-2 text-right font-bold tabular-nums">{money(shownTotals.buckets.age30)}</td>
+						<td class="px-3 py-2 text-right font-bold tabular-nums">{money(shownTotals.buckets.age60)}</td>
+						<td class="px-3 py-2 text-right font-bold tabular-nums">{money(shownTotals.buckets.age90)}</td>
+						<td class="px-3 py-2 text-right font-bold tabular-nums text-rose-700">{money(shownTotals.buckets.over90)}</td>
+						<td class="px-3 py-2 text-right font-bold tabular-nums">{money(shownTotals.total)}</td>
+						<td class="px-3 py-2"></td>
+					</tr>
+				</tfoot>
 			</table>
 		</div>
+
+		<p class="mt-3 text-sm text-slate-500">{fill($copy.accAgeClear, { clear: units.length - summary.pastDueLots, all: units.length })}</p>
+
+		{#if planned.length > 0}
+			<div class="mt-4 rounded-2xl border border-border bg-surface-2 p-4">
+				<h3 class="text-sm font-bold text-slate-900">{$copy.accAgePlanTitle}</h3>
+				<ul class="mt-2 space-y-1 text-sm text-slate-600">
+					{#each planned as row (row.unitId)}
+						<li class="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-1 last:border-0 last:pb-0">
+							<a class="font-semibold text-brand-700 no-underline" href="/units/{row.unitId}">{row.unitId} · {row.unit.owner}</a>
+							<span class="tabular-nums">{money(row.planned)} · {fill($copy.accAgePlanLine, { amount: money(LEVY_PLAN_CENTS[row.unitId] ?? 0) })}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+
 		<p class="mt-3 text-sm text-slate-500">{$copy.accReceivablesNote}</p>
 	{/if}
 

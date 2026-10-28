@@ -25,22 +25,22 @@
 		{ name: 'BCFSA', url: 'bcfsa.ca', status: 'Regulator', role: 'Audit-ready exports' }
 	];
 
-	/** Offered 2026-10-28. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
+	/** Offered 2026-10-28 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. The floor plan on Units and the statement on Accounting were picked from this offer and shipped in v0.3.44; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45; these four are what is waiting now.';
 	const uiQueue = [
 		{
-			name: 'Aged arrears',
-			where: '/accounting',
+			name: 'A receipt you can hand over',
+			where: '/pay',
 			detail:
-				'The receivables tab as an aging ladder — current, 30, 60 and 90+ days — oldest money first, each row opening the lot it names.'
+				'One printed page per payment: the amount, the rail, the reference or txid, the rate at lock and the lot, on council letterhead, checked at print size. Today the receipt tape is on screen only.'
 		},
 		{
-			name: 'A lot’s own sheet',
-			where: '/units?lot=305',
+			name: 'Health, over time',
+			where: '/',
 			detail:
-				'One lot on one page: the balance, its own ledger, the forms issued, the next dated items, and a print that keeps the tenant off it.'
+				'The compliance-health score as a six-month trend with the three inputs that moved it, drawn from the calendar and the ledger rather than from a stored number.'
 		},
 		{
 			name: 'Search that reaches the workspace',

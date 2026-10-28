@@ -14,6 +14,52 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.45",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Aged arrears on /accounting. The receivables tab is an aging ladder: every charge aged from the day it fell due, in five columns — current, 1–30, 31–60, 61–90 and 90+ — oldest money first, with each row opening that lot’s own sheet. Three cards above it carry the whole book (what is past due, how much of it is over 90 days, and the lot where time has done the most damage), and the table’s footer totals only the rows on screen.",
+          "A lot’s own sheet at /units/207. Every lot has a real page: the balance, the account behind it from April to September with each cleared month against its payment, the parkade levy at the resolution that created it, the forms on file, and what is dated next. Print drops the tenancy and the buttons; the page says so beside the button.",
+          "src/lib/arrears.ts, the aging rules as a pure module: 19 tests covering day counts across a month and a leap day, the column boundaries (30/31, 60/61, 90/91), month stepping, a plan balance held out of every bucket, a not-yet-due charge counted in the total and not in the buckets, the sort order, and lot 104 and 207’s exact columns.",
+          "src/lib/lot-sheet.ts, one lot read as a statement: 15 tests covering the fiscal months billed, a cleared month against its payment, a month inside the arrears window standing open, the running figure, the levy at its own date ahead of the fiscal year, and the calendar matcher that reads lot 207 and lots 201, 309, and 404 without catching $300.",
+          "src/lib/demo/arrears.ts, the dated charges the lot records do not carry on their own — the rules the page already states (fees on the 1st, the late fee on the 5th) plus the fine posted September 16 and the levy passed 12 November 2025.",
+          "Links into the sheet from where a reader already is. An arrears row opens its lot, and the lot panel on /units has a second button under the pay link."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "A page plan is a schedule, not overdue debt. Lots 108 and 403 are paying their levies down at $300 and $450 a month, so their balances sit outside the ladder, listed under it with the monthly figure. A ladder that ranked the owner keeping their word beside the one who stopped would be lying.",
+          "“Current” means not yet due. On September 30 the October fee is real money owed and not one day late, so it is in the total and in the column that should be empty before the 1st — the same distinction the page already makes about Form F.",
+          "The ladder’s footer now totals the rows on screen rather than the whole book, because a turned-on filter left a footer that added up to more than the reader could see.",
+          "“Nothing past due” counts the building, not the rows. Three lots are fully prepaid and have no charges at all, so the denominator is the building’s 40 lots, not the 37 with something on the books.",
+          "The sheet’s dates read forward. A future item was printing in −1 days; it now reads Tomorrow, in 5 days and the like."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A future dated item printed a negative day count on the lot sheet — the day difference was measured the wrong way round.",
+          "A lot with no charges was missing from “show every lot” on the ladder; the toggle now fills all 40 lots with a zero row rather than showing only the 37 that owe something."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The ladder ties, lot by lot and column by column. Each lot’s charges add up to balance(unit).total (a test over all 40), and in the browser the table’s own rows sum to its footer — $2,007.00 current, $1,515.00, $716.00, $50.00, $4,218.00 over 90, $8,506.00 total — under both the past-due and the every-lot setting ($25,137.00 / $31,636.00 for all 40).",
+          "Every row opens its lot: /units/207, /units/104, /units/309, and each of those pages renders its own balance, account and dated items.",
+          "The sheet in Chrome: 207 reads $6,366.00 to clear, its account opens with the levy at Nov 12 ($3,552.00), runs April to September with the three months behind standing open and the late fees after the fees they followed, and closes on $5,700.00 — the fees, late fees and levy still standing, with October a dated item rather than a ledger line. 305 reads $576.00 to clear, all six months cleared, $0.00 still owing.",
+          "Print, measured rather than assumed: with print media emulated, the tenancy card is display: none and the action row is gone.",
+          "Geometry at 1440, 1100, 900, 620 and 390, both pages: no page overflow at any width; the ladder scrolls inside its own table (820px of content in a 390px window) and the sheet’s account does the same (520px).",
+          "Contrast, measured on the rendered theme: the worst of the new ink is 5.48:1 light (the cleared figure) and 7.15:1 dark; the ladder’s 90+ column is 6.29:1 and 6.75:1, and the sheet’s balance 17.85:1 and 12.88:1.",
+          "Frontend 408 passed, Svelte check 0 errors / 0 warnings, translation audit 1,383 keys × 9 locales (36 new), contrast audit 218 pairs, production build green with 40 lot pages and v0.3.45 in build/index.html."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.44",
     "date": "2026-10-28",
     "groups": [

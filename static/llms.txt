@@ -61,9 +61,9 @@ Shipped 2026-10-16: the one-lot pay sheet on `/pay` (v0.3.30) — offered 2026-0
 
 Offered 2026-10-28, not started:
 
-1. Aged arrears — `/accounting`. The receivables tab as an aging ladder: current, 30, 60 and 90+ days, oldest money first, each row opening the lot it names.
-2. A lot's own sheet — `/units?lot=305`. One lot on one page: the balance, its own ledger, the forms issued, the next dated items, and a print that keeps the tenant off it.
+1. A receipt you can hand over — `/pay`. One printed page per payment: the amount, the rail, the reference or txid, the rate at lock and the lot, on council letterhead, checked at print size. Today the receipt tape is on screen only.
+2. Health, over time — `/`. The compliance-health score as a six-month trend with the three inputs that moved it, drawn from the calendar and the ledger rather than from a stored number.
 3. Search that reaches the workspace — Cmd/Ctrl+K. The index finds pages and documents today, not the building: add lot records, ledger entries and tax sections, each result opening the row it names.
 4. The AGM packet — `/meetings`. One printable packet per meeting: notice, agenda, last minutes and the quorum maths on one page, checked at print size rather than shrunk to fit.
 
-Shipped from that offer: the September close on `/accounting` (v0.3.40), the next-30-days strip on `/tax` and `/calendar` (v0.3.41), the release trail on `/changelog` (v0.3.43), and the floor plan on `/units` with the statement on `/accounting` (v0.3.44). The queue was refreshed each time, so four are waiting again.
+Shipped from that offer: the September close on `/accounting` (v0.3.40), the next-30-days strip on `/tax` and `/calendar` (v0.3.41), the release trail on `/changelog` (v0.3.43), the floor plan on `/units` with the statement on `/accounting` (v0.3.44), and aged arrears on `/accounting` with a lot's own sheet at `/units/207` (v0.3.45). The queue was refreshed each time, so four are waiting again.
