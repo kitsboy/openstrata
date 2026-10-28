@@ -1,9 +1,22 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.43
+**Site/product version:** v0.3.44
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — the floor plan on /units and the statement on /accounting (site, `0.3.44`, the first two picks from the 28 October queue)
+
+- **Both picks shipped in one release.** The queue offered four on 2026-10-28; the two head items were taken together — `A floor you can walk` (`/units`) and `A ledger you can read as a ledger` (`/accounting`) — and two new offers replace them.
+- **`/units` is a plan, not a wall of buttons.** Four bands, top floor first, each drawn as the building stands: two rows of lots either side of a corridor, lot numbers running up the row. Every lot is as wide as its square footage earns. `src/lib/floor-plan.ts` (11 tests) holds the split and the widths.
+- **Width is the only number that is not decoration, and it has two rules.** A row adds to exactly **100** after rounding — the drift goes to the widest lot, because a plan with a hairline gap at the right edge reads as a bug — and a lot that would fall below **14%** is held there while the rest of the row is shared among the wider lots, so a 548 sq ft studio still carries its own number beside a 1,540 sq ft two-bed.
+- **The plan reads the filter the list already had.** No second control: a chip narrows the drawing, a floor with nothing in view is dropped rather than drawn empty, and the legend lists only the tones actually on screen. Colours are `tone()` in `demo/building`, so the plan cannot disagree with the filters.
+- **A layout defect the old grid had hidden:** a grid item defaults to `min-width: auto`, so the plan's 460px row pushed a 390px phone to **502px**. `min-w-0` on the plan column hands the scrolling to the band, which is now the only thing that scrolls — measured at `390`, `620`, `900`, `1100` and `1440`: no page overflow, no clipped tile, tiles 80–192px.
+- **`/accounting`'s journal reads as a statement.** Date order (the written order is kept within a day), a running cash balance beside every entry, and a drawer per entry with its hash, who posted it and the evidence behind it. `src/lib/ledger-statement.ts` (11 tests).
+- **Cash means two named accounts, not a prefix.** The first draft matched `10xx` and swept the war chest at cost (`1080`) into the balance, moving it by **$405** it never saw. `CASH_ACCOUNTS` is now `1010` + `1020`, and a third bank account is a decision rather than an accident.
+- **The statement closes on the funds tab.** Opening cash is the closing cash less what the journal moved, so the last line is **$685,486.42** = operating **$81,797.62** + reserve **$603,688.80** on `/accounting`'s Three funds tab — read back off both tabs in the browser. Hashes are chained: each covers the entry and the hash above, so editing a line changes every hash below. The drawer says the chain runs in the browser; the host keeps the durable copy.
+- **The queue is refreshed, per the standing rule.** Two new offers replace the two picks — aged arrears (`/accounting`) and a lot's own sheet (`/units?lot=305`) — beside search that reaches the workspace and the AGM packet, so four are always waiting. Updated in `docs/ROADMAP.md`, `/roadmap` and `static/llms.txt`.
+- 14 catalog keys × 9 locales; site `0.3.44`. Verification: frontend **374 passed**, `check` **0/0**, i18n **1,346 keys × 9 locales**, i18n audit passing, contrast measured in a browser at 9.3:1 (tiles) and 8.3:1 (drawer) at worst.
 
 ## Recent milestone — `/changelog` says where you are (site, `0.3.43`, the queue's last pick and a refreshed queue)
 

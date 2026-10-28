@@ -1,3 +1,21 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the floor plan on /units, and the journal as a statement
+
+Commit: `a4651ef` (site `0.3.44`). Backend API version stays `0.3.28`.
+
+> **The first two picks from the 28 October queue, shipped together.** `/units` is a plan now instead of a wall of lot buttons: four bands, top floor first, each drawn as the building stands — two rows of lots either side of a corridor, lot numbers running up the row, and every lot as wide as its square footage earns. `A ledger you can read as a ledger` follows on `/accounting`, where the journal reads as a statement: date order, a running cash balance beside every entry, and a drawer per entry with its hash, who posted it and what evidence came with it.
+>
+> **`src/lib/floor-plan.ts` (11 tests) holds the plan's rules.** A row adds to exactly **100** after rounding — the drift goes to the widest lot, because a hairline gap at the right edge reads as a bug — and a lot that would fall below **14%** is held there while the rest is shared among the wider lots, so a 548 sq ft studio keeps its own number beside a 1,540 sq ft two-bed. The plan also reads the filter the list already had rather than adding a second control, and drops a floor with nothing left in view instead of drawing it empty.
+>
+> **The floor plan found a layout defect the old grid had hidden.** A grid item defaults to `min-width: auto`, so the plan's 460px row pushed a 390px phone to **502px**. `min-w-0` hands the scrolling to the band, which is now the only thing that scrolls. Measured at `390`, `620`, `900`, `1100` and `1440`: no page overflow, no clipped tile, tiles 80–192px wide.
+>
+> **`src/lib/ledger-statement.ts` (11 tests) holds the statement's rules, and one of them caught a real mistake.** Cash is two named accounts — `1010` operating and `1020` reserve — not a `10xx` prefix: the first draft's pattern swept the war chest at cost (`1080`) into the balance and moved it by **$405** it never saw. The opening balance is the closing cash less what the journal moved, so the last line lands on **$685,486.42** — exactly the operating (**$81,797.62**) plus reserve (**$603,688.80**) cash on the Three funds tab, read back off both tabs in Chrome. Hashes are chained: each covers the entry and the hash above it, so editing a line changes every hash below. The drawer says the chain runs in the browser here; the host keeps the durable copy.
+>
+> **The queue is refreshed, because two picks ended.** Two new offers replace them — aged arrears (`/accounting`) and a lot's own sheet (`/units?lot=305`) — beside search that reaches the workspace (`Cmd/Ctrl+K`) and the AGM packet (`/meetings`), so four are always waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt` and `.ai_docs/current-status.md`.
+>
+> **Verified:** frontend **374 passed**, `check` **0 errors / 0 warnings**, translation audit **1,346 keys × 9 locales** (14 new), production build green with `v0.3.44` in `build/index.html`. Contrast measured in the browser at **9.3:1** for the worst tile and **8.3:1** for the drawer, on the theme it rendered. The CDP probes live in `/tmp`; none is in the tree.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — /changelog says where you are
 
 Commit: `2105165` (site `0.3.43`). Backend API version stays `0.3.28`.

@@ -1,3 +1,24 @@
+## Session — 2026-10-28 (third)
+
+**Done:**
+- Shipped the first two picks from the 28 October queue in one release (`0.3.44`): the floor plan on `/units` and the journal-as-statement on `/accounting`.
+- `src/lib/floor-plan.ts` (11 tests): the north/south split (01–05 / 06–10), floors top down, rows adding to exactly 100%, a 14% floor under the small lots, a dropped floor when a filter empties it.
+- `src/lib/ledger-statement.ts` (11 tests): date order with written order inside a day, cash running balance over `1010`+`1020` only, a chained 16-hex hash, and the closing balance.
+- `/accounting`'s journal entries carry `postedBy` and `evidence` in `demo/books.ts`; the drawer shows both plus the hash and the entry's own lines.
+- 14 new catalog keys × 9 locales, catalog **1,346** keys at full parity.
+
+**Decisions:**
+- Cash accounts are named, not matched by prefix: the first draft's `/^10\d\d/` swept the war chest at cost (1080) into the balance and moved it by $405 it never saw.
+- Opening cash is derived from the closing cash less what the journal moved, so the statement closes on the funds tab's cash ($685,486.42 = $81,797.62 + $603,688.80) instead of asserting an opening a reader cannot check.
+- The plan reads the existing filter rather than adding a control, and a floor with nothing in view is dropped rather than drawn empty.
+- Two new offers replace the two picks: aged arrears (`/accounting`), a lot's own sheet (`/units?lot=305`), beside search-in-the-workspace and the AGM packet.
+
+**Git State:**
+- SHA: `a4651ef` (feature), plus this docs commit.
+- Unpushed: pushed with this session; `origin/main` carries both.
+
+---
+
 ## Session — 2026-10-28 (second)
 
 **Done:**
