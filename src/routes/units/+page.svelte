@@ -113,7 +113,10 @@
 									onclick={() => choose(unit.id)}
 								>
 									<span class="block text-sm font-bold">{unit.id}</span>
-									<span class="block truncate text-xs">{unit.owner}</span>
+									<!-- Wraps to two lines rather than cutting: at 1100 a five-up row
+									     leaves this cell ~108px, and "Northwater Holdings Ltd." needs
+									     137. -->
+									<span class="block text-xs leading-snug line-clamp-2">{unit.owner}</span>
 									<span class="block text-[11px] tabular-nums">{money(balance(unit).fee)}/mo</span>
 								</button>
 							{/each}

@@ -604,7 +604,10 @@ kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; color
 .more-button:hover { color: var(--ink); background: #f2f5f6; }
 .building-info { margin: 14px 0 14px; padding-bottom: 13px; border-bottom: 1px solid #f0f2f3; }
 .building-info h3 { margin: 0 0 5px; overflow: hidden; color: var(--ink); font-size: 13.5px; font-weight: 800; letter-spacing: -.3px; text-overflow: ellipsis; white-space: nowrap; }
-.building-info p { margin: 0; overflow: hidden; color: var(--muted); font-size: 9.5px; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+/* Wraps instead of truncating. Its own card fits the line at most widths but not
+   all: at 1440 the address · lots · floors line was 5px too long for a nowrap
+   ellipsis, and a cut "4 flo…" is worse than a second line. */
+.building-info p { margin: 0; color: var(--muted); font-size: 9.5px; font-weight: 500; line-height: 1.45; overflow-wrap: break-word; }
 .building-info p span { margin: 0 4px; color: var(--faint); }
 .progress-label { margin-bottom: 6px; color: var(--muted); font-size: 9.5px; font-weight: 600; }
 .progress-label strong { color: var(--ink); font-family: 'DM Mono', monospace; font-size: 9.5px; font-weight: 700; margin-left: 4px; }
@@ -687,8 +690,12 @@ kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; color
 .proof-card .proof-cta:hover { color: var(--orange-deep); background: rgba(249,115,72,.08); gap: 9px; }
 /* Three columns only while there is room for a readable measure. Narrower, it
    goes two up with the last card spanning, so no card is left with a 4-line
-   column of copy; on a phone it is one card per row. */
-@media (max-width: 1180px) { .proof-band { grid-template-columns: 1fr 1fr; gap: 12px; }
+   column of copy; on a phone it is one card per row.
+   The breakpoint is 1280, not the window: from about 1181 up the dashboard's
+   sidebar is on screen, so a 1181px window leaves the band 929px and each card
+   only 254px — a 156px column of copy, which is the defect this layout was
+   supposed to end. Measured at 1181, 1440 and 620 in both themes. */
+@media (max-width: 1279px) { .proof-band { grid-template-columns: 1fr 1fr; gap: 12px; }
   .proof-card:nth-child(3) { grid-column: 1 / -1; }
   .proof-card { padding: 16px 18px 14px; }
   .proof-card .proof-cta { margin-top: 10px; } }
@@ -728,7 +735,7 @@ kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; color
 .more-button { margin-left: auto; color: var(--muted); background: transparent; font-size: 12px; letter-spacing: 1px; }
 .building-info { margin: 17px 0 18px; }
 .building-info h3 { margin: 0 0 5px; overflow: hidden; color: var(--ink); font-size: 13px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.building-info p { margin: 0; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.building-info p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.45; overflow-wrap: break-word; }
 .building-info p span { margin: 0 4px; color: var(--faint); }
 .progress-label { margin-bottom: 6px; color: var(--muted); font-size: 9px; }
 .progress-label strong { color: var(--ink); font-family: 'DM Mono', monospace; font-size: 9px; }

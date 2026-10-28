@@ -14,6 +14,48 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.40",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A September close on /accounting. Five checks between the September books and a signed month: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, board approval is on the minutes, and the period locks. Three pass today; board approval is open and the lock waits on it. The checks read books.tie, the payroll entry and the reserve figures rather than a stored status, so the panel cannot drift from the cards above it. The close button is disabled while anything is open, and the blocking check is named both on screen and in the button's aria-describedby.",
+          "The accounting page is in the translation catalog. 96 keys across nine locales — the lede, the six tab labels, every column header, the fund rows and the close panel — and a fill() helper for catalog strings that carry figures ({amount}, {date}). The page went from 47 hard-coded English strings to 0 on the i18n audit; the catalog is now 1,179 keys with parity enforced across fr es zh hi fil pl uk sw."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "The building card's meta line no longer cuts its own text. 4100 Cambie Street, Vancouver · 40 lots · 4 floors was a nowrap ellipsis that overflowed by 5px at 1440 and rendered as … 40 lots · 4 flo…. It wraps now — two lines at 1440 and at 1181, one line at 1100 — with no clipping at any width measured.",
+          "A long owner name wraps instead of losing its second half. The /units lot cell is 108px at 1100, and Northwater Holdings Ltd. needed 137. The name takes two lines now, fully visible.",
+          "The proof band's breakpoint was still too generous by 99px. Three columns above 1180px, but the dashboard sidebar is on screen from about 1181, which leaves the band 929px and each card 254px — a 156px column of copy in both themes. That is the defect the band was rebuilt to end, at a different window width. The two-up breakpoint is now 1279px."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The close panel's open-state chip uses --color-amber-50 on --warning-text instead of amber-700 over a translucent fill. The first version measured 4.37:1 in light and 2.32:1 in dark — a fixed amber stays dark on a dark tint. The token pair reads 6.15:1 and 6.63:1."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Geometry audit over /accounting (all six tabs), /units and / at 1440, 1279, 1181, 1100, 900 and 620, in both themes: 0 clipped, truncated, spilled or sub-200px findings.",
+          "French rendering checked in the browser: the panel reads Clôture de septembre, the blocked line names Approbation du conseil au procès-verbal, and all six tabs translate.",
+          "Frontend 322 passed, Svelte check 0 errors / 0 warnings, translation audit 1,179 keys × 9 locales with /accounting clean, contrast audit 218 pairs + 3 fill guards, secret gate green. Backend untouched at 0.3.28."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The demo money() helper is not locale-aware, so figures in French read $904.58 rather than 904,58 $. formatCurrency in src/lib/i18n.ts does the right thing and is used where formatting matters; the demo statements keep the plain helper. Localizing money and dates across the demo pages is item 47 on the improvements list.",
+          "/units, /pay, /tax, /calendar and /meetings still carry hard-coded copy. /accounting was the largest surface, not the last."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.39",
     "date": "2026-10-28",
     "groups": [

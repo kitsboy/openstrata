@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.40
+-  summary: "The accounting page gets a September close, and its copy goes into the catalog. A new panel sits under the four fund cards on /accounting and lists the five checks between the September books and a signed month: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, the board approval is on the minutes, and the period is locked. Four are computed from the ledger rather than from a status field, so the panel cannot disagree with the numbers above it; three pass today, board approval is open, and the lock waits on it. The close button is disabled and names the blocking check in its aria description as well as on screen, because a disabled button that does not say what it is waiting for is a dead end. The page's own copy also left the template: 96 new keys in nine locales, from the lede and the six tab labels to every column header and fund row, and a fill() helper for catalog strings with figures in them. /accounting went from 47 hard-coded English strings to 0, and the catalog to 1,179 keys. The two ellipses the last audit left behind are fixed the same way the deadline titles were: the building card's meta line wraps instead of cutting 5px at 1440, and a long owner name wraps to two lines rather than losing 29px in a 108px cell at 1100. Auditing the result turned up a third case of the same defect that the breakpoint had missed: between 1181 and 1279 the sidebar shrinks the dashboard to 929px, which left the proof band a 156px column of copy in both themes, so its two-up breakpoint moved from 1180 to 1279. One measurement caught a regression before it shipped: the panel's open chip used amber-700 over a translucent fill and read 4.37:1 in light and 2.32:1 in dark, so it now uses the token pair that flips with the theme, at 6.15:1 and 6.63:1. Frontend 322 tests, check 0/0, contrast audit 218 pairs, 1,179 i18n keys."
 -  version: 0.3.39
 -  summary: "The rest of the dashboard's panels were audited for the problem the proof band had, and one of them had it. The compliance-health panel set its tracked-item list in a row beside a 112px gauge, which left each deadline title about 118px even at 1440 and about 50px in a 1100px window — so 'Energy Performance Report (EPR) filing' rendered as 'Ener…' and nothing could be read. The gauge now sits on its own row with the score formula full width beneath it, and the items take the panel's whole width below that, clamping to two lines rather than truncating to one — 250px per title at 1440, where all three read on one line. The task list's row titles likewise clamp to two lines instead of cutting the longest one at 620px, where it lost 19px of text. Everything else measured clean: at 1440, 1181, 1100, 900 and 620 no panel has clipped, spilled or unreadably narrow copy, and the only remaining overflow is content built to scroll — the payment strip and the tab rows, both overflow-x auto with their own thin scrollbars. Two smaller single-line ellipses are known and left alone: the building card's meta line cuts 5px at 1440, and the /units company column cuts a long company name at 1100. Frontend 318 tests, check 0/0, contrast audit 218 pairs."
 -  version: 0.3.38
@@ -118,6 +120,36 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.40] — 2026-10-28
+
+### Added
+
+- **A September close on `/accounting`.** Five checks between the September books and a signed month: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, board approval is on the minutes, and the period locks. Three pass today; board approval is open and the lock waits on it. The checks read `books.tie`, the payroll entry and the reserve figures rather than a stored status, so the panel cannot drift from the cards above it. The close button is disabled while anything is open, and the blocking check is named both on screen and in the button's `aria-describedby`.
+- **The accounting page is in the translation catalog.** 96 keys across nine locales — the lede, the six tab labels, every column header, the fund rows and the close panel — and a `fill()` helper for catalog strings that carry figures (`{amount}`, `{date}`). The page went from **47** hard-coded English strings to **0** on the i18n audit; the catalog is now **1,179** keys with parity enforced across `fr es zh hi fil pl uk sw`.
+
+### Fixed
+
+- **The building card's meta line no longer cuts its own text.** `4100 Cambie Street, Vancouver · 40 lots · 4 floors` was a `nowrap` ellipsis that overflowed by 5px at 1440 and rendered as `… 40 lots · 4 flo…`. It wraps now — two lines at 1440 and at 1181, one line at 1100 — with no clipping at any width measured.
+- **A long owner name wraps instead of losing its second half.** The `/units` lot cell is **108px** at 1100, and `Northwater Holdings Ltd.` needed 137. The name takes two lines now, fully visible.
+- **The proof band's breakpoint was still too generous by 99px.** Three columns above 1180px, but the dashboard sidebar is on screen from about 1181, which leaves the band 929px and each card 254px — a **156px** column of copy in both themes. That is the defect the band was rebuilt to end, at a different window width. The two-up breakpoint is now 1279px.
+
+### Changed
+
+- The close panel's open-state chip uses `--color-amber-50` on `--warning-text` instead of `amber-700` over a translucent fill. The first version measured **4.37:1** in light and **2.32:1** in dark — a fixed amber stays dark on a dark tint. The token pair reads **6.15:1** and **6.63:1**.
+
+### Verified
+
+- Geometry audit over `/accounting` (all six tabs), `/units` and `/` at `1440`, `1279`, `1181`, `1100`, `900` and `620`, in both themes: **0** clipped, truncated, spilled or sub-200px findings.
+- French rendering checked in the browser: the panel reads `Clôture de septembre`, the blocked line names `Approbation du conseil au procès-verbal`, and all six tabs translate.
+- Frontend **322 passed**, Svelte check **0 errors / 0 warnings**, translation audit **1,179 keys × 9 locales** with `/accounting` clean, contrast audit **218 pairs** + 3 fill guards, secret gate green. Backend untouched at `0.3.28`.
+
+### Known issues
+
+- The demo `money()` helper is not locale-aware, so figures in French read `$904.58` rather than `904,58 $`. `formatCurrency` in `src/lib/i18n.ts` does the right thing and is used where formatting matters; the demo statements keep the plain helper. Localizing money and dates across the demo pages is item 47 on the improvements list.
+- `/units`, `/pay`, `/tax`, `/calendar` and `/meetings` still carry hard-coded copy. `/accounting` was the largest surface, not the last.
+
+---
 
 ## [0.3.39] — 2026-10-28
 
