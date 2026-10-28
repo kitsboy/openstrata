@@ -1,11 +1,21 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.39
+**Site/product version:** v0.3.40
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the rest of the dashboard audited, and one panel had the same bug (site, `0.3.39`)
+## Recent milestone — a September close on /accounting, and the page in the catalog (site, `0.3.40`)
+
+- **A September close now exists, and it cannot lie about itself.** `src/lib/components/SeptemberClose.svelte` lists the five checks between the September books and a signed month: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, board approval is on the minutes, and the period locks. Four read the ledger (`books.tie`, the payroll entry, the reserve figures) rather than a stored status, so the panel cannot drift from the cards above it; three pass today, board approval is open (next council meeting 20 October), and the lock waits on it.
+- **The close button is disabled and says why.** The blocking check is named on screen *and* in the button's `aria-describedby` — a disabled control without a stated reason is a dead end. `src/lib/components/SeptemberClose.test.ts` (4 tests) pins the 3-of-5 count, the refusal, the sentence naming the blocking check, and that nothing in the panel is set to truncate.
+- **The accounting page's copy is in the catalog:** **96** new keys across `fr es zh hi fil pl uk sw` — lede, kicker, six tab labels, every column header, the fund rows and the close panel. `fill(text, values)` in `src/lib/i18n.ts` fills `{amount}` / `{date}` slots and leaves a missing value as a visible placeholder rather than `undefined`. `/accounting` went from **47** hard-coded English strings to **0**; the catalog is **1,179** keys at full parity.
+- **Both left-over ellipses are fixed, the way the deadline titles were.** The building card's meta line (`4100 Cambie Street, Vancouver · 40 lots · 4 floors`) was a `nowrap` ellipsis overflowing by 5px at 1440 — it wraps now (two lines at 1440 and 1181, one at 1100), `scrollWidth === clientWidth` everywhere measured. The `/units` lot cell is **108px** at 1100 and `Northwater Holdings Ltd.` needed 137; it takes two lines, fully visible.
+- **The audit found a third case of the same defect, in the fix that was supposed to end it.** Between **1181 and 1279** the dashboard sidebar is on screen, leaving the proof band 929px and each card 254px — a **156px** column of copy in both themes. Its two-up breakpoint moved from `1180` to `1279`.
+- **One regression caught before it shipped.** The close panel's open chip was `amber-700` over a translucent fill: **4.37:1** in light, **2.32:1** in dark, because a fixed amber stays dark on a dark tint. The token pair (`--warning-text` on `--color-amber-50`) flips with the theme and reads **6.15:1** / **6.63:1**. The contrast audit cannot see Tailwind classes, so this needed a browser measurement.
+- Site version `0.3.40` (`CHANGELOG.md` section + front-matter summary, `changelog.generated.ts` regenerated — **43 releases with notes, 307 items**); backend stays `0.3.28`. Verification: frontend **322 passed**, `check` **0/0**, i18n **1,179 keys × 9 locales**, contrast **218 pairs** + 3 fill guards, secret gate green, build green with `v0.3.40` in `build/index.html`.
+
+## Prior milestone — the rest of the dashboard audited, and one panel had the same bug (site, `0.3.39`)
 
 - **Audited every dashboard panel at `1440`, `1181`, `1100`, `900` and `620`, both themes**, looking for the proof band's defect class: content clipped by `overflow: hidden`, content spilling out of its card, deliberate ellipsis that actually truncates, and text set in a column under 200px with three or more lines.
 - **One panel had it.** `HealthScore` set its tracked-item list in a row beside the 112px gauge, leaving each title **118px** at `1440` and **50px** at `1100` — `Energy Performance Report (EPR) filing` rendered as `Ener…`, and at desktop `Depreciation report renewal` lost its last word. The panel was scoring deadlines it could not name.
@@ -101,7 +111,8 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 - Agent accounts are not a distinct identity class yet; the manifest explicitly warns against sharing admin/treasurer credentials. A dedicated scoped credential model remains future work.
 - The backend is not confirmed deployed; do not call local verification a production check.
 - Legal/statutory content requires current professional review. Payment rails and backend integrations must remain honestly labeled until real host credentials/providers exist.
-- The six dashboard routes listed under the i18n milestone render English in every locale, and the repaired audit now says so on every run.
+- **`/accounting` is now fully in the catalog; five routes still are not.** The six dashboard routes listed under the i18n milestone render English in every locale except `/accounting`, which shipped its copy in `0.3.40` — `/units`, `/pay`, `/tax`, `/calendar` and `/meetings` remain, and the audit names each string on every run.
+- **The demo `money()` helper is not locale-aware.** A French page still shows `$904.58` rather than `904,58 $`; `formatCurrency` in `src/lib/i18n.ts` does it properly and is used where formatting matters. Localizing money and dates across the demo statements is item 47 on the improvements list.
 - **Migration execution now repeats on every push, on this machine.** `npm run db:check` applies the whole set from zero and as an upgrade and runs the suite against the result in ~3s, and `.githooks/pre-push` runs it — installed in this clone (`core.hooksPath=.githooks`), so another clone or machine needs `npm run hooks:install` once. CI's `backend-e2e` job runs the same gate on a fresh `pgvector/pgvector:pg17` container (it replaces the separate `npm run migrate` and `-- e2e-smoke` steps), so CI and the hook agree on what "applies" means. What is still not covered: the harness is Homebrew-shaped — `OPENSTRATA_PG_BIN` or a `DATABASE_URL` pointing at `docker compose`'s `db` service are the non-macOS paths.
 - The audit row for a bylaw fine carries the amount and the council-minutes reference, but **not the unit** — the complaint is an opaque JSON string the policy deliberately does not parse. Traceability for a fine runs through the minutes, not the lot.
 - The site consumes `POST /auth/logout` but **not refresh tokens**: an access token simply expires after an hour and the next call 401s into a signed-out state. That is a UX decision left open, not a broken path.
@@ -111,4 +122,4 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 
 ## UI queue
 
-The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. Current queue is the floor walk on `/units`, September close on `/accounting`, next-30-days strip on `/tax` + `/calendar`, and a release trail on `/changelog`. Neither commit here consumed a queue item — the chip/token work is design-system compliance, and the localization is the chrome those pages sit in.
+The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **The September close on `/accounting` shipped in `0.3.40`, so three are left:** a floor walk on `/units`, a next-30-days strip on `/tax` + `/calendar`, and a release trail on `/changelog`.

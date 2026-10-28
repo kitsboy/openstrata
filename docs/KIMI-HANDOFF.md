@@ -1,3 +1,31 @@
+## Session — 2026-10-28 · a September close on /accounting, and its copy in the catalog
+
+**Done:**
+- **Cam asked for the two things the last handoff left on the table: the two remaining ellipses, and the September close queue item with `/accounting` moved into the i18n catalog.** Both shipped as site `0.3.40`.
+- **`SeptemberClose.svelte`** sits under the four fund cards on `/accounting`. Five checks between the September books and a signed month: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, board approval is on the minutes, and the period locks. **Four read the ledger** (`books.tie`, the payroll entry, the reserve figures) rather than a stored status, so the panel cannot disagree with the cards above it. Three pass today; board approval is open; the lock waits on it.
+- **The close button is disabled and names what it is waiting for** — on screen and in its `aria-describedby`, because a disabled button without a reason is a dead end. Four tests in `SeptemberClose.test.ts` pin the count, the refusal, the article that names the blocking check, and that nothing in the panel is set to truncate.
+- **The accounting page's copy is in the catalog:** **96** new keys across nine locales — the lede, the kicker, the six tab labels, every column header, the fund rows, and the close panel. A `fill(text, values)` helper in `src/lib/i18n.ts` fills the `{amount}` / `{date}` slots; a missing value stays a visible placeholder instead of `undefined`. `/accounting` went from **47** hard-coded English strings on the audit to **0**; the catalog is **1,179** keys with `fr es zh hi fil pl uk sw` at parity.
+- **Both ellipses fixed the way the deadline titles were.** The building card's meta line (`4100 Cambie Street, Vancouver · 40 lots · 4 floors`) was a `nowrap` ellipsis overflowing by 5px at 1440 — it wraps now, two lines at 1440 and 1181, one line at 1100, `scrollWidth === clientWidth` at every width measured. The `/units` lot cell is **108px** at 1100 and `Northwater Holdings Ltd.` needed 137; the name takes two lines, fully visible.
+- **Auditing the result found a third case of the same defect the earlier breakpoint had missed.** Between **1181 and 1279** the dashboard's sidebar is on screen, which leaves the proof band 929px and each card 254px — a **156px** column of copy in both themes, i.e. the very defect the band was rebuilt to end. Its two-up breakpoint moved from `1180` to `1279`.
+- **Site version `0.3.40`** — `CHANGELOG.md` section plus front-matter summary, `changelog.generated.ts` regenerated (**43 releases with notes, 307 items**), footer stamp reads `v0.3.40`.
+
+**Decisions:**
+- **The panel reads state, never stores it.** A checklist backed by a mutable "done" flag would have drifted from the books the first time a number changed. The two checks that are not done say why (`board approval is 20 October`; `nothing is locked today`) instead of showing fabricated progress.
+- **Paid the translation cost rather than shipping a half-localized page.** 96 keys × 9 languages is the bulk of this release; the alternative was a September close panel in English bolted onto a page the i18n audit already called the worst offender.
+- **Fixed the proof band's breakpoint even though it was not asked for.** It came out of the same measurement, it is the same defect class, and leaving it would have made "the ellipses are fixed" a half-truth at one window width.
+- **Changed a chip colour because the measurement said so.** The open-state chip started as `amber-700` over a translucent fill and measured **4.37:1** in light and **2.32:1** in dark — a fixed amber on a dark olive tint. The token pair (`--warning-text` on `--color-amber-50`) flips with the theme and reads **6.15:1** / **6.63:1**. The contrast audit does not see Tailwind classes, which is why this needed a browser measurement.
+- **Consumed one queue item.** The September close was the pick, so the queue is now three: the floor walk on `/units`, the next-30-days strip on `/tax` + `/calendar`, and the release trail on `/changelog`.
+
+**Verified:** geometry audit over `/accounting` (all **six** tabs), `/units` and `/` at `1440`, `1279`, `1181`, `1100`, `900` and `620` in both themes — **0** clipped, truncated, spilled or sub-200px findings. French rendering checked in the browser: `Clôture de septembre`, `Achèvement`-style rows, the blocked line naming `Approbation du conseil au procès-verbal`, all six tabs translated. Frontend **322 passed** (318 + 4), `check` **0 errors / 0 warnings**, translation audit **1,179 keys × 9 locales**, contrast audit **218 pairs** + 3 fill guards, secret gate green, production build green with `v0.3.40` in `build/index.html`. No probe script is in the tree.
+
+**What is still open:** the demo `money()` helper is not locale-aware, so a French page still shows `$904.58` rather than `904,58 $` — `formatCurrency` in `src/lib/i18n.ts` does it properly and is used where formatting matters; localizing money and dates across the demo pages is item 47 on the improvements list. `/units`, `/pay`, `/tax`, `/calendar` and `/meetings` still carry hard-coded copy — `/accounting` was the largest surface, not the last.
+
+**Git State:**
+- `f235e86` — feat(ui): a September close on /accounting, and the page in the catalog (site `0.3.40`).
+- Backend API version `0.3.28`; site version `0.3.40`.
+
+---
+
 ## Session — 2026-10-28 · the rest of the dashboard audited, and one panel had the same bug
 
 **Done:**

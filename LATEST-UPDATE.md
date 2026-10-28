@@ -1,3 +1,25 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — a September close on /accounting, and its copy in the catalog
+
+Commit: `f235e86` (site `0.3.40`). Backend API version stays `0.3.28`.
+
+> **Two things from the last handoff, both shipped.** The September close was the queue item worth taking, and the two remaining ellipses were its other half.
+>
+> **The close panel is built from the ledger, not from a status field.** Five checks sit under the four fund cards on `/accounting`: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, board approval is on the minutes, and the period locks. Four read `books.tie` and the payroll/reserve entries, so the panel cannot drift from the cards above it. Three pass today; board approval is open (next council meeting 20 October); the lock waits on it, and **the disabled close button names the check that blocks it** — on screen and in its `aria-describedby`.
+>
+> **The page's copy left the template.** **96** new keys across nine locales — the lede, the kicker, the six tab labels, every column header, the fund rows and the close panel — with a `fill()` helper for the `{amount}` / `{date}` slots. `/accounting` went from **47** hard-coded English strings to **0**; the catalog is **1,179** keys with `fr es zh hi fil pl uk sw` at parity. French rendering checked in the browser: `Clôture de septembre`, `Approbation du conseil au procès-verbal`, and all six tabs translated.
+>
+> **Both ellipses fixed the same way the deadline titles were.** The building card's meta line overflowed by 5px at 1440 behind a `nowrap` ellipsis; it wraps now — two lines at 1440 and 1181, one at 1100 — with `scrollWidth === clientWidth` at every width measured. The `/units` lot cell is **108px** at 1100 and `Northwater Holdings Ltd.` needed 137; it takes two lines, fully visible.
+>
+> **The measurement found a third case of the same defect, inside the fix that was meant to end it.** Between **1181 and 1279** the dashboard sidebar is on screen, which leaves the proof band 929px and each card 254px — a **156px** column of copy in both themes. Its two-up breakpoint moved from `1180` to `1279`.
+>
+> **One colour regression caught before it shipped.** The close panel's open chip was `amber-700` over a translucent fill: **4.37:1** in light and **2.32:1** in dark, because a fixed amber stays dark on a dark tint. It now uses the token pair that flips with the theme — **6.15:1** and **6.63:1**. The contrast audit cannot see Tailwind classes, so only a browser measurement would have caught it.
+>
+> **Verified:** geometry audit over `/accounting` (all six tabs), `/units` and `/` at `1440`, `1279`, `1181`, `1100`, `900` and `620`, both themes — **0** clipped, truncated, spilled or sub-200px findings. Frontend **322 passed**, `check` **0 errors / 0 warnings**, translation audit **1,179 keys × 9 locales**, contrast audit **218 pairs** + 3 fill guards, secret gate green, production build green with `v0.3.40` in `build/index.html`. Site version `0.3.40` (`changelog.generated.ts` regenerated: **43 releases, 307 items**). The probes were throwaway scripts against a dev server; none is in the tree.
+>
+> **One queue item consumed** — the held-over queue is now three: the floor walk on `/units`, the next-30-days strip on `/tax` + `/calendar`, and the release trail on `/changelog`.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the compliance panel was cutting the deadlines it scores
 
 Commit: `06c55d7` (site `0.3.39`). Backend API version stays `0.3.28`.
