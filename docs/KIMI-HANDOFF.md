@@ -1,3 +1,28 @@
+## Session — 2026-10-28 · the rest of the dashboard audited, and one panel had the same bug
+
+**Done:**
+- **Cam asked whether the other dashboard panels had the proof band's cramped-copy problem at `1100` and `620`, so this was measured rather than judged.** A throwaway DevTools-protocol probe walked the dashboard at `1440`, `1181`, `1100`, `900` and `620` (both themes) and reported four things per element: content larger than a box that hides it, a single-line ellipsis that is actually truncating, text set in a column under 200px with three or more lines, and any child spilling outside its card.
+- **`HealthScore` had it.** The tracked-item list shared a row with the 112px gauge: each title got **118px** at `1440` and **50px** at `1100`, so `Energy Performance Report (EPR) filing` rendered as `Ener…` and `Depreciation report renewal` lost its last word at desktop. A panel that scores deadlines could not name them.
+- **Fixed by stacking the panel:** the gauge keeps its own row, the formula note is full width beneath it, and the items take the panel's whole width below that, clamping to **two lines** instead of truncating to one. 250px per title at `1440` (all three on one line), 182px at `1100` (the longest wraps). The panel grew by about one row.
+- **`TaskList` had the small version:** at `620`, `Annual General Meeting (within 2 months of fiscal year end)` lost 19px behind an ellipsis. Row titles clamp to two lines now.
+- **Site version `0.3.39`** — `CHANGELOG.md` section plus front-matter summary, `changelog.generated.ts` regenerated (**42 releases, 296 items**), footer stamp reads `v0.3.39`.
+
+**Decisions:**
+- **Did not "fix" what is designed to scroll.** The audit at first flagged the payment strip and the tab rows on `/units`, `/accounting`, `/calendar` and `/tax`; a second probe showed all of them are `overflow-x: auto` with their own thin scrollbars, so nothing is unreachable. The `sr-only` headings on `/pay` and the `/tax` filing table are the same category. Changing them would have been churn.
+- **Left two single-line ellipses alone.** The building card's meta line cuts 5px at `1440` and the `/units` company column cuts a long company name at `1100`. Both are deliberate single-line truncations on other pages, and the task was the dashboard panels; recorded in the changelog's known issues rather than quietly widened.
+- **Stacked instead of shrinking the gauge.** A smaller ring would still have left the titles fighting the days column in a 250px-wide rail; the items need the panel's width, not a bigger slice of it.
+- **Bumped the site, not the backend** — visible change, no service behaviour.
+
+**Verified:** audited at five widths in both themes with zero remaining clipped, spilled or sub-200px text on the dashboard; `/units`, `/accounting`, `/pay`, `/tax`, `/calendar` and `/meetings` checked at `1100` and `620` with the same result. Frontend **318 passed**, `check` **0 errors / 0 warnings**, contrast audit **218 pairs** + 3 fill guards, production build green with `v0.3.39` in `build/index.html`. No probe script is in the tree.
+
+**What is still open:** the two single-line ellipses above; and unchanged from earlier sessions — no UI for the sessions list or the audit trail, the site consumes `POST /auth/logout` but not refresh tokens, the bylaw-fine audit row omits the lot, and CI's migration "upgrade path" step starts from an empty container so checksum drift is still only caught locally. The four queued UI upgrades remain offered and unstarted.
+
+**Git State:**
+- `06c55d7` — fix(ui): stop the compliance panel cutting the deadlines it scores (site `0.3.39`).
+- Backend API version `0.3.28`; site version `0.3.39`.
+
+---
+
 ## Session — 2026-10-28 · the cards above the footer fit their copy
 
 **Done:**

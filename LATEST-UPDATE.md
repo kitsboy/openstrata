@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the compliance panel was cutting the deadlines it scores
+
+Commit: `06c55d7` (site `0.3.39`). Backend API version stays `0.3.28`.
+
+> **Asked to check the other dashboard panels for the proof band's problem, I measured them instead of eyeballing.** Every panel at `1440`, `1181`, `1100`, `900` and `620`, in both themes, looking for four things: content clipped by `overflow: hidden`, content spilling out of its card, ellipsis that actually truncates, and text set in a column under 200px with three or more lines.
+>
+> **One panel had it, and it was the worst place for it.** The compliance-health card put its tracked-item list in a row beside the 112px gauge: each deadline title got **118px** at `1440` and **50px** at `1100`, so `Energy Performance Report (EPR) filing` rendered as `Ener…` and `Depreciation report renewal` lost its last word at desktop. The panel was scoring deadlines it could not name.
+>
+> **Fixed by stacking:** the gauge keeps its own row, the formula note is full width beneath it, and the items take the panel's whole width below that, clamping to two lines rather than truncating to one. Titles now get 250px at `1440` — all three on one line — and 182px at `1100`, where the longest wraps cleanly. The panel is about one row taller, which is what giving the copy its width costs.
+>
+> **The task list had the smaller version of it:** at `620` the title `Annual General Meeting (within 2 months of fiscal year end)` lost 19px behind an ellipsis. Row titles clamp to two lines now.
+>
+> **Everything else measured clean, including the rest of the workspace.** `/units`, `/accounting`, `/pay`, `/tax`, `/calendar` and `/meetings` at `1100` and `620` report no clipped or spilled copy. The things that look clipped are built to scroll — the payment strip and the tab rows, both `overflow-x: auto` with their own thin scrollbars, checked to be reachable rather than `hidden`; `sr-only` headings and the filing table on `/tax` are the same story.
+>
+> **Two single-line ellipses left alone**, since they are a different page and not the reported defect: the building card's meta cuts 5px at `1440` (`… 40 lots · 4 flo…`) and the `/units` company column cuts long company names at `1100`.
+>
+> **Verified:** frontend **318 passed**, `check` **0 errors / 0 warnings**, contrast audit **218 pairs** + 3 fill guards, production build green with `v0.3.39` in `build/index.html`. Site version `0.3.39`, `changelog.generated.ts` regenerated (**42 releases, 296 items**). The audit probes were throwaway scripts against a running dev server; none of them is in the tree.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the cards above the footer now fit their copy
 
 Commit: `50de813` (site `0.3.38`). Backend API version stays `0.3.28` — nothing server-side moved.

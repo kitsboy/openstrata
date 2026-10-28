@@ -1,11 +1,20 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.38
+**Site/product version:** v0.3.39
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the dashboard's closing cards fit their copy (site, `0.3.38`)
+## Recent milestone — the rest of the dashboard audited, and one panel had the same bug (site, `0.3.39`)
+
+- **Audited every dashboard panel at `1440`, `1181`, `1100`, `900` and `620`, both themes**, looking for the proof band's defect class: content clipped by `overflow: hidden`, content spilling out of its card, deliberate ellipsis that actually truncates, and text set in a column under 200px with three or more lines.
+- **One panel had it.** `HealthScore` set its tracked-item list in a row beside the 112px gauge, leaving each title **118px** at `1440` and **50px** at `1100` — `Energy Performance Report (EPR) filing` rendered as `Ener…`, and at desktop `Depreciation report renewal` lost its last word. The panel was scoring deadlines it could not name.
+- **Fix:** the gauge keeps its own row, the formula note is full width beneath it, and the items take the panel's whole width below that, clamping to **two lines** instead of truncating to one — 250px per title at `1440` (all three on one line) and 182px at `1100` (the longest wraps). The task list's row titles clamp the same way, which stops `Annual General Meeting (within 2 months of fiscal year end)` losing 19px at `620`. The panel is about one row taller, which is the cost of not sharing horizontal space.
+- **The rest measured clean, including on the other workspace routes.** `/units`, `/accounting`, `/pay`, `/tax`, `/calendar` and `/meetings` at `1100` and `620` show no clipped or spilled copy either. What looks like clipping is content built to scroll: the payment strip and the tab rows, both `overflow-x: auto` with their own thin scrollbars (verified reachable, not `hidden`). The `sr-only` headings on `/pay` and the `/tax` filing table are the same story.
+- **Two known single-line ellipses left alone** (same family, different page, not the reported defect): the building card's meta line cuts 5px at `1440` (`… 40 lots · 4 flo…`), and the `/units` company column cuts long company names at `1100` (108px against 137px of text).
+- Site version `0.3.39` (`CHANGELOG.md` section + front-matter summary, `changelog.generated.ts` regenerated — **42 releases / 296 items**); backend stays `0.3.28`. Verification: frontend **318 passed**, `check` **0/0**, contrast audit **218 pairs** + 3 fill guards, build green with `v0.3.39` in `build/index.html`.
+
+## Prior milestone — the dashboard's closing cards fit their copy (site, `0.3.38`)
 
 - **The complaint was a real layout defect, not a taste question.** The three proof cards above the footer capped the copy at `28ch` — about **145px** at `9.5px` type — while a `white-space: nowrap` link took the rest of the card, and `overflow: hidden` hid whatever did not fit. The longest line ("Every deadline, Form K gap and AR balance is a tracked item with a stake in the score — not a vanity number.") had to wrap four or five times in that sliver.
 - **Each card is now a two-row grid**: mark and copy side by side, the link on its own baseline underneath, `margin-left: -9px` offsetting its padding so the link's text sits on the copy's left edge. Type goes `11.5/9.5px` → **`12.5/10.5px`** at `1.5` leading; mark, hairline border, radius and shadow are untouched. The cards share a height, so the three links share a baseline.
