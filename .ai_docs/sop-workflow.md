@@ -25,6 +25,8 @@ npm run cli -- rosa ingest    validate + probe the BC compliance corpus (no DB)
 npm run cli -- ziggy simulate walk treasury scenarios through the state machine (no DB)
 npm run migrate          apply trust-ledger migrations (idempotent, serialized, checksummed)
 npm run migrate:check    read-only preflight: checksums, missing and orphan drift (no writes)
+npm run db:check         the gate: migrations from zero AND as an upgrade, then the Postgres suite
+npm run db:up / db:down  start / stop the local PostgreSQL 17 + pgvector cluster
 npm run seed             seed a demo community (idempotent)
 
 The Postgres E2E tests skip themselves when DATABASE_URL is unset, which is the normal
@@ -61,6 +63,10 @@ and `migrate:check` must be clean.
 - **postgres suite** — the backend suite against the scratch database, requiring
 **0 skipped**, because an unset or wrong `DATABASE_URL` is exactly how the durable
 paths go untested while the suite still reports green.
+
+**CI runs it too.** The `backend-e2e` job calls `npm run db:check` against its own
+`pgvector/pgvector:pg17` service instead of the old `npm run migrate` + `-- e2e-smoke`
+steps, so a push made with `--no-verify` is still measured the same way.
 
 `DATABASE_URL` always wins, so CI and `docker compose` use the same gate (bring up
 `docker compose up -d db`, set `DATABASE_URL`, run `npm run db:check`). If it points at

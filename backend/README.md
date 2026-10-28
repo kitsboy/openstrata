@@ -197,11 +197,12 @@ npm test                         # 377/377 with DATABASE_URL, not 369/8 skipped
 npm run db:down                  # stop it; the data directory is kept
 ```
 
-`npm run db:check` is the gate CI cannot run for you: it applies pending
-migrations to the development database (the upgrade path), drops and recreates a
-scratch `<db>_gate` and applies every migration from zero (the CI path), proves a
-second run is a no-op, then runs the suite against the scratch database and
-requires nothing skipped. It takes ~3s. `db:status`, `db:url` and `db:reset`
+`npm run db:check` is the gate, and CI runs the same command in its
+`backend-e2e` job, so a push that skipped the hook is measured the same way. It
+applies pending migrations to the development database (the upgrade path), drops
+and recreates a scratch `<db>_gate` and applies every migration from zero (the CI
+path), proves a second run is a no-op, then runs the suite against the scratch
+database and requires nothing skipped. It takes ~3s. `db:status`, `db:url` and `db:reset`
 round it out; it needs `brew install postgresql@17 pgvector` (or
 `OPENSTRATA_PG_BIN`), listens on loopback only, and an explicit `DATABASE_URL`
 always wins — a remote one is refused rather than migrated.

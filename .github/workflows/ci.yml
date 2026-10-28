@@ -75,7 +75,7 @@ jobs:
         run: npm test
 
   backend-e2e:
-    name: Phase 3 backend — Postgres e2e smoke
+    name: Phase 3 backend — Postgres migration gate + e2e
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -109,8 +109,9 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
-      - name: Apply all migrations (0001..0006+)
-        run: npm run migrate
-
-      - name: Postgres e2e smoke suite (register -> ledger -> billing -> payments -> forms -> meetings)
-        run: npm run test -- e2e-smoke
+      # The same gate the pre-push hook runs locally (backend/scripts/prepush-db-check.mjs),
+      # so a push that skipped the hook is still measured the same way: migrations
+      # applied as an upgrade and from zero, a re-run that must settle, then the
+      # whole backend suite against the scratch database with nothing skipped.
+      - name: Migration gate — from zero and as an upgrade, then the Postgres suite
+        run: npm run db:check
