@@ -18,6 +18,8 @@
 
 **Verified:** `db:up` initialised a cluster from nothing; `db:reset` did it again from nothing; the gate passed on a cluster with no history (`upgrade path: applied 8 migration(s)`, `from zero: applied 8 migration(s)`) and on one with history; `db:down` left nothing listening on 5455. Migration records on the upgrade database: **9 rows, all with checksums**. Backend **369 passed / 8 skipped** without a database and **377/377** with one; `npm run typecheck` clean; the gate itself run from both `backend/` and the repo root. Nothing frontend changed, so the site gates were not rerun and no screenshot applies.
 
+**Confirmed in CI:** run `40610138684` on `5a1e2c6` is green in all three jobs — the push itself went through the new hook and passed the gate in **3.1s**, `backend` ran **369 passed / 8 skipped**, `backend-e2e` applied the migrations on a fresh `pgvector/pgvector:pg17` container and passed the smoke suite **8/8**, and the site job passed both audits and the production build. The hook is local, so CI still proves migrations only on its own fresh container.
+
 **What is still open:** the hook is armed in **this clone only** — another clone or machine (Kimi on M4) needs `npm run hooks:install` once, and git hooks never run in CI, so `main`'s protection is still CI's `backend-e2e` job. The harness is Homebrew-shaped: `OPENSTRATA_PG_BIN` or a `DATABASE_URL` pointing at `docker compose`'s `db` service are the non-macOS paths, and both are untested here because Docker is unavailable on M3. Unchanged from earlier sessions: no UI for the sessions list or the audit trail, the site consumes `POST /auth/logout` but not refresh tokens, the audit row for a bylaw fine still omits the lot, and `npm run check:security` is red on 15 fixtures.
 
 **Git State:**
