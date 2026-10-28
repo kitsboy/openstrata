@@ -182,7 +182,7 @@ const RULES = [
   // `autoComplete` ternary whose operands happen to be quoted 16-char strings),
   // never a relaxed rule.
   ['quoted-credential-literal',
-    /(?:^|[^A-Za-z0-9])(?:[A-Za-z0-9]+_)*(?:API_?KEY|API_?TOKEN|ACCESS_?TOKEN|SECRET_?KEY|SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL)["'`]?\s*[:=]\s*["'`][^"'`\s]{16,}["'`]/i],
+    /(?:^|[^A-Za-z0-9])(?:[A-Za-z0-9]+_)*(?:API_?KEY|API_?TOKEN|ACCESS_?TOKEN|SECRET_?KEY|SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL)["'`]?\s*[:=]\s*["'`](?<value>[^"'`\s]{16,})["'`]/i],
   // Unquoted env-style set: `db_password=s3cr3t…` / `DB_PASSWORD=s3cr3t…` at line
   // start. The residual gap (t_a07a0299) was lowercase identifiers (`db_password=…`)
   // being invisible — the old `[A-Z]` leading anchor demanded an uppercase line
@@ -192,22 +192,54 @@ const RULES = [
   // — that measured distinction is what keeps this rule from flagging every typed
   // React prop. Strict superset, 0 regressions and 0 new detections across the fleet.
   ['env-credential-literal',
-    /^\s*[A-Za-z][A-Za-z0-9_]*(?:TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|token|secret|password|credential)[A-Za-z0-9_]*\s*=\s*[^\s"'`$][^\s]{11,}\s*$/m],
+    /^\s*[A-Za-z][A-Za-z0-9_]*(?:TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|token|secret|password|credential)[A-Za-z0-9_]*\s*=\s*(?<value>[^\s"'`$][^\s]{11,})\s*$/m],
 ];
 
 /**
- * Placeholder values are not credentials. Without this, `.env.example` and setup
- * docs (which exist to be filled in) fail the gate and the gate gets switched off
- * — the failure mode this whole script exists to prevent.
+ * Fixture values are not credentials. Without this, `.env.example` and test
+ * helpers (which exist to be filled in) fail the gate and the gate gets switched
+ * off — the failure mode this whole script exists to prevent.
+ *
+ * Classify by the VALUE, never by the path: a real credential pasted into a test
+ * file is the most common way a secret leaks, so "it lives under tests/" is not
+ * evidence of anything. The value comes from the rule's own `value` capture
+ * group, so a prose line quoting many strings is judged on the one the rule
+ * actually matched (`…is the credential: \`ospl1.<payload>.<sig>\``), not on
+ * whichever quoted run happens to come last on the line.
+ *
+ * Three tells, in order of confidence, with a veto above them:
+ *   1. A marker segment — the value says what it is: `auth-test-secret-xyz`,
+ *      `openstrata-dev-only`, `bitcoin-modules-test-secret`.
+ *   2. A placeholder slot — the value is a template with a hole in it:
+ *      `ospl1.<payload>.<sig>` quoting the link-token format in prose,
+ *      `text-white/<opacity>` naming a CSS class in a contrast table.
+ *   3. A written-out slug — lowercase words joined by `-`/`_`/`.`, an optional
+ *      short numeric tail, and no letter+digit run: `correct-horse-battery`,
+ *      `member-store-secret-0123456789`. A generated key does not read as words.
+ *
+ * A DANGER segment vetoes all three. `prod-db-password-2026` is a credential
+ * wearing a friendly name, and reporting it is the whole point of the gate, so
+ * `prod`, `production`, `live`, `real`, `staging`, `actual`, `private`,
+ * `mainnet` and `release` fail even when the value otherwise reads as a fixture.
+ *
+ * The residual miss is a real key written as a friendly slug with no danger
+ * word (`internal-db-passphrase-2026`). The counterweight: every value-bearing
+ * rule below still fails on its shape, and each classification is COUNTED and
+ * printed, so a jump in the number is visible in the log rather than silent.
  */
-const PLACEHOLDER =
-  /^(?:your|my|the|change|replace|insert|add|put|test|example|sample|dummy|fake|placeholder|todo|xxx+)[-_]/i;
-const isPlaceholder = (line) => {
-  const value = (line.split(/[:=]/).slice(1).join('=') || '').trim().replace(/^["'`]|["'`]$/g, '');
+const FIXTURE_MARKER =
+  /(?:^|[-_.])(?:test|tests|example|sample|dummy|fake|mock|fixture|placeholder|dev|local|smoke|e2e|xyz|redacted|todo|insecure|changeme|notreal)(?:[-_.]|$)/i;
+const DANGER_MARKER =
+  /(?:^|[-_.])(?:prod|production|live|real|staging|actual|private|mainnet|release)(?:[-_.]|$)/i;
+const PLACEHOLDER_SLOT = /[<{][\w /-]{1,24}[>}]/;
+const WRITTEN_SLUG = /^[a-z]{2,}(?:[-_.](?:[a-z]{2,}|[0-9]{1,12}))+$/;
+
+const isFixtureValue = (value) => {
   if (!value) return false;
-  if (PLACEHOLDER.test(value)) return true;
-  if (/^[<[{].*[>}\]]$/.test(value)) return true; // <your-key-here>, ${VAR}, {json}
-  return /(change[-_ ]?(me|this)|replace[-_ ]?me|placeholder|example\.com|your[-_]?key)/i.test(value);
+  if (DANGER_MARKER.test(value)) return false;
+  if (FIXTURE_MARKER.test(value)) return true;
+  if (PLACEHOLDER_SLOT.test(value)) return true;
+  return WRITTEN_SLUG.test(value);
 };
 
 /** Structural tells: decoding a blob straight into a credential sink. */
@@ -251,6 +283,8 @@ const scanTargets = targets.length ? targets : listTrackedFiles();
 
 const findings = [];
 const suppressed = [];
+/** Credential-shaped lines whose value is a fixture — counted, never printed. */
+const fixtures = [];
 /** A finding is either recorded as a failure, or recorded as an allowlisted hit. */
 const record = (file, line, rule, detail, lineText) => {
   const allow = matchAllowlist(file, rule, lineText || '');
@@ -259,10 +293,16 @@ const record = (file, line, rule, detail, lineText) => {
 };
 
 const scanLine = (file, lineNo, line) => {
-  const placeholder = isPlaceholder(line);
   for (const [rule, re] of RULES) {
-    if (placeholder && (rule === 'env-credential-literal' || rule === 'quoted-credential-literal')) continue;
-    if (re.test(line)) record(file, lineNo, rule, '', line);
+    const match = line.match(re);
+    if (!match) continue;
+    // The two value-bearing rules name the literal they matched, so the fixture
+    // classifier judges that value rather than the surrounding sentence.
+    if (match.groups?.value && isFixtureValue(match.groups.value)) {
+      fixtures.push({ file, line: lineNo, rule });
+      continue;
+    }
+    record(file, lineNo, rule, '', line);
   }
   for (const [rule, re] of STRUCTURAL_RULES) if (re.test(line)) record(file, lineNo, rule, '', line);
 
@@ -298,6 +338,16 @@ for (const file of scanTargets) {
   buf.toString('utf8').split('\n').forEach((line, i) => scanLine(file, i + 1, line));
 }
 
+/** Fixture classifications are counted on every run — never silent. */
+const printFixtures = (log) => {
+  if (!fixtures.length) return;
+  const files = new Set(fixtures.map((f) => f.file)).size;
+  log(
+    `Fixture-shaped literals classified as test/dev values: ${fixtures.length} in ${files} files ` +
+    '(values never printed; see FIXTURE_MARKER / DANGER_MARKER in this script).'
+  );
+};
+
 /** Allowlisted hits are always printed — silence-with-a-record, never silence. */
 const printSuppressed = (log) => {
   if (!suppressed.length) return;
@@ -313,6 +363,7 @@ if (findings.length) {
     console.error(`  ${f.file}:${f.line} [${f.rule}]${f.detail ? ' ' + f.detail : ''}`);
   }
   console.error('');
+  printFixtures((m) => console.error(m));
   printSuppressed((m) => console.error(m));
   console.error(
     '\nRotate the credential first (a deleted file does not un-leak a value), then remove it\n' +
@@ -323,4 +374,5 @@ if (findings.length) {
 }
 
 console.log('Secret-hygiene gate passed: 0 credential findings across all tracked files.');
+printFixtures((m) => console.log(m));
 printSuppressed((m) => console.log(m));

@@ -25,6 +25,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Runs first because it is the cheapest step and the one that must never be
+      # skipped: every tracked file, with base64 blobs decoded and re-scanned.
+      - name: Secret-hygiene gate (tracked tree, fixture-aware)
+        run: npm run check:security
+
       - name: Typecheck (svelte-check)
         run: npm run check
 
