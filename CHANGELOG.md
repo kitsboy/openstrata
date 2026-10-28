@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.39
+-  summary: "The rest of the dashboard's panels were audited for the problem the proof band had, and one of them had it. The compliance-health panel set its tracked-item list in a row beside a 112px gauge, which left each deadline title about 118px even at 1440 and about 50px in a 1100px window — so 'Energy Performance Report (EPR) filing' rendered as 'Ener…' and nothing could be read. The gauge now sits on its own row with the score formula full width beneath it, and the items take the panel's whole width below that, clamping to two lines rather than truncating to one — 250px per title at 1440, where all three read on one line. The task list's row titles likewise clamp to two lines instead of cutting the longest one at 620px, where it lost 19px of text. Everything else measured clean: at 1440, 1181, 1100, 900 and 620 no panel has clipped, spilled or unreadably narrow copy, and the only remaining overflow is content built to scroll — the payment strip and the tab rows, both overflow-x auto with their own thin scrollbars. Two smaller single-line ellipses are known and left alone: the building card's meta line cuts 5px at 1440, and the /units company column cuts a long company name at 1100. Frontend 318 tests, check 0/0, contrast audit 218 pairs."
 -  version: 0.3.38
 -  summary: "The dashboard's closing band reads properly. The three cards above the footer are now a two-row grid per card — icon beside the copy, the link on its own baseline under it — so the long line in the first card wraps inside the width the card actually has instead of being squeezed into a 28ch cap at 9.5px next to a nowrap link, and all three links sit on one baseline because the cards share a height. The headline is 12.5px and the body 10.5px with 1.5 leading, the hairlines and borders are unchanged; the band keeps three columns only while there is room for a readable measure, goes two-up with the third card spanning between 620 and 1180, and one card per row on a phone. Measured at 1440, 1181, 1100, 620 and 380 in both themes: zero horizontal or vertical overflow, every child inside its card, and per-card copy at two lines or fewer wherever the band is multi-column. Frontend 318 tests, check 0/0, contrast audit 218 pairs."
 -  version: 0.3.37
@@ -116,6 +118,28 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.39] — 2026-10-28
+
+### Fixed
+
+- **The compliance-health panel was cutting its own evidence.** The tracked-item list shared a row with the 112px gauge, which left each deadline title about 118px at 1440 and about **50px** at 1100 — `Energy Performance Report (EPR) filing` rendered as `Ener…`, and at desktop `Depreciation report renewal` lost its last word. The gauge now sits in its own row with the formula note beneath it, and the items get the panel's full width: 250px at 1440 (all three titles on one line) and 182px at 1100 (the longest wraps to two). Titles clamp to two lines instead of truncating to one, so the text is always readable in full.
+- **The task list cut the longest title at 620px.** `Annual General Meeting (within 2 months of fiscal year end)` lost 19px behind an ellipsis; row titles now clamp to two lines.
+
+### Changed
+
+- The compliance-health panel is taller by roughly one row, because the gauge, the formula and the items no longer share horizontal space.
+
+### Verified
+
+- Audited every dashboard panel at `1440`, `1181`, `1100`, `900` and `620`, in both themes: zero clipped, spilled or sub-200px text remains. The only overflow reported is content built to scroll — the payment strip and the tab rows on `/units`, `/accounting`, `/calendar` and `/tax`, all `overflow-x: auto` with their own thin scrollbars, so nothing is unreachable.
+- Frontend **318 passed**, Svelte check **0 errors / 0 warnings**, contrast audit **218 pairs**, i18n audit unchanged. Backend untouched at `0.3.28`.
+
+### Known issues
+
+- Two single-line ellipses were found and left alone: the building card's meta line cuts 5px at `1440` (`… 40 lots · 4 flo…`), and the `/units` company column cuts long company names at `1100`.
+
+---
 
 ## [0.3.38] — 2026-10-28
 

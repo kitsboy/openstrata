@@ -247,7 +247,7 @@
                 <Icon name="check" class="h-3.5 w-3.5" />
               </button>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-slate-500 line-through">{step.title}</p>
+                <p class="line-clamp-2 text-sm font-semibold text-slate-500 line-through">{step.title}</p>
                 <p class="truncate text-xs text-slate-400">{step.hint}</p>
               </div>
             </div>
@@ -279,7 +279,7 @@
             {/if}
 
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-semibold text-slate-800">{task.title}</p>
+              <p class="line-clamp-2 text-sm font-semibold text-slate-800">{task.title}</p>
               <p class="truncate text-xs text-slate-400">
                 {#if task.setup}
                   {task.detail}

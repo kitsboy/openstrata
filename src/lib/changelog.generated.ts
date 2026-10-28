@@ -14,6 +14,38 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.39",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Fixed",
+        "items": [
+          "The compliance-health panel was cutting its own evidence. The tracked-item list shared a row with the 112px gauge, which left each deadline title about 118px at 1440 and about 50px at 1100 — Energy Performance Report (EPR) filing rendered as Ener…, and at desktop Depreciation report renewal lost its last word. The gauge now sits in its own row with the formula note beneath it, and the items get the panel's full width: 250px at 1440 (all three titles on one line) and 182px at 1100 (the longest wraps to two). Titles clamp to two lines instead of truncating to one, so the text is always readable in full.",
+          "The task list cut the longest title at 620px. Annual General Meeting (within 2 months of fiscal year end) lost 19px behind an ellipsis; row titles now clamp to two lines."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The compliance-health panel is taller by roughly one row, because the gauge, the formula and the items no longer share horizontal space."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Audited every dashboard panel at 1440, 1181, 1100, 900 and 620, in both themes: zero clipped, spilled or sub-200px text remains. The only overflow reported is content built to scroll — the payment strip and the tab rows on /units, /accounting, /calendar and /tax, all overflow-x: auto with their own thin scrollbars, so nothing is unreachable.",
+          "Frontend 318 passed, Svelte check 0 errors / 0 warnings, contrast audit 218 pairs, i18n audit unchanged. Backend untouched at 0.3.28."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "Two single-line ellipses were found and left alone: the building card's meta line cuts 5px at 1440 (… 40 lots · 4 flo…), and the /units company column cuts long company names at 1100."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.38",
     "date": "2026-10-28",
     "groups": [

@@ -66,25 +66,28 @@
   {#if loading && live}
     <div class="mt-5 flex justify-center"><div class="h-28 w-28 animate-pulse rounded-full bg-slate-100"></div></div>
   {:else}
-    <div class="mt-5 flex items-center gap-5">
+    <!-- Everything stacks, so each block gets the panel's full width. Sharing
+         a row with the gauge left each item title about 50px in a 1100px
+         window — "Ener…" — and the formula no room to breathe either. -->
+    <div class="mt-5 flex justify-center">
       <div class="relative flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-8 {ringColor} border-opacity-20">
         <div class="text-center">
           <p class="text-3xl font-black {ringColor}">{score}</p>
           <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">{grade}</p>
         </div>
       </div>
-      <ul class="min-w-0 flex-1 space-y-1.5 text-xs text-slate-600">
-        {#each shown.slice(0, 4) as d}
-          <li class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full {d.daysLeft < 0 ? 'bg-danger' : d.severity === 'urgent' ? 'bg-danger' : d.severity === 'soon' ? 'bg-amber-400' : 'bg-success'}"></span>
-            <span class="truncate">{d.title}</span>
-            <span class="ml-auto shrink-0 font-bold {d.daysLeft < 0 ? 'text-danger' : 'text-slate-500'}">{d.daysLeft < 0 ? 'overdue' : `${d.daysLeft}d`}</span>
-          </li>
-        {/each}
-      </ul>
     </div>
     <p class="mt-4 rounded-lg bg-surface-2/60 px-3 py-2 text-[10px] leading-relaxed text-slate-400">
       −20 overdue · −10 due ≤14d · −8 urgent · −4 soon · based on {shown.length} tracked item{shown.length === 1 ? '' : 's'} ({live ? 'live' : $copy.demoLabel}).
     </p>
+    <ul class="mt-4 space-y-2 text-xs text-slate-600">
+      {#each shown.slice(0, 4) as d}
+        <li class="flex items-start gap-2">
+          <span class="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full {d.daysLeft < 0 ? 'bg-danger' : d.severity === 'urgent' ? 'bg-danger' : d.severity === 'soon' ? 'bg-amber-400' : 'bg-success'}"></span>
+          <span class="min-w-0 flex-1 line-clamp-2 leading-snug">{d.title}</span>
+          <span class="shrink-0 font-bold {d.daysLeft < 0 ? 'text-danger' : 'text-slate-500'}">{d.daysLeft < 0 ? 'overdue' : `${d.daysLeft}d`}</span>
+        </li>
+      {/each}
+    </ul>
   {/if}
 </section>
