@@ -14,6 +14,40 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.41",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A next-30-days strip on /calendar and /tax. The window is src/lib/next30.ts — a pure module over the calendar the rest of the app already uses, so the strip cannot claim a date the month grid does not hold. It groups the sample's September 30 through October 30 into Today (3), This week (4) and Later this month (6), with the day count on each item and a link to the calendar.",
+          "/tax gets the same window, narrowed. Filings, remittances and compliance dates only: four items, from the two returns due today to the October 15 CPP and EI remittance. Owner-tax declarations stay in the sections below, where they belong."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Five new dashboard-free views of one dataset, not a second list. The days-left label reads today rather than due today, so a title that already ends in \"due\" does not read *due due today*."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Window tested against the real calendar data: the 30-day edge is inclusive, the bucket boundaries hold, the day count is DST-safe (2026-10-25 → 2026-11-08 is 14 days, not 13 or 15), the category filter invents nothing, and a caller-supplied date moves the whole window.",
+          "Geometry at 1440, 1279, 1181, 1100, 900 and 620 in both themes on both pages: 0 clipped, spilled or sub-200px findings. The strip's own text measures 5.2:1 in light and 6.58:1 in dark at its worst, against the 4.5 floor.",
+          "Frontend 335 passed (322 + 9 window tests + 4 component tests), Svelte check 0 errors / 0 warnings, catalog 1,190 keys × 9 locales."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The strip uses the sample's 2026-09-30 as today, deliberately. A live council passes its own date; nothing here reads the machine clock.",
+          "Category names stay English on the calendar, so the strip shows a category dot rather than a label. Moving those names into the catalog belongs with the /calendar localization."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.40",
     "date": "2026-10-28",
     "groups": [

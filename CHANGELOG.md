@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.41
+-  summary: "The next 30 days, in one strip on both /calendar and /tax. The three pages that describe dated items — the dashboard panels, the month grid, and the prose deadlines inside the tax sections — now have a fourth view built from the calendar's own data rather than a second list: 13 dated items from the sample's September 30 through the end of October, grouped into Today (3), This week (4) and Later this month (6), each with its day count and a link to the calendar. /tax shows the same window narrowed to filings, remittances and compliance dates — four items, from both returns due today to the October 15 CPP and EI remittance — so a treasurer reads the tax page and sees the same dates the calendar holds. Today is the sample date, not the machine clock: the books are Evergreen House at September 30, 2026, and a strip reading new Date() would have called a September balance 'due today' months later; the window is a pure module with 9 tests covering the 30-day edge, the bucket boundaries, a DST-safe day count, the category filter and a date moved by the caller. The category is shown as the calendar's own dot and no label, because the category names are English data and printing them would have put untranslated words on a page being localized in the same session. 11 catalog keys x 9 locales. Verified at 1440, 1279, 1181, 1100, 900 and 620 in both themes: 0 clipped, spilled or sub-200px text on either page, and the strip's own copy measured at 5.2:1 light and 6.58:1 dark at its worst."
 -  version: 0.3.40
 -  summary: "The accounting page gets a September close, and its copy goes into the catalog. A new panel sits under the four fund cards on /accounting and lists the five checks between the September books and a signed month: the three accounts tie, payroll and source deductions are posted, the reserve contribution and interest are billed, the board approval is on the minutes, and the period is locked. Four are computed from the ledger rather than from a status field, so the panel cannot disagree with the numbers above it; three pass today, board approval is open, and the lock waits on it. The close button is disabled and names the blocking check in its aria description as well as on screen, because a disabled button that does not say what it is waiting for is a dead end. The page's own copy also left the template: 96 new keys in nine locales, from the lede and the six tab labels to every column header and fund row, and a fill() helper for catalog strings with figures in them. /accounting went from 47 hard-coded English strings to 0, and the catalog to 1,179 keys. The two ellipses the last audit left behind are fixed the same way the deadline titles were: the building card's meta line wraps instead of cutting 5px at 1440, and a long owner name wraps to two lines rather than losing 29px in a 108px cell at 1100. Auditing the result turned up a third case of the same defect that the breakpoint had missed: between 1181 and 1279 the sidebar shrinks the dashboard to 929px, which left the proof band a 156px column of copy in both themes, so its two-up breakpoint moved from 1180 to 1279. One measurement caught a regression before it shipped: the panel's open chip used amber-700 over a translucent fill and read 4.37:1 in light and 2.32:1 in dark, so it now uses the token pair that flips with the theme, at 6.15:1 and 6.63:1. Frontend 322 tests, check 0/0, contrast audit 218 pairs, 1,179 i18n keys."
 -  version: 0.3.39
@@ -120,6 +122,30 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.41] — 2026-10-28
+
+### Added
+
+- **A next-30-days strip on `/calendar` and `/tax`.** The window is `src/lib/next30.ts` — a pure module over the calendar the rest of the app already uses, so the strip cannot claim a date the month grid does not hold. It groups the sample's September 30 through October 30 into **Today (3)**, **This week (4)** and **Later this month (6)**, with the day count on each item and a link to the calendar.
+- **`/tax` gets the same window, narrowed.** Filings, remittances and compliance dates only: four items, from the two returns due today to the October 15 CPP and EI remittance. Owner-tax declarations stay in the sections below, where they belong.
+
+### Changed
+
+- **Five new dashboard-free views of one dataset, not a second list.** The days-left label reads `today` rather than `due today`, so a title that already ends in "due" does not read *due due today*.
+
+### Verified
+
+- Window tested against the real calendar data: the 30-day edge is inclusive, the bucket boundaries hold, the day count is DST-safe (`2026-10-25 → 2026-11-08` is 14 days, not 13 or 15), the category filter invents nothing, and a caller-supplied date moves the whole window.
+- Geometry at `1440`, `1279`, `1181`, `1100`, `900` and `620` in both themes on both pages: **0** clipped, spilled or sub-200px findings. The strip's own text measures **5.2:1** in light and **6.58:1** in dark at its worst, against the 4.5 floor.
+- Frontend **335 passed** (322 + 9 window tests + 4 component tests), Svelte check **0 errors / 0 warnings**, catalog **1,190 keys × 9 locales**.
+
+### Known issues
+
+- The strip uses the sample's `2026-09-30` as today, deliberately. A live council passes its own date; nothing here reads the machine clock.
+- Category names stay English on the calendar, so the strip shows a category dot rather than a label. Moving those names into the catalog belongs with the `/calendar` localization.
+
+---
 
 ## [0.3.40] — 2026-10-28
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import Next30 from '$lib/components/Next30.svelte';
 	import {
 		categoryMeta,
 		eventsInMonth,
@@ -47,6 +48,8 @@
 		title="Calendar"
 		lede="Fees on the 1st, council on the third Tuesday, CRA dates on the day they actually fall, and the inspections that keep Form B boring. September 30 is today in this sample."
 	/>
+
+	<Next30 />
 
 	<div class="mb-4 flex gap-2 overflow-x-auto">
 		{#each highlightDates as item}

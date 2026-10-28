@@ -1,7 +1,10 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import Next30 from '$lib/components/Next30.svelte';
+	import { copy } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { priorYear, sections, statusStyles } from '$lib/demo/tax';
+	import { TAX_CATEGORIES } from '$lib/next30';
 
 	let open = $state('position');
 </script>
@@ -16,6 +19,8 @@
 		title="Tax and CRA"
 		lede="Two returns are due today for the year that ended March 31, 2026. The year the building is living in is not filed until September 30, 2027. Owner taxes — empty homes, speculation, underused housing, property tax — are tracked here and paid by the owners."
 	/>
+
+	<Next30 categories={TAX_CATEGORIES} hint={$copy.next30TaxHint} />
 
 	<div class="mb-8 overflow-x-auto">
 		<div class="flex gap-2">
