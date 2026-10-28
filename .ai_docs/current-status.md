@@ -1,11 +1,20 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.37
+**Site/product version:** v0.3.38
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the secret gate is green, so it can be a gate (tooling + CI)
+## Recent milestone — the dashboard's closing cards fit their copy (site, `0.3.38`)
+
+- **The complaint was a real layout defect, not a taste question.** The three proof cards above the footer capped the copy at `28ch` — about **145px** at `9.5px` type — while a `white-space: nowrap` link took the rest of the card, and `overflow: hidden` hid whatever did not fit. The longest line ("Every deadline, Form K gap and AR balance is a tracked item with a stake in the score — not a vanity number.") had to wrap four or five times in that sliver.
+- **Each card is now a two-row grid**: mark and copy side by side, the link on its own baseline underneath, `margin-left: -9px` offsetting its padding so the link's text sits on the copy's left edge. Type goes `11.5/9.5px` → **`12.5/10.5px`** at `1.5` leading; mark, hairline border, radius and shadow are untouched. The cards share a height, so the three links share a baseline.
+- **The breakpoints earn their place.** Three columns only while the measure stays readable (≥`1181px`); `620`–`1180` is two-up with the third card spanning the row; below `620` one card per row with the mark stepped to `36px`. At `1100px` the old three-up would have left each body column at **136px** — the same complaint at a different width — which is why the breakpoint moved rather than the type.
+- **Measured, not eyeballed** — a throwaway CDP probe read every card's geometry in Chrome at `1440`, `1181`, `1100`, `620` and `380`, both themes: **zero** horizontal or vertical overflow, every child inside its card's bounds, equal heights within a row, copy at two lines where the band is multi-column. Probe and its temporary start-choice page deleted before the commit.
+- Site version **`0.3.38`** (`CHANGELOG.md` section + front-matter summary, `changelog.generated.ts` regenerated to **41 releases / 290 items**, footer stamp); backend stays `0.3.28`. Requested directly by Cam, so the UI queue is **untouched** — still the four offered 2026-10-16, none picked.
+- Verification: frontend **318 passed**, `check` **0/0**, contrast audit **218 pairs** + 3 fill guards, production build green (`v0.3.38` in `build/index.html`).
+
+## Prior milestone — the secret gate is green, so it can be a gate (tooling + CI)
 
 - **It was red at HEAD on 17 hand-read false positives**: 13 backend test constants (`AUTH_SECRET = 'auth-test-secret-xyz'` and siblings), two quoted test fixtures (`password: 'correct-horse-battery'`, `'other-password-123'`), the `.env.example` dev password `POSTGRES_PASSWORD=openstrata-dev-only`, three prose lines that call the payment link "the credential" and quote its format `ospl1.<payload>.<sig>`, and one CSS class name (`token: 'text-white/<opacity>'`) in the contrast audit's token table. None was a credential. A gate nobody can read is a gate nobody runs — and it was not wired into CI, so nothing was blocked and nothing was checked.
 - **Fixed by classifying the value, never the path.** A real credential pasted into a test file is the most common way a secret leaks, so "it lives under `tests/`" is not evidence of anything. `scripts/check-secret-hygiene.mjs` now classifies the matched *value* on three tells — a **marker segment** (`test`, `dev`, `example`, `smoke`, `xyz`), a **placeholder slot** (`<payload>`, `<opacity>`), or a **written-out slug** (lowercase words joined by `-`/`_`/`.`, optional short numeric tail, no letter+digit run) — and a **danger segment** (`prod`, `production`, `live`, `real`, `staging`, `actual`, `private`, `mainnet`, `release`) vetoes all three. `prod-db-password-2026` is a credential wearing a friendly name, and it still fails.

@@ -1,3 +1,26 @@
+## Session — 2026-10-28 · the cards above the footer fit their copy
+
+**Done:**
+- **Cam reported the three proof cards above the footer as cramped, and it was a layout defect rather than a taste question.** The copy was capped at `28ch` — about **145px** at `9.5px` type — while the link beside it was `white-space: nowrap` and took the rest of the card, with `overflow: hidden` hiding anything that did not fit. The first card's two sentences were being set in four or five fragments.
+- **Each card is now a two-row grid:** mark and copy side by side, the link on its own baseline under them, with `margin-left: -9px` on the link so its text sits on the copy's left edge. Type `11.5/9.5px` → **`12.5/10.5px`** at `1.5` leading; hairline border, radius, shadow and pastel marks unchanged. Cards share a height, so the three links share a baseline.
+- **Breakpoints moved rather than the type.** Three columns only while the measure stays readable; `620–1180px` is two-up with the third card spanning the row; below `620px` one card per row and a `36px` mark. The reason is measured: at `1100px` the old three-up left each copy column at **136px**, the same defect at another window width.
+- **Site version `0.3.38`** — `CHANGELOG.md` section plus front-matter summary, `changelog.generated.ts` regenerated (**41 releases, 290 items**), sitemap `lastmod` refreshed by the prebuild, footer stamp reads `v0.3.38`.
+
+**Decisions:**
+- **Measured instead of eyeballed.** A throwaway DevTools-protocol probe (Node 22's built-in `WebSocket`, a temporary page that set the first-visit choice so the dashboard rendered) read every card's box at `1440`, `1181`, `1100`, `620` and `380`, both themes: zero horizontal or vertical overflow, every child inside its card, equal heights within a row. Probe and probe page deleted before the commit.
+- **Bumped the site, not the backend.** A visible change ships a release here; `0.3.28` stays because no service behaviour moved.
+- **Left the UI queue alone.** This came from a direct request, like the signed pay link — not a queue pick — so the four offered on 2026-10-16 are still waiting and nothing was replaced.
+
+**Verified:** frontend **318 passed**, `check` **0 errors / 0 warnings**, contrast audit **218 pairs** + 3 fill guards, production build green with `v0.3.38` in `build/index.html`, i18n audit unchanged (no new copy). Browser geometry as above. Nothing backend changed, so the backend suite, typecheck and the migration gate were not rerun beyond the pre-push hook, which passed in 3.4s.
+
+**What is still open:** unchanged — no UI for the sessions list or the audit trail, the site consumes `POST /auth/logout` but not refresh tokens, the bylaw-fine audit row omits the lot, and CI's migration "upgrade path" step starts from an empty container so checksum drift is still only caught locally. The four queued UI upgrades remain offered and unstarted.
+
+**Git State:**
+- `50de813` — fix(ui): give the dashboard's closing cards a layout the copy fits in (site `0.3.38`).
+- Backend API version `0.3.28`; site version `0.3.38`.
+
+---
+
 ## Session — 2026-10-28 · the secret gate was red, so it was not a gate
 
 **Done:**

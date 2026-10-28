@@ -1,3 +1,19 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the cards above the footer now fit their copy
+
+Commit: `50de813` (site `0.3.38`). Backend API version stays `0.3.28` — nothing server-side moved.
+
+> **The complaint was a layout defect, not a matter of taste.** The three proof cards that close the dashboard capped their copy at `28ch` — roughly **145px** at `9.5px` type — while a `white-space: nowrap` link took the rest of each card and `overflow: hidden` hid whatever did not fit. The longest line, *"Every deadline, Form K gap and AR balance is a tracked item with a stake in the score — not a vanity number."*, was being set in four or five fragments in a sliver.
+>
+> **Each card is now a two-row grid.** Mark and copy sit side by side; the link drops to its own baseline underneath them, its padding offset by `-9px` so the word lines up with the copy above. Type goes from `11.5/9.5px` to **`12.5/10.5px`** at `1.5` leading — the same hairline border, radius, shadow and pastel marks — and because the cards share a height, the three links share a baseline.
+>
+> **The breakpoints moved instead of the type.** Three columns hold only while the measure stays readable; between `620px` and `1180px` the band is two-up with the third card spanning the row; below `620px` it is one card per row with the mark stepped to `36px`. At `1100px` the old three-up left each copy column at **136px**, which is the same defect at a different window width.
+>
+> **Measured, not eyeballed.** A throwaway DevTools-protocol probe read the geometry of every card in Chrome at `1440`, `1181`, `1100`, `620` and `380`, in both themes: **zero** horizontal or vertical overflow, every mark, copy block and link inside its card's bounds, equal heights within a row, and copy at two lines wherever the band is multi-column. The probe and the temporary start-choice page it used are deleted; only the CSS and the release notes are in the commit.
+>
+> **Verified:** frontend **318 passed**, `check` **0 errors / 0 warnings**, contrast audit **218 pairs** with the fill guards, production build green with `v0.3.38` in `build/index.html`, i18n audit unchanged (no new copy). Site version `0.3.38` — new `CHANGELOG.md` section, regenerated `changelog.generated.ts` (**41 releases, 290 items**), sitemap `lastmod` refreshed by the prebuild. This was requested directly, not picked from the queue, so the four offered UI upgrades are still waiting, none started.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the secret gate is green, so CI can run it
 
 Commits: `7a3878e` (gate fix + 6 tests + CI step) and `ccde02b` (the fix that CI forced). Site version `0.3.37` and backend version `0.3.28` are both unchanged: this release makes a repo check usable, and no service or interface behaviour changed.
