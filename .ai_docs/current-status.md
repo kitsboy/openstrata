@@ -1,9 +1,22 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.44
+**Site/product version:** v0.3.45
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — the money has an age, and every lot has a page (site, `0.3.45`, the first two picks from the 28 October queue)
+
+- **Both picks shipped in one release.** The receivables tab on `/accounting` is an aging ladder — every charge aged from the day it fell due, current / 1–30 / 31–60 / 61–90 / 90+, oldest money first — and every row opens that lot's own sheet, because `/units/207` is now one of **40 real pages**.
+- **`src/lib/arrears.ts` holds the rules, with 19 tests.** Ages come from due dates, never from a status field. The dates come from rules the page already states (fees on the 1st, the $50 late fee on the 5th) plus two facts the demo records: lot 309's fine posted September 16 and the levy passed 12 November 2025.
+- **A payment plan is a schedule, not overdue debt.** Lots 108 and 403 are paying their levies down at **$300** and **$450** a month, so their balances sit outside every bucket in a block of their own. A ladder that ranked the owner keeping their word beside the one who stopped would be lying.
+- **"Current" means not yet due.** On September 30 the October fee is real money owed and not one day late, so it is in the total and in the column that should be empty before the 1st — the same distinction `/accounting` already makes about Form F.
+- **The ladder ties, lot by lot.** Each lot's charges add to `balance(unit).total` (a test over all 40), and 207's buckets — `$666` current, `$716`, `$716`, `$50`, `$4,218` over 90 — reach its **$6,366** balance to the cent.
+- **`src/lib/lot-sheet.ts` reads one lot as a statement, with 15 tests.** The account stops at the statement date, so October is a dated item and not a ledger line; a month is cleared only where the fee run matched a deposit; the months inside the arrears window stand open; the levy sits at the resolution that created it, the one line that sorts before April. The sheet also carries the forms on file and what is dated next, drawn from the calendar by a matcher that reads `lot 207` and `lots 201, 309, and 404` without catching `$300`.
+- **The print keeps the tenant off it.** The tenancy card carries `no-print`, measured `display: none` under emulated print media, along with the action row — paper going to a notary does not need the tenant's name, and the page says so beside the button.
+- **Three defects found by looking, not by the tests.** The ladder's footer totalled the whole book while three rows were on screen (it now totals the rows shown, and the cards above carry the book); the "nothing past due" line said 37 of 37 lots, because three lots are fully prepaid and have no charges at all (the denominator is the building's 40); and the sheet printed `in −1 days` on a future item, a day difference measured the wrong way round.
+- **The queue is refreshed, per the standing rule.** Two new offers replace the two picks — a receipt you can hand over (`/pay`) and health over time (`/`) — beside search that reaches the workspace and the AGM packet. Updated in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md` and `docs/WORKPLAN.md`.
+- 36 catalog keys × 9 locales, catalogue **1,383** keys at full parity; site `0.3.45`. Verification: frontend **408 passed**, `check` **0/0**, contrast **218 pairs** plus the new ink measured in a browser at **5.48:1** light and **7.15:1** dark at worst, production build green with **40 lot pages**.
 
 ## Recent milestone — the floor plan on /units and the statement on /accounting (site, `0.3.44`, the first two picks from the 28 October queue)
 

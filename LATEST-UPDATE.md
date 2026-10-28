@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the money has an age, and every lot has a page
+
+Commit: `ab0b680` (site `0.3.45`). Backend API version stays `0.3.28`.
+
+> **Both picks from the 28 October queue are in.** `/accounting`'s receivables tab now ages every charge from the day it fell due — current, 1–30, 31–60, 61–90 and 90+ — oldest money first, each row opening that lot's own sheet. `/units/207` is one of 40 real pages: the balance, the account behind it from April to September with each cleared month against its payment, the levy at the resolution that created it, the forms on file, and what is dated next. Print drops the tenancy and the buttons, and the page says so beside them.
+>
+> **`src/lib/arrears.ts` (19 tests) carries three rules, and each one can be argued.** Ages come from due dates, never from a status field, and the dates are the rules the page already states — fees on the 1st, the $50 late fee on the 5th. A payment plan is a schedule, not overdue debt: lots 108 and 403 are paying their levies down at $300 and $450 a month, so their balances sit outside the ladder in a block of their own, because a ladder that ranked the owner keeping their word beside the one who stopped would be lying. And "current" means not yet due — on September 30 the October fee is real money owed and not one day late, the same distinction the page already makes about Form F. The ladder ties to the rest of the app: each lot's charges add to `balance(unit).total`, a test over all 40, and 207's buckets reach its $6,366 to the cent.
+>
+> **`src/lib/lot-sheet.ts` (15 tests) reads one lot as a statement.** The account stops at the statement date, so October is a dated item rather than a ledger line; a month is cleared only where the fee run matched a deposit, and the months inside the arrears window stand open. The levy sits at the resolution that made it (12 November 2025), ahead of the fiscal year — the one line that sorts before April.
+>
+> **Three defects were found by looking, not by the tests.** The ladder's footer totalled the whole book while three rows were on screen; it totals the rows shown now, and the cards above carry the book. The "nothing past due" line said 37 of 37 lots, because a lot with no charges has no row at all — three lots are fully prepaid, so the denominator is the building's 40. And the sheet printed `in −1 days` on a future item: the day difference was measured the wrong way round.
+>
+> **Measured rather than eyeballed:** no page overflow at `1440`, `1100`, `900`, `620` or `390` on either surface, with the ladder and the account each scrolling inside its own table; print media measured `display: none` on the tenancy card and the action row; the worst of the new ink is **5.48:1** light and **7.15:1** dark against the 4.5 floor.
+>
+> **The queue is refreshed, because it ended.** Two new offers replace the two picks — a receipt you can hand over (`/pay`) and health over time (`/`) — beside search that reaches the workspace and the AGM packet, so four are always waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md` and `.ai_docs/current-status.md`.
+>
+> **Verified:** frontend **408 passed**, `check` **0 errors / 0 warnings**, translation audit **1,383 keys × 9 locales** (36 new), contrast **218 pairs**, production build green with `v0.3.45` and **40 lot pages**, `changelog.generated.ts` regenerated (**48 releases with notes, 374 items**). The CDP probes live in `/tmp`; none is in the tree.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the floor plan on /units, and the journal as a statement
 
 Commit: `a4651ef` (site `0.3.44`). Backend API version stays `0.3.28`.

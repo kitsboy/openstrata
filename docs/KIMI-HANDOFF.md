@@ -1,6 +1,27 @@
 ## Session — 2026-10-28 (third)
 
 **Done:**
+- Shipped the two head picks of the 28 October queue together (`0.3.45`). `/accounting`'s receivables tab is an aging ladder (current / 1–30 / 31–60 / 61–90 / 90+), oldest money first, each row opening that lot's own sheet. `/units/[lot]` is a real prerendered page for all 40 lots: the balance, the account from April to September against what cleared it, the levy at its resolution, the forms on file, what is dated next, and a print that leaves the tenancy off it.
+- `src/lib/arrears.ts` (19 tests) and `src/lib/lot-sheet.ts` (15 tests); dated demo charges in `src/lib/demo/arrears.ts`.
+- 36 catalog keys × 9 locales (1,383 at parity).
+
+**Decisions:**
+- Ages come from due dates, never from a status field; the dates are the rules the page already states.
+- A payment plan is a schedule, not overdue debt — the two levy plans sit outside the ladder by their own amount.
+- "Current" is the not-yet-due fee: in the total, out of the buckets.
+- The printed sheet leaves the tenancy off it (`no-print`, measured under print media).
+- Three defects were found by looking: the footer totalling the book while three rows showed, the 37-of-37 denominator, and `in −1 days` on a future item.
+- The queue refilled with a receipt you can hand over (`/pay`) and health over time (`/`), beside workspace search and the AGM packet.
+
+**Git State:**
+- SHA: `ab0b680`
+- Unpushed: this docs commit, once it lands.
+
+---
+
+## Session — 2026-10-28 (third)
+
+**Done:**
 - Shipped the first two picks from the 28 October queue in one release (`0.3.44`): the floor plan on `/units` and the journal-as-statement on `/accounting`.
 - `src/lib/floor-plan.ts` (11 tests): the north/south split (01–05 / 06–10), floors top down, rows adding to exactly 100%, a 14% floor under the small lots, a dropped floor when a filter empties it.
 - `src/lib/ledger-statement.ts` (11 tests): date order with written order inside a day, cash running balance over `1010`+`1020` only, a chained 16-hex hash, and the closing balance.
