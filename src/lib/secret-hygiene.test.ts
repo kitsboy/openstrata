@@ -17,6 +17,15 @@ const gate = path.join(process.cwd(), 'scripts/check-secret-hygiene.mjs');
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'secret-hygiene-'));
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
+/**
+ * The gate scans every tracked file, this one included, so a literal like the
+ * ones below would (correctly) fail the build. Each adversarial value is built
+ * from pieces shorter than the 16-character floor, assembled at runtime, and
+ * written to a temp file — the gate sees the finished line exactly as it would
+ * in a commit, and the tree carries no credential-shaped literal to exempt.
+ */
+const value = (...pieces: string[]) => pieces.join('');
+
 let counter = 0;
 
 type Run = { code: number; stdout: string; stderr: string };
@@ -76,15 +85,18 @@ describe('secret-hygiene gate', () => {
   it('still fails on a real-looking value', () => {
     const cases: Array<[string, string]> = [
       // Mixed-case, no separators: what a generated key looks like.
-      ["const AUTH_SECRET = 'Zx9Qm2Lp7Rt4Vb8Nc3Kd6Wf1Qz8';", 'quoted-credential-literal'],
+      [`const AUTH_SECRET = '${value('Zx9Qm2Lp7Rt4Vb8', 'Nc3Kd6Wf1Qz8')}';`, 'quoted-credential-literal'],
       // An unquoted env value with a letter+digit run inside a segment.
-      ['DB_PASSWORD=a1b2c3d4e5f6g7h8i9j0k1', 'env-credential-literal'],
+      [`DB_PASSWORD=${value('a1b2c3d4e5f6', 'g7h8i9j0k1l2')}`, 'env-credential-literal'],
       // A quoted passphrase a human might actually use.
-      ["  password: 'Summer2024!Secure',", 'quoted-credential-literal'],
+      [`  password: '${value('Summer2024', '!Secure')}',`, 'quoted-credential-literal'],
       // A provider token is caught by its own shape even in a test helper.
-      ["const TOKEN = 'ghp_0123456789abcdefghijklmnopqrstuv';", 'github-token'],
+      [`const TOKEN = '${value('ghp_', '0123456789abcdefgh', 'ijklmnopqrstuv')}';`, 'github-token'],
       // Base64 does not hide it: the blob decodes to a provider token.
-      ["const blob = 'Z2hwXzAxMjM0NTY3ODlhYmNkZWZnaGlqa2xtbm9wcXJzdHV2';", 'base64-wrapped-credential']
+      [
+        `const blob = '${value('Z2hwXzAxMjM0', 'NTY3ODlhYmNk', 'ZWZnaGlqa2xt', 'bm9wcXJzdHV2')}';`,
+        'base64-wrapped-credential'
+      ]
     ];
     for (const [line, rule] of cases) {
       const run = runGate([line]);
@@ -97,10 +109,10 @@ describe('secret-hygiene gate', () => {
     // Every one of these reads like a fixture and names a real environment, so
     // the danger veto has to win. A friendly name is not evidence.
     const cases = [
-      "const AUTH_SECRET = 'prod-db-password-2026';",
-      "const AUTH_SECRET = 'staging-db-password-2026';",
-      "const PAY_LINK_SECRET = 'live-pay-link-secret-2026';",
-      "const API_KEY = 'real-deployment-key-2026';"
+      `const AUTH_SECRET = '${value('prod', '-db-password-2026')}';`,
+      `const AUTH_SECRET = '${value('staging', '-db-password-2026')}';`,
+      `const PAY_LINK_SECRET = '${value('live', '-pay-link-secret-2026')}';`,
+      `const API_KEY = '${value('real', '-deployment-key-2026')}';`
     ];
     for (const line of cases) {
       const run = runGate([line]);
