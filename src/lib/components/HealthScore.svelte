@@ -8,13 +8,17 @@
   import { auth } from '$lib/api/auth';
   import { fetchDeadlines, type DeadlineItem } from '$lib/api/deadlines';
   import { fetchUnits, type ApiUnit } from '$lib/api/units';
+  import { demoDeadlinesAt, healthNow } from '$lib/demo/health';
   import Icon from './Icon.svelte';
 
-  const DEMO_ITEMS: DeadlineItem[] = [
-    { id: 'demo-epr', kind: 'epr', title: 'Energy Performance Report (EPR) filing', dueAt: '2026-12-31', daysLeft: 127, severity: 'soon', jurisdiction: 'BC' },
-    { id: 'demo-agm', kind: 'agm', title: 'Annual General Meeting', dueAt: '2026-10-31', daysLeft: 66, severity: 'routine', jurisdiction: 'BC' },
-    { id: 'demo-dep', kind: 'depreciation', title: 'Depreciation report renewal', dueAt: '2027-12-31', daysLeft: 492, severity: 'routine', jurisdiction: 'BC' }
-  ];
+  /**
+   * The demo side reads the shared model, so this gauge, the metric card above
+   * it and the six-month panel all print the same number. Days left come from
+   * the due dates rather than a stored count — the old constant here said 127
+   * days for a filing 92 days out.
+   */
+  const DEMO_ITEMS: DeadlineItem[] = demoDeadlinesAt();
+  const DEMO_SCORE = healthNow().score;
 
   let items = $state<DeadlineItem[] | null>(null);
   let live = $state(false);
@@ -38,8 +42,11 @@
   const shown = $derived(items ?? DEMO_ITEMS);
 
   const score = $derived.by(() => {
+    // Signed in, the live calendar is what we can read; the demo book is scored
+    // by the shared model, arrears and Form K included.
+    if (!items) return DEMO_SCORE;
     let s = 100;
-    for (const d of shown) {
+    for (const d of items) {
       if (d.daysLeft < 0) s -= 20;
       else if (d.daysLeft <= 14) s -= 10;
       else if (d.severity === 'urgent') s -= 8;

@@ -13,6 +13,15 @@
 
   const appVersion = packageJson.version;
 
+  /**
+   * The compliance-health number the card and the gauge share. Both read the
+   * same model (`$lib/health`), and the trend below the cards is that model run
+   * at each of the last six month ends — one score, one place to check it.
+   */
+  const health = healthNow();
+  const healthMonths = healthTrend();
+  const healthDelta = healthMonths.at(-1)!.score - healthMonths[0].score;
+
 
   // Sidebar navigation: key, i18n key, icon name (single SVG icon system).
   const navGroups = [
@@ -58,6 +67,8 @@
   import RailsStatus from '$lib/components/RailsStatus.svelte';
   import DeadlineCalendar from '$lib/components/DeadlineCalendar.svelte';
   import HealthScore from '$lib/components/HealthScore.svelte';
+  import HealthTrend from '$lib/components/HealthTrend.svelte';
+  import { healthNow, healthTrend } from '$lib/demo/health';
   import RateSparkline from '$lib/components/RateSparkline.svelte';
   import ChainViz from '$lib/components/ChainViz.svelte';
   import NotificationsFeed from '$lib/components/NotificationsFeed.svelte';
@@ -390,8 +401,10 @@
         <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(1, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon"><Icon name="alert" class="h-4 w-4" /></span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div>{#if balancesLoading && crfBalance === null}<div class="metric-skeleton"><Skeleton height="26px" width="120px" /></div>{:else}<strong>{formatCurrency(crfBalance ?? books.crf.equity / 100, $locale, { maximumFractionDigits: 0 })}</strong>{/if}<Sparkline values={reserveSpark} tone="blue" /><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span>{formatCurrency(books.operating.cash / 100, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{/if}<span>{$copy.yearToDate}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>91<span class="metric-unit">/100</span></strong><div class="health-bar"><span style="width: 91%"></span></div><div class="metric-foot"><span class="trend up">{$copy.excellent}</span><span>{$copy.acrossBuildings}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>{health.score}<span class="metric-unit">/100</span></strong><div class="health-bar"><span style={`width: ${health.score}%`}></span></div><div class="metric-foot"><span class:down={healthDelta < 0} class="trend">{healthDelta < 0 ? '↘' : healthDelta > 0 ? '↗' : '→'} {Math.abs(healthDelta)} {$copy.healthTrendOverSix}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
+
+      <HealthTrend rows={healthMonths} />
 
       <section class="main-grid">
         <div class="left-stack">

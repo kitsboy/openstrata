@@ -1,3 +1,25 @@
+## Session — 2026-10-28 (fourth)
+
+**Done:**
+- The three follow-ons to the `0.3.45` picks shipped as `0.3.46`. A health point's open month now carries **Open in the books** into `/accounting?period=YYYY-MM`, where the receivables ladder is aged at that month's end (September: $6,499.00 past due, 322 days oldest; April: $3,552.00, the levy alone).
+- `src/lib/period-link.ts` (4 tests) owns the link: `YYYY-MM` only, month end via `dayIn`, everything else rejected so a bad link opens today's ladder.
+- `MonthDetail.datedInMonth` — a second cut of the same aged list — with a two-button filter on the panel: 5 of September's 10 charges and $1,515.00 of $6,499.00; none in April.
+- Form K rows in the trend link to `/units/309#forms`, and that card prints the tenancy date, the day the 14-day window closed and the days past it. `addDays` added to `lib/arrears`.
+- On `/accounting` the month is page-level: the banner sits above the tabs, the journal stops at that day, and the tabs with no monthly ledger (funds, budget, payables) say they stay at the September 30 close.
+- 8 catalog keys x 9 locales (1,410 at parity).
+
+**Decisions:**
+- "Filtered to that month" means the ladder **as at** that month end, not a row filter: a month is a date in the books, and the point above the link is a dated figure.
+- The second cut is a subset of the same list, never a separately built book — so it cannot total more than the score's own arrears term.
+- The journal follows the date only where entries exist; when nothing was posted by then the page says so and names the day the sample journal begins, rather than showing September's closing cash under an April heading.
+- Fund balances, budget and payables are deliberately not re-dated: there is no month-by-month ledger behind them, and the page states that instead of estimating.
+
+**Git State:**
+- SHA: this commit (`0.3.46`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-28 (third)
 
 **Done:**

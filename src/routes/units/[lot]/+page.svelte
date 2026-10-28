@@ -1,11 +1,12 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { copy, fill, formatDate, locale } from '$lib/i18n';
+	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { LEVY_PLAN_CENTS, charges } from '$lib/demo/arrears';
 	import { balance, building, formF, getUnit, monthlyFeeCents, type Unit } from '$lib/demo/building';
 	import { events } from '$lib/demo/schedule';
-	import { dayIn, daysPastDue, periodOf } from '$lib/arrears';
+	import { addDays, dayIn, daysBetween, daysPastDue, periodOf } from '$lib/arrears';
+	import { FORM_K_DAYS } from '$lib/health';
 	import { account, billedMonths, forLot, upcoming, type AccountLine } from '$lib/lot-sheet';
 	import type { PageData } from './$types';
 
@@ -174,7 +175,9 @@
 			</section>
 
 			<div class="grid gap-4 sm:grid-cols-2">
-				<section class="rounded-2xl border border-border bg-surface-2 p-5">
+				<!-- Anchored: the health trend links a Form K gap straight here, so the
+				     claim about a closed window lands on the dates it is made from. -->
+				<section id="forms" class="scroll-mt-24 rounded-2xl border border-border bg-surface-2 p-5">
 					<h2 class="font-bold text-slate-900">{$copy.lotSheetForms}</h2>
 					<ul class="mt-2 space-y-2 text-sm text-slate-600">
 						<li>
@@ -184,7 +187,20 @@
 								{formF(unit) === 'withheld' ? $copy.lotSheetFormFWithheld : $copy.lotSheetFormFClear}
 							</span>
 						</li>
-						<li><span class="font-semibold text-slate-800">{$copy.unitsFormK}</span> {unit.formK}</li>
+						<li>
+							<span class="font-semibold text-slate-800">{$copy.unitsFormK}</span> {unit.formK}
+							{#if unit.formK === 'missing' && unit.tenantSince}
+								<span class="mt-0.5 block text-xs leading-relaxed text-slate-500">
+									{fill($copy.lotSheetFormKWindow, {
+										since: formatDate(unit.tenantSince, $locale),
+										closed: formatDate(addDays(unit.tenantSince, FORM_K_DAYS), $locale)
+									})}
+									· {fill($copy.healthTrendPastWindow, {
+										days: formatNumber(daysBetween(unit.tenantSince, asOf) - FORM_K_DAYS, $locale)
+									})}
+								</span>
+							{/if}
+						</li>
 						{#if unit.id === '201'}
 							<li class="text-xs leading-relaxed text-slate-500">{fill($copy.unitsFormBNote, {
 								requested: formatDate('2026-09-28', $locale),

@@ -14,6 +14,47 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.46",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Health over time on the dashboard. The compliance-health panel charts six fiscal months of the score — 82, 82, 82, 74, 72, 56 — each point rebuilt at that month end from the calendar, the dated charges and the lot register, with the three inputs beside it showing what each costs now, what it cost in April and the month it moved. The card above prints 56 instead of a hard-coded 91: card, gauge and trend read one model (src/lib/health.ts, 22 tests), and the gauge's demo deadlines count days from their due dates instead of a stored 127.",
+          "Every column opens. A clicked month lists the charges that were past due at that month end and the lots whose Form K window had closed, drawn from the same functions the score read — September shows 10 charges, $6,499.00, and 3 Form K gaps; April shows the parkade levy alone and says no window had closed yet.",
+          "A month of the health trend opens the books. The open month's detail carries an “Open in the books” button, and it goes to /accounting?period=YYYY-MM: the receivables ladder aged at that month's end, with a banner saying so and a way back to today's. September lands on the figures the point scored — $6,499.00 past due, 322 days on lot 207's November 2025 levy — and April on $3,552.00, the levy alone.",
+          "src/lib/period-link.ts, the link's rules as a pure module (4 tests): a YYYY-MM month only, its month end computed through dayIn so February 2028 lands on the 29th, and everything else — 2026-13, 2026-9, 2026-09-30 — rejected. A mistyped link opens today's ladder, which is true, instead of a partial month that would not be.",
+          "A second cut of the open month. The charge list now offers two readings of one list — every charge still standing at that month end, or only those that carry a date inside the month — with the cut's own total. September: 5 of 10, $1,515.00 of $6,499.00. April: none, which is the answer — that balance was already owing before April opened.",
+          "A Form K gap links to its dates. The trend's Form K rows point at /units/309#forms, and the forms card now prints the tenancy date, the day the 14-day window closed and how long the lot has been past it (2026-07-01, 2026-07-15, 77 days), so the gap is checkable rather than asserted.",
+          "MonthDetail.datedInMonth and its total, cut from the same aged list the score reads, so the second list can never total more than the first."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The month is a page-level fact on /accounting. The banner moved above the tab strip, the journal stops at that day (entries dated on or before it, run from the fiscal year's opening cash), and the closing line names the date it closes on.",
+          "The tabs that cannot follow the date say so. Fund balances, budget and payables have no month-by-month ledger behind them, so they stay at the September 30 close and the page states which figures moved and which did not."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "An earlier month no longer shows September's closing cash in the journal. With a period set, the statement ends on that day's cash and says so; when nothing had been posted by then it says that too, and names the day the sample journal does begin (September 1, 2026)."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The link, the ladder and the point agree. /accounting?period=2026-09 renders $6,499.00 and 322 days, /accounting?period=2026-04 renders $3,552.00 and 169 days, and a test asserts the detail's own total is the arrears term at every month end.",
+          "The cut is a cut. Tests assert the September cut is 5 charges and $1,515, that every row in it is one of the ten above, that April's cut is empty, and the rendered detail shows — rather than a figure when the cut is empty.",
+          "The Form K anchor holds. A route test renders /units/309 and /units/209 and finds #forms, the closed window and the day count; a lot with its Form K on file carries no window claim.",
+          "The journal and the note, rendered: the September journal closes on “operating and reserve cash at September 30, 2026”; the April one says no entry was posted by then and names September 1; the overview under an April date carries the sentence that fund balances, budget and payables stay at the close.",
+          "Frontend 458 passed (12 new), Svelte check 0 errors / 0 warnings, translation audit 1,410 keys × 9 locales (8 new), contrast audit 218 pairs, production build green with no banner in build/accounting.html at rest and id=\"forms\" plus 14-day window closed 2026-07-15 in build/units/309.html."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.45",
     "date": "2026-10-28",
     "groups": [

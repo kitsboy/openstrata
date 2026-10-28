@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the month opens the books
+
+Commit: this commit (site `0.3.46`). Backend API version stays `0.3.28`.
+
+> **Health over time, and the month opens the books.** The dashboard's compliance-health panel charts six fiscal months of the score — **82, 82, 82, 74, 72, 56** — each point rebuilt at that month end from the calendar, the dated charges and the lot register, with the three inputs beside it showing what each costs now, what it cost in April and the month it moved. The card above prints **56** instead of a hard-coded 91, and the gauge's demo deadlines count days from due dates instead of a stored `127`: card, gauge and trend read one model (`src/lib/health.ts`, 22 tests). Every column is a button, and each open month lists the charges that were past due and the Form K windows that had closed.
+>
+> **Three follow-ons to the `0.3.45` picks.** A health point on `/` now opens the book behind it: the month detail carries **Open in the books**, and `/accounting?period=2026-09` lands on the receivables ladder **aged at 30 September** rather than today — **$6,499.00** past due and **322 days** on lot 207's November 2025 levy, the same figures the point scored. April lands on **$3,552.00**, the levy alone.
+>
+> **One parser, both sides.** `src/lib/period-link.ts` (4 tests) accepts a `YYYY-MM` month only, computes the month end with `dayIn` (February 2028 is the 29th) and rejects `2026-13`, `2026-9` and `2026-09-30`, so a mistyped link opens today's ladder instead of a half-filtered page. The panel and the page import the same module; a `?month=` on one side and a `?period=` on the other could not fail loudly.
+>
+> **A second cut of the month, not a second book.** The open month's charges can now be read two ways — everything still standing, or only the charges dated inside the month — each with its own total. September is **5 of 10, $1,515.00 of $6,499.00**; April is **none**, and that is the answer: the money was already owing when April opened. The cut comes from `MonthDetail.datedInMonth`, filtered off the same aged list the score read, so it can never total more than the number above it.
+>
+> **A Form K gap now lands on its dates.** The trend's Form K rows go to `/units/309#forms`, and the forms card prints the tenancy date, the day the 14-day window closed and how long the lot has been past it (`2026-07-01`, `2026-07-15`, `77 days`). `addDays` joined `lib/arrears` for the closing day.
+>
+> **The month is page-level on `/accounting`.** The banner sits above the tabs, the journal stops at that day (entries dated on or before it, from the same fiscal-year opening cash) and its closing line names the date. An earlier month with nothing posted says so and names `September 1, 2026`. The tabs that cannot be re-dated — fund balances, budget, payables — say they stay at the September 30 close, rather than printing September's cash under an April heading.
+>
+> **Verified:** frontend **458 passed** (12 new: 4 period-link, 7 accounting route, 4 lot route, 2 trend interaction, 1 health), `check` **0 errors / 0 warnings**, translation audit **1,410 keys × 9 locales** (8 new), contrast **218 pairs**, production build green — `build/units/309.html` carries `id="forms"` and `14-day window closed 2026-07-15`, and `build/accounting.html` carries no banner at rest. Chrome was not opened this session; the rendered text was read in jsdom.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the money has an age, and every lot has a page
 
 Commit: `ab0b680` (site `0.3.45`). Backend API version stays `0.3.28`.

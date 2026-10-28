@@ -52,6 +52,15 @@ export function daysBetween(from: string, to: string): number {
 	return Math.round((end - start) / 86_400_000);
 }
 
+/** The calendar day `days` after `day`. Both are `YYYY-MM-DD`. */
+export function addDays(day: string, days: number): string {
+	const date = new Date(
+		Date.UTC(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10)))
+	);
+	date.setUTCDate(date.getUTCDate() + days);
+	return date.toISOString().slice(0, 10);
+}
+
 /**
  * Days a charge is past its due date. A charge due today is 0, and one that is
  * not due yet is negative — the sign is kept so a caller can tell "due today"

@@ -1,16 +1,37 @@
 <script lang="ts">
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
-	import { copy, fill, formatNumber, locale } from '$lib/i18n';
+	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
 	import { cashEffect, statement } from '$lib/ledger-statement';
 	import { age, summarise } from '$lib/arrears';
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
 	import { building, depreciation, formF, units } from '$lib/demo/building';
+	import { PERIOD_PARAM, parsePeriod, type PeriodPoint } from '$lib/period-link';
 
 	let tab = $state<'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'journal'>('overview');
+
+	/**
+	 * A month carried in from the compliance-health trend: `?period=2026-09` opens
+	 * the receivables tab aged at 30 September, which is the book that point scored.
+	 * Read in an effect because `$page.url.searchParams` is not available while the
+	 * page is prerendered, and only ever set from a valid month: a bad link leaves
+	 * the reader on today's books rather than on a half-filtered page.
+	 */
+	let period = $state<PeriodPoint | null>(null);
+	$effect(() => {
+		const next = parsePeriod($page.url.searchParams.get(PERIOD_PARAM));
+		period = next;
+		if (next) tab = 'receivables';
+	});
+	/** The date every age is counted to: the linked month end, or today's statement. */
+	const asOf = $derived(period?.asOf ?? building.asOf);
+	/** The same day written out for the reader, in their language. */
+	const longDate = $derived(formatDate(asOf, $locale, { day: 'numeric', month: 'long', year: 'numeric' }));
 	// The ladder opens on what is actually late. A book where every lot is current
 	// still has a total, and the toggle brings the other 36 lots back into view.
 	let onlyPastDue = $state(true);
@@ -24,17 +45,19 @@
 
 	// Receivables are aged from the day each charge fell due, not from a status
 	// field. `demo/arrears` supplies the dates; `lib/arrears` owns the counting.
-	const aged = age(charges(), building.asOf).map((row) => ({
-		...row,
-		unit: units.find((candidate) => candidate.id === row.unitId)!
-	}));
-	const summary = summarise(aged);
+	const aged = $derived(
+		age(charges(), asOf).map((row) => ({
+			...row,
+			unit: units.find((candidate) => candidate.id === row.unitId)!
+		}))
+	);
+	const summary = $derived(summarise(aged));
 
 	// A lot with nothing on the books has no charges, so the ladder has no row for
 	// it. "Show every lot" still owes a row: the building has 40, not the 37 that
 	// happen to owe something.
-	const agedById = new Map(aged.map((row) => [row.unitId, row]));
-	const everyLot = units.map(
+	const agedById = $derived(new Map(aged.map((row) => [row.unitId, row])));
+	const everyLot = $derived(units.map(
 		(unit) =>
 			agedById.get(unit.id) ?? {
 				unitId: unit.id,
@@ -46,7 +69,7 @@
 				oldestDays: 0,
 				unit
 			}
-	);
+	));
 	const ladder = $derived(onlyPastDue ? aged.filter((row) => row.pastDue > 0) : everyLot);
 	const planned = $derived(aged.filter((row) => row.planned > 0));
 
@@ -73,7 +96,20 @@
 	const closingCash = books.operating.cash + books.crf.cash;
 	const cashMoved = books.journal.reduce((sum, entry) => sum + cashEffect(entry), 0);
 	const openingCash = closingCash - cashMoved;
-	const journalRows = statement(books.journal, openingCash);
+	// A journal is dated entries, so a month carried in is the same book stopped
+	// short: everything posted on or before that day, run from the fiscal year's
+	// opening cash. Nothing is estimated — an entry that had not been posted by
+	// then simply is not in the statement.
+	const journalEntries = $derived(
+		period ? books.journal.filter((entry) => entry.date <= asOf) : books.journal
+	);
+	const journalRows = $derived(statement(journalEntries, openingCash));
+	/** The first day the sample journal has anything on it. */
+	const journalFirst =
+		books.journal
+			.map((entry) => entry.date)
+			.sort()
+			.at(0) ?? building.asOf;
 
 	/** A journal reads debit-positive; money out carries the minus and shows in red. */
 	function signed(cents: number): string {
@@ -112,6 +148,19 @@
 		lede={$copy.accLede}
 	/>
 
+	<!-- The date belongs to the page, not to one tab: it opens here and stays in
+	     view while the reader moves between the ladder and the journal. -->
+	{#if period}
+		<div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+			<p class="min-w-0 flex-1 text-sm text-amber-950">
+				{fill($copy.accPeriodBanner, { date: longDate })}
+			</p>
+			<button class="shrink-0 rounded-full border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-950 hover:bg-amber-100" onclick={() => goto('/accounting')}>
+				{$copy.accPeriodBack}
+			</button>
+		</div>
+	{/if}
+
 	<div class="mb-6 flex gap-1 overflow-x-auto">
 		{#each tabs as item (item.id)}
 			<button
@@ -120,6 +169,12 @@
 			>{item.label}</button>
 		{/each}
 	</div>
+
+	{#if period && tab !== 'receivables' && tab !== 'journal'}
+		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600">
+			{fill($copy.accPeriodCloseNote, { date: longDate, close: formatDate(building.asOf, $locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}
+		</p>
+	{/if}
 
 	{#if tab === 'overview'}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -429,8 +484,21 @@
 	{#if tab === 'journal'}
 		<p class="mb-2 max-w-3xl text-sm text-slate-600">{$copy.accJournalIntro}</p>
 		<p class="mb-4 text-sm text-slate-600">
-			{fill($copy.accStatementOpening, { amount: money(openingCash) })}
+			{period
+				? fill($copy.accStatementOpeningAt, {
+						date: formatDate(building.fiscalStart, $locale, { day: 'numeric', month: 'long', year: 'numeric' }),
+						amount: money(openingCash)
+					})
+				: fill($copy.accStatementOpening, { amount: money(openingCash) })}
 		</p>
+		{#if period && journalRows.length === 0}
+			<p class="mb-4 text-sm text-slate-600">
+				{fill($copy.accStatementNone, {
+					date: longDate,
+					first: formatDate(journalFirst, $locale, { dateStyle: 'long' })
+				})}
+			</p>
+		{/if}
 		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[720px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
@@ -500,9 +568,14 @@
 			</table>
 		</div>
 		<p class="mt-3 text-sm text-slate-600">
-			{fill($copy.accStatementClosing, {
-				amount: money(journalRows[journalRows.length - 1]?.balance ?? openingCash)
-			})}
+			{period
+				? fill($copy.accStatementClosingAt, {
+						amount: money(journalRows.at(-1)?.balance ?? openingCash),
+						date: longDate
+					})
+				: fill($copy.accStatementClosing, {
+						amount: money(journalRows.at(-1)?.balance ?? openingCash)
+					})}
 		</p>
 		<p class="mt-2 max-w-3xl text-xs leading-relaxed text-slate-500">{$copy.accStatementChain}</p>
 	{/if}
