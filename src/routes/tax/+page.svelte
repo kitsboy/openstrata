@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Next30 from '$lib/components/Next30.svelte';
-	import { copy } from '$lib/i18n';
+	import { copy, fill } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { priorYear, sections, statusStyles } from '$lib/demo/tax';
 	import { TAX_CATEGORIES } from '$lib/next30';
@@ -10,15 +10,11 @@
 </script>
 
 <svelte:head>
-	<title>Tax and CRA — Evergreen House</title>
+	<title>{$copy.taxPageTitle}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-	<PageHeader
-		kicker="Strata returns, and the owner-tax desk"
-		title="Tax and CRA"
-		lede="Two returns are due today for the year that ended March 31, 2026. The year the building is living in is not filed until September 30, 2027. Owner taxes — empty homes, speculation, underused housing, property tax — are tracked here and paid by the owners."
-	/>
+	<PageHeader kicker={$copy.taxKicker} title={$copy.taxHeading} lede={$copy.taxLede} />
 
 	<Next30 categories={TAX_CATEGORIES} hint={$copy.next30TaxHint} />
 
@@ -33,15 +29,19 @@
 	</div>
 
 	<section class="mb-8 rounded-2xl border border-border bg-surface-2 p-5">
-		<h2 class="font-bold text-slate-900">Prior year, the one being filed today</h2>
+		<h2 class="font-bold text-slate-900">{$copy.taxPriorYear}</h2>
 		<p class="text-sm text-slate-500">{priorYear.label}</p>
 		<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-			<div><p class="text-xs text-slate-400">Revenue</p><p class="text-xl font-bold tabular-nums">{money(priorYear.revenue)}</p></div>
-			<div><p class="text-xs text-slate-400">Operating expenses</p><p class="text-xl font-bold tabular-nums">{money(priorYear.operatingExpenses)}</p></div>
-			<div><p class="text-xs text-slate-400">Reserve contribution</p><p class="text-xl font-bold tabular-nums">{money(priorYear.crf)}</p></div>
-			<div><p class="text-xs text-slate-400">Excess kept in the funds</p><p class="text-xl font-bold tabular-nums">{money(priorYear.excess)}</p></div>
+			<div><p class="text-xs text-slate-400">{$copy.taxRevenue}</p><p class="text-xl font-bold tabular-nums">{money(priorYear.revenue)}</p></div>
+			<div><p class="text-xs text-slate-400">{$copy.taxOperating}</p><p class="text-xl font-bold tabular-nums">{money(priorYear.operatingExpenses)}</p></div>
+			<div><p class="text-xs text-slate-400">{$copy.taxReserve}</p><p class="text-xl font-bold tabular-nums">{money(priorYear.crf)}</p></div>
+			<div><p class="text-xs text-slate-400">{$copy.taxExcess}</p><p class="text-xl font-bold tabular-nums">{money(priorYear.excess)}</p></div>
 		</div>
-		<p class="mt-3 text-sm text-slate-600">Assets {money(priorYear.assets)}. Fund balances {money(priorYear.equity)}. Interest plus parking {money(priorYear.passive)}, which is why the T1044 is not optional.</p>
+		<p class="mt-3 text-sm text-slate-600">{fill($copy.taxFundsLine, {
+			assets: money(priorYear.assets),
+			equity: money(priorYear.equity),
+			passive: money(priorYear.passive)
+		})}</p>
 	</section>
 
 	<div class="space-y-4">
@@ -56,7 +56,7 @@
 						{section.statusLabel}
 					</button>
 				</div>
-				<p class="mt-2 text-sm text-slate-500">Due {section.deadline}. Applies to {section.appliesTo}.</p>
+				<p class="mt-2 text-sm text-slate-500">{fill($copy.taxDueApplies, { due: section.deadline, appliesTo: section.appliesTo })}</p>
 				<p class="mt-3 text-sm leading-relaxed text-slate-700">{section.why}</p>
 
 				{#if open === section.id || section.status === 'due'}
@@ -68,17 +68,17 @@
 							</div>
 						{/each}
 					</dl>
-					<h3 class="mt-5 text-sm font-bold uppercase tracking-wide text-slate-500">Do it in this order</h3>
+					<h3 class="mt-5 text-sm font-bold uppercase tracking-wide text-slate-500">{$copy.taxInOrder}</h3>
 					<ol class="mt-2 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
 						{#each section.steps as step}
 							<li>{step}</li>
 						{/each}
 					</ol>
-					<h3 class="mt-5 text-sm font-bold uppercase tracking-wide text-slate-500">Checklist</h3>
+					<h3 class="mt-5 text-sm font-bold uppercase tracking-wide text-slate-500">{$copy.taxChecklist}</h3>
 					<ul class="mt-2 space-y-1">
 						{#each section.checklist as item}
 							<li class="flex items-start gap-2 text-sm text-slate-700">
-								<span class="mt-0.5 font-bold {item.done ? 'text-emerald-600' : 'text-amber-600'}">{item.done ? 'Done' : 'Open'}</span>
+								<span class="mt-0.5 font-bold {item.done ? 'text-emerald-600' : 'text-amber-600'}">{item.done ? $copy.taxDone : $copy.taxOpen}</span>
 								<span>{item.label}</span>
 							</li>
 						{/each}
@@ -91,7 +91,7 @@
 						</div>
 					{/if}
 				{:else}
-					<button class="mt-3 text-sm font-semibold text-brand-700" onclick={() => (open = section.id)}>Read the steps</button>
+					<button class="mt-3 text-sm font-semibold text-brand-700" onclick={() => (open = section.id)}>{$copy.taxReadSteps}</button>
 				{/if}
 			</article>
 		{/each}

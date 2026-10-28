@@ -6,7 +6,7 @@
 	import InteracPay from '$lib/components/InteracPay.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import QrPay from '$lib/components/QrPay.svelte';
-	import { copy } from '$lib/i18n';
+	import { copy, fill } from '$lib/i18n';
 	import { books } from '$lib/demo/books';
 	import {
 		BTC_CAD_CENTS,
@@ -193,16 +193,16 @@
 </script>
 
 <svelte:head>
-	<title>Pay — Evergreen House</title>
+	<title>{$copy.payPageTitle}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
 	<PageHeader
-		kicker="Same balance, five ways to pay it"
-		title="Pay a strata lot"
+		kicker={$copy.payKicker}
+		title={$copy.payPageHeading}
 		lede={bill
 			? $copy.payLinkLede.replace('{council}', bill.councilName).replace('{unit}', bill.unitRef)
-			: 'One amount, then the rail the owner already trusts. Bitcoin and Lightning sit beside e-transfer on every bill — paying in bitcoin does not make an owner less of a full owner. PAD and cheque stay at the bottom for the people who use them. Every destination on this page is a demo and cannot be paid.'}
+			: $copy.payLede}
 	/>
 
 	{#if linkBlocked}
@@ -295,8 +295,7 @@
 					<div><dt>{$copy.payAmountDue}</dt><dd>{money(due.total)}</dd></div>
 				</dl>
 				<p class="sheet-amount-foot">
-					Of the monthly fee, {money(due.operatingPart)} is operating and {money(due.crfPart)} is
-					reserve. The owner sends one amount.
+					{fill($copy.payFeeSplitLine, { operating: money(due.operatingPart), crf: money(due.crfPart) })}
 				</p>
 			{/if}
 		</div>
@@ -383,20 +382,20 @@
 						<dd class="amount">{money(amountDue)}</dd>
 					</div>
 					<div class="sheet-row">
-						<dt>{rail === 'bitcoin' ? 'Exact bitcoin' : 'Exact lightning amount'}</dt>
+						<dt>{rail === 'bitcoin' ? $copy.payExactBitcoin : $copy.payExactLightning}</dt>
 						<dd class="mono" data-stale={lock === 'expired'}>
 							{quote.btc} BTC · {satsLabel(quote.sats)}
 						</dd>
 					</div>
 					<div class="sheet-row">
-						<dt>{rail === 'bitcoin' ? 'Watch-only address' : 'Invoice'}</dt>
+						<dt>{rail === 'bitcoin' ? $copy.payWatchAddress : $copy.payInvoice}</dt>
 						<dd class="mono">
 							{rail === 'bitcoin' ? building.payTo.bitcoin : building.payTo.lightning}
 						</dd>
 					</div>
 					{#if rail === 'lightning'}
 						<div class="sheet-row">
-							<dt>Standing offer</dt>
+							<dt>{$copy.payStandingOffer}</dt>
 							<dd class="mono">{building.payTo.bolt12}</dd>
 						</div>
 					{/if}
@@ -457,7 +456,7 @@
 	</details>
 
 	<section class="mt-8 rounded-2xl border border-border bg-surface-2 p-5">
-		<h2 class="font-bold text-slate-900">How a payment finds its lot</h2>
+		<h2 class="font-bold text-slate-900">{$copy.payMatchingTitle}</h2>
 		<ol class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
 			{#each howMatchingWorks as step}
 				<li>{step}</li>
@@ -466,17 +465,17 @@
 	</section>
 
 	<section class="mt-8">
-		<h2 class="font-bold text-slate-900">September receipt tape</h2>
-		<p class="mt-1 text-sm text-slate-500">A sample of the month, not a second copy of the cash total. The fund statement is the number that has to tie.</p>
+		<h2 class="font-bold text-slate-900">{$copy.payTapeTitle}</h2>
+		<p class="mt-1 text-sm text-slate-500">{$copy.payTapeNote}</p>
 		<div class="mt-3 overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[680px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
-						<th class="px-3 py-3">Date</th>
-						<th class="px-3 py-3">Lot</th>
-						<th class="px-3 py-3">Rail</th>
-						<th class="px-3 py-3">Reference</th>
-						<th class="px-3 py-3 text-right">Amount</th>
+						<th class="px-3 py-3">{$copy.payColDate}</th>
+						<th class="px-3 py-3">{$copy.payColLot}</th>
+						<th class="px-3 py-3">{$copy.payColRail}</th>
+						<th class="px-3 py-3">{$copy.payColReference}</th>
+						<th class="px-3 py-3 text-right">{$copy.payColAmount}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -499,12 +498,14 @@
 	</section>
 
 	<section class="mt-8 rounded-2xl border border-slab-line bg-slab p-5 text-slab-ink">
-		<h2 class="font-bold">Council paying a vendor</h2>
+		<h2 class="font-bold">{$copy.payVendorTitle}</h2>
 		<p class="mt-2 text-sm leading-relaxed text-slab-muted">
-			{vendor.vendor} is owed {money(vendor.cents)} for {vendor.memo.toLowerCase()}, due {vendor.due}.
-			The ordinary way out is an e-transfer from the operating account, after the treasurer matches the invoice to account 6250.
-			Bitcoin and Lightning are on the card because the vendor may ask. They are not the default, and they are never paid from the reserve or the levy trust.
-			A bitcoin payment would be a PSBT signed 3 of 5 on hardware wallets. This software watches. It does not hold a key.
+			{fill($copy.payVendorBody, {
+				vendor: vendor.vendor,
+				amount: money(vendor.cents),
+				memo: vendor.memo.toLowerCase(),
+				due: vendor.due
+			})}
 		</p>
 	</section>
 	{/if}

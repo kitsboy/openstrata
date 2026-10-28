@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.42
+-  summary: "The five remaining demo routes speak the reader's language, and their money does too. /units, /calendar, /tax, /meetings and /pay move their own copy into the catalog — 149 keys across nine locales in this release — which takes the audit's hard-coded surface on those routes to zero and the catalog to 1,322 keys at full parity. Money and dates now follow the interface locale rather than a fixed en-CA: money(), moneyCompact() and satsLabel() read the active locale at call time, so a French page shows 904,58 $ instead of $904.58, and month names, weekday heads, the selected-day heading and the receipt-tape date chips come from Intl instead of hard-coded English lists. Two defects were found by doing it. formatDate() never matched its own YYYY-MM-DD regex — it was written with a doubled backslash, so a bare calendar day parsed as UTC midnight and rendered as the day before for every reader west of UTC; the day strings are now anchored at noon UTC, and a test takes the path a page takes rather than the one that hid the bug. The audit's locale-parity guard read a French value ending in ' :' as a key, so it failed on a translation that was correct; keys are now only read where a property can sit. A new test requires every locale to carry the same {slots} as the English source, because fill() leaves a missing slot visible as {amount}. Verified in the browser: all five routes in French with no unfilled slot, back to English unchanged, and the calendar reading septembre 2026 / mercredi 30 septembre / 1 sept. 5 sept."
 -  version: 0.3.41
 -  summary: "The next 30 days, in one strip on both /calendar and /tax. The three pages that describe dated items — the dashboard panels, the month grid, and the prose deadlines inside the tax sections — now have a fourth view built from the calendar's own data rather than a second list: 13 dated items from the sample's September 30 through the end of October, grouped into Today (3), This week (4) and Later this month (6), each with its day count and a link to the calendar. /tax shows the same window narrowed to filings, remittances and compliance dates — four items, from both returns due today to the October 15 CPP and EI remittance — so a treasurer reads the tax page and sees the same dates the calendar holds. Today is the sample date, not the machine clock: the books are Evergreen House at September 30, 2026, and a strip reading new Date() would have called a September balance 'due today' months later; the window is a pure module with 9 tests covering the 30-day edge, the bucket boundaries, a DST-safe day count, the category filter and a date moved by the caller. The category is shown as the calendar's own dot and no label, because the category names are English data and printing them would have put untranslated words on a page being localized in the same session. 11 catalog keys x 9 locales. Verified at 1440, 1279, 1181, 1100, 900 and 620 in both themes: 0 clipped, spilled or sub-200px text on either page, and the strip's own copy measured at 5.2:1 light and 6.58:1 dark at its worst."
 -  version: 0.3.40
@@ -122,6 +124,37 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.42] — 2026-10-28
+
+### Added
+
+- **The last five demo routes are in the catalog.** `/units`, `/calendar`, `/tax`, `/meetings` and `/pay` now read their own copy from `src/lib/i18n.ts` — ledes, kickers, page titles, filter chips, column headers, the tax checklist labels, the quorum cards and the pay sheet's rail rows. **149** keys in nine locales in this release; the catalog is **1,322** keys with `fr es zh hi fil pl uk sw` at parity, and the audit's hard-coded surface on those five routes is **zero**.
+- **A test that a translation cannot silently lose a figure.** `fill()` leaves a slot with no value exactly as written, which is right for a missing value and wrong for a missing translation — a reader would see `{amount}`. The new test compares every locale's `{slots}` with the English source, across all ~11,900 translated strings.
+
+### Changed
+
+- **Money follows the reader's locale.** `money()`, `moneyCompact()` and `satsLabel()` in `src/lib/demo/format.ts` read the active locale at call time instead of formatting with `en-CA`, so a French page prints `904,58 $` where it used to print `$904.58`. Sats keep their unit name — the Lightning unit is not an English word — but group their digits the reader's way.
+- **Dates do too.** The calendar's month name, its seven weekday heads, the selected-day heading and the receipt tape's date chips come from `Intl` (`septembre 2026`, `mercredi 30 septembre`, `1 sept.`) rather than from hard-coded arrays, so they change with the language instead of beside it.
+- **The parity guard reads keys where a key can be.** `scripts/audit-i18n.mjs` matched `\bword: '` anywhere, so French copy ending in ` :` — `unitsParking: 'Stationnement / rangement :'` — reported `rangement` as a key in `fr` and missing in the other eight. Keys now have to sit after `{`, after a comma, or at the start of a line.
+
+### Fixed
+
+- **`formatDate()` was a day early for everyone west of UTC.** Its `YYYY-MM-DD` check was written with a doubled backslash, so it never matched and a bare calendar day went through `new Date('2026-09-30')` — UTC midnight, which renders as September 29 in Vancouver. Day strings are anchored at noon UTC now. The existing test missed it because it passed `timeZone: 'UTC'`, which is not the path a page takes; a second test takes the page's path.
+- **The calendar's selected-day heading said `2026-09-30`.** It reads `Wednesday, September 30` / `mercredi 30 septembre` now.
+
+### Verified
+
+- The five routes in Chrome with the locale set to French: no unfilled `{slot}` anywhere, correct headlines (`Impôts et ARC`, `Assemblées et votes`, `Payer un lot`, `Qui habite ici`, `Calendrier`), and the same pages unchanged in English.
+- Calendar formatting in `fr`, `en` and `zh`: `septembre 2026` / `September 2026` / `九月 2026`, weekday heads `D L M M J V S` / `S M T W T F S` / `日 一 二 三 四 五 六`, day heading `mercredi 30 septembre` (the 30th, not the 29th).
+- Frontend **341 passed**, Svelte check **0 errors / 0 warnings**, translation audit **1,322 keys × 9 locales**, contrast audit unchanged, production build green.
+
+### Known issues
+
+- **Demo records stay English.** Event titles, tax-section prose, bylaw steps and owner notes are sample data, not chrome, and are not in the catalog. The pages around them are.
+- **The calendar's category names (`Fees`, `Council`, `CRA`…) are now catalog keys, but the event titles they label are still English data.** That is the same line the next-30-days strip drew.
+
+---
 
 ## [0.3.41] — 2026-10-28
 

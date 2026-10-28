@@ -29,6 +29,21 @@ describe('i18n catalog', () => {
     }
   });
 
+  // `fill()` leaves a slot with no value exactly as written, which is right for a
+  // missing value but wrong for a missing translation: a reader would see
+  // `{amount}`. So every locale has to carry the same slots as the English source.
+  it('every translation carries the same {slots} as the English source', () => {
+    const slots = (text: string) => (text.match(/\{\w+\}/g) ?? []).sort().join(',');
+    for (const locale of locales) {
+      const block = overrides[locale.code];
+      if (!block) continue;
+      for (const [key, value] of Object.entries(block)) {
+        const source = english[key as keyof Translation];
+        expect(slots(value as string), `${locale.code}.${key} slots`).toBe(slots(source));
+      }
+    }
+  });
+
   it('no locale overrides more keys than the French benchmark (full coverage)', () => {
     const frKeys = Object.keys(overrides.fr ?? {}).sort();
     for (const locale of locales) {
@@ -74,5 +89,13 @@ describe('formatters', () => {
     });
     expect(out).toContain('Aug');
     expect(out).toContain('2026');
+  });
+
+  it('formatDate keeps the calendar day in the reader’s own zone', () => {
+    // No `timeZone` here on purpose: this is the path a page takes, and a bare
+    // `YYYY-MM-DD` used to land on UTC midnight and render as the day before
+    // for anyone west of UTC.
+    const out = formatDate('2026-08-25', 'en', { month: 'short', day: 'numeric' });
+    expect(out).toContain('Aug 25');
   });
 });

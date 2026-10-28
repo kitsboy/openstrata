@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { money } from '$lib/demo/format';
+	import { copy, fill } from '$lib/i18n';
 	import {
 		balance,
 		building,
@@ -52,33 +53,43 @@
 		payerUnitId.set(id);
 	}
 
-	const filters = [
-		['all', 'All lots'],
-		['arrears', 'Fees behind'],
-		['formk', 'Form K missing'],
-		['levy', 'Levy balance'],
-		['withheld', 'Form F withheld'],
-		['vacant', 'Vacant'],
-		['short-term', 'Short-term']
-	] as const;
+	const filters = $derived([
+		['all', $copy.unitsFilterAll],
+		['arrears', $copy.unitsFilterArrears],
+		['formk', $copy.unitsFilterFormK],
+		['levy', $copy.unitsFilterLevy],
+		['withheld', $copy.unitsFilterWithheld],
+		['vacant', $copy.unitsFilterVacant],
+		['short-term', $copy.unitsFilterShortTerm]
+	] as const);
+
+	const occupancyLabel = $derived(
+		selected.occupancy === 'owner'
+			? $copy.unitsOccOwner
+			: selected.occupancy === 'vacant'
+				? $copy.unitsOccVacant
+				: selected.occupancy === 'short-term'
+					? $copy.unitsOccShortTerm
+					: selected.occupancy
+	);
 </script>
 
 <svelte:head>
-	<title>Units — Evergreen House</title>
+	<title>{$copy.unitsPageTitle}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
 	<PageHeader
-		kicker="{headcount.lots} strata lots · {building.floors} floors"
-		title="Who lives here"
-		lede="Pick a lot. The card on the right is the owner file: fees, levy, Form K, and the vacancy-tax notes the secretary actually gets asked for."
+		kicker={fill($copy.unitsKicker, { lots: headcount.lots, floors: building.floors })}
+		title={$copy.unitsTitle}
+		lede={$copy.unitsLede}
 	/>
 
 	<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
 		<input
 			bind:value={query}
-			placeholder="Search a name or a lot"
-			aria-label="Search lots"
+			placeholder={$copy.unitsSearchPlaceholder}
+			aria-label={$copy.unitsSearchLabel}
 			class="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm sm:max-w-xs"
 		/>
 		<div class="flex gap-1 overflow-x-auto">
@@ -86,7 +97,7 @@
 				<button
 					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {floor === level ? 'bg-slab text-slab-ink' : 'bg-surface-2 border border-border text-slate-600'}"
 					onclick={() => (floor = floor === level ? 'all' : level)}
-				>Floor {level}</button>
+				>{fill($copy.unitsFloor, { n: level })}</button>
 			{/each}
 		</div>
 	</div>
@@ -105,7 +116,7 @@
 				{@const onFloor = level.units.filter(matches)}
 				{#if onFloor.length > 0 && (floor === 'all' || floor === level.floor)}
 					<div class="rounded-2xl border border-border bg-surface-2 p-3">
-						<p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Floor {level.floor}</p>
+						<p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">{fill($copy.unitsFloor, { n: level.floor })}</p>
 						<div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
 							{#each onFloor as unit}
 								<button
@@ -117,7 +128,7 @@
 									     leaves this cell ~108px, and "Northwater Holdings Ltd." needs
 									     137. -->
 									<span class="block text-xs leading-snug line-clamp-2">{unit.owner}</span>
-									<span class="block text-[11px] tabular-nums">{money(balance(unit).fee)}/mo</span>
+									<span class="block text-[11px] tabular-nums">{fill($copy.unitsPerMonth, { amount: money(balance(unit).fee) })}</span>
 								</button>
 							{/each}
 						</div>
@@ -125,67 +136,69 @@
 				{/if}
 			{/each}
 			{#if visible.length === 0}
-				<p class="rounded-2xl border border-dashed border-border p-6 text-sm text-slate-500">No lot matches that filter.</p>
+				<p class="rounded-2xl border border-dashed border-border p-6 text-sm text-slate-500">{$copy.unitsNoMatch}</p>
 			{/if}
 		</div>
 
 		<aside class="h-fit rounded-2xl border border-border bg-surface-2 p-5 lg:sticky lg:top-36">
-			<p class="text-xs font-bold uppercase tracking-wide text-slate-400">Lot {selected.id} · strata lot {selected.lot}</p>
+			<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{fill($copy.unitsLotHeading, { lot: selected.id, n: selected.lot })}</p>
 			<h2 class="mt-1 text-2xl font-bold text-slate-900">{selected.owner}</h2>
-			<p class="text-sm text-slate-500">{selected.type} · {selected.sqft} sq ft · floor {selected.floor}</p>
+			<p class="text-sm text-slate-500">{fill($copy.unitsSpec, { type: selected.type, sqft: selected.sqft, floor: selected.floor })}</p>
 			{#if selected.role}
 				<p class="mt-2 text-sm font-semibold text-brand-700">{selected.role}</p>
 			{/if}
 
 			<dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
 				<div>
-					<dt class="text-xs text-slate-400">Monthly fee</dt>
+					<dt class="text-xs text-slate-400">{$copy.unitsMonthlyFee}</dt>
 					<dd class="font-semibold tabular-nums">{money(due.fee)}</dd>
 				</div>
 				<div>
-					<dt class="text-xs text-slate-400">To clear, including October</dt>
+					<dt class="text-xs text-slate-400">{$copy.unitsToClear}</dt>
 					<dd class="font-semibold tabular-nums">{money(due.total)}</dd>
 				</div>
 				<div>
-					<dt class="text-xs text-slate-400">Entitlement</dt>
-					<dd class="font-semibold tabular-nums">{selected.entitlement} pts</dd>
+					<dt class="text-xs text-slate-400">{$copy.unitsEntitlement}</dt>
+					<dd class="font-semibold tabular-nums">{fill($copy.unitsPoints, { n: selected.entitlement })}</dd>
 				</div>
 				<div>
-					<dt class="text-xs text-slate-400">Form F</dt>
+					<dt class="text-xs text-slate-400">{$copy.accColFormF}</dt>
 					<dd class="font-semibold {formF(selected) === 'withheld' ? 'text-rose-700' : 'text-emerald-700'}">{formF(selected)}</dd>
 				</div>
 			</dl>
 
 			<ul class="mt-4 space-y-1 text-sm text-slate-600">
-				<li>October: {selected.prepaidOctober ? 'already paid' : money(due.october)}</li>
-				<li>Fees behind: {money(due.arrears)}{selected.feeArrearsMonths ? ` (${selected.feeArrearsMonths} month${selected.feeArrearsMonths === 1 ? '' : 's'})` : ''}</li>
-				<li>Late fees: {money(due.late)}</li>
-				<li>Fines: {money(due.fine)}</li>
-				<li>Levy still owing: {money(due.levy)}</li>
-				<li>Of each month’s fee, {money(due.operatingPart)} is operating and {money(due.crfPart)} is reserve.</li>
+				<li>{selected.prepaidOctober ? $copy.unitsOctoberPaid : fill($copy.unitsOctoberDue, { amount: money(due.october) })}</li>
+				<li>{selected.feeArrearsMonths
+					? fill($copy.unitsFeesBehindMonths, { amount: money(due.arrears), n: selected.feeArrearsMonths })
+					: fill($copy.unitsFeesBehind, { amount: money(due.arrears) })}</li>
+				<li>{fill($copy.unitsLateFees, { amount: money(due.late) })}</li>
+				<li>{fill($copy.unitsFines, { amount: money(due.fine) })}</li>
+				<li>{fill($copy.unitsLevyOwing, { amount: money(due.levy) })}</li>
+				<li>{fill($copy.unitsFeeSplit, { operating: money(due.operatingPart), crf: money(due.crfPart) })}</li>
 			</ul>
 
 			<div class="mt-4 space-y-2 text-sm text-slate-600">
-				<p><span class="font-semibold text-slate-800">Lives:</span> {selected.occupancy === 'owner' ? 'Owner' : selected.occupancy}{selected.tenant ? ` — ${selected.tenant}` : ''}{selected.tenantSince ? ` since ${selected.tenantSince}` : ''}</p>
-				<p><span class="font-semibold text-slate-800">Owner is in:</span> {selected.ownerLives}</p>
-				<p><span class="font-semibold text-slate-800">Form K:</span> {selected.formK}</p>
-				<p><span class="font-semibold text-slate-800">Pays by:</span> {selected.payMethod}</p>
-				<p><span class="font-semibold text-slate-800">Parking / locker:</span> {selected.parking.join(', ')} · {selected.locker}</p>
-				<p><span class="font-semibold text-slate-800">Pets:</span> {selected.pets}</p>
-				<p><span class="font-semibold text-slate-800">EV:</span> {selected.ev ? 'Charger installed' : 'No charger'}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsLives}</span> {occupancyLabel}{selected.tenant ? ` — ${selected.tenant}` : ''}{selected.tenantSince ? ` ${fill($copy.unitsTenantSince, { date: selected.tenantSince })}` : ''}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsOwnerIsIn}</span> {selected.ownerLives}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsFormK}</span> {selected.formK}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsPaysBy}</span> {selected.payMethod}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsParking}</span> {selected.parking.join(', ')} · {selected.locker}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsPets}</span> {selected.pets}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsEv}</span> {selected.ev ? $copy.unitsEvYes : $copy.unitsEvNo}</p>
 				<p class="text-xs text-slate-400">{selected.email} · {selected.phone}</p>
 			</div>
 
 			<div class="mt-4 space-y-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-				<p><span class="font-semibold text-slate-800">Empty Homes Tax.</span> {selected.eht}</p>
-				<p><span class="font-semibold text-slate-800">Speculation tax.</span> {selected.svt}</p>
-				<p><span class="font-semibold text-slate-800">Underused housing.</span> {selected.uht}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsEht}</span> {selected.eht}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsSvt}</span> {selected.svt}</p>
+				<p><span class="font-semibold text-slate-800">{$copy.unitsUht}</span> {selected.uht}</p>
 			</div>
 
 			<p class="mt-4 text-sm leading-relaxed text-slate-700">{selected.notes}</p>
 
 			{#if selected.id === '201'}
-				<p class="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">Form B was requested September 28 and is due October 5. The lot is clear, so Form F can go with it.</p>
+				<p class="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{fill($copy.unitsFormBNote, { requested: 'September 28', due: 'October 5' })}</p>
 			{/if}
 
 			<a
@@ -193,7 +206,7 @@
 				class="mt-4 flex items-center justify-center rounded-xl bg-slab px-4 py-3 text-sm font-bold text-slab-ink no-underline transition-colors hover:bg-slab-raised"
 				onclick={() => payerUnitId.set(selected.id)}
 			>
-				Pay this lot
+				{$copy.unitsPayThisLot}
 			</a>
 		</aside>
 	</div>

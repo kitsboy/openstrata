@@ -37,9 +37,18 @@ for (const match of catalog.matchAll(LOCALE_BLOCK)) {
   // (a string value). Requiring the quote avoids matching "Word:" patterns
   // that appear inside translated values (e.g. French "BCFSA :", Spanish
   // "Sellado:", or "marketing.ts:").
+  // A key sits where a property can sit: after `{`, after a comma, or at the
+  // start of a line — never in the middle of a value. Matching `\bword: '`
+  // anywhere read French copy that ends in " :" as a key, because the closing
+  // quote sits right after the colon: `unitsParking: 'Stationnement /
+  // rangement :'` reported `rangement` (and `résidant` as `sidant`) as keys in
+  // fr and missing everywhere else. The parity check then failed on a
+  // translation that was correct.
   localeBlocks.set(
     match[1],
-    new Set([...match[2].matchAll(/\b([a-z][A-Za-z0-9]*)\s*:\s*'/g)].map((m) => m[1]))
+    new Set(
+      [...match[2].matchAll(/(?:^|,|\{)\s*([a-z][A-Za-z0-9]*)\s*:\s*'/gm)].map((m) => m[1])
+    )
   );
 }
 

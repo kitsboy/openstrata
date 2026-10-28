@@ -14,6 +14,49 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.42",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The last five demo routes are in the catalog. /units, /calendar, /tax, /meetings and /pay now read their own copy from src/lib/i18n.ts — ledes, kickers, page titles, filter chips, column headers, the tax checklist labels, the quorum cards and the pay sheet's rail rows. 149 keys in nine locales in this release; the catalog is 1,322 keys with fr es zh hi fil pl uk sw at parity, and the audit's hard-coded surface on those five routes is zero.",
+          "A test that a translation cannot silently lose a figure. fill() leaves a slot with no value exactly as written, which is right for a missing value and wrong for a missing translation — a reader would see {amount}. The new test compares every locale's {slots} with the English source, across all ~11,900 translated strings."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Money follows the reader's locale. money(), moneyCompact() and satsLabel() in src/lib/demo/format.ts read the active locale at call time instead of formatting with en-CA, so a French page prints 904,58 $ where it used to print $904.58. Sats keep their unit name — the Lightning unit is not an English word — but group their digits the reader's way.",
+          "Dates do too. The calendar's month name, its seven weekday heads, the selected-day heading and the receipt tape's date chips come from Intl (septembre 2026, mercredi 30 septembre, 1 sept.) rather than from hard-coded arrays, so they change with the language instead of beside it.",
+          "The parity guard reads keys where a key can be. scripts/audit-i18n.mjs matched \\bword: ' anywhere, so French copy ending in : — unitsParking: 'Stationnement / rangement :' — reported rangement as a key in fr and missing in the other eight. Keys now have to sit after {, after a comma, or at the start of a line."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "formatDate() was a day early for everyone west of UTC. Its YYYY-MM-DD check was written with a doubled backslash, so it never matched and a bare calendar day went through new Date('2026-09-30') — UTC midnight, which renders as September 29 in Vancouver. Day strings are anchored at noon UTC now. The existing test missed it because it passed timeZone: 'UTC', which is not the path a page takes; a second test takes the page's path.",
+          "The calendar's selected-day heading said 2026-09-30. It reads Wednesday, September 30 / mercredi 30 septembre now."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The five routes in Chrome with the locale set to French: no unfilled {slot} anywhere, correct headlines (Impôts et ARC, Assemblées et votes, Payer un lot, Qui habite ici, Calendrier), and the same pages unchanged in English.",
+          "Calendar formatting in fr, en and zh: septembre 2026 / September 2026 / 九月 2026, weekday heads D L M M J V S / S M T W T F S / 日 一 二 三 四 五 六, day heading mercredi 30 septembre (the 30th, not the 29th).",
+          "Frontend 341 passed, Svelte check 0 errors / 0 warnings, translation audit 1,322 keys × 9 locales, contrast audit unchanged, production build green."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "Demo records stay English. Event titles, tax-section prose, bylaw steps and owner notes are sample data, not chrome, and are not in the catalog. The pages around them are.",
+          "The calendar's category names (Fees, Council, CRA…) are now catalog keys, but the event titles they label are still English data. That is the same line the next-30-days strip drew."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.41",
     "date": "2026-10-28",
     "groups": [
