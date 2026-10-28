@@ -1,9 +1,19 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.40
+**Site/product version:** v0.3.42
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — the last five routes speak French, and the money does too (site, `0.3.42`)
+
+- **`/units`, `/calendar`, `/tax`, `/meetings` and `/pay` moved their own copy into the catalog** — 149 keys across nine locales in this release, catalog **1,322** keys at full parity, and the i18n audit's hard-coded surface on those five routes is **zero**. The workspace routes now all render in the reader's language; `/accounting` shipped at `0.3.40`.
+- **Money follows the locale, not a fixed `en-CA`.** `money()`, `moneyCompact()` and `satsLabel()` in `src/lib/demo/format.ts` read `get(locale)` at call time, so a French page prints `904,58 $` where it printed `$904.58`. Sats keep the unit name — the Lightning unit is not an English word — and group digits the reader's way.
+- **Dates do too.** The calendar's month name, seven weekday heads, selected-day heading and receipt-tape chips come from `Intl`, so the page reads `septembre 2026`, `mercredi 30 septembre`, `1 sept.` rather than English in a French frame.
+- **`formatDate()` was a day early for everyone west of UTC, and its own test could not see it.** The `YYYY-MM-DD` check was written with a doubled backslash, so it never matched and a bare day went through `new Date('2026-09-30')` — UTC midnight, i.e. September 29 in Vancouver. Day strings are anchored at noon UTC now; the old test missed it because it passed `timeZone: 'UTC'`, which is not the path a page takes, and a second test takes the page's path (`Aug 25`, no timezone).
+- **The parity guard was failing on correct French.** `scripts/audit-i18n.mjs` matched `\bword: '` anywhere, so `unitsParking: 'Stationnement / rangement :'` reported `rangement` as a key in `fr` and missing in the other eight. Keys now have to sit after `{`, after a comma, or at the start of a line.
+- **A translation cannot silently drop a figure any more.** `fill()` leaves an unfilled slot visible on purpose, so a missing translation would print `{amount}` to a reader; the new test requires every locale to carry the same `{slots}` as the English source, across ~11,900 translated strings.
+- Verification: the five routes in Chrome with the locale set to French — `Impôts et ARC`, `Assemblées et votes`, `Payer un lot`, `Qui habite ici`, `Calendrier`, no unfilled slot anywhere, and unchanged in English; calendar formatting in `fr`/`en`/`zh` (`septembre 2026` / `September 2026` / `九月 2026`, weekday heads `D L M M J V S` / `S M T W T F S` / `日 一 二 三 四 五 六`). Frontend **341 passed**, `check` **0/0**, i18n **1,322 keys × 9 locales**, contrast **218 pairs** + 3 fill guards, secret gate green, build green with `v0.3.42` in `build/index.html`.
 
 ## Recent milestone — a September close on /accounting, and the page in the catalog (site, `0.3.40`)
 
@@ -111,8 +121,8 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 - Agent accounts are not a distinct identity class yet; the manifest explicitly warns against sharing admin/treasurer credentials. A dedicated scoped credential model remains future work.
 - The backend is not confirmed deployed; do not call local verification a production check.
 - Legal/statutory content requires current professional review. Payment rails and backend integrations must remain honestly labeled until real host credentials/providers exist.
-- **`/accounting` is now fully in the catalog; five routes still are not.** The six dashboard routes listed under the i18n milestone render English in every locale except `/accounting`, which shipped its copy in `0.3.40` — `/units`, `/pay`, `/tax`, `/calendar` and `/meetings` remain, and the audit names each string on every run.
-- **The demo `money()` helper is not locale-aware.** A French page still shows `$904.58` rather than `904,58 $`; `formatCurrency` in `src/lib/i18n.ts` does it properly and is used where formatting matters. Localizing money and dates across the demo statements is item 47 on the improvements list.
+- **Every workspace route's chrome is in the catalog; the demo records are not.** `/accounting` (`0.3.40`) and then `/units`, `/pay`, `/tax`, `/calendar` and `/meetings` (`0.3.42`) took their copy out of the templates. What still reads English in every locale is sample *data* — event titles, tax-section prose, bylaw steps, owner notes — because those are records rather than chrome. The calendar's category names are the one exception already keyed, so the labels translate and the events they label do not.
+- **The demo `money()` helper is locale-aware now (`0.3.42`).** It reads the active locale through `formatCurrency`, as do `moneyCompact()`, `satsLabel()` and `formatDate`. The remaining half of item 47 is the other direction: a qualified reviewer for the French, and any jurisdiction-specific date/currency rules.
 - **Migration execution now repeats on every push, on this machine.** `npm run db:check` applies the whole set from zero and as an upgrade and runs the suite against the result in ~3s, and `.githooks/pre-push` runs it — installed in this clone (`core.hooksPath=.githooks`), so another clone or machine needs `npm run hooks:install` once. CI's `backend-e2e` job runs the same gate on a fresh `pgvector/pgvector:pg17` container (it replaces the separate `npm run migrate` and `-- e2e-smoke` steps), so CI and the hook agree on what "applies" means. What is still not covered: the harness is Homebrew-shaped — `OPENSTRATA_PG_BIN` or a `DATABASE_URL` pointing at `docker compose`'s `db` service are the non-macOS paths.
 - The audit row for a bylaw fine carries the amount and the council-minutes reference, but **not the unit** — the complaint is an opaque JSON string the policy deliberately does not parse. Traceability for a fine runs through the minutes, not the lot.
 - The site consumes `POST /auth/logout` but **not refresh tokens**: an access token simply expires after an hour and the next call 401s into a signed-out state. That is a UX decision left open, not a broken path.
@@ -122,4 +132,4 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 
 ## UI queue
 
-The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **The September close on `/accounting` shipped in `0.3.40`, so three are left:** a floor walk on `/units`, a next-30-days strip on `/tax` + `/calendar`, and a release trail on `/changelog`.
+The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **The September close (`0.3.40`) and the next-30-days strip (`0.3.41`) both shipped, so one is left:** the release trail on `/changelog`. The `0.3.42` localization pass was requested work, not a queue item — the queue is about UI, and no one picked it.

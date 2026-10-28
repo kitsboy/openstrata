@@ -1,3 +1,21 @@
+## Session — 2026-10-28
+
+**Done:**
+- Two batches, both shipped. Batch 1 (`0.3.41`, `888aef0`): a next-30-days strip on `/calendar` and `/tax`, built from the calendar's own data.
+- Batch 2 (`0.3.42`): `/units`, `/calendar`, `/tax`, `/meetings` and `/pay` moved their copy into the catalog — **149** keys × 9 locales, catalog **1,322** keys at parity, zero hard-coded strings left on those five routes.
+- Locale-aware money (`money`, `moneyCompact`, `satsLabel`) and Intl dates (calendar month, weekday heads, day heading, receipt chips).
+- Fixed: `formatDate()` parsed a bare `YYYY-MM-DD` as UTC midnight — a doubled-backslash regex meant the day-string branch never ran, so every date west of UTC rendered a day early. Fixed the audit's parity guard reading French ` :` as a key. Added a test that every locale carries the same `{slots}` as English.
+
+**Decisions:**
+- Demo *records* (event titles, tax prose, bylaw steps, owner notes) stay English; only chrome is in the catalog. They are sample data, not interface.
+- `formatDate` anchors a bare day at noon UTC rather than taking a timezone argument, because every caller prints a calendar day, never an instant.
+
+**Git State:**
+- SHA: `703c20c`
+- Unpushed: see `git log --oneline origin/main..HEAD` after the push.
+
+---
+
 ## Session — 2026-10-28 · a September close on /accounting, and its copy in the catalog
 
 **Done:**

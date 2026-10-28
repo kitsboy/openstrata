@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the last five routes speak the reader's language, and the money does too
+
+Commit: `703c20c` (site `0.3.42`). Backend API version stays `0.3.28`.
+
+> **Both batches are in.** Batch one was the next-30-days strip on `/calendar` and `/tax` (`0.3.41`). Batch two is this release: `/units`, `/calendar`, `/tax`, `/meetings` and `/pay` now read their own copy from the catalog — **149** keys across nine locales, **1,322** keys at full parity, and the i18n audit's hard-coded surface on those five routes is **zero**. Every workspace route renders in the reader's language; `/accounting` got there at `0.3.40`.
+>
+> **The money left `en-CA`.** `money()`, `moneyCompact()` and `satsLabel()` read the active locale through `formatCurrency` at call time, so a French page prints `904,58 $` where it printed `$904.58`. Sats keep the unit name, because the Lightning unit is not an English word, but their digits group the reader's way.
+>
+> **So did the dates.** The calendar's month name, its seven weekday heads, the selected-day heading and the receipt tape's chips come from `Intl`: `septembre 2026`, `mercredi 30 septembre`, `1 sept.`. Verified in `fr`, `en` and `zh` (`septembre 2026` / `September 2026` / `九月 2026`, heads `D L M M J V S` / `S M T W T F S` / `日 一 二 三 四 五 六`).
+>
+> **Two defects came out of doing it.** `formatDate()`'s `YYYY-MM-DD` check was written with a doubled backslash, so it never matched: a bare calendar day went through `new Date('2026-09-30')`, which is UTC midnight and rendered as **September 29** for every reader west of UTC. Day strings are anchored at noon UTC now. The old test could not see it because it passed `timeZone: 'UTC'` — not the path a page takes — so a second test takes the page's path. And the parity guard in `scripts/audit-i18n.mjs` read a French value ending in ` :` as a key, failing on a translation that was correct (`unitsParking: 'Stationnement / rangement :'` reported `rangement`); keys are only read where a property can sit.
+>
+> **A translation can no longer silently drop a figure.** `fill()` leaves an unfilled slot visible on purpose, which is right for a missing value and wrong for a missing translation — a reader would see `{amount}`. The new test requires every locale to carry the same `{slots}` as the English source, across ~11,900 translated strings.
+>
+> **Verified:** the five routes in Chrome with the locale set to French — `Impôts et ARC`, `Assemblées et votes`, `Payer un lot`, `Qui habite ici`, `Calendrier`, **no** unfilled `{slot}` anywhere, and the same pages unchanged in English. Frontend **341 passed**, `check` **0 errors / 0 warnings**, translation audit **1,322 keys × 9 locales**, contrast audit **218 pairs** + 3 fill guards, secret gate green, production build green with `v0.3.42` in `build/index.html`. `changelog.generated.ts` regenerated (**45 releases with notes, 327 items**). The probes were throwaway CDP scripts in `/tmp`; none is in the tree.
+>
+> **Still English on purpose:** the demo *records* — event titles, tax-section prose, bylaw steps, owner notes. Those are sample data rather than chrome; the pages around them translate. The queue's last item, a release trail on `/changelog`, is untouched.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — a September close on /accounting, and its copy in the catalog
 
 Commit: `f235e86` (site `0.3.40`). Backend API version stays `0.3.28`.
