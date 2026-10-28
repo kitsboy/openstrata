@@ -73,15 +73,16 @@ After every push that changes what a person sees:
 
 Do not start a queued item before it is picked. Do not treat the queue as finished.
 
-### Offered 2026-10-28 — not started
+### Offered 2026-10-28 — refreshed, not started
 
-1. **A floor you can walk** (`/units`). Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.
-2. **A ledger you can read as a ledger** (`/accounting`). The journal tab as a statement: a running balance beside every entry, and a drawer per entry with its hash, who posted it and what evidence came with it.
+1. **Aged arrears** (`/accounting`). The receivables tab as an aging ladder — current, 30, 60 and 90+ days — oldest money first, each row opening the lot it names.
+2. **A lot's own sheet** (`/units?lot=305`). One lot on one page: the balance, its own ledger, the forms issued, the next dated items, and a print that keeps the tenant off it.
 3. **Search that reaches the workspace** (`Cmd/Ctrl+K`). The index finds pages and documents today, not the building. Add lot records, ledger entries and tax sections, each result opening the row it names.
 4. **The AGM packet** (`/meetings`). One printable packet per meeting: the notice, the agenda, the last minutes and the quorum maths on one page, checked at print size rather than shrunk to fit.
 
 ### Shipped
 
+- **The floor plan and the statement** (`/units`, `/accounting`, v0.3.44) — both picked from the 2026-10-28 offer, shipped together. `/units` draws the building instead of listing it: four bands, top floor first, two rows of lots either side of a corridor, each lot as wide as its square footage earns and coloured by the same tone rule the filters use. `src/lib/floor-plan.ts` (11 tests) holds the split and the widths — every row adds to exactly 100 after rounding, with a 14% floor under the small studios so a lot keeps its own number. A grid item's default `min-width: auto` had pushed a 390px phone to 502px; the plan column is `min-w-0` now and the band is the only thing that scrolls. `/accounting`'s journal reads as a statement: date order, a cash balance beside every entry, and a drawer per entry with its hash, who posted it and the evidence behind it. `src/lib/ledger-statement.ts` (11 tests) names the two bank accounts rather than matching a `10xx` prefix — the first draft swept the war chest at cost (1080) into the balance and moved it by $405 it never saw — and the hashes are chained, so an edited line changes every hash below. The last line lands on $685,486.42, which is the operating plus reserve cash on Three funds. Two new offers replace the two picks, so four are waiting.
 - **The release trail** (`/changelog`, v0.3.43) — picked from the 2026-10-16 offer. The page opens with the build you are running and how far it is from the newest note, marks the running release, and gives every release a step naming the one it followed and counting what it changed. Rules in `src/lib/release-trail.ts` (11 tests): versions compare as numbers (`0.3.9` before `0.3.10`), and a build whose version has no note is a stated state rather than a marker pointing at the wrong release. Verified in all three states in a browser by moving `package.json`. Three new offers replaced it, so four are waiting again.
 - **The next 30 days, once** (`/tax` and `/calendar`, v0.3.41) — picked from the 2026-10-16 offer. One strip over the calendar the rest of the app already reads, grouped Today / This week / Later this month, with a tax-narrowed window on `/tax`.
 - **September close** (`/accounting`, v0.3.40) — picked from the 2026-10-16 offer. Five checks read from the ledger rather than a status field, with the blocking one named on the disabled button.

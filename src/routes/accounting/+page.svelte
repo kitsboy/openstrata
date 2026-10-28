@@ -5,10 +5,12 @@
 	import { copy, fill } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
+	import { cashEffect, statement } from '$lib/ledger-statement';
 	import { balance, building, depreciation, formF, units } from '$lib/demo/building';
 
 	let tab = $state<'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'journal'>('overview');
 	let onlyPastDue = $state(false);
+	let openEntry = $state<string | null>(null);
 
 	const chart = books.monthly.map((month) => ({
 		label: month.label,
@@ -25,6 +27,25 @@
 		.sort((a, b) => b.past - a.past || a.unit.lot - b.unit.lot);
 
 	const shown = $derived(onlyPastDue ? rows.filter((row) => row.past > 0) : rows);
+
+	// The statement closes on the cash the Three funds tab reports, so the opening
+	// balance is the closing cash less everything the journal moved. Both figures
+	// are on the page: a reader can add the column up and land on the funds tab.
+	const closingCash = books.operating.cash + books.crf.cash;
+	const cashMoved = books.journal.reduce((sum, entry) => sum + cashEffect(entry), 0);
+	const openingCash = closingCash - cashMoved;
+	const journalRows = statement(books.journal, openingCash);
+
+	/** A journal reads debit-positive; money out carries the minus and shows in red. */
+	function signed(cents: number): string {
+		if (cents === 0) return '—';
+		return cents > 0 ? money(cents) : `−${money(-cents)}`;
+	}
+
+	function cashTone(cents: number): string {
+		if (cents === 0) return 'text-slate-400';
+		return cents > 0 ? 'text-emerald-700' : 'text-rose-700';
+	}
 
 	const feeIncomeAnnual = books.feeAnnual;
 	const budgetResult = books.feeAnnual + books.otherIncomeAnnual - books.expenseAnnual - books.crfContributionAnnual;
@@ -316,25 +337,83 @@
 	{/if}
 
 	{#if tab === 'journal'}
-		<p class="mb-4 text-sm text-slate-600">{$copy.accJournalIntro}</p>
-		<div class="space-y-4">
-			{#each books.journal as entry}
-				<article class="rounded-2xl border border-border bg-surface-2 p-4">
-					<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{entry.date}</p>
-					<h2 class="font-semibold text-slate-900">{entry.memo}</h2>
-					<table class="mt-2 w-full text-sm">
-						<tbody>
-							{#each entry.lines as line}
-								<tr>
-									<td class="py-1">{line.account}</td>
-									<td class="py-1 text-right tabular-nums text-slate-700">{line.debit ? money(line.debit) : ''}</td>
-									<td class="py-1 text-right tabular-nums text-slate-500">{line.credit ? money(line.credit) : ''}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</article>
-			{/each}
+		<p class="mb-2 max-w-3xl text-sm text-slate-600">{$copy.accJournalIntro}</p>
+		<p class="mb-4 text-sm text-slate-600">
+			{fill($copy.accStatementOpening, { amount: money(openingCash) })}
+		</p>
+		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
+			<table class="w-full min-w-[720px] text-sm">
+				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
+					<tr class="border-b border-border">
+						<th class="px-3 py-3">{$copy.payColDate}</th>
+						<th class="px-3 py-3">{$copy.accColEntry}</th>
+						<th class="px-3 py-3 text-right">{$copy.accStatementCash}</th>
+						<th class="px-3 py-3 text-right">{$copy.accColRunning}</th>
+						<th class="px-3 py-3"><span class="sr-only">{$copy.accStatementDetails}</span></th>
+					</tr>
+				</thead>
+				{#each journalRows as row (row.hash)}
+					<tbody class="border-b border-border last:border-0">
+						<tr class={openEntry === row.hash ? 'bg-slate-50' : ''}>
+							<td class="whitespace-nowrap px-3 py-2 align-top text-xs tabular-nums text-slate-500"
+								>{row.entry.date}</td
+							>
+							<td class="px-3 py-2 align-top font-medium text-slate-900">{row.entry.memo}</td>
+							<td class="px-3 py-2 text-right align-top tabular-nums {cashTone(row.cash)}"
+								>{signed(row.cash)}</td
+							>
+							<td class="px-3 py-2 text-right align-top font-semibold tabular-nums">{money(row.balance)}</td>
+							<td class="px-3 py-2 text-right align-top">
+								<button
+									class="rounded-full border border-border px-2 py-0.5 text-xs font-semibold text-slate-600 hover:bg-surface"
+									aria-expanded={openEntry === row.hash}
+									aria-controls="entry-{row.hash}"
+									onclick={() => (openEntry = openEntry === row.hash ? null : row.hash)}
+								>
+									{openEntry === row.hash ? '−' : '+'}
+									<span class="sr-only">{$copy.accStatementDetails}</span>
+								</button>
+							</td>
+						</tr>
+						{#if openEntry === row.hash}
+							<tr id="entry-{row.hash}">
+								<td colspan="5" class="bg-slate-50 px-3 pb-4 pt-2">
+									<dl class="grid gap-3 text-xs sm:grid-cols-3">
+										<div>
+											<dt class="font-bold uppercase tracking-wide text-slate-400">{$copy.accStatementPostedBy}</dt>
+											<dd class="mt-1 text-slate-700">{row.entry.postedBy}</dd>
+										</div>
+										<div>
+											<dt class="font-bold uppercase tracking-wide text-slate-400">{$copy.accStatementHash}</dt>
+											<dd class="mt-1 break-all font-mono text-[11px] text-slate-700">{row.hash}</dd>
+										</div>
+										<div>
+											<dt class="font-bold uppercase tracking-wide text-slate-400">{$copy.accStatementEvidence}</dt>
+											<dd class="mt-1 text-slate-700">{row.entry.evidence}</dd>
+										</div>
+									</dl>
+									<ul class="mt-3 space-y-1 border-t border-border pt-3">
+										{#each row.entry.lines as line}
+											<li class="flex items-baseline justify-between gap-4">
+												<span class="text-slate-600">{line.account}</span>
+												<span class="tabular-nums {line.debit ? 'text-slate-800' : 'text-slate-500'}"
+													>{line.debit ? `+${money(line.debit)}` : `−${money(line.credit ?? 0)}`}</span
+												>
+											</li>
+										{/each}
+									</ul>
+								</td>
+							</tr>
+						{/if}
+					</tbody>
+				{/each}
+			</table>
 		</div>
+		<p class="mt-3 text-sm text-slate-600">
+			{fill($copy.accStatementClosing, {
+				amount: money(journalRows[journalRows.length - 1]?.balance ?? openingCash)
+			})}
+		</p>
+		<p class="mt-2 max-w-3xl text-xs leading-relaxed text-slate-500">{$copy.accStatementChain}</p>
 	{/if}
 </div>

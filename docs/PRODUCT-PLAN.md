@@ -141,10 +141,12 @@ The workspace keeps being refined as the product grows. After every push that ch
 
 Offered 2026-10-28, not started. Full wording is in [ROADMAP.md](ROADMAP.md) and on `/roadmap`.
 
-1. **A floor you can walk** — `/units`, four floors sized by square footage.
-2. **A ledger you can read as a ledger** — `/accounting`, a running balance per entry and a drawer with its hash, actor and evidence.
+1. **Aged arrears** — `/accounting`, the receivables tab as an aging ladder (current, 30, 60, 90+), oldest money first.
+2. **A lot's own sheet** — `/units?lot=305`, one lot on one page: balance, its ledger, forms issued, next dated items, a print without the tenant.
 3. **Search that reaches the workspace** — Cmd/Ctrl+K over lot records, ledger entries and tax sections.
 4. **The AGM packet** — `/meetings`, one printable notice, agenda, minutes and quorum maths checked at print size.
+
+Shipped from the 2026-10-28 offer: **the floor plan** (`/units`) and **the statement** (`/accounting`), v0.3.44.
 
 Shipped from the 2026-10-16 offer: **September close** (`/accounting`, v0.3.40), **the next 30 days once** (`/tax` and `/calendar`, v0.3.41) and **You are here** (`/changelog`, v0.3.43).
 

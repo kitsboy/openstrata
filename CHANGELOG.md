@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.44
+-  summary: "Two picks from the 2026-10-28 queue, shipped together. /units is now a walkable plan instead of a wall of buttons: four bands, top floor first, each drawn as the building stands with two rows of lots either side of a corridor, and every lot as wide as its square footage earns. src/lib/floor-plan.ts holds the rules with 11 tests. Two decisions are load-bearing. A lot's width is proportional until it stops carrying its own number, so the small studios are held at a 14% floor and the rest of the row is shared among the wider lots — every row still adds to exactly 100 after rounding, because a plan that leaves a hairline gap at the right edge reads as a bug. And the plan reads the filter the list already had rather than adding a control, so a chip narrows the drawing and a floor with nothing left in view is dropped instead of drawn empty. The colours are the tone rule that was already there, now with a legend that lists only the tones on screen. Building it turned up a layout defect the old grid had hidden: a grid item defaults to min-width auto, so the plan's 460px row pushed the whole page to 502px on a 390px phone; min-w-0 hands the scrolling to the band, which is now the only thing that scrolls. The same release makes /accounting's journal read as a statement. src/lib/ledger-statement.ts (11 tests) sorts the entries by date, keeps the written order within a day, and runs a cash balance beside every line. Cash means the two bank accounts and nothing else: the war chest at cost (1080) and the receivables start with 10 too, so the first draft's prefix rule swept the war chest into the balance and moved it by $405 it never saw — the accounts are now named, and adding a third one is a decision rather than an accident. The opening balance is the closing cash less everything the journal moved, so the last line lands on $685,486.42, which is exactly the operating ($81,797.62) plus reserve ($603,688.80) cash on the Three funds tab, and a reader can add the column up and check it. Every entry opens a drawer with its hash, who posted it and what evidence came with it, and the hashes are chained — each one covers the entry and the hash above it, so editing a line changes every hash below. The drawer says the chain runs in the browser here; the host keeps the durable copy. 14 new catalog keys x 9 locales (1,346 keys at full parity), 374 frontend tests, check 0/0, i18n audit passing. Verified in Chrome: 40 lots across four bands at every width from 390 to 1440 with no page overflow and no clipped tile, filters and floor chips narrowing the drawing, the drawer's three fields and its lines, and the closing figure read back off the funds tab in both themes."
 -  version: 0.3.43
 -  summary: "The changelog now says where you are. /changelog opens with a release trail instead of a flat list: one line naming the build you are running and how far it is from the newest note, a 'You are here' marker on the release that is actually running, and a step on every release that names the one it followed and counts what it changed — 'since v0.3.41 · 12 changes'. src/lib/release-trail.ts holds the rules as a pure module with 11 tests, and two decisions are load-bearing. Versions are compared as numbers, not strings: 0.3.9 is older than 0.3.10, and a page that sorted them the other way would put a fix above the release that made it necessary. And a build whose version has no note is a normal state, not an error — the site is published from package.json while the notes are written by hand, so a build can be newer than the newest note or older than every note on the page. Neither renders a marker pointing at the wrong release: the placement is null and the page says what it knows ('This build is v0.3.99, newer than the newest note here'). Verified in the browser in all three states by moving package.json: on the newest release, one release behind ('You are running v0.3.41 — 1 release and 12 changes since', with the v0.3.41 row marked), and ahead of every note. Geometry clean at 1440 and 620 in both themes, no overflow, and the new ink measures 5.47:1 light / 6.59:1 dark at its worst against the 4.5 floor. 9 catalog keys x 9 locales. Shipped from the queue offered 2026-10-16; the queue is refreshed with three new offers so four are waiting again."
 -  version: 0.3.42
@@ -126,6 +128,39 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.44] — 2026-10-28
+
+### Added
+
+- **The floor plan on `/units`.** The lot-button grid is gone. The building is drawn as it stands: four bands, top floor first, each with two rows of lots either side of a corridor and the lot numbers running up the row. Every lot is as wide as its square footage earns, and coloured by the tone rule the filters already use.
+- **The journal as a statement on `/accounting`.** The September entries read in date order, each with its effect on cash and the cash balance after it, and every entry opens a drawer with its hash, who posted it and what evidence came with it. The hashes are chained, so an edited line changes every hash below it.
+- **`src/lib/floor-plan.ts`**, the plan's rules as a pure module: 11 tests covering the north/south split (01–05 / 06–10), floors top down and lot numbers up, a dropped floor when a filter empties it, and the widths.
+- **`src/lib/ledger-statement.ts`**, the statement's rules as a pure module: 11 tests covering date order (the written order survives inside a day), the cash effect, the running balance, and the chain.
+
+### Changed
+
+- **A row's widths add to exactly 100 after rounding.** The drift goes to the widest lot, because a plan with a hairline gap at the right edge reads as a bug. A lot that would fall below **14%** is held there while the rest of the row is shared among the wider lots, so a 548 sq ft studio still carries its own number beside a 1,540 sq ft two-bed.
+- **The plan reads the filter the list already had.** No second control: a chip narrows the drawing, and the legend lists only the tones on screen.
+- **Cash means two named accounts.** `1010` operating and `1020` reserve, not a `10xx` prefix: the first draft's pattern swept the war chest at cost (`1080`) into the balance and moved it by **$405** it never saw.
+- **The statement closes on the funds tab.** Opening cash is the closing cash less what the journal moved, so the last line is **$685,486.42** — operating **$81,797.62** plus reserve **$603,688.80** — rather than an opening figure a reader could not check.
+- **A grid item's `min-width: auto` was pushing a phone wide.** The plan's 460px row took a 390px viewport to **502px**; the plan column is `min-w-0` and the band is the only thing that scrolls.
+
+### Verified
+
+- **The plan in Chrome at `390`, `620`, `900`, `1100` and `1440`:** no page overflow at any width, no clipped tile, tiles **80–192px**, a 20px corridor between the rows, and the band scrolling on its own at 390 (332px client against 460px content).
+- **The filters and the floor chips narrow the drawing, not the page.** `Fees behind` leaves two lots on two floors (207 and 104) with no empty band, and `Floor 4` leaves one band. Clicking a lot still fills the panel and the pay link.
+- **The statement in Chrome:** nine rows in date order (`09-01` twice, then `09-02`, `09-05`, `09-16`, `09-28`, `09-30` three times), cash effects `—`, `$25,785.00`, `−$405.00`, `—`, `—`, `$1,863.00`, `−$904.58`, `—`, `$360.00`, and the drawer reading `Cam Taylor — treasurer`, `9532c12784084eb7`, and the exchange receipt.
+- **The tie, read back off both tabs:** the statement's last line **$685,486.42** is the Three funds tab's operating cash **$81,797.62** plus reserve cash **$603,688.80**.
+- **Contrast, measured on the rendered theme:** the worst tile is **9.3:1** and the drawer's copy **8.3:1**, both against the 4.5 floor.
+- Frontend **374 passed**, Svelte check **0 errors / 0 warnings**, translation audit **1,346 keys × 9 locales** (14 new), production build green.
+
+### Known issues
+
+- **The chain is a demo chain.** The hashes are computed in the browser from the sample books; the host keeps the durable copy, and the drawer says so instead of implying a server checked it.
+- **The statement's opening cash is derived**, not a stored ledger fact: it is the closing cash less the journal's movement, so the column ties to the funds tab by construction. A real ledger would carry the opening balance forward from the prior period.
+
+---
 
 ## [0.3.43] — 2026-10-28
 

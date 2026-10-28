@@ -14,6 +14,49 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.44",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The floor plan on /units. The lot-button grid is gone. The building is drawn as it stands: four bands, top floor first, each with two rows of lots either side of a corridor and the lot numbers running up the row. Every lot is as wide as its square footage earns, and coloured by the tone rule the filters already use.",
+          "The journal as a statement on /accounting. The September entries read in date order, each with its effect on cash and the cash balance after it, and every entry opens a drawer with its hash, who posted it and what evidence came with it. The hashes are chained, so an edited line changes every hash below it.",
+          "src/lib/floor-plan.ts, the plan's rules as a pure module: 11 tests covering the north/south split (01–05 / 06–10), floors top down and lot numbers up, a dropped floor when a filter empties it, and the widths.",
+          "src/lib/ledger-statement.ts, the statement's rules as a pure module: 11 tests covering date order (the written order survives inside a day), the cash effect, the running balance, and the chain."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "A row's widths add to exactly 100 after rounding. The drift goes to the widest lot, because a plan with a hairline gap at the right edge reads as a bug. A lot that would fall below 14% is held there while the rest of the row is shared among the wider lots, so a 548 sq ft studio still carries its own number beside a 1,540 sq ft two-bed.",
+          "The plan reads the filter the list already had. No second control: a chip narrows the drawing, and the legend lists only the tones on screen.",
+          "Cash means two named accounts. 1010 operating and 1020 reserve, not a 10xx prefix: the first draft's pattern swept the war chest at cost (1080) into the balance and moved it by $405 it never saw.",
+          "The statement closes on the funds tab. Opening cash is the closing cash less what the journal moved, so the last line is $685,486.42 — operating $81,797.62 plus reserve $603,688.80 — rather than an opening figure a reader could not check.",
+          "A grid item's min-width: auto was pushing a phone wide. The plan's 460px row took a 390px viewport to 502px; the plan column is min-w-0 and the band is the only thing that scrolls."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The plan in Chrome at 390, 620, 900, 1100 and 1440: no page overflow at any width, no clipped tile, tiles 80–192px, a 20px corridor between the rows, and the band scrolling on its own at 390 (332px client against 460px content).",
+          "The filters and the floor chips narrow the drawing, not the page. Fees behind leaves two lots on two floors (207 and 104) with no empty band, and Floor 4 leaves one band. Clicking a lot still fills the panel and the pay link.",
+          "The statement in Chrome: nine rows in date order (09-01 twice, then 09-02, 09-05, 09-16, 09-28, 09-30 three times), cash effects —, $25,785.00, −$405.00, —, —, $1,863.00, −$904.58, —, $360.00, and the drawer reading Cam Taylor — treasurer, 9532c12784084eb7, and the exchange receipt.",
+          "The tie, read back off both tabs: the statement's last line $685,486.42 is the Three funds tab's operating cash $81,797.62 plus reserve cash $603,688.80.",
+          "Contrast, measured on the rendered theme: the worst tile is 9.3:1 and the drawer's copy 8.3:1, both against the 4.5 floor.",
+          "Frontend 374 passed, Svelte check 0 errors / 0 warnings, translation audit 1,346 keys × 9 locales (14 new), production build green."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The chain is a demo chain. The hashes are computed in the browser from the sample books; the host keeps the durable copy, and the drawer says so instead of implying a server checked it.",
+          "The statement's opening cash is derived, not a stored ledger fact: it is the closing cash less the journal's movement, so the column ties to the funds tab by construction. A real ledger would carry the opening balance forward from the prior period."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.43",
     "date": "2026-10-28",
     "groups": [

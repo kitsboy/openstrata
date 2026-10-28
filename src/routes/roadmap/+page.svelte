@@ -28,19 +28,19 @@
 	/** Offered 2026-10-28. Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. The September close, the next-30-days strip and the release trail were picked from the October 16 offer and shipped; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. The floor plan on Units and the statement on Accounting were picked from this offer and shipped in v0.3.44; these four are what is waiting now.';
 	const uiQueue = [
 		{
-			name: 'A floor you can walk',
-			where: '/units',
-			detail:
-				'Replace the lot-button grid with a plan of four floors. Lots sized by square footage, a corridor, and a color for arrears, a missing Form K, or a levy balance.'
-		},
-		{
-			name: 'A ledger you can read as a ledger',
+			name: 'Aged arrears',
 			where: '/accounting',
 			detail:
-				'The journal tab as a statement: a running balance beside every entry, and a drawer per entry with its hash, who posted it and what evidence came with it.'
+				'The receivables tab as an aging ladder — current, 30, 60 and 90+ days — oldest money first, each row opening the lot it names.'
+		},
+		{
+			name: 'A lot’s own sheet',
+			where: '/units?lot=305',
+			detail:
+				'One lot on one page: the balance, its own ledger, the forms issued, the next dated items, and a print that keeps the tenant off it.'
 		},
 		{
 			name: 'Search that reaches the workspace',

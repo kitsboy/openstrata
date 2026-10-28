@@ -36,6 +36,10 @@ export interface JournalEntry {
 	date: string;
 	memo: string;
 	lines: JournalLine[];
+	/** Who put the entry in, named the way the audit trail names them. */
+	postedBy: string;
+	/** What came with it — the document a reader would ask for. */
+	evidence: string;
 }
 
 const expenseSeed: Array<[string, string, number, number, string?]> = [
@@ -246,6 +250,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-01',
 		memo: 'September strata fees billed — 40 lots',
+		postedBy: 'Rosa — billing run',
+		evidence: 'September fee roll, 40 lots at the 600-point entitlement, run September 1 at 06:00.',
 		lines: [
 			{ account: '1200 Accounts receivable — fees', debit: TOTAL_ENTITLEMENT * 450 },
 			{ account: '4010 Fee income — operating', credit: TOTAL_ENTITLEMENT * OP_POINT_CENTS },
@@ -255,6 +261,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-01',
 		memo: 'September fee cash, net of lots 104 and 207',
+		postedBy: 'Ziggy — e-transfer match',
+		evidence: 'Credit union statement for September, 38 deposits matched by the reference on each memo.',
 		lines: [
 			{ account: '1010 Operating chequing', debit: Math.round((septemberCash * 13) / 15) },
 			{ account: '1020 CRF savings', debit: septemberCash - Math.round((septemberCash * 13) / 15) },
@@ -264,6 +272,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-28',
 		memo: 'October fees prepaid by lots 203, 308, and 401',
+		postedBy: 'Ziggy — e-transfer match',
+		evidence: 'Three deposits whose memo line quotes October, matched to lots 203, 308, and 401.',
 		lines: [
 			{ account: '1010 Operating chequing', debit: prepaidOperating },
 			{ account: '1020 CRF savings', debit: prepaidCrf },
@@ -274,6 +284,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-02',
 		memo: 'War-chest purchase, operating surplus only, 3-of-5 watch-only',
+		postedBy: 'Cam Taylor — treasurer',
+		evidence: 'Exchange receipt for the purchase, a 3-of-5 transaction, and the watch-only address on file.',
 		lines: [
 			{ account: '1080 BTC war chest at cost', debit: dollar(405) },
 			{ account: '1010 Operating chequing', credit: dollar(405) }
@@ -282,6 +294,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-05',
 		memo: 'Late fees — lots 104 and 207, September',
+		postedBy: 'Bylaw module — Rosa',
+		evidence: 'Bylaw 20.1 and the two lot ledgers showing the fee unpaid past the 5th.',
 		lines: [
 			{ account: '1210 Late fees receivable', debit: dollar(100) },
 			{ account: '7060 Late fee income', credit: dollar(100) }
@@ -290,6 +304,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-16',
 		memo: 'Bylaw fine — lot 309, one day under bylaw 9.2',
+		postedBy: 'Cam Taylor — treasurer',
+		evidence: 'Notice served September 2, and no written response inside the 14-day window.',
 		lines: [
 			{ account: '1220 Fines receivable', debit: dollar(200) },
 			{ account: '7030 Bylaw fine income', credit: dollar(200) }
@@ -298,6 +314,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-30',
 		memo: 'Concierge payroll — Samira El-Masri, September',
+		postedBy: 'Ziggy — payroll run',
+		evidence: 'September time sheet at ten hours a week, and the CRA remittance due October 15.',
 		lines: [
 			{ account: '6210 Concierge wages', debit: gross },
 			{ account: '6215 Employer CPP and EI', debit: employerBurden },
@@ -308,6 +326,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-30',
 		memo: 'Insurance amortized for September',
+		postedBy: 'Rosa — monthly accrual',
+		evidence: 'Policy HH-2847-26, premium prepaid on April 1, one twelfth of the year taken down.',
 		lines: [
 			{ account: '6100 Insurance expense', debit: dollar(4050) },
 			{ account: '1300 Prepaid insurance', credit: dollar(4050) }
@@ -316,6 +336,8 @@ const journal: JournalEntry[] = [
 	{
 		date: '2026-09-30',
 		memo: 'CRF interest posted by the credit union',
+		postedBy: 'Coastal Community CU feed',
+		evidence: 'September statement line on 1020 CRF savings. The credit union posts, not the council.',
 		lines: [
 			{ account: '1020 CRF savings', debit: dollar(360) },
 			{ account: '7100 Interest — CRF', credit: dollar(360) }

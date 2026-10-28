@@ -2,11 +2,11 @@
 	import { page } from '$app/stores';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { money } from '$lib/demo/format';
-	import { copy, fill } from '$lib/i18n';
+	import { plan } from '$lib/floor-plan';
+	import { copy, fill, formatNumber } from '$lib/i18n';
 	import {
 		balance,
 		building,
-		floorsDesc,
 		formF,
 		getUnit,
 		haystack,
@@ -14,6 +14,7 @@
 		isUnitId,
 		tone,
 		toneStyles,
+		type Tone,
 		units,
 		type Unit
 	} from '$lib/demo/building';
@@ -47,6 +48,19 @@
 	}
 
 	const visible = $derived(units.filter(matches));
+
+	// The plan reads the same filter as the list did, so a chip narrows the drawing
+	// instead of hiding it behind a second control. A floor with nothing left in
+	// view is dropped rather than drawn empty.
+	const plans = $derived(plan(units, matches));
+
+	// Only the colours actually on screen, in a fixed order, so the plan explains
+	// itself without a key of colours the reader cannot see.
+	const legend = $derived(
+		(['arrears', 'formk', 'short-term', 'levy', 'vacant', 'tenant', 'owner'] as Tone[])
+			.filter((id) => visible.some((unit) => tone(unit) === id))
+			.map((id) => ({ id, ...toneStyles[id] }))
+	);
 
 	function choose(id: string) {
 		selectedId = id;
@@ -111,29 +125,68 @@
 	</div>
 
 	<div class="grid gap-6 lg:grid-cols-[1fr_340px]">
-		<div class="space-y-3">
-			{#each floorsDesc as level}
-				{@const onFloor = level.units.filter(matches)}
-				{#if onFloor.length > 0 && (floor === 'all' || floor === level.floor)}
-					<div class="rounded-2xl border border-border bg-surface-2 p-3">
-						<p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">{fill($copy.unitsFloor, { n: level.floor })}</p>
-						<div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
-							{#each onFloor as unit}
-								<button
-									class="rounded-xl border px-2 py-2 text-left {selectedId === unit.id ? 'ring-2 ring-brand-500' : ''} {toneStyles[tone(unit)].cell}"
-									onclick={() => choose(unit.id)}
-								>
-									<span class="block text-sm font-bold">{unit.id}</span>
-									<!-- Wraps to two lines rather than cutting: at 1100 a five-up row
-									     leaves this cell ~108px, and "Northwater Holdings Ltd." needs
-									     137. -->
-									<span class="block text-xs leading-snug line-clamp-2">{unit.owner}</span>
-									<span class="block text-[11px] tabular-nums">{fill($copy.unitsPerMonth, { amount: money(balance(unit).fee) })}</span>
-								</button>
+		<!-- min-w-0 lets the plan's own scroller do the scrolling: a grid item defaults
+		     to min-width auto, so without it the 460px row would push the page wide. -->
+		<div class="min-w-0 space-y-3">
+			<p class="text-sm leading-relaxed text-slate-600">{$copy.unitsPlanHint}</p>
+			{#if legend.length > 0}
+				<div class="flex flex-wrap gap-1.5">
+					{#each legend as item (item.id)}
+						<span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {item.pill}"> {item.label}</span>
+					{/each}
+				</div>
+			{/if}
+			{#each plans as level (level.floor)}
+				<div class="rounded-2xl border border-border bg-surface-2 p-3">
+					<p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+						{fill($copy.unitsPlanLine, {
+							n: level.floor,
+							lots: level.lots,
+							sqft: formatNumber(level.sqft)
+						})}
+					</p>
+					<!-- Scrolls inside its own band rather than squeezing ten lots into a
+					     phone: 460px keeps the smallest studio wide enough for its number. -->
+					<div class="overflow-x-auto pb-1">
+						<div class="min-w-[460px]">
+							{#each level.rows as row, rowIndex (row.side)}
+								{#if rowIndex === 1}
+									<div
+										class="flex h-5 items-center gap-2 border-y border-dashed border-border bg-slate-50 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400"
+										aria-hidden="true"
+									>
+										<span>{$copy.unitsPlanCorridor}</span>
+										<span class="flex-1 border-t border-dashed border-slate-300"></span>
+										<span>⇅</span>
+									</div>
+								{/if}
+								<div class="flex">
+									{#each row.units as unit, index (unit.id)}
+										<button
+											class="relative border px-2 py-1.5 text-left {toneStyles[tone(unit)].cell} {selectedId === unit.id
+												? 'z-10 ring-2 ring-brand-600 ring-inset'
+												: ''}"
+											style="width: {row.shares[index]}%"
+											aria-pressed={selectedId === unit.id}
+											aria-label={fill($copy.unitsPlanLotAria, {
+												lot: unit.id,
+												owner: unit.owner,
+												sqft: unit.sqft
+											})}
+											onclick={() => choose(unit.id)}
+										>
+											<span class="block text-sm font-bold leading-tight">{unit.id}</span>
+											<span class="block text-[10px] leading-tight tabular-nums opacity-70"
+												>{formatNumber(unit.sqft)} sqft</span
+											>
+											<span class="mt-0.5 block text-[10px] leading-snug line-clamp-2">{unit.owner}</span>
+										</button>
+									{/each}
+								</div>
 							{/each}
 						</div>
 					</div>
-				{/if}
+				</div>
 			{/each}
 			{#if visible.length === 0}
 				<p class="rounded-2xl border border-dashed border-border p-6 text-sm text-slate-500">{$copy.unitsNoMatch}</p>
