@@ -135,6 +135,48 @@ describe('/accounting?period=', () => {
 		expect(text).toContain('$81,797.62');
 	});
 
+	it('draws the reserve fund five years out from the books and the report', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Reserve plan');
+		const text = container.textContent ?? '';
+		expect(text).toContain('The reserve fund, five years out');
+		// The first year closes on the fund's own opening, contribution and spend.
+		expect(text).toContain('2026–27');
+		expect(text).toContain('$627,675.52');
+	});
+
+	it('names the year the plan runs past the fund, and by how much', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Reserve plan');
+		const text = container.textContent ?? '';
+		expect(text).toContain(
+			'The schedule runs past the fund in 2030–31: that year ends $133,291.62 short.'
+		);
+		// The roof is the project in that year, not an unnamed gap.
+		expect(text).toContain('Roof replacement');
+	});
+
+	it('keeps the levy out of the fund and states the contribution gap', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Reserve plan');
+		const text = container.textContent ?? '';
+		expect(text).toContain('belongs to the parkade levy, not this fund');
+		expect(text).toContain('$216,000.00');
+		expect(text).toContain('The budget contributes $43,200.00 a year');
+		expect(text).toContain('$48,000.00');
+	});
+
+	it('keeps the tabs and the print button off the paper', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Reserve plan');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print this table'))).toBe(true);
+		// The tab bar is navigation too, so neither prints.
+		expect(controls.some((text) => text.includes('Reserve plan'))).toBe(true);
+	});
+
 	it('leaves the page alone when no month is passed', () => {
 		const { container } = renderAt('/accounting');
 		const text = container.textContent ?? '';

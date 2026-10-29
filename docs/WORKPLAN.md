@@ -12,11 +12,11 @@ Evergreen House is on `main` (LMS 2847, 40 lots, pages `/units`, `/accounting`, 
 Next product work is the UI refinement queue in [ROADMAP.md](ROADMAP.md). Four items are offered and not chosen:
 
 1. A receipt you can hand over (`/pay`)
-2. The reserve fund's five-year picture (`/accounting`)
+2. A year on one page (`/`)
 3. Search that reaches the workspace (`Cmd/Ctrl+K`)
 4. The AGM packet (`/meetings`)
 
-Shipped: the Form K register at `/units/register` (v0.3.48, the offered item whose slot the reserve fund's five-year picture now takes), the funds following the month with a Form K recorded from the lot's sheet (v0.3.47, requested outside the queue), health over time on `/` (v0.3.46, offered), and aged arrears on `/accounting` with a lot's own sheet at `/units/207` (v0.3.45, picked from the 2026-10-28 offer, which then refilled with the two above). Before that, the floor plan on `/units` and the statement on `/accounting` (v0.3.44), and from the 2026-10-16 offer: September close (`/accounting`, v0.3.40), the next 30 days once (`/tax` and `/calendar`, v0.3.41) and You are here (`/changelog`, v0.3.43). Wherever the queue is copied (here, `static/llms.txt`, the `/roadmap` page), keep it the same four.
+Shipped: the reserve fund's five-year picture on `/accounting` (v0.3.49, the offered item whose slot a year on one page now takes), the Form K register at `/units/register` (v0.3.48, offered), the funds following the month with a Form K recorded from the lot's sheet (v0.3.47, requested outside the queue), health over time on `/` (v0.3.46, offered), and aged arrears on `/accounting` with a lot's own sheet at `/units/207` (v0.3.45, picked from the 2026-10-28 offer, which then refilled with the two above). Before that, the floor plan on `/units` and the statement on `/accounting` (v0.3.44), and from the 2026-10-16 offer: September close (`/accounting`, v0.3.40), the next 30 days once (`/tax` and `/calendar`, v0.3.41) and You are here (`/changelog`, v0.3.43). Wherever the queue is copied (here, `static/llms.txt`, the `/roadmap` page), keep it the same four.
 
 The interface keeps being refined as the product grows. After every push that changes what a person sees, offer exactly four upgrades and wait. Cam picks one or two. Only those are polished. When a pick ships, replace it so four remain. Do not start this queue before a pick.
 

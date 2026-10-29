@@ -1,3 +1,24 @@
+## Session — 2026-10-28 (seventh)
+
+**Done:**
+- The reserve fund's five-year picture shipped as `0.3.49`, the queue pick. A new **Reserve plan** tab on `/accounting`: five fiscal years of the CRF — opening, the budget's contribution, the interest actually paid, what the report schedules, the balance each 31 March ends on. **2026–27** closes at **$627,675.52**; the **2031 roof leaves the fund $133,291.62 short**, and the page leads with that.
+- `src/lib/reserve-plan.ts` (9 tests) and `src/lib/demo/reserve.ts`; four route tests. 17 catalog keys × 9 locales (1,461 at parity), 508 frontend tests.
+- The accounting tab bar now carries `no-print`, so a printed tab is a document rather than a row of buttons.
+
+**Decisions:**
+- The projection uses the **budget's** $43,200 contribution, not the report's $48,000 recommendation, and the page prints the $4,800-a-year gap. Projecting the recommendation would draw a fund the building does not have.
+- Interest is the rate the statements **actually paid** (0.74% a year, from $2,180 on $586,400 over six months), applied to the average balance, and **zero in a year that ends below zero** — a fund cannot collect interest on a deficit.
+- A project named for a calendar year is spent in the **fiscal year that ends in it**: the report's 2029 elevator lands in 2028–29, not 2029–30. Matching the report's digits to the row's first year would pay a year early.
+- The **parkade membrane stays out** of the CRF: the levy collected and spent its $216,000 in its own trust. Including it would double-count money that never entered the fund.
+- The picture is allowed to be **negative**. A five-year table whose job is to answer "does the fund cover the plan" must be able to say no, and `firstShortfall` is what the page leads with.
+- The pick is replaced by **a year on one page** (`/`), so four offers are waiting: receipt, annual summary, workspace search, AGM packet.
+
+**Git State:**
+- SHA: this commit (`0.3.49`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-28 (sixth)
 
 **Done:**

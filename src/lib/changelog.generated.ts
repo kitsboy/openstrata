@@ -14,6 +14,34 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.49",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A Reserve plan tab on /accounting. The CRF five fiscal years forward: opening balance, the budget's contribution, the interest the credit union actually paid, the projects the depreciation report schedules, and the balance each 31 March ends on. Fiscal 2026–27 opens at $586,400.00 and closes at $627,675.52; the report's boiler, elevator and envelope are covered; the 2031 roof leaves the fund $133,291.62 short, and the page says so above the table rather than under it.",
+          "The rules live in src/lib/reserve-plan.ts (9 tests). The contribution is the budget's $43,200, never the report's recommended $48,000 — the page states the $4,800-a-year gap instead of drawing a fund the building does not have. Interest is 0.74% a year, the rate the statements paid, on the average balance; a year ending below zero earns nothing. A project named for a calendar year is paid in the fiscal year that ends in it, so the report's 2029 elevator lands in 2028–29. The parkade membrane stays out: the levy collected and spent its $216,000 in its own trust.",
+          "The page names its basis. The report (RJC, dated 12 June 2024, next due 12 June 2029), the rate and the six months it was measured over, the contribution gap, and the levy's exclusion are all printed under the table, so a reader can check the projection against the documents it came from."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The tab bar no longer prints. The seven tabs carried no no-print, so every printed tab of the books opened with a row of navigation buttons. Printing from the Reserve plan tab now yields the page header and the table alone.",
+          "The queue is refreshed with the pick's replacement. A year on one page (/) takes the slot beside the receipt, workspace search and the AGM packet, so four offers are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Four route tests render the new tab: the five fiscal rows and the fund's first closing, the roof year and its $133,291.62 shortfall, the levy's $216,000 exclusion beside the $43,200 / $48,000 funding gap, and the print controls carrying no-print with the tab bar.",
+          "Frontend 508 passed (13 new), Svelte check 0 errors / 0 warnings, translation audit 1,461 keys × 9 locales (17 new), contrast audit 218 pairs, secret gate green, production build green. Chrome was not opened this session; the rendered text was read in jsdom."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.48",
     "date": "2026-10-28",
     "groups": [

@@ -13,8 +13,12 @@
 	import { building, depreciation, formF, units } from '$lib/demo/building';
 	import { PERIOD_PARAM, parsePeriod, type PeriodPoint } from '$lib/period-link';
 	import { cashAt, cashRows } from '$lib/fund-history';
+	import { reservePlan } from '$lib/reserve-plan';
+	import { reservePicture } from '$lib/demo/reserve';
 
-	let tab = $state<'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'journal'>('overview');
+	let tab = $state<
+		'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'reserve' | 'journal'
+	>('overview');
 
 	/**
 	 * A month carried in from the compliance-health trend: `?period=2026-09` opens
@@ -147,8 +151,24 @@
 		{ id: 'receivables', label: $copy.accTabReceivables },
 		{ id: 'payables', label: $copy.accTabPayables },
 		{ id: 'funds', label: $copy.accTabFunds },
+		{ id: 'reserve', label: $copy.accTabReserve },
 		{ id: 'journal', label: $copy.accTabJournal }
 	] as const);
+
+	/**
+	 * The reserve fund five years out, from the budget's contribution and the
+	 * report's schedule. `firstShortfall` is the year the plan runs past the fund,
+	 * which is the one line the table exists to answer.
+	 */
+	const reserve = $derived(reservePlan(reservePicture.input));
+	const reserveLast = $derived(reserve.rows.at(-1)!);
+	/** The rate the statements actually paid, as a percentage the reader can check. */
+	const reserveRate = $derived(
+		formatNumber(reservePicture.input.annualRateBps / 100, $locale, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		})
+	);
 </script>
 
 <svelte:head>
@@ -175,7 +195,8 @@
 		</div>
 	{/if}
 
-	<div class="mb-6 flex gap-1 overflow-x-auto">
+	<!-- The tabs are navigation, not part of any printed report. -->
+	<div class="mb-6 flex gap-1 overflow-x-auto no-print">
 		{#each tabs as item (item.id)}
 			<button
 				class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold {tab === item.id ? 'bg-slab text-slab-ink' : 'border border-border bg-surface-2 text-slate-600'}"
@@ -186,7 +207,7 @@
 
 	<!-- The ladder and the journal follow the date; the funds tab follows it too,
 	     from its own statements. The rest say they do not. -->
-	{#if period && tab !== 'receivables' && tab !== 'journal' && tab !== 'funds'}
+	{#if period && tab !== 'receivables' && tab !== 'journal' && tab !== 'funds' && tab !== 'reserve'}
 		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600">
 			{fill($copy.accPeriodCloseNote, { date: longDate, close: closeDate })}
 		</p>
@@ -553,6 +574,102 @@
 				</p>
 			{/if}
 		</div>
+	{/if}
+
+	{#if tab === 'reserve'}
+		<div class="mb-4 flex flex-wrap items-center gap-2 no-print">
+			<button
+				class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+				onclick={() => window.print()}>{$copy.accReservePrint}</button
+			>
+			<span class="text-xs text-slate-500">{$copy.accReservePrintNote}</span>
+		</div>
+
+		<section class="rounded-2xl border border-border bg-surface-2 p-5">
+			<h2 class="font-bold text-slate-900">{$copy.accReserveTitle}</h2>
+			<p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">{$copy.accReserveLede}</p>
+
+			<div class="mt-4 overflow-x-auto">
+				<table class="w-full min-w-[720px] text-sm">
+					<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
+						<tr class="border-b border-border">
+							<th class="px-3 py-2">{$copy.accReserveColYear}</th>
+							<th class="px-3 py-2 text-right">{$copy.accReserveColOpening}</th>
+							<th class="px-3 py-2 text-right">{$copy.accReserveColContribution}</th>
+							<th class="px-3 py-2 text-right">{$copy.accReserveColInterest}</th>
+							<th class="px-3 py-2">{$copy.accReserveColScheduled}</th>
+							<th class="px-3 py-2 text-right">{$copy.accReserveColClosing}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each reserve.rows as row (row.label)}
+							<tr class="border-b border-border last:border-0">
+								<th scope="row" class="px-3 py-2 text-left font-semibold tabular-nums">{row.label}</th>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.openingCents)}</td>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.contributionCents)}</td>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.interestCents)}</td>
+								<td class="px-3 py-2 text-slate-600">
+									{#if row.projects.length > 0}
+										{#each row.projects as project (project.label)}
+											<span class="block"
+												>{project.label} · <span class="tabular-nums">{money(project.cents)}</span></span
+											>
+										{/each}
+									{:else}
+										<span class="text-slate-400">—</span>
+									{/if}
+								</td>
+								<td
+									class="px-3 py-2 text-right font-semibold tabular-nums {row.short
+										? 'text-rose-700'
+										: 'text-slate-900'}">{money(row.closingCents)}</td
+								>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+
+			<p class="mt-3 text-sm font-semibold {reserve.firstShortfall ? 'text-rose-700' : 'text-emerald-700'}">
+				{#if reserve.firstShortfall}
+					{fill($copy.accReserveShortfall, {
+						year: reserve.firstShortfall.label,
+						amount: money(-reserve.firstShortfall.closingCents)
+					})}
+				{:else}
+					{fill($copy.accReserveCovers, {
+						year: reserveLast.label,
+						amount: money(reserveLast.closingCents)
+					})}
+				{/if}
+			</p>
+
+			<p class="mt-2 max-w-3xl text-xs leading-relaxed text-slate-500">
+				{fill($copy.accReserveReport, {
+					firm: reservePicture.report.firm,
+					dated: reservePicture.report.dated,
+					due: reservePicture.report.nextDue
+				})}
+			</p>
+			<p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">
+				{fill($copy.accReserveRate, {
+					rate: reserveRate,
+					date: formatDate(reservePicture.statementDate, $locale, { dateStyle: 'long' })
+				})}
+			</p>
+			<p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">
+				{fill($copy.accReserveFunding, {
+					funded: money(reservePicture.input.annualContributionCents),
+					recommended: money(reservePicture.recommendedAnnualCents)
+				})}
+			</p>
+			<p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">
+				{fill($copy.accReserveLevy, {
+					project: reservePicture.levy.label,
+					amount: money(reservePicture.levy.cents)
+				})}
+			</p>
+		</section>
 	{/if}
 
 	{#if tab === 'journal'}

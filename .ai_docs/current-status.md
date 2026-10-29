@@ -1,11 +1,20 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.48
+**Site/product version:** v0.3.49
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the Form K register, on one printable page (site, `0.3.48`, the queue pick)
+## Recent milestone — the reserve fund, five years out (site, `0.3.49`, the queue pick)
+
+- **A new Reserve plan tab on `/accounting`.** Five fiscal years of the CRF — opening, the budget's contribution, the interest the credit union actually paid, what the depreciation report schedules, and the balance each 31 March ends on. **2026–27** opens at **$586,400.00** and closes at **$627,675.52**; the boiler, elevator and envelope are covered; the **2031 roof leaves the fund $133,291.62 short**, and the page leads with that.
+- **`src/lib/reserve-plan.ts` holds four rules, with 9 tests.** The contribution is the budget's **$43,200**, never the report's recommended **$48,000** — the page states the **$4,800-a-year** gap. Interest is **0.74%**, the rate the statements paid, on the average balance; a year ending below zero earns nothing. A project named for a calendar year is paid in the fiscal year that ends in it (the 2029 elevator in **2028–29**). The parkade membrane is excluded: the levy spent its **$216,000** in its own trust.
+- **The page prints its basis.** The report (RJC, dated 12 June 2024, next due 12 June 2029), the rate and the six months it was measured over, the contribution gap and the levy's exclusion sit under the table with a **Print this table** button.
+- **The tab bar is `no-print` now.** Seven tabs opened every printed page with navigation buttons; a print from Reserve plan is the header and the table alone.
+- 17 new catalog keys × 9 locales, catalogue **1,461** keys at full parity. Verification: frontend **508 passed** (13 new: 9 rules, 4 route), `check` **0/0**, i18n and contrast audits (**218 pairs**), secret gate green, production build green with the **Reserve plan** tab in `build/accounting.html` — the table is behind the tab, so it is exercised by the route tests in jsdom rather than in the prerendered HTML. Chrome was not opened this session.
+- **Queue:** the picked slot is replaced by a year on one page (`/`), so four offers are waiting.
+
+## Prior milestone — the Form K register, on one printable page (site, `0.3.48`, the queue pick)
 
 - **`/units/register` is the list the score counts, made printable.** Every tenanted lot — eight in the sample book — with the day its two-week window closed, whether the form is on file, the days a missing one has been missing and the points it costs: **309 at 77 days, then 209 and 407 at 15**, longest-open first. The summary states the gaps, the denominator and the charge: **3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them: 5 a gap, capped at 15.** The controls are `no-print`; the table is the document.
 - **`src/lib/form-k-register.ts` holds the rules, with 9 tests.** It imports `FORM_K_EACH` and `FORM_K_CAP` from `health.ts` and its total is the same `formKPenalty` the gauge adds, checked at four statement dates, so a row's points and the score's cannot drift. The cap is spent on the oldest gaps: a fourth gap prints no points rather than pretending to add them.
@@ -25,7 +34,7 @@
 - **`/units` reads the same record.** The Form K filter and the plan's tones now take the filed set, so a lot with its form on file stops being drawn as a gap.
 - 12 new catalog keys × 9 locales, catalogue **1,422** keys at full parity. Verification: frontend **481 passed** (23 new: 6 fund-history, 6 form-k, 5 health, 3 accounting route, 3 lot route), `check` **0/0**, i18n and contrast audits (**218 pairs**), secret gate green, production build green — `build/units/309.html` carries **Record the Form K** and its date field. Chrome was not opened this session; the rendered text was read in jsdom.
 
-## Earlier milestone — the month opens the books (site, `0.3.46`, health over time plus three follow-ons)
+## Prior milestone — the month opens the books (site, `0.3.46`, health over time plus three follow-ons)
 
 - **The dashboard's health is now a series, not a single number.** `HealthTrend.svelte` charts six fiscal months of the score — **82, 82, 82, 74, 72, 56** — each point rebuilt at that month end from the calendar, the dated charges and the lot register, with the three inputs beside it showing what each costs now, what it cost in April and the month it moved. The metric card prints **56** instead of a hard-coded 91, and the gauge's demo deadlines count days from their due dates instead of a stored `127` — card, gauge and trend read one model (`src/lib/health.ts`).
 - **Every column opens to the records.** A clicked month lists the charges past due at that month end and the lots whose Form K window had closed, from the same functions the score read; `MonthDetail` totals to the arrears term at every month end (a test), so the panel cannot explain a different number than it prints.

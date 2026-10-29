@@ -1,3 +1,21 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the reserve fund, five years out
+
+Commit: this commit (site `0.3.49`). Backend API version stays `0.3.28`.
+
+> **A new Reserve plan tab on `/accounting`, and it can say no.** Five fiscal years of the CRF: opening balance, the budget's contribution, the interest the credit union actually paid, what the depreciation report schedules, and the balance each 31 March ends on. **2026–27** opens at **$586,400.00** and closes at **$627,675.52**; the report's boiler, elevator and envelope are covered; the **2031 roof leaves the fund $133,291.62 short**, so that is the sentence above the table.
+>
+> **Four rules, each a decision.** `src/lib/reserve-plan.ts` (9 tests). The contribution is the budget's **$43,200**, never the report's recommended **$48,000** — the page states the **$4,800-a-year** gap rather than drawing a fund the building does not have. Interest is **0.74%**, the rate the six months of statements actually paid, on the average balance; a year that ends below zero earns nothing. A project named for a calendar year is paid in the fiscal year that ends in it, so the report's 2029 elevator lands in **2028–29**, not a year early. And the parkade membrane stays out: the levy collected and spent its **$216,000** in its own trust, so counting it here would double-count money that never entered the fund.
+>
+> **The page shows its working.** The report (RJC, dated 12 June 2024, next due 12 June 2029), the rate and the months it is measured over, the contribution gap, and the levy's exclusion all print under the table, so a reader can check the projection against the documents it came from.
+>
+> **The tab bar no longer prints.** Seven tabs had no `no-print`, so every printed tab of the books opened with a row of navigation buttons. Printing from Reserve plan now yields the page header and the table alone.
+>
+> **Verified:** frontend **508 passed** (13 new: 9 reserve rules, 4 route), `check` **0 errors / 0 warnings**, translation audit **1,461 keys × 9 locales** (17 new), contrast **218 pairs**, secret gate green, production build green with the **Reserve plan** tab in `build/accounting.html` and `v0.3.49` stamped; changelog regenerated (52 releases with notes). The table itself is behind the tab, so it is exercised in jsdom by the four route tests rather than in the prerendered HTML. Chrome was not opened this session.
+>
+> **The queue is refreshed, because the pick shipped.** A year on one page (`/`) takes its slot beside the receipt, workspace search and the AGM packet, so four are waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md` and `.ai_docs/current-status.md`.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the Form K register, on one printable page
 
 Commit: this commit (site `0.3.48`). Backend API version stays `0.3.28`.
