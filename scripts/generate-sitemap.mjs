@@ -49,6 +49,16 @@ const routes = [
   '/terms'
 ];
 
+// Every lot has its own sheet at /units/[lot] — four floors of ten, the same ids
+// `demo/building` builds. They are real pages linked from /units, and search
+// results open them by lot, so they belong in the sitemap rather than only in
+// the app's route table.
+for (const floor of [1, 2, 3, 4]) {
+  for (let index = 1; index <= 10; index += 1) {
+    routes.push(`/units/${floor}${String(index).padStart(2, '0')}`);
+  }
+}
+
 const urls = routes
   .map(
     (route) => `  <url>

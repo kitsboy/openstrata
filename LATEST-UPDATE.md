@@ -1,3 +1,19 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — a receipt you can hand over, and a search that reaches the building
+
+Commit: this commit (site `0.3.51`). Backend API version stays `0.3.28`.
+
+> **Two picks, shipped together, and both of them open a record a reader could not reach.** `/pay` prints one payment per page on the council's letterhead: the amount received, who paid, the lot, the rail, the reference, the transaction where the rail has one, the rate a bitcoin payment locked at with the sats that rate bought, and the fee's own split. Lot 305's September fee is **$576.00** — **$499.20 operating** and **$76.80 reserve** — settled on Lightning at **$135,820** a bitcoin for **424,091 sats**. The newest payment is picked on arrival, so the print button always yields a real page, and the paying sheet and the tape carry `no-print`.
+>
+> **`src/lib/pay-receipt.ts` (9 tests) holds three rules, and each one is a decision.** The split is cross-multiplied from the amount with the remainder to the reserve, so the parts always add back — a receipt a cent out is one an owner will query. A transaction id belongs only to a rail that carries one, so a txid recorded against a cheque is dropped rather than printed. And a locked rate is quoted from the payment's own record and never recomputed: a receipt that re-priced an old payment at today's rate would state a number nobody paid, so a bitcoin row with no recorded rate says exactly that instead.
+>
+> **The search index grows from ten groups to thirteen.** **40 lots**, the journal's **9 entries** and the tax desk's **13 sections**, each result opening the row it names: `/units/305` for a lot (by number or by owner), `/tax#gst` for a section, `/accounting?tab=journal#entry-<hash>` for a journal entry. That last one needed the page to read its tab and an entry hash from the URL and open that drawer, and the opening-cash subtraction to move into `ledger-statement` — the index and the page must chain the same hashes, and a second copy of that arithmetic would have produced links to entries that do not exist. The sitemap grew to **70 routes** because the 40 lot pages are real pages.
+>
+> **Verified:** frontend **560 passed** (25 new: 9 receipt rules, 6 receipt sheet, 3 pay route, 4 search index, 3 accounting link), `check` **0 errors / 0 warnings**, translation audit **1,528 keys × 9 locales** (15 new) across 35 route components, contrast audit **218 pairs**, secret gate green, production build green with the receipt in `build/pay.html`. The receipt printed to a Letter PDF in Chrome and read back at page size: one page, the sheet held to **176 mm**, no horizontal overflow, and the tape gone from the paper.
+>
+> **The queue is refreshed, because the picks shipped.** **The AGM package in one print** (`/documents`) and **filters that stay put** (`/units`) take the two slots beside the budget that prints and the year's deadlines on one page, so four are waiting.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — a year on one page, and the AGM packet to hand out
 
 Commit: this commit (site `0.3.50`). Backend API version stays `0.3.28`.

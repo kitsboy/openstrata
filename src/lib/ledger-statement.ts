@@ -17,7 +17,7 @@
  *    which is why the drawer says so instead of implying a server checked it.
  */
 
-import type { JournalEntry } from './demo/books';
+import { books, type JournalEntry } from './demo/books';
 
 export interface StatementRow {
 	entry: JournalEntry;
@@ -73,6 +73,23 @@ export function chainHash(entry: JournalEntry, previous: string): string {
 
 /** The genesis link: the hash the first entry is chained to. */
 export const GENESIS = '0000000000000000';
+
+/**
+ * The sample book's opening cash: the closing cash the funds tab reports, less
+ * everything the journal moved. It lives here rather than on a page because two
+ * readers need the same number — the statement, and the search result that opens
+ * a journal entry by the hash that number produces. A second copy of this
+ * subtraction would produce different hashes for the same entry.
+ */
+export const OPENING_CASH =
+	books.operating.cash +
+	books.crf.cash -
+	books.journal.reduce((sum, entry) => sum + cashEffect(entry), 0);
+
+/** The whole book as a statement, chained from the opening balance above. */
+export function bookStatement(): StatementRow[] {
+	return statement(books.journal, OPENING_CASH);
+}
 
 /**
  * Sort, run the balance, and chain the hashes in one pass.

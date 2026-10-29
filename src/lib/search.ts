@@ -6,9 +6,26 @@ import { printDocuments } from '$lib/documents';
 import { manualSections } from '$lib/manual';
 import { templates } from '$lib/templates';
 import { strataToolModules } from '$lib/strata-tool';
+import { units } from '$lib/demo/building';
+import { sections as taxSections } from '$lib/demo/tax';
+import { bookStatement } from '$lib/ledger-statement';
+import { money } from '$lib/demo/format';
 import type { Translation } from '$lib/i18n';
 
-export type SearchGroup = 'pages' | 'posts' | 'faq' | 'templates' | 'documents' | 'manual' | 'legal' | 'feeds' | 'tools' | 'tasks';
+export type SearchGroup =
+	| 'pages'
+	| 'units'
+	| 'ledger'
+	| 'tax'
+	| 'posts'
+	| 'faq'
+	| 'templates'
+	| 'documents'
+	| 'manual'
+	| 'legal'
+	| 'feeds'
+	| 'tools'
+	| 'tasks';
 
 export type SearchEntry = {
 	group: SearchGroup;
@@ -23,6 +40,9 @@ export type SearchEntry = {
 export function searchGroupLabels(t: Translation): Record<SearchGroup, string> {
 	return {
 		pages: t.searchPages,
+		units: t.searchUnits,
+		ledger: t.searchLedger,
+		tax: t.searchTax,
 		posts: t.searchPosts,
 		faq: t.searchFaq,
 		templates: t.searchTemplates,
@@ -41,6 +61,9 @@ export function searchGroupLabels(t: Translation): Record<SearchGroup, string> {
 export function searchGroupShort(t: Translation): Record<SearchGroup, string> {
 	return {
 		pages: t.searchShortPages,
+		units: t.searchShortUnits,
+		ledger: t.searchShortLedger,
+		tax: t.searchShortTax,
 		posts: t.searchShortPosts,
 		faq: t.searchShortFaq,
 		templates: t.searchShortTemplates,
@@ -59,6 +82,9 @@ export function searchGroupShort(t: Translation): Record<SearchGroup, string> {
 export function groupsInIndex(index: SearchEntry[]): SearchGroup[] {
 	const order: SearchGroup[] = [
 		'pages',
+		'units',
+		'ledger',
+		'tax',
 		'documents',
 		'manual',
 		'posts',
@@ -116,6 +142,41 @@ export function buildSearchIndex(t: Translation): SearchEntry[] {  const pages: 
     description: t.custodyMetaDescription,
     href: '/custody'
   });
+
+	// The building itself. A council hunting "305" or an owner's surname is
+	// looking for the lot's own sheet, not the /units list, so each lot opens its
+	// page rather than the register.
+	const lots: SearchEntry[] = units.map((unit) => ({
+		group: 'units',
+		title: `${t.payLot} ${unit.id} — ${unit.type}`,
+		description: [
+			unit.owner,
+			unit.occupancy === 'tenant' && unit.tenant ? unit.tenant : null,
+			`${unit.sqft} sqft`
+		]
+			.filter(Boolean)
+			.join(' · '),
+		href: `/units/${unit.id}`
+	}));
+
+	// The journal. Each entry opens the drawer it names, by the hash the statement
+	// chains it to — so the link and the row are the same entry, not a search for
+	// a memo that may read alike elsewhere.
+	const ledger: SearchEntry[] = bookStatement().map((row) => ({
+		group: 'ledger',
+		title: row.entry.memo,
+		description: `${row.entry.date} · ${money(row.cash)} · ${row.entry.postedBy}`,
+		href: `/accounting?tab=journal#entry-${row.hash}`
+	}));
+
+	// The tax desk's sections, by the agency that wants them and the day they are
+	// due. The page already anchors every section, so a result lands on it.
+	const tax: SearchEntry[] = taxSections.map((section) => ({
+		group: 'tax',
+		title: section.title,
+		description: `${section.agency} · ${section.statusLabel} · ${section.deadline}`,
+		href: `/tax#${section.id}`
+	}));
 
 	const posts: SearchEntry[] = blogPosts.map((post) => ({
 		group: 'posts',
@@ -186,7 +247,21 @@ export function buildSearchIndex(t: Translation): SearchEntry[] {  const pages: 
 		}
 	];
 
-	return [...pages, ...docs, ...manual, ...posts, ...faq, ...tpls, ...legal, ...feeds, ...tools, ...tasks];
+	return [
+		...pages,
+		...lots,
+		...ledger,
+		...tax,
+		...docs,
+		...manual,
+		...posts,
+		...faq,
+		...tpls,
+		...legal,
+		...feeds,
+		...tools,
+		...tasks
+	];
 }
 
 /** Rank entries by title/exact-prefix matches first, then description matches. */

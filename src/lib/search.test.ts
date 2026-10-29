@@ -11,6 +11,9 @@ import {
 import { english, translations } from '$lib/i18n';
 import { printDocuments } from '$lib/documents';
 import { manualSections } from '$lib/manual';
+import { units } from '$lib/demo/building';
+import { sections as taxSections } from '$lib/demo/tax';
+import { bookStatement } from '$lib/ledger-statement';
 
 describe('search index', () => {
 	it('indexes pages, posts, faq, templates, legal, feeds', () => {
@@ -22,6 +25,49 @@ describe('search index', () => {
 		expect(groups.has('templates')).toBe(true);
 		expect(groups.has('legal')).toBe(true);
 		expect(groups.has('feeds')).toBe(true);
+	});
+
+	it('reaches the building: every lot, every journal entry, every tax section', () => {
+		const index = buildSearchIndex(english);
+		expect(index.filter((entry) => entry.group === 'units')).toHaveLength(units.length);
+		expect(index.filter((entry) => entry.group === 'ledger').length).toBe(
+			bookStatement().length
+		);
+		expect(index.filter((entry) => entry.group === 'tax')).toHaveLength(taxSections.length);
+	});
+
+	it('opens the lot a query names, not the lot list', () => {
+		const index = buildSearchIndex(english);
+		const lot = searchIndex(index, 'lot 305')[0];
+		expect(lot.group).toBe('units');
+		expect(lot.href).toBe('/units/305');
+		// An owner's name finds their lot too — the reason a council searches.
+		expect(searchIndex(index, 'Priya')[0].href).toBe('/units/305');
+	});
+
+	it('opens the journal entry a query names, by that entry’s own hash', () => {
+		const index = buildSearchIndex(english);
+		const rows = bookStatement();
+		const memo = rows[0].entry.memo;
+		const hit = searchIndex(index, memo).find((entry) => entry.group === 'ledger')!;
+		expect(hit).toBeTruthy();
+		expect(hit.href).toBe(`/accounting?tab=journal#entry-${rows[0].hash}`);
+		// Every ledger result carries the hash of the row it came from, so the
+		// drawer a reader lands in is that entry and not a same-memo neighbour.
+		const ledger = index.filter((entry) => entry.group === 'ledger');
+		for (const [i, entry] of ledger.entries()) {
+			expect(entry.href.endsWith(`#entry-${rows[i].hash}`)).toBe(true);
+		}
+	});
+
+	it('opens the tax section a query names, on the section itself', () => {
+		const index = buildSearchIndex(english);
+		const hit = searchIndex(index, 'GST')[0];
+		expect(hit.group).toBe('tax');
+		expect(hit.href.startsWith('/tax#')).toBe(true);
+		for (const section of taxSections) {
+			expect(index.some((entry) => entry.href === `/tax#${section.id}`)).toBe(true);
+		}
 	});
 
 	it('indexes strata tool modules under the tools group', () => {
@@ -93,10 +139,10 @@ describe('search index', () => {
 		}
 	});
 
-	it('every locale resolves ten non-empty group labels', () => {
+	it('every locale resolves thirteen non-empty group labels', () => {
 		for (const [code, t] of Object.entries(translations)) {
 			const labels = searchGroupLabels(t);
-			expect(Object.keys(labels).length, code).toBe(10);
+			expect(Object.keys(labels).length, code).toBe(13);
 			for (const [group, label] of Object.entries(labels)) {
 				expect(label.trim().length, `${code}:${group}`).toBeGreaterThan(0);
 			}
@@ -153,8 +199,8 @@ describe('search index', () => {
 	it('groupsInIndex lists every group the index carries, in stable order', () => {
 		const index = buildSearchIndex(english);
 		const groups = groupsInIndex(index);
-		expect(groups.length).toBe(10);
-		expect(new Set(groups).size).toBe(10);
+		expect(groups.length).toBe(13);
+		expect(new Set(groups).size).toBe(13);
 		expect(groups).toEqual([...groups].sort(() => 0)); // stable, no duplicates
 	});
 

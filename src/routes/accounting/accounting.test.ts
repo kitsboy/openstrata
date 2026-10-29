@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/svelte';
+import { bookStatement } from '$lib/ledger-statement';
 
 /**
  * The books, opened at a month carried in from the health trend.
@@ -182,6 +183,34 @@ describe('/accounting?period=', () => {
 		const text = container.textContent ?? '';
 		expect(text).not.toContain('Opened at');
 		expect(text).not.toContain('stay at the');
+		expect(container.querySelector('button[class*="bg-slab"]')?.textContent).toBe('Overview');
+	});
+});
+
+describe('/accounting?tab=journal#entry=', () => {
+	it('opens the journal and the drawer a search result names', () => {
+		const row = bookStatement()[3];
+		const { container } = renderAt(`/accounting?tab=journal#entry-${row.hash}`);
+		expect(container.querySelector('button[class*="bg-slab"]')?.textContent).toBe(
+			'September journal'
+		);
+		const drawer = container.querySelector(`#entry-${row.hash}`);
+		expect(drawer).toBeTruthy();
+		// The drawer is the entry the hash belongs to, not a same-memo neighbour.
+		expect(drawer?.textContent ?? '').toContain(row.entry.postedBy);
+		expect(drawer?.textContent ?? '').toContain(row.hash);
+		expect(drawer?.textContent ?? '').toContain(row.entry.evidence);
+	});
+
+	it('opens a linked entry that is only found by scrolling the journal', () => {
+		const rows = bookStatement();
+		const row = rows.at(-1)!;
+		const { container } = renderAt(`/accounting?tab=journal#entry-${row.hash}`);
+		expect(container.querySelectorAll(`#entry-${row.hash}`).length).toBe(1);
+	});
+
+	it('ignores a tab it cannot name rather than blanking the page', () => {
+		const { container } = renderAt('/accounting?tab=nonsense');
 		expect(container.querySelector('button[class*="bg-slab"]')?.textContent).toBe('Overview');
 	});
 });

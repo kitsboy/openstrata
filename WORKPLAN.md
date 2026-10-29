@@ -9,7 +9,7 @@
 
 Do not treat the unchecked boxes below as the current plan. They were written before v0.3.28. The current instruction is:
 
-The interface keeps being refined as the product grows. Four UI upgrades are offered and not started (a receipt you can hand over, search that reaches the workspace, a budget that prints, and the year's deadlines on one page). Wait for a pick of one or two. Ten picks have shipped — September close (v0.3.40), the next 30 days once (v0.3.41), the release trail (v0.3.43), the floor plan with the statement (v0.3.44), aged arrears with a lot's own sheet (v0.3.45), health over time (v0.3.46), the Form K register (v0.3.48), the reserve fund's five-year picture (v0.3.49), and the year on one page with the AGM packet (v0.3.50) — and the queue was replaced each time. v0.3.47 was requested outside the queue. See `docs/ROADMAP.md` and the latest session in `docs/KIMI-HANDOFF.md`.
+The interface keeps being refined as the product grows. Four UI upgrades are offered and not started (a budget that prints, the year's deadlines on one page, the AGM package in one print, and filters that stay put). Wait for a pick of one or two. Eleven picks have shipped — September close (v0.3.40), the next 30 days once (v0.3.41), the release trail (v0.3.43), the floor plan with the statement (v0.3.44), aged arrears with a lot's own sheet (v0.3.45), health over time (v0.3.46), the Form K register (v0.3.48), the reserve fund's five-year picture (v0.3.49), the year on one page with the AGM packet (v0.3.50), and the receipt on `/pay` with workspace search (v0.3.51) — and the queue was replaced each time. v0.3.47 was requested outside the queue. See `docs/ROADMAP.md` and the latest session in `docs/KIMI-HANDOFF.md`.
 
 ---
 

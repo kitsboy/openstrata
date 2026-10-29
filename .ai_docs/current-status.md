@@ -1,11 +1,22 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.50
+**Site/product version:** v0.3.51
 **Backend API version:** v0.3.28
-**Last Updated:** 2026-10-28
+**Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — a year on one page, and the AGM packet to hand out (site, `0.3.50`, the two queue picks)
+## Recent milestone — a receipt you can hand over, and a search that reaches the building (site, `0.3.51`, the two queue picks)
+
+- **`/pay` prints one payment per page.** The tape is a screen record; a row's Receipt button puts that payment on the council's letterhead — the amount received, who paid, the lot, the rail, the reference, the transaction where the rail has one, the rate a bitcoin payment locked at with the sats that rate bought, and the fee's own split. Lot 305's September fee is **$576.00**, split **$499.20 operating** and **$76.80 reserve**, settled on Lightning at **$135,820** a bitcoin for **424,091 sats**. The newest payment is picked on arrival, so a print button always yields a real page; the paying sheet, the tape and the vendor panel carry `no-print`.
+- **`src/lib/pay-receipt.ts` holds three rules, with 9 tests.** The split is cross-multiplied from the amount in the fee's **$3.90 / $0.60** a point ratio and the reserve takes the rounding remainder, so the parts always add back — a receipt a cent out is one an owner will query. A transaction id belongs only to a rail that carries one, so a txid recorded against a cheque is dropped rather than printed. And a locked rate is quoted from the payment's own record and never recomputed: a receipt that re-priced an old payment at today's rate would state a number nobody paid, so a bitcoin row with no recorded rate says exactly that.
+- **The demo's bitcoin rows carry what settled them.** Lot 305's Lightning payment and lot 410's on-chain payment now store the rate they locked at (**$135,820**) and their transaction, because the receipt prints those and not today's rate.
+- **The search index grows from ten groups to thirteen.** **40 lots**, the journal's **9 entries** and the tax desk's **13 sections**, each result opening the row it names: `/units/305` for a lot (by number or by owner), `/tax#gst` for a section, `/accounting?tab=journal#entry-<hash>` for a journal entry.
+- **A journal link opens the entry, not the tab.** `/accounting` now reads its tab and an `#entry-<hash>` from the URL and opens that drawer, so the row a result names is the row the reader lands on. `OPENING_CASH` moved into `ledger-statement`, because the index and the page must chain the same hashes — a second copy of that subtraction would have produced links to entries that do not exist.
+- **The lot pages are in the sitemap.** It grew from 30 routes to **70**, because `/units/[lot]` is a real page for all 40 lots and search now sends readers there.
+- 15 new catalog keys × 9 locales, catalogue **1,528** keys at full parity. Verification: frontend **560 passed** (25 new: 9 receipt rules, 6 receipt sheet, 3 pay route, 4 search index, 3 accounting link), `check` **0/0**, i18n audit **1,528 keys across 35 route components**, contrast **218 pairs**, secret gate green, production build green with the receipt in `build/pay.html`. The receipt printed to a Letter PDF in Chrome and read back at page size: one page, the sheet held to **176 mm**, no horizontal overflow, one `.print-doc` on the page, and the tape's heading gone under print media.
+- **Queue:** the two picked slots are replaced by **the AGM package in one print** (`/documents`) and **filters that stay put** (`/units`), so four offers are waiting.
+
+## Prior milestone — a year on one page, and the AGM packet to hand out (site, `0.3.50`, the two queue picks)
 
 - **The dashboard ends in a printable annual sheet.** Income and spend by category with their totals and budget column; the three fund balances and their **$717,034.42** total; the score from **April 2026's 82 to September 2026's 56**, down **26**; and all **3** tracked items with their dates and day counts, **0 overdue**. The sheet is outside the `no-print` half, so the print control and the dashboard's own furniture do not reach the paper.
 - **`src/lib/year-sheet.ts` holds three rules, with 9 tests.** Every figure is read from the books, never retyped: a code no category claims is returned as `unmatched` rather than dropped, so a new account code is a visible defect. The surplus is income less spend and **never nets the CRF contribution** — a dollar moved to the reserve is still the owners' money. An open item is tracked and dated, and a passed date is counted as overdue rather than removed.

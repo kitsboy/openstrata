@@ -7,7 +7,7 @@
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
-	import { cashEffect, statement } from '$lib/ledger-statement';
+	import { OPENING_CASH, statement } from '$lib/ledger-statement';
 	import { age, summarise } from '$lib/arrears';
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
 	import { building, depreciation, formF, units } from '$lib/demo/building';
@@ -16,9 +16,17 @@
 	import { reservePlan } from '$lib/reserve-plan';
 	import { reservePicture } from '$lib/demo/reserve';
 
-	let tab = $state<
-		'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'reserve' | 'journal'
-	>('overview');
+	type TabId = 'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'reserve' | 'journal';
+	const TAB_IDS: readonly TabId[] = [
+		'overview',
+		'budget',
+		'receivables',
+		'payables',
+		'funds',
+		'reserve',
+		'journal'
+	];
+	let tab = $state<TabId>('overview');
 
 	/**
 	 * A month carried in from the compliance-health trend: `?period=2026-09` opens
@@ -26,12 +34,37 @@
 	 * Read in an effect because `$page.url.searchParams` is not available while the
 	 * page is prerendered, and only ever set from a valid month: a bad link leaves
 	 * the reader on today's books rather than on a half-filtered page.
+	 *
+	 * The same effect reads a search result's link. `?tab=journal#entry-<hash>`
+	 * opens the journal and the drawer for that entry, so the row a result names is
+	 * the row the reader lands on — the hash is the entry's own, not a memo match.
 	 */
 	let period = $state<PeriodPoint | null>(null);
 	$effect(() => {
-		const next = parsePeriod($page.url.searchParams.get(PERIOD_PARAM));
+		const url = $page.url;
+		const next = parsePeriod(url.searchParams.get(PERIOD_PARAM));
 		period = next;
 		if (next) tab = 'receivables';
+
+		const named = url.searchParams.get('tab');
+		if (named && (TAB_IDS as readonly string[]).includes(named) && !next) {
+			tab = named as TabId;
+		}
+
+		const hash = url.hash.replace(/^#/, '');
+		if (hash.startsWith('entry-')) {
+			tab = 'journal';
+			openEntry = hash.slice('entry-'.length);
+		}
+	});
+
+	/** Bring a linked entry into view once its drawer exists. */
+	$effect(() => {
+		if (!openEntry) return;
+		const id = `entry-${openEntry}`;
+		requestAnimationFrame(() =>
+			document.getElementById(id)?.scrollIntoView({ block: 'center' })
+		);
 	});
 	/** The date every age is counted to: the linked month end, or today's statement. */
 	const asOf = $derived(period?.asOf ?? building.asOf);
@@ -105,9 +138,9 @@
 	// The statement closes on the cash the Three funds tab reports, so the opening
 	// balance is the closing cash less everything the journal moved. Both figures
 	// are on the page: a reader can add the column up and land on the funds tab.
-	const closingCash = books.operating.cash + books.crf.cash;
-	const cashMoved = books.journal.reduce((sum, entry) => sum + cashEffect(entry), 0);
-	const openingCash = closingCash - cashMoved;
+	// The subtraction lives in `ledger-statement`, because the search index needs
+	// the same opening balance to produce the same entry hashes.
+	const openingCash = OPENING_CASH;
 	// A journal is dated entries, so a month carried in is the same book stopped
 	// short: everything posted on or before that day, run from the fiscal year's
 	// opening cash. Nothing is estimated — an entry that had not been posted by

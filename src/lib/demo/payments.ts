@@ -8,9 +8,20 @@ export interface Receipt {
 	cents: number;
 	reference: string;
 	note: string;
+	/** The on-chain transaction id or Lightning payment hash, where the rail has one. */
+	txid?: string;
+	/** CAD cents per bitcoin at the moment the amount was locked. */
+	rateCents?: number;
 }
 
-function receipt(date: string, unitId: string, method: PayMethod, note: string, period = '202609'): Receipt {
+function receipt(
+	date: string,
+	unitId: string,
+	method: PayMethod,
+	note: string,
+	period = '202609',
+	extra: Pick<Receipt, 'txid' | 'rateCents'> | null = null
+): Receipt {
 	const unit = getUnit(unitId);
 	return {
 		date,
@@ -19,13 +30,36 @@ function receipt(date: string, unitId: string, method: PayMethod, note: string, 
 		method,
 		cents: monthlyFeeCents(unit.entitlement),
 		reference: payReference(unitId, period),
-		note
+		note,
+		...(extra ?? {})
 	};
 }
 
 export const receipts: Receipt[] = [
-	receipt('2026-09-01', '305', 'Lightning', 'September fee. Settled in a few seconds. CAD locked at $135,820 for the invoice window.'),
-	receipt('2026-09-01', '410', 'Bitcoin', 'Quarterly on-chain fee from the treasurer’s own wallet. One confirmation. The strata only watches the address.'),
+	// The two bitcoin payments carry the rate they locked at and the transaction
+	// that settled them — the receipt prints those, not today's rate.
+	receipt(
+		'2026-09-01',
+		'305',
+		'Lightning',
+		'September fee. Settled in a few seconds. CAD locked at $135,820 for the invoice window.',
+		'202609',
+		{
+			txid: '7d9f2c4b8a1e6350f4b2c8d97a3e5016c9b8f2d4a6e1703582c9d1f4b7a2e630',
+			rateCents: 13_582_000
+		}
+	),
+	receipt(
+		'2026-09-01',
+		'410',
+		'Bitcoin',
+		'Quarterly on-chain fee from the treasurer’s own wallet. One confirmation. The strata only watches the address.',
+		'202609',
+		{
+			txid: 'b41c7e9f0a2d6583c9e1f7a4b8d205e6c3a9f1d7e4b2c85016a9e3f7d2c4b801',
+			rateCents: 13_582_000
+		}
+	),
 	receipt('2026-09-01', '101', 'E-transfer', 'Reference matched on its own. The memo was exactly the code.'),
 	receipt('2026-09-02', '110', 'Cheque', 'Deposited by the treasurer. Cleared September 4.'),
 	receipt('2026-09-04', '210', 'Cheque', 'Mailbox drop. Cleared September 8.'),

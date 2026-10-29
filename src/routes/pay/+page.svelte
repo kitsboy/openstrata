@@ -5,6 +5,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import InteracPay from '$lib/components/InteracPay.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import PayReceipt from '$lib/components/PayReceipt.svelte';
 	import QrPay from '$lib/components/QrPay.svelte';
 	import { copy, fill } from '$lib/i18n';
 	import { books } from '$lib/demo/books';
@@ -18,7 +19,8 @@
 		units
 	} from '$lib/demo/building';
 	import { btcQuote, money, satsLabel } from '$lib/demo/format';
-	import { howMatchingWorks, rails, receipts } from '$lib/demo/payments';
+	import { howMatchingWorks, rails, receipts, type Receipt } from '$lib/demo/payments';
+	import { newestReceipt, receiptFacts, receiptKey } from '$lib/pay-receipt';
 	import { payerUnitId } from '$lib/demo/payer';
 	import {
 		DEFAULT_SHEET_RAIL,
@@ -151,6 +153,22 @@
 					{ label: 'Parkade levy', cents: due.levy }
 				].filter((part) => part.cents !== 0)
 	);
+	/**
+	 * The receipt on paper. The tape is a screen record; one row of it is a page an
+	 * owner can keep, so choosing a row prints that payment and nothing else. On
+	 * arrival the newest payment is selected, because a print button that yields a
+	 * blank page is a worse default than a real receipt the reader can change.
+	 */
+	// The picked row is held by its key, not by object identity: a `$state` proxy
+	// and the demo module's plain object never compare equal.
+	const newest = newestReceipt(receipts);
+	let pickedKey = $state<string | null>(newest ? receiptKey(newest) : null);
+	const picked = $derived(receipts.find((row) => receiptKey(row) === pickedKey) ?? null);
+	const receiptSheet = $derived(picked ? receiptFacts(picked) : null);
+	function pickReceipt(row: Receipt) {
+		pickedKey = receiptKey(row);
+	}
+
 	const vendor = books.ap[0];
 
 	/**
@@ -197,6 +215,9 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+	<!-- Everything above the receipt is the screen half. The receipt at the foot of
+	     the page is the printed artifact, which is why it sits outside this div. -->
+	<div class="no-print">
 	<PageHeader
 		kicker={$copy.payKicker}
 		title={$copy.payPageHeading}
@@ -432,10 +453,12 @@
 		</div>
 	</section>
 	{/if}
+	</div>
 
 	{#if !bill}
 	<!-- A demo lot is the only thing that gets the demo furniture below. An owner
 	     holding a council's link sees the bill, and nothing about other lots. -->
+	<div class="no-print">
 	<!-- Tucked under the sheet: the two rails nobody has to be sold on. -->
 	<details class="sheet-more">
 		<summary>{$copy.payOtherWays}</summary>
@@ -476,20 +499,30 @@
 						<th class="px-3 py-3">{$copy.payColRail}</th>
 						<th class="px-3 py-3">{$copy.payColReference}</th>
 						<th class="px-3 py-3 text-right">{$copy.payColAmount}</th>
+						<th class="px-3 py-3"><span class="sr-only">{$copy.payReceiptOpen}</span></th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each receipts as row}
-						<tr class="border-b border-border">
+					{#each receipts as row (`${row.date}-${row.unitId}`)}
+						<tr class="border-b border-border" class:bg-slate-50={pickedKey === receiptKey(row)}>
 							<td class="px-3 py-2">{row.date}</td>
 							<td class="px-3 py-2">{row.unitId} {row.owner}</td>
 							<td class="px-3 py-2 font-semibold">{row.method}</td>
 							<td class="px-3 py-2 font-mono text-xs">{row.reference}</td>
 							<td class="px-3 py-2 text-right tabular-nums">{money(row.cents)}</td>
+							<td class="px-3 py-2 text-right">
+								<button
+									class="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-surface"
+									aria-pressed={pickedKey === receiptKey(row)}
+									aria-label="{$copy.payReceiptOpen}: {row.reference}"
+									onclick={() => pickReceipt(row)}
+								>{$copy.payReceiptOpen}</button
+								>
+							</td>
 						</tr>
 						<tr class="border-b border-border">
 							<td></td>
-							<td class="px-3 pb-3 text-xs text-slate-500" colspan="4">{row.note}</td>
+							<td class="px-3 pb-3 text-xs text-slate-500" colspan="5">{row.note}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -508,6 +541,28 @@
 			})}
 		</p>
 	</section>
+	</div>
+
+	<!-- The one printed page: the picked payment, on the council's letterhead. -->
+	{#if receiptSheet}
+		<section class="mt-10 print:mt-0" aria-labelledby="receipt-heading">
+			<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+				<div>
+					<p class="text-xs font-bold uppercase tracking-wide text-brand-700">{$copy.payTapeTitle}</p>
+					<h2 id="receipt-heading" class="text-xl font-bold text-slate-900">{$copy.payReceiptTitle}</h2>
+					<p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">{$copy.payReceiptHint}</p>
+				</div>
+				<div class="flex flex-wrap items-center gap-2">
+					<button
+						class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+						onclick={() => window.print()}>{$copy.payReceiptPrint}</button
+					>
+					<span class="text-xs text-slate-500">{$copy.yearSheetPrintNote}</span>
+				</div>
+			</div>
+			<PayReceipt receipt={receiptSheet} />
+		</section>
+	{/if}
 	{/if}
 </div>
 

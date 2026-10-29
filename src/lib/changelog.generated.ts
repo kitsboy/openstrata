@@ -14,6 +14,37 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.51",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A receipt you can hand over (/pay). One printed page per payment, on the council's letterhead: the amount received, who paid, the lot, the rail, the reference, the transaction for a rail that has one, the rate a bitcoin payment locked at with the sats that rate bought, and the fee's own split between the two funds. Lot 305's September fee prints as $576.00, split $499.20 operating and $76.80 reserve, settled on Lightning at $135,820 a bitcoin for 424,091 sats. Every row in the tape carries a Receipt button, the newest payment is picked on arrival so a print button always yields a real page, and the paying sheet, the tape and the vendor panel carry no-print — what leaves the printer is the receipt alone.",
+          "The rules live in src/lib/pay-receipt.ts (9 tests), and each one is a decision. The split is cross-multiplied from the amount in the fee's $3.90 / $0.60 a point ratio and the reserve takes the rounding remainder, so the two parts always add back to the amount — a receipt a cent out is one an owner will query. A transaction id belongs only to a rail that has one: a txid recorded against a cheque is dropped rather than printed. And a locked rate is quoted from the payment's own record and never recomputed, because a receipt that re-priced an old payment at today's rate would state a number nobody paid; a bitcoin payment with no recorded rate says so instead.",
+          "The demo's bitcoin rows carry what settled them. Lot 305's Lightning payment and lot 410's on-chain payment now store the rate they locked at ($135,820) and their transaction, so the receipt prints the figures the payment actually had.",
+          "Search that reaches the workspace (⌘K). The index grows from ten groups to thirteen: 40 lots, the journal's 9 entries and the tax desk's 13 sections, each result opening the row it names — /units/305 for a lot (by number or by owner), /tax#gst for a section, and /accounting?tab=journal#entry-<hash> for a journal entry.",
+          "A journal link opens the entry, not the tab. /accounting now reads its tab and an #entry-<hash> from the URL and opens that drawer, so the row a result names is the row the reader lands on. The opening-cash subtraction moved into ledger-statement as OPENING_CASH, because the index and the page must chain the same hashes: a second copy of that arithmetic would have produced links to entries that do not exist.",
+          "The lot pages are in the sitemap. The sitemap grew from 30 routes to 70, because /units/[lot] is a real page for all 40 lots and search now sends readers there."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The queue is refreshed with two picks' replacements. The AGM package in one print (/documents) and filters that stay put (/units) take the two picked slots beside the budget that prints and the year's deadlines on one page, so four are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "25 new tests: 9 for the receipt's rules, 6 rendering the sheet (amount, split, transaction, locked rate and sats, the no-rate sentence, and French), 3 for the /pay route (the newest payment prints, a picked row fills the sheet, the print control stays on screen), 4 for the index (every lot, entry and tax section; a lot by owner; a journal link by that entry's hash; a tax section on itself), and 3 for the accounting link (the drawer a hash names, the last entry, a tab it cannot name).",
+          "The receipt printed to a Letter PDF in Chrome and read back at page size: one page, the sheet held to 176 mm, no horizontal overflow, one .print-doc on the page, and the tape's heading gone under print media.",
+          "Frontend 560 passed (25 new), Svelte check 0 errors / 0 warnings, translation audit 1,528 keys × 9 locales (15 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green with the receipt in build/pay.html and the 40 lot pages in the sitemap."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.50",
     "date": "2026-10-28",
     "groups": [

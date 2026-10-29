@@ -1,3 +1,25 @@
+## Session — 2026-10-29
+
+**Done:**
+- Two queue picks shipped as `0.3.51` together. **A receipt you can hand over** (`/pay`): every row of the receipt tape carries a Receipt button, and the picked payment prints on the council's letterhead — amount received, who paid, lot, rail, reference, txid where the rail has one, the rate a bitcoin payment locked at with the sats it bought, and the fee's split. Lot 305: **$576.00** = **$499.20 operating** + **$76.80 reserve**, Lightning at **$135,820**/BTC for **424,091 sats**. The paying sheet, tape and vendor panel are `no-print`; the newest payment is picked on arrival.
+- `src/lib/pay-receipt.ts` (9 tests) plus `PayReceipt.svelte` (6 tests) and three `/pay` route tests. The demo's Lightning (305) and on-chain (410) rows now carry `txid` and `rateCents`.
+- **Search that reaches the workspace** (`⌘K`): the index grows from ten groups to thirteen — **40 lots**, the journal's **9 entries**, the tax desk's **13 sections** — each result opening the row it names (`/units/305`, `/tax#gst`, `/accounting?tab=journal#entry-<hash>`). `/accounting` now reads `?tab=` and an `#entry-<hash>` and opens that drawer (3 new route tests).
+- `OPENING_CASH` and `bookStatement()` moved into `src/lib/ledger-statement.ts`; the accounting page imports `OPENING_CASH` instead of subtracting its own, so the index and the page chain identical hashes.
+- `scripts/generate-sitemap.mjs` now emits the 40 lot routes (70 routes total). `src/app.css` adds `.receipt-doc` to the 176 mm print rule.
+
+**Decisions:**
+- The **locked rate is quoted, never recomputed**. `BTC_CAD_CENTS` is today's rate; a receipt that priced an old payment with it would state a number nobody paid. A crypto row with no recorded rate prints that the rate was not recorded.
+- **A txid belongs only to a rail that has one.** A txid recorded against a cheque is dropped, because the paper would assert something untrue.
+- The **split takes the fee's own ratio** ($3.90 / $0.60 a point) and gives the remainder to the reserve, so the two parts always add back to the amount.
+- **Search links by hash, not by memo.** Memos can repeat; the chained hash is the entry's identity, which is why the opening-cash arithmetic had to become shared state rather than two copies.
+- The two picks are replaced by **the AGM package in one print** (`/documents`) and **filters that stay put** (`/units`), so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.51`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-28 (eighth)
 
 **Done:**
