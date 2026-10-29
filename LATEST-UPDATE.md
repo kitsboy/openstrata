@@ -1,3 +1,21 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — a budget that prints, and the year's deadlines on one page
+
+Commit: this commit (site `0.3.52`). Backend API version stays `0.3.28`.
+
+> **Two picks, shipped together, and both of them turn a screen into paper a council keeps.** The Budget tab on `/accounting` is now the page a council reviews at the table: every income and expense line with its annual budget, the year to date, what is left and the variance, then the reserve contribution and the result — **$0.00** budgeted for the year, **$15,878.32** to date and **$15,878.32** over plan, which is the books' own surplus.
+>
+> **`src/lib/budget-sheet.ts` (13 tests) holds four rules, and each one is a decision.** The plan to date is the annual figure pro-rated to the six months the books cover — **50%** of every line — because nine months of actuals against twelve months of plan would make every line look under, and a variance nobody can trust is worse than no column. Variance is always the year to date less the plan to date, so the sign means one thing on every row and only the verdict changes with the side of the page: spending over plan and income short of plan are unfavourable and print bold. The reserve contribution carries no verdict — a fund ahead of its contribution is a council decision, not a slip. And the result is the three groups added rather than a fourth division, so a reader who adds the page up lands on the printed surplus.
+>
+> **`/calendar` gains the fiscal year on one sheet.** Twelve month rows of real days (**February 2027 has 28 cells**), the payroll window as a bar across each month's 1st to 15th, the EPR and SVT windows shaded, the T2 and T4 deadlines as dark cells, and a dot on all **18** dated items. `src/lib/year-calendar.ts` (13 tests): a window keeps its own dates when the grid cannot hold it — the EPR opened **1 January** and only **275 of its 365 days** fall in this fiscal year, which the sheet states rather than shortening the rule to fit; the monthly rhythm is detected from the data (a title, or a category-and-day, repeating in six or more months) so the fee run, late fee, council meeting, reconciliation and remittance are left out; and nothing dated is dropped — the **AGM window (1 April – 31 May 2027, 61 days)** is drawn on its own two-month strip below the year, with the six items after 31 March under it.
+>
+> **Verified:** frontend **597 passed** (37 new: 13 budget rules, 13 year-calendar rules, 7 calendar route, 4 accounting route), `check` **0 errors / 0 warnings**, translation audit **1,576 keys × 9 locales** (46 new) across 35 route components, contrast audit **218 pairs**, secret gate green, production build green. Both sheets printed to **Letter PDFs in Chrome and read back at page size**: one page each, the sheet held to **176 mm**, no horizontal overflow, and the year sheet's item columns aligned.
+>
+> **Two print defects were found by making the paper and measuring it, not by reading the code.** The budget sheet ran onto a second page at 8.4pt with 43 rows, so the table is set at 7.2pt with tighter rules; and on a phone the five money columns clipped their own amounts, so the sheet scrolls its table inside itself at a **560px** floor while the print rules restore full width — measured at 390, 620, 900 and 1280 with no page overflow and no clipped cell.
+>
+> **The queue is refreshed, because the picks shipped.** **The budget's reasons, beside the variance** (`/accounting`) and **a levy statement of its own** (`/accounting`) take the two slots beside the AGM package and filters that stay put, so four are waiting.
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — a receipt you can hand over, and a search that reaches the building
 
 Commit: this commit (site `0.3.51`). Backend API version stays `0.3.28`.

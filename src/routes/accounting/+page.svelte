@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import BarChart from '$lib/components/BarChart.svelte';
+	import BudgetSheet from '$lib/components/BudgetSheet.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
@@ -15,6 +16,7 @@
 	import { cashAt, cashRows } from '$lib/fund-history';
 	import { reservePlan } from '$lib/reserve-plan';
 	import { reservePicture } from '$lib/demo/reserve';
+	import { budgetSheet } from '$lib/budget-sheet';
 
 	type TabId = 'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'reserve' | 'journal';
 	const TAB_IDS: readonly TabId[] = [
@@ -173,8 +175,33 @@
 		return cents > 0 ? 'text-emerald-700' : 'text-rose-700';
 	}
 
-	const feeIncomeAnnual = books.feeAnnual;
-	const budgetResult = books.feeAnnual + books.otherIncomeAnnual - books.expenseAnnual - books.crfContributionAnnual;
+	/**
+	 * The budget on paper: the fee run, the other income codes, every expense line
+	 * and the reserve contribution, read from the books. The sheet's own rules —
+	 * the pro-rated plan, the variance's direction, the reserve's missing verdict —
+	 * live in `budget-sheet` so the printed page and its tests cannot disagree.
+	 */
+	const budget = $derived(
+		budgetSheet({
+			monthsElapsed: books.monthsElapsed,
+			income: [
+				{
+					code: '4000',
+					name: 'Strata fees',
+					annualCents: books.feeAnnual,
+					ytdCents: books.feesOperating + books.feesCrf
+				},
+				...books.incomeLines
+			],
+			expense: books.expenses,
+			reserve: {
+				code: '3500',
+				name: 'CRF contribution',
+				annualCents: books.crfContributionAnnual,
+				ytdCents: books.feesCrf
+			}
+		})
+	);
 
 	// Tab labels come from the catalog, so they translate with the rest of the page
 	// rather than sitting in English in every locale.
@@ -208,17 +235,22 @@
 	<title>{$copy.accPageTitle}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-	<PageHeader
-		kicker={fill($copy.accKicker, { year: building.fiscalLabel })}
-		title={$copy.accTitle}
-		lede={$copy.accLede}
-	/>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 print:px-0 print:py-0">
+	<!-- The budget prints as one sheet, so the page's own furniture comes off the
+	     paper on that tab and stays on it everywhere else (the reserve plan prints
+	     with its header, which is how it shipped). -->
+	<div class={tab === 'budget' ? 'no-print' : ''}>
+		<PageHeader
+			kicker={fill($copy.accKicker, { year: building.fiscalLabel })}
+			title={$copy.accTitle}
+			lede={$copy.accLede}
+		/>
+	</div>
 
 	<!-- The date belongs to the page, not to one tab: it opens here and stays in
 	     view while the reader moves between the ladder and the journal. -->
 	{#if period}
-		<div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+		<div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 {tab === 'budget' ? 'no-print' : ''}">
 			<p class="min-w-0 flex-1 text-sm text-amber-950">
 				{fill($copy.accPeriodBanner, { date: longDate })}
 			</p>
@@ -241,7 +273,7 @@
 	<!-- The ladder and the journal follow the date; the funds tab follows it too,
 	     from its own statements. The rest say they do not. -->
 	{#if period && tab !== 'receivables' && tab !== 'journal' && tab !== 'funds' && tab !== 'reserve'}
-		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600">
+		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600 {tab === 'budget' ? 'no-print' : ''}">
 			{fill($copy.accPeriodCloseNote, { date: longDate, close: closeDate })}
 		</p>
 	{/if}
@@ -315,58 +347,19 @@
 	{/if}
 
 	{#if tab === 'budget'}
-		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
-			<table class="w-full min-w-[640px] text-sm">
-				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
-					<tr class="border-b border-border">
-						<th class="px-4 py-3">{$copy.accColAccount}</th>
-						<th class="px-4 py-3 text-right">{$copy.accColAnnualBudget}</th>
-						<th class="px-4 py-3 text-right">{$copy.yearToDate}</th>
-						<th class="px-4 py-3 text-right">{$copy.accColLeft}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr class="border-b border-border bg-slate-50 font-semibold">
-						<td class="px-4 py-3">{$copy.accRowStrataFees}</td>
-						<td class="px-4 py-3 text-right tabular-nums">{money(feeIncomeAnnual)}</td>
-						<td class="px-4 py-3 text-right tabular-nums">{money(books.feesOperating + books.feesCrf)}</td>
-						<td class="px-4 py-3 text-right tabular-nums">{money(feeIncomeAnnual - books.feesOperating - books.feesCrf)}</td>
-					</tr>
-					{#each books.incomeLines as line}
-						<tr class="border-b border-border">
-							<td class="px-4 py-3">{line.code} {line.name}</td>
-							<td class="px-4 py-3 text-right tabular-nums">{money(line.annualCents)}</td>
-							<td class="px-4 py-3 text-right tabular-nums">{money(line.ytdCents)}</td>
-							<td class="px-4 py-3 text-right tabular-nums">{money(line.annualCents - line.ytdCents)}</td>
-						</tr>
-					{/each}
-					{#each books.expenses as line}
-						<tr class="border-b border-border">
-							<td class="px-4 py-3">
-								{line.code} {line.name}
-								{#if line.note}<span class="mt-0.5 block text-xs font-normal text-slate-400">{line.note}</span>{/if}
-							</td>
-							<td class="px-4 py-3 text-right tabular-nums">{money(line.annualCents)}</td>
-							<td class="px-4 py-3 text-right tabular-nums">{money(line.ytdCents)}</td>
-							<td class="px-4 py-3 text-right tabular-nums">{money(line.annualCents - line.ytdCents)}</td>
-						</tr>
-					{/each}
-					<tr class="border-b border-border bg-slate-50">
-						<td class="px-4 py-3 font-semibold">{$copy.accRowCrfContribution}</td>
-						<td class="px-4 py-3 text-right font-semibold tabular-nums">{money(books.crfContributionAnnual)}</td>
-						<td class="px-4 py-3 text-right tabular-nums">{money(books.feesCrf)}</td>
-						<td class="px-4 py-3 text-right tabular-nums">{money(books.crfContributionAnnual - books.feesCrf)}</td>
-					</tr>
-					<tr>
-						<td class="px-4 py-3 font-bold">{$copy.accRowBudgetResult}</td>
-						<td class="px-4 py-3 text-right font-bold tabular-nums">{money(budgetResult)}</td>
-						<td class="px-4 py-3"></td>
-						<td class="px-4 py-3"></td>
-					</tr>
-				</tbody>
-			</table>
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.budgetSheetLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.budgetSheetPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.budgetSheetPrintNote}</span>
+			</div>
 		</div>
-		<p class="mt-3 text-sm text-slate-500">{$copy.accBudgetNote}</p>
+		<BudgetSheet sheet={budget} />
 	{/if}
 
 	{#if tab === 'receivables'}

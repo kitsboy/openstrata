@@ -84,7 +84,7 @@
   /* A sheet that is wider than the @page box is clipped on the right, not
      wrapped. The two sheets that are whole pages of their own are held to
      176mm — inside the 14mm side margins — so the paper shows every column. */
-  .year-doc, .packet-doc, .receipt-doc {
+  .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;

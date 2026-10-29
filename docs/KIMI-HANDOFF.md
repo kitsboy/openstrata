@@ -1,3 +1,26 @@
+## Session — 2026-10-29 (second)
+
+**Done:**
+- Two queue picks shipped as `0.3.52` together. **A budget that prints** (`/accounting`): the Budget tab is now a printed page — every income and expense line with its annual budget, the year to date, what is left and the variance, then the reserve contribution and the result. **$0.00** budgeted for the year, **$15,878.32** to date, **$15,878.32** over plan. Header, tabs and print control are `no-print` on that tab only, so the reserve plan still prints with its header.
+- `src/lib/budget-sheet.ts` (13 tests) and `BudgetSheet.svelte`, plus four `/accounting` route tests. **`/calendar` gains the year on one sheet**: twelve month rows of real days, payroll as a bar across each month's 1st–15th, EPR and SVT shaded, T2/T4 as dark cells, a dot on all **18** dated items, the **AGM window (1 Apr – 31 May 2027)** on its own strip below the year. `src/lib/year-calendar.ts` (13 tests), `YearCalendar.svelte`, seven `/calendar` route tests.
+- `src/app.css` adds `.budget-doc` and `.year-cal-doc` to the 176 mm print rule. 46 catalog keys × 9 locales (1,576 at parity).
+
+**Decisions:**
+- The **plan to date is pro-rated**, never the whole annual figure: six of twelve months is **50%** of each line. Comparing September actuals to a full-year budget would make every line look under, and a variance nobody can trust is worse than no column.
+- **Variance's sign means one thing everywhere** (`ytd − plan`); only the verdict flips with the side of the page. The **reserve contribution carries no verdict** (`na`) because funding the reserve ahead of plan is a decision, not a slip, and the printed result is the **sum of the three groups** so adding the page up lands on it.
+- In the year chart, **a window keeps its true dates** even when the year holds only part of it (EPR: 275 of 365 days), and **the rhythm is detected from the data** — a title or a category-and-day repeating in six or more months — rather than from a hand-kept list of "monthly" items. **Nothing dated is dropped**: items after 31 March are listed under the AGM strip.
+- **The printed sheet scrolls inside itself on a phone** (560px floor, print restores full width) rather than clipping an amount; the page itself never overflows.
+- The two picks are replaced by **the budget's reasons, beside the variance** (`/accounting`) and **a levy statement of its own** (`/accounting`), so four offers are waiting.
+
+**Found, not fixed (pre-existing demo data):**
+- `books.expenses` line `6215` (Employer CPP, EI, WorkSafeBC) stores `employerBurden` — dollars, **6168** — in a cents field, so the books show **$61.68** for that line instead of **$6,168.00**. Every derived figure (`expenseTotal`, `surplusYtd`, cash, the funds) reads that number, so correcting it would move several published totals and many tests. Left alone in `0.3.52` and flagged here; it is visible on the printed budget at `6215`.
+
+**Git State:**
+- SHA: this commit (`0.3.52`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29
 
 **Done:**

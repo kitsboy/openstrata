@@ -28,20 +28,8 @@
 	/** Offered 2026-10-29 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, and the receipt on /pay with workspace search shipped in v0.3.51; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, and the receipt on /pay with workspace search shipped in v0.3.51, and the budget that prints with the year’s deadlines shipped in v0.3.52; these four are what is waiting now.';
 	const uiQueue = [
-		{
-			name: 'A budget that prints',
-			where: '/accounting',
-			detail:
-				'One printed page per budget, line by line: the annual figure, the year to date, what is left and the variance, so a council can review the plan against the actuals on paper. The Budget tab is on screen only, and the variance is not on it.'
-		},
-		{
-			name: 'The year’s deadlines on one page',
-			where: '/calendar',
-			detail:
-				'Twelve months of the fiscal year on one printable grid, each statutory window shaded and the tracked items listed beneath, so a council can pin the year to the wall instead of paging through months.'
-		},
 		{
 			name: 'The AGM package in one print',
 			where: '/documents',
@@ -53,6 +41,18 @@
 			where: '/units',
 			detail:
 				'The search box and the six tone filters are gone the moment a reader opens a lot and comes back. Keep them on the device, restore them on return, and give the row one button that clears all of it — the plan and the filters read the same record as they do now.'
+		},
+		{
+			name: 'The budget’s reasons, beside the variance',
+			where: '/accounting',
+			detail:
+				'The printed sheet says how far each line is from plan; the data already knows why — the parkade gate motor, the concierge’s September start, the inspection still ahead. Print the reason against the line, so a council reads why rather than only how much.'
+		},
+		{
+			name: 'A levy statement of its own',
+			where: '/accounting',
+			detail:
+				'The parkade levy is a separate trust with its own resolution, assessment, collections and holdback, and it is only ever a card among the funds. Give it a printable page: assessed, collected by lot, spent, holdback held and what remains — reported without handing over the operating books.'
 		}
 	];
 </script>

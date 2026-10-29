@@ -14,6 +14,37 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.52",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A budget that prints (/accounting). The Budget tab is now the page a council reviews at the table: every income and expense line with its annual budget, the year to date, what is left and the variance, then the reserve contribution and the result. The year's plan is $0.00 by design and balanced; six months in, the result is $15,878.32 against a plan of $0.00, so the sheet prints $15,878.32 over — the books' own surplus, not a second computation of it. The header, the tabs and the print control carry no-print on that tab only, so the reserve plan keeps printing with its header.",
+          "src/lib/budget-sheet.ts (13 tests) holds four rules. The plan to date is the annual figure pro-rated to the six months the books cover — 50% of every line — because nine months of actuals against twelve months of plan would make every line look under, and a variance nobody can trust is worse than no column. Variance is always the year to date less the plan to date, so the sign means one thing on every row and only the verdict changes with the side of the page: spending over plan and income short of plan are unfavourable and print bold. The reserve contribution carries no verdict (na) — a fund ahead of its contribution is a council decision, not a slip. And the result is the three groups added rather than a fourth division, so a reader who adds the page up lands on the printed surplus.",
+          "The year's deadlines on one page (/calendar). Twelve month rows of the fiscal year, each column a day of the month: the payroll window as a bar across each month's 1st to 15th, the EPR and SVT windows shaded, the T2 and T4 deadlines as dark cells, and an orange rule on each of the 18 dated items listed beneath. The fiscal year is 365 days, February 2027 has 28 cells, and the windows carry their own dates: EPR 1 Jan – 31 Dec 2026 (275 of 365 days inside this year), SVT 1 Jan – 31 Mar 2027 (90 days), T2 30 Sep 2026, T4 28 Feb 2027, payroll 12 windows of 15 days each.",
+          "src/lib/year-calendar.ts (13 tests) holds the rest. A window keeps its true dates when the grid cannot hold it rather than being shortened to fit. The monthly rhythm is detected from the data — a title, or a category-and-day, repeating in six or more months — so the fee run, late fee, council meeting, reconciliation and remittance are left out and the one-off items are readable. And nothing dated is dropped: the AGM window (1 April – 31 May 2027, 61 days) is drawn on its own two-month strip below the year, with the six items after 31 March listed under it."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Two print defects were found by making the paper and measuring it. The budget sheet ran onto a second page at 8.4pt with 43 rows; the table is now 7.2pt with tighter rules and holds one Letter page at 176 mm. On a phone the five money columns clipped their own amounts, so the sheet scrolls its table inside itself at a 560px floor while the print rules restore full width — no page overflow and no clipped cell at 390, 620, 900 or 1280.",
+          "src/app.css adds .budget-doc and .year-cal-doc to the 176 mm print rule.",
+          "The queue is refreshed with the two picks' replacements. The budget's reasons beside the variance (/accounting) and a levy statement of its own (/accounting) take the two picked slots beside the AGM package and filters that stay put, so four are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "37 new tests: 13 for the budget's rules (the pro-rated plan, a clamped month count, the verdicts, the groups adding up column by column, the result landing on the books' surplus, and the real lines — insurance on plan, hydro $720 over, the concierge $7,440 under, the reserve carrying no verdict), 13 for the year calendar (twelve real months, payroll's 12 windows of 15 days, the EPR's clipped 275 days, SVT's 90, the T2 and T4 on their own days, the AGM window outside the year, the rhythm detected and excluded, nothing dropped, the marks on the grid), 7 for the /calendar sheet and 4 for the /accounting budget tab.",
+          "Both sheets printed to Letter PDFs in Chrome and read back at page size: one page each, the sheet held to 176 mm, no horizontal overflow, and the year sheet's item columns aligned.",
+          "Frontend 597 passed (37 new), Svelte check 0 errors / 0 warnings, translation audit 1,576 keys × 9 locales (46 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green with the year sheet in build/calendar.html and v0.3.52 on the page."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.51",
     "date": "2026-10-29",
     "groups": [

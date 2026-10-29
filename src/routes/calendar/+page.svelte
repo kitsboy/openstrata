@@ -1,20 +1,32 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Next30 from '$lib/components/Next30.svelte';
+	import YearCalendarSheet from '$lib/components/YearCalendar.svelte';
 	import {
 		categoryMeta,
+		events,
 		eventsInMonth,
 		eventsOn,
 		highlightDates,
 		monthGrid,
 		type CalCategory
 	} from '$lib/demo/schedule';
+	import { yearCalendar } from '$lib/year-calendar';
+	import { building } from '$lib/demo/building';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 
 	let year = $state(2026);
 	let month = $state(9);
 	let selected = $state('2026-09-30');
 	let filter = $state<'all' | CalCategory>('all');
+
+	/**
+	 * The year on one sheet, built from the same schedule this page draws month by
+	 * month. The fiscal year comes from the building's own record, not from the
+	 * month currently open, so paging through the calendar never changes the paper.
+	 */
+	const fiscalStartYear = Number(building.fiscalStart.slice(0, 4));
+	const yearSheet = yearCalendar(fiscalStartYear, events);
 
 	/** Month names and weekday heads come from Intl, not a hard-coded list. */
 	const monthName = $derived(
@@ -61,7 +73,10 @@
 	<title>{$copy.calPageTitle}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 print:px-0 print:py-0">
+	<!-- The month view is what the reader works in; the year sheet below is the
+	     page's one printed artifact, so everything above it carries `no-print`. -->
+	<div class="no-print">
 	<PageHeader kicker={$copy.calKicker} title={$copy.calHeading} lede={$copy.calLede} />
 
 	<Next30 />
@@ -146,5 +161,23 @@
 				</li>
 			{/each}
 		</ul>
+	</section>
+	</div>
+
+	<section class="mt-10 print:mt-0" aria-labelledby="year-cal-heading">
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<div>
+				<h2 id="year-cal-heading" class="text-xl font-bold text-slate-900">{$copy.yearCalHeading}</h2>
+				<p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">{$copy.yearCalLede}</p>
+			</div>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.yearCalPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.yearCalPrintNote}</span>
+			</div>
+		</div>
+		<YearCalendarSheet calendar={yearSheet} />
 	</section>
 </div>

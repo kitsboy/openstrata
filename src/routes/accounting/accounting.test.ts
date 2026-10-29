@@ -214,3 +214,56 @@ describe('/accounting?tab=journal#entry=', () => {
 		expect(container.querySelector('button[class*="bg-slab"]')?.textContent).toBe('Overview');
 	});
 });
+
+describe('/accounting budget', () => {
+	it('prints the plan to date beside the year to date, line by line', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Budget');
+		const text = container.textContent ?? '';
+		expect(text).toContain('The budget against the year to date');
+		expect(text).toContain('Variance');
+		// Six months of a twelve-month year is half of every annual line.
+		expect(text).toContain(
+			'The plan to date is 50% of each annual line — 6 of the year’s twelve months — because the books stop at September 30, 2026.'
+		);
+		expect(text).toContain('The reserve contribution carries no verdict.');
+	});
+
+	it('states each line’s variance in the direction the reader has to read', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Budget');
+		const rows = [...container.querySelectorAll('tbody tr')].map((row) => row.textContent ?? '');
+		const row = (code: string) => rows.find((text) => text.startsWith(code));
+		// Insurance is prepaid and expensed straight across the year: exactly half.
+		expect(row('6100')).toContain('on plan');
+		// Hydro has run $720 past halfway.
+		expect(row('6110')).toContain('$720.00 over');
+		// The concierge started on 1 September, so the line is far under plan.
+		expect(row('6210')).toContain('$7,440.00 under');
+		// The reserve contribution is a decision, not a slip.
+		const reserve = rows.find((text) => text.includes('CRF contribution (separate fund)') && text.includes('$43,200.00'));
+		expect(reserve).toContain('—');
+	});
+
+	it('lands the printed result on the books’ own surplus', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Budget');
+		const result = [...container.querySelectorAll('tbody tr')].find((row) =>
+			(row.textContent ?? '').startsWith('Budget result')
+		);
+		expect(result?.textContent ?? '').toContain('$15,878.32');
+		expect(result?.textContent ?? '').toContain('$15,878.32 over');
+	});
+
+	it('keeps the page furniture off the budget’s printed page', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Budget');
+		// The header would push the sheet onto a second page.
+		expect(container.querySelector('h1')?.closest('.no-print')).toBeTruthy();
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print this budget'))).toBe(true);
+		expect(container.querySelector('.budget-doc')?.closest('.no-print')).toBeNull();
+	});
+});
