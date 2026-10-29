@@ -14,6 +14,36 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.55",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The cash statement with its chain (/accounting). The Journal tab now prints the operating account as its own page: the account named on the letterhead, the opening balance, every journal entry with its movement, running balance and hash, the closing balance, and the chain head. It is the book's own figure — $59,145.60 opening, $22,652.02 moved, $81,797.62 closing, which is the operating cash the overview and the Three funds tab report — so a reader can add the printed column up and land on the account's own cash.",
+          "src/lib/cash-statement.ts (11 tests) holds the rules. The statement is one named bank account — 1010 operating — because a statement that ran on both bank accounts would answer a question nobody files; the reserve has its own five-year page. But every entry in the journal prints, including the five that did not move this account: a hash covers its entry and the hash above it, so removing a row would break every hash below and tell a reader the chain is unbroken while making it impossible to check. Those rows print a dash in the movement column and leave the balance alone. The opening balance is the closing less what the journal moved, so the column adds to the closing instead of trusting a typed opening. A stopped statement keeps the same opening and folds nothing back: a month carried in prints the entries posted by that day. And the check that the book has no forgotten account is arithmetic: the operating opening ($59,145.60) and the reserve opening ($599,642.40) add back to the journal's own combined opening, $658,788.00.",
+          "src/lib/components/CashStatement.svelte. The letterhead and reference block (fiscal year, statement date, account code), three summary figures — opening, movement with 4 of 9 entries on this account, closing — a five-column table with the hash printed under each memo in mono, a closing row, the tie (or, for a stopped month, the note that it cannot tie to a close it has not reached), the basis (1020 reserve and the parkade levy are separate funds; 1080 war chest at cost is not cash), and the chain head printed from the genesis link.",
+          "The paper is the sheet, not the screen. The Journal tab's intro, opening and closing lines, screen table and chain note carry no-print, the page header and period banner come off the paper on that tab as they do on the budget's, and the tab gains a print button with its hint. The drawer still opens on screen, and a ?tab=journal#entry-<hash> link still lands on its row."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "src/app.css adds .cash-doc to the 176 mm print rule and gives it a 4 mm gutter, like the arrears ladder: its last column is right-aligned, so the last glyph would otherwise sit on the sheet's edge.",
+          "The queue is refreshed. A reconciliation sheet for the close (/accounting) takes the shipped slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four offers are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md, LATEST-UPDATE.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "16 new tests: 11 for the statement's rules (one account, every entry printed, the balance untouched by a row that missed the account, the war chest and payroll movements, the account named per row, the journal's own hashes, the column adding to the closing, a stopped month, an empty period, the reserve from the same rules, and the two openings adding to the combined opening) and 5 for /accounting (the sheet on the page with its figures and tie, nine hashes with the head, the screen table and its drawer still on screen, the stopped month's note, and a month before the journal printing only its reason).",
+          "Printed and measured in Chrome: one Letter page; the sheet is 665.19 px wide (176 mm) inside the page box, 695.52 px of the 927 px a Letter page holds, with .no-print measured as display: none, the nine entry hashes and the chain head in the printed DOM, and the body no taller than the sheet.",
+          "Frontend 657 passed across 69 files, Svelte check 0 errors / 0 warnings, translation audit 1,612 keys × 9 locales (16 new) across 35 route components, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.54",
     "date": "2026-10-29",
     "groups": [

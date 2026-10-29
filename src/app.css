@@ -84,16 +84,18 @@
   /* A sheet that is wider than the @page box is clipped on the right, not
      wrapped. The two sheets that are whole pages of their own are held to
      176mm — inside the 14mm side margins — so the paper shows every column. */
-  .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc {
+  .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc,
+  .cash-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
   }
-  /* The ladder is the one sheet whose last column is right-aligned (the totals,
-     the plan amounts, the letterhead's dates), so its last glyph ends exactly on
-     the sheet's edge. A 4mm gutter keeps the ink inside the sheet rather than on
-     the boundary, where a renderer cuts it. */
-  .arrears-doc {
+  /* The ladder and the cash statement both end in a right-aligned money column
+     (the totals, the plan amounts, the letterhead's dates), so the last glyph
+     ends exactly on the sheet's edge. A 4mm gutter keeps the ink inside the
+     sheet rather than on the boundary, where a renderer cuts it. */
+  .arrears-doc,
+  .cash-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }

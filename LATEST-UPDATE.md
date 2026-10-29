@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the cash statement with its chain
+
+Commit: this commit (site `0.3.55`). Backend API version stays `0.3.28`.
+
+> **The cash statement with its chain, picked from the 29 October queue.** The Journal tab on `/accounting` now prints the operating account as a page a council files: the account on the letterhead, the opening balance, every entry with its movement, running balance and hash, the closing balance, and the chain head. It is the book's own figure — **$59,145.60** opening, **$22,652.02** moved, **$81,797.62** closing, the operating cash the overview and the Three funds tab report.
+>
+> **`src/lib/cash-statement.ts` holds the rules, with 11 tests, and two of them decide the sheet.** The statement is **one named bank account** — `1010` operating — because a statement that ran on both bank accounts would answer a question nobody files, and the reserve already has its five-year page. But **every entry in the journal prints**, including the five that did not move this account: a hash covers its entry and the hash above it, so dropping a row would break every hash below and tell a reader the chain is unbroken while making it impossible to check. Those rows print a dash and leave the balance alone.
+>
+> **The rest is arithmetic a reader can add up.** The opening balance is the closing less what the journal moved, so the printed column lands on the printed closing instead of trusting a typed opening: four of the nine entries moved this account — the September fee cash **+$22,347.00**, October's prepaid fees **+$1,614.60**, the war chest **−$405.00** and the concierge payroll **−$904.58**. The operating opening (**$59,145.60**) and the reserve opening (**$599,642.40**) add back to the journal's own combined opening (**$658,788.00**), which is the check that no bank account was forgotten. A stopped month keeps the same opening and folds nothing back, and a month before the journal begins prints only the reason there is nothing to chain.
+>
+> **`CashStatement.svelte`** carries the letterhead and reference block (fiscal year, statement date, account code), three summary figures — opening, movement with **4 of 9** entries on this account, closing — a five-column table with each hash printed under its memo in mono, the closing row, the tie (or the stopped-month note), the basis (**1020** reserve and the parkade levy are separate funds; **1080** war chest at cost is not cash) and the chain head from the genesis link. The Journal tab's intro, opening and closing lines, screen table and chain note are `no-print`; the drawer still opens on screen, and a `?tab=journal#entry-<hash>` link still lands on its row.
+>
+> **`src/app.css`** adds `.cash-doc` to the **176 mm** print rule with a **4 mm gutter**, like the arrears ladder, because its last column is right-aligned and the last glyph would otherwise sit on the sheet's edge.
+>
+> **Verified:** frontend **657 passed** across 69 files (16 new: 11 rules, 5 accounting route), `check` **0 errors / 0 warnings**, translation audit **1,612 keys × 9 locales** (16 new) across 35 route components, secret gate green, production build green. Printed and measured in Chrome: **one Letter page**, the sheet **176 mm** wide inside the page box, **695.52 px** of the **927 px** a Letter page holds, `.no-print` measured `display: none`, and the nine entry hashes plus the chain head in the printed DOM.
+>
+> **The queue is refreshed, because the pick shipped.** **A reconciliation sheet for the close** (`/accounting`) takes the slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four are waiting.
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — the arrears ladder on paper
 
 Commit: this commit (site `0.3.54`). Backend API version stays `0.3.28`.

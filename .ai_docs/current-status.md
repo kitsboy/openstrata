@@ -1,11 +1,21 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.54
+**Site/product version:** v0.3.55
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the arrears ladder on paper (site, `0.3.54`, one queue pick)
+## Recent milestone — the cash statement with its chain (site, `0.3.55`, one queue pick)
+
+- **The Journal tab on `/accounting` prints the operating account as a page a council files.** The account named on the letterhead, the opening balance, **every** journal entry with its movement, running balance and hash, the closing balance, and the chain head. It is the book's own figure — **$59,145.60** opening, **$22,652.02** moved across **4 of 9** entries, **$81,797.62** closing, which is the operating cash the overview and the Three funds tab report.
+- **`src/lib/cash-statement.ts` holds the rules, with 11 tests.** The statement is **one named bank account** (`1010`); a statement on both bank accounts would answer a question nobody files, and the reserve has its own five-year page. But **every entry prints**, including the five that did not move this account, because a hash covers its entry and the hash above it: a dropped row would break every hash below and make the chain impossible to check from the paper. Those rows print a dash and leave the balance alone. The **opening is the closing less what the journal moved** (**$59,145.60** + **$22,652.02** = **$81,797.62**); a stopped month keeps that opening and folds nothing back; and the operating and reserve openings add back to the journal's own combined opening (**$658,788.00**), so no bank account is forgotten.
+- **`src/lib/components/CashStatement.svelte`.** Letterhead, reference block (fiscal year, statement date, account code), three summary figures, a five-column table with each hash under its memo in mono, the closing row, the tie (or the stopped-month note), the basis (**1020** reserve and the levy are separate funds; **1080** war chest at cost is not cash), and the chain head from the genesis link.
+- **The screen stays the screen.** The Journal tab's intro, opening and closing lines, screen table and chain note are `no-print`; the header and period banner come off the paper on that tab; the drawer still opens and a `?tab=journal#entry-<hash>` link still lands on its row. The tab gains a print button with its hint.
+- **`src/app.css`:** `.cash-doc` joins the **176 mm** print rule with a **4 mm gutter**, because its last column is right-aligned.
+- 16 new catalog keys × 9 locales, catalogue **1,612** keys at full parity. Verification: frontend **657 passed** across 69 files (16 new: 11 rules, 5 accounting route), `check` **0/0**, i18n audit **1,612 keys across 35 route components**, secret gate green, production build green. Printed in Chrome: **one Letter page**, the sheet **176 mm** wide inside the page box, **695.52px** of the **927px** a page holds, `.no-print` measured `display: none`, nine entry hashes and the chain head in the printed DOM.
+- **Queue:** the picked slot is replaced by **a reconciliation sheet for the close** (`/accounting`), beside **a levy statement of its own**, **the budget in the reader's language** and **the Form K register in the package** — four offers, none started.
+
+## Prior milestone — the arrears ladder on paper (site, `0.3.54`, the queue pick)
 
 - **The Receivables tab on `/accounting` prints as one page for the table.** The lots with money past due, each charge in the column its age earns (current / 1–30 / 31–60 / 61–90 / 90+), the columns added up, the **Form F** flag, and one line that accounts for every other lot. It is the books' own figure — **$6,499.00** past due across **3 of 40 lots**, the same number the cards above carry.
 - **`src/lib/arrears-sheet.ts` holds five rules, with 10 tests.** The ladder is the lots **past due**, not every lot that owes: **33** of the 40 lots owe only next month's fee, and 33 rows of a fee that is not late would bury the three a council acts on. “Current” is its own column, because money owed is not money overdue — lot 207's **$666.00** October fee sits beside its **$5,700.00** of late money. A plan balance is a schedule and stays outside every bucket: lots **108** and **403** are named under the table with **$1,800.00** and **$2,700.00** standing. The columns add to the printed total (**$8,506.00** = **$6,499.00** past due + **$2,007.00** of the same lots' next fee), and the sheet is built from every lot, so the screen's “past due only” toggle cannot change a printed total.

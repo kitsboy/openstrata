@@ -1,3 +1,25 @@
+## Session — 2026-10-29 (fifth)
+
+**Done:**
+- One queue pick shipped as `0.3.55`. **The cash statement with its chain** (`/accounting`): the Journal tab prints the operating account as a page a council files — the account on the letterhead, the opening balance, **every** journal entry with its movement, running balance and hash, the closing balance and the chain head. **$59,145.60** opening, **$22,652.02** moved across **4 of 9** entries, **$81,797.62** closing, the operating cash the overview reports.
+- `src/lib/cash-statement.ts` (11 tests) holds the rules; `src/lib/components/CashStatement.svelte` draws the letterhead and reference block, three summary figures, the five-column table with each hash under its memo, the closing row, the tie or stopped-month note, the basis and the chain head from the genesis link. Five `/accounting` route tests.
+- The Journal tab's screen table, drawer, notes, header and period banner are `no-print`; the tab gains a print button. `.cash-doc` joins the 176 mm print rule in `src/app.css` with a **4 mm gutter**. 16 catalog keys × 9 locales (1,612 at parity), 657 frontend tests total.
+
+**Decisions:**
+- **The statement is one named bank account (`1010`).** A statement that ran on both bank accounts would answer a question nobody files, and the reserve already has its five-year page. The sheet's basis says what is outside it: **1020** reserve and the parkade levy are separate funds, and the war chest at cost (**1080**) is not cash.
+- **Every entry prints, including the five that did not move this account.** A hash covers its entry and the hash above it, so a dropped row would break every hash below and make the chain impossible to check from paper — the exact opposite of why the sheet exists. Those rows print a dash and leave the balance alone.
+- **The opening is derived, not typed.** Closing less what the journal moved is **$59,145.60**, so the printed column adds to the printed closing. The operating and reserve openings add back to the journal's own combined opening (**$658,788.00**), which is the check that no bank account was forgotten.
+- **A stopped month keeps the same opening and folds nothing back**; a month before the journal begins prints only the reason there is nothing to chain, with no fabricated opening or closing.
+- The picked slot is replaced by **a reconciliation sheet for the close** (`/accounting`), so four offers are waiting: that, a levy statement of its own, the budget in the reader's language, and the Form K register in the package.
+
+**Correction to an earlier flag:** the `0.3.52` session recorded `books.expenses` line `6215` as storing dollars in a cents field. It does not: `employerBurden` is **6,168 cents = $61.68** on a **$960.00** gross, which is 1.4× employee EI (**$21.91**) plus employer CPP (**$39.77**). The line is right in cents, no published total is wrong, and nothing was changed.
+
+**Git State:**
+- SHA: this commit (`0.3.55`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (second)
 
 **Done:**

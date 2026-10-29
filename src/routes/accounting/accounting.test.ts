@@ -342,3 +342,84 @@ describe('the receivables ladder on paper', () => {
 		);
 	});
 });
+
+describe('the operating statement on paper', () => {
+	it('prints the operating account as its own sheet', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'September journal');
+		const sheet = container.querySelector('.cash-doc');
+		expect(sheet).toBeTruthy();
+		// The sheet is the paper, not part of the screen's furniture.
+		expect(sheet?.closest('.no-print')).toBeNull();
+		const text = sheet?.textContent ?? '';
+		expect(text).toContain('Cash statement — operating account');
+		// Opening, the fee cash and payroll, and the closing the funds tab reports.
+		expect(text).toContain('$59,145.60');
+		expect(text).toContain('+$22,347.00');
+		expect(text).toContain('$81,797.62');
+		expect(text).toContain('The closing balance is the operating cash');
+	});
+
+	it('prints every entry with its hash, including the ones off this account', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'September journal');
+		const sheet = container.querySelector('.cash-doc')!;
+		// Nine entries and the closing line, whatever the account column says.
+		expect(sheet.querySelectorAll('tbody tr')).toHaveLength(10);
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('CRF interest posted by the credit union');
+		// The reserve's interest prints with a dash in this account's column.
+		const interest = [...sheet.querySelectorAll('tbody tr')].find((row) =>
+			(row.textContent ?? '').includes('CRF interest posted')
+		)!;
+		expect(interest.textContent).toContain('—');
+		expect(interest.textContent).toContain('1020');
+		// Every printed hash is the journal's 16-hex link, and the chain head is
+		// named at the foot of the page.
+		const hashes = [...sheet.querySelectorAll('.entry-hash')].map(
+			(node) => node.textContent?.trim() ?? ''
+		);
+		expect(hashes).toHaveLength(9);
+		for (const hash of hashes) expect(hash).toMatch(/^[0-9a-f]{16}$/);
+		expect(text).toContain('Chain head');
+		expect(text).toContain(hashes.at(-1));
+	});
+
+	it('keeps the screen table and its drawer, and takes the page furniture off the paper', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'September journal');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print this statement'))).toBe(true);
+		// The header would push the sheet onto a second page, and the screen table
+		// is not the paper.
+		expect(container.querySelector('h1')?.closest('.no-print')).toBeTruthy();
+		const screenTable = [...container.querySelectorAll('table')].find(
+			(table) => !table.closest('.cash-doc')
+		);
+		expect(screenTable?.closest('.no-print')).toBeTruthy();
+	});
+
+	it('says a stopped statement cannot tie to the close it has not reached', async () => {
+		const { container } = renderAt('/accounting?period=2026-09');
+		await openTab(container, 'September journal');
+		const sheet = container.querySelector('.cash-doc');
+		expect(sheet?.textContent ?? '').toContain('Stopped at September 30, 2026');
+		expect(sheet?.textContent ?? '').not.toContain(
+			'The closing balance is the operating cash'
+		);
+	});
+
+	it('prints nothing but the reason for a month before the journal begins', async () => {
+		const { container } = renderAt('/accounting?period=2026-04');
+		await openTab(container, 'September journal');
+		const sheet = container.querySelector('.cash-doc')!;
+		expect(sheet.textContent ?? '').toContain('No entry was posted by April 30, 2026');
+		expect(sheet.textContent ?? '').toContain('The journal begins on September 1, 2026');
+		// No table, no fabricated opening and closing, and no unfilled placeholder.
+		expect(sheet.querySelectorAll('tbody')).toHaveLength(0);
+		expect(sheet.textContent ?? '').not.toContain('Opening balance');
+		expect(sheet.textContent ?? '').not.toContain('{account}');
+	});
+});
