@@ -423,3 +423,80 @@ describe('the operating statement on paper', () => {
 		expect(sheet.textContent ?? '').not.toContain('{account}');
 	});
 });
+
+describe('the close reconciliation on paper', () => {
+	it('prints the close as its own sheet on the overview', () => {
+		const { container } = renderAt('/accounting');
+		const sheet = container.querySelector('.recon-doc');
+		expect(sheet).toBeTruthy();
+		// The sheet is the paper, not part of the screen's furniture.
+		expect(sheet?.closest('.no-print')).toBeNull();
+		const text = sheet?.textContent ?? '';
+		expect(text).toContain('The close, reconciled');
+		expect(text).toContain('The books to September 30, 2026');
+	});
+
+	it('adds the three bank balances the credit union reports', () => {
+		const sheet = renderAt('/accounting').container.querySelector('.recon-doc')!;
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('Cash on deposit');
+		expect(text).toContain('$81,797.62');
+		expect(text).toContain('$603,688.80');
+		expect(text).toContain('$31,548.00');
+		expect(text).toContain('$717,034.42');
+	});
+
+	it('counts each fund from its accounts and again from the year, and says they agree', () => {
+		const sheet = renderAt('/accounting').container.querySelector('.recon-doc')!;
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('The operating fund');
+		expect(text).toContain('From the accounts');
+		expect(text).toContain('From the year’s activity');
+		// The fund balance both ways, the reserve's equity, and the levy's work left.
+		expect(text).toContain('$107,358.32');
+		expect(text).toContain('$603,780.00');
+		expect(text).toContain('$39,600.00');
+		// Three differences, each of them zero and printed as such.
+		const differences = [...sheet.querySelectorAll('.recon-verdict')].map(
+			(row) => row.textContent ?? ''
+		);
+		expect(differences).toHaveLength(3);
+		for (const row of differences) {
+			expect(row).toContain('$0.00');
+			expect(row).toContain('agrees');
+		}
+	});
+
+	it('states the checks that have no amount in them', () => {
+		const text = renderAt('/accounting').container.querySelector('.recon-doc')?.textContent ?? '';
+		expect(text).toContain('Every journal entry’s debits equal its credits.');
+		expect(text).toContain('The 40 lots add to 6,000 points, the schedule’s own total.');
+		// Both hold on the sample books, so neither prints a failure.
+		expect(text).not.toContain('does not hold');
+		// And the page does not claim the one close item that is not arithmetic.
+		expect(text).toContain('Board approval of the close is not a number');
+	});
+
+	it('leaves the cards, the chart and the close checklist on screen', () => {
+		const { container } = renderAt('/accounting');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print the reconciliation'))).toBe(true);
+		expect(container.querySelector('#september-close-title')?.closest('.no-print')).toBeTruthy();
+		expect(container.querySelector('h1')?.closest('.no-print')).toBeTruthy();
+	});
+
+	it('stays at the close when a month is carried in', async () => {
+		const { container } = renderAt('/accounting?period=2026-09');
+		// A month link opens the ladder; the overview is where the close prints.
+		await openTab(container, 'Overview');
+		const sheet = container.querySelector('.recon-doc')!;
+		const text = sheet.textContent ?? '';
+		// The overview does not follow the month, and the sheet says which books it
+		// counts instead of borrowing the banner's date.
+		expect(text).toContain('The books to September 30, 2026');
+		expect(text).toContain('$107,358.32');
+		expect(text).not.toContain('{date}');
+	});
+});

@@ -1,3 +1,25 @@
+## Session — 2026-10-29 (sixth)
+
+**Done:**
+- One queue pick shipped as `0.3.56`. **The close, reconciled** (`/accounting`): the Overview tab prints the page behind its close checklist — cash on deposit (**$717,034.42** = **$81,797.62** + **$603,688.80** + **$31,548.00**), then every fund counted from its accounts and again from the year's activity. The operating fund closes on **$107,358.32** both ways, the reserve on **$603,780.00**, the levy's work left on **$39,600.00** ($31,548.00 in the trust + $8,052.00 still owed = $216,000.00 assessed − $176,400.00 spent), and the budget on **$0.00**.
+- `src/lib/close-reconciliation.ts` (11 tests) holds the rules; `src/lib/components/CloseReconciliation.svelte` draws the letterhead, one table with a head per fund and a sub-head per count, every label with its ledger code, the two totals, a difference row reading **$0.00 agrees**, the two checks and the basis. Six `/accounting` route tests. 25 catalog keys × 9 locales (1,638 at parity), 674 frontend tests total.
+- The cards, chart and September close checklist are `no-print` on the Overview tab, which now prints its own sheet (it joins `printsOwnSheet`). `.recon-doc` joins the 176 mm print rule with a 4 mm gutter.
+
+**Decisions:**
+- **Every fund is counted twice, and the difference is printed.** A reconciliation that printed one count would be an assertion. The operating fund's accounts (cash, receivables, prepaids, war chest, less bills, prepaid fees and source deductions) and its year (equity at 1 April, fees, other income, expenses) both close on $107,358.32; the reserve does the same; the levy counts cash plus what is still owed against assessed less spent. Totals are always the sum of their lines, so a broken figure prints the gap — a test moves one balance by $1.00 and watches $1.00 appear on the row a reader checks.
+- **No invented timing difference.** The offer asked for the statement's cash beside the credit union's with every difference named. The sample books hold no unrecorded cheques or deposits in transit, so there is nothing to name, and a made-up one would have been the page's only dishonest line. What the books can prove is that each fund reaches its balance two ways, and that is what the sheet prints.
+- **The levy is work left, not cash that looks like equity.** The trust's $31,548.00 is not the fund's own money until the membrane is done, so the section counts $39,600.00 of work against assessed less spent.
+- **The reserve contribution is a deduction in the budget group** (a transfer to another fund, not income), which is what brings the plan to zero.
+- **Board approval is not a number.** The basis names it as the one close item the page cannot claim.
+- **Print:** the generic `.print-doc table { break-inside: avoid }` rule made the sheet one unbreakable block and Chrome produced three Letter pages with the letterhead and foot on pages of their own. The table now breaks between rows while each fund's `tbody` stays whole, and the sheet prints as **two Letter pages** at 176 mm (`tbody` sections 99/323/248/192/118px, the sheet 1,231px tall).
+- The picked slot is replaced by **a payables sheet for the close** (`/accounting`), so four offers are waiting: that, a levy statement of its own, the budget in the reader's language, and the Form K register in the package.
+
+**Git State:**
+- SHA: this commit (`0.3.56`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (fifth)
 
 **Done:**

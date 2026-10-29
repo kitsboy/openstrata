@@ -6,12 +6,14 @@
 	import BudgetSheet from '$lib/components/BudgetSheet.svelte';
 	import ArrearsSheet from '$lib/components/ArrearsSheet.svelte';
 	import CashStatement from '$lib/components/CashStatement.svelte';
+	import CloseReconciliation from '$lib/components/CloseReconciliation.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
 	import { OPENING_CASH, statement } from '$lib/ledger-statement';
 	import { OPERATING_ACCOUNT, OPERATING_OPENING, cashStatement } from '$lib/cash-statement';
+	import { BOOK_RECONCILIATION } from '$lib/close-reconciliation';
 	import { age, summarise } from '$lib/arrears';
 	import { arrearsSheet } from '$lib/arrears-sheet';
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
@@ -34,7 +36,9 @@
 	];
 	let tab = $state<TabId>('overview');
 	/** The tabs that print a sheet of their own, so the page's furniture comes off the paper. */
-	const printsOwnSheet = $derived(tab === 'budget' || tab === 'receivables' || tab === 'journal');
+	const printsOwnSheet = $derived(
+		tab === 'overview' || tab === 'budget' || tab === 'receivables' || tab === 'journal'
+	);
 
 	/**
 	 * A month carried in from the compliance-health trend: `?period=2026-09` opens
@@ -315,7 +319,22 @@
 	{/if}
 
 	{#if tab === 'overview'}
-		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.accReconLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.accReconPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.accReconPrintNote}</span>
+			</div>
+		</div>
+		<!-- The overview is the close, so its paper is the reconciliation sheet:
+		     the cards, the chart and the close checklist stay on screen. -->
+		<div class="no-print">
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 			<div class="rounded-2xl border border-border bg-surface-2 p-5">
 				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{$copy.accOperatingCash}</p>
 				<p class="mt-2 text-2xl font-bold tabular-nums">{money(books.operating.cash)}</p>
@@ -379,7 +398,10 @@
 					next: depreciation.nextDue
 				})}</p>
 			</div>
+			</div>
 		</div>
+
+		<CloseReconciliation sheet={BOOK_RECONCILIATION} />
 	{/if}
 
 	{#if tab === 'budget'}

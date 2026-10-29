@@ -14,6 +14,42 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.56",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The close, reconciled (/accounting). The Overview tab now prints the page behind its close checklist: the three balances the credit union reports, then every fund counted from its accounts and again from the year's activity, with the difference between the two counts printed rather than asserted. It is the books' own figure — $717,034.42 on deposit, the operating fund $107,358.32 both ways, the reserve $603,780.00, the levy's work left $39,600.00, and the budget $0.00.",
+          "src/lib/close-reconciliation.ts (11 tests) holds the rules. Cash comes first because it is the only figure on the sheet from outside these books: 1010 $81,797.62, 1020 $603,688.80, the levy trust $31,548.00. The operating fund is counted from its accounts — cash, receivables $2,607.40, prepaid insurance $24,300.00, the war chest at cost $6,885.00, less bills payable $6,500.00, prepaid October fees $1,614.60 and source deductions payable $117.10 — and again from the year: equity at 1 April $91,480.00, fees earned $140,400.00, other income $2,920.00, less expenses $127,441.68. Both routes close on $107,358.32. The reserve does the same ($603,780.00 from cash plus fee arrears less prepaid fees, and from opening plus contributions plus interest less the $6,400.00 elevator study). The levy is counted as work left, not as cash that looks like equity: $31,548.00 in the trust plus $8,052.00 still owed is $39,600.00, which is also the $216,000.00 assessed less the $176,400.00 spent on the membrane. The budget has one count and must come to zero, with the reserve contribution as a deduction, because it is a transfer to another fund and not income. Two checks carry no amount and are stated instead: every journal entry's debits equal its credits, and the 40 lots add to 6,000 points, the schedule's own total.",
+          "Every total is the sum of its lines, and the difference is the two totals subtracted. Nothing on the sheet is a typed figure, so a balance that moves prints the gap on the row a reader would check: the module takes the books as a parameter, and a test moves one balance by $1.00 to watch a $1.00 difference appear. Another test breaks the journal flag and the annual other income, and each fails the sheet without fabricating a difference in the funds.",
+          "src/lib/components/CloseReconciliation.svelte. The letterhead and reference block, one table with a head per fund and a mono sub-head per count when a fund has two (from the accounts / from the year's activity), every label carrying its ledger code, the two totals, a difference row reading $0.00 agrees, the two checks with their status, the basis and the sample line. The cards, the chart, the September close checklist and the period notes are no-print on that tab, so the overview's paper is the reconciliation; the tab gains a print button with its hint."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "src/app.css adds .recon-doc to the 176 mm print rule with a 4 mm gutter, like the other money sheets. The sheet's own print rule lets its table break between rows while each fund's tbody stays whole.",
+          "The queue is refreshed. A payables sheet for the close (/accounting) takes the shipped slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four offers are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md, LATEST-UPDATE.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "17 new tests: 11 for the reconciliation (the three balances added, the operating fund by both routes, what the fund owes taken off rather than netted, the reserve by both routes, the levy as work left, the budget at zero with the reserve as a deduction, every check holding, a moved figure printing its difference, the cash total following its balances, a broken journal failing the sheet, and a budget that no longer comes to zero) and 6 for /accounting (the sheet on the overview, the three bank balances and their total, the two counts of each fund with three zero differences, the two amountless checks, the screen furniture off the paper, and a month carried in leaving the sheet at the close).",
+          "Printed and measured in Chrome: two Letter pages — the generic table { break-inside: avoid } rule had made the sheet one unbreakable block and produced three pages with the letterhead and the foot on pages of their own. The sheet is 176 mm wide and 1,231 px tall (325.7 mm of the 490.8 mm two pages hold), with .no-print measured as display: none.",
+          "Frontend 674 passed across 70 files, Svelte check 0 errors / 0 warnings, translation audit 1,638 keys × 9 locales (25 new) across 35 route components, secret gate green, production build green."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "The offer asked for the credit union's balance beside the book's with every timing difference named. The sample books hold no unrecorded cheques or deposits in transit, so there is no timing difference to print and none was invented; what the sheet proves is that each fund reaches the same balance by two independent routes. A real bank reconciliation needs the deposit-in-transit and outstanding-cheque records the ledger does not carry yet."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.55",
     "date": "2026-10-29",
     "groups": [

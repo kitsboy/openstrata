@@ -85,7 +85,7 @@
      wrapped. The two sheets that are whole pages of their own are held to
      176mm — inside the 14mm side margins — so the paper shows every column. */
   .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc,
-  .cash-doc {
+  .cash-doc, .recon-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
@@ -95,7 +95,8 @@
      ends exactly on the sheet's edge. A 4mm gutter keeps the ink inside the
      sheet rather than on the boundary, where a renderer cuts it. */
   .arrears-doc,
-  .cash-doc {
+  .cash-doc,
+  .recon-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }

@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the close, reconciled
+
+Commit: this commit (site `0.3.56`). Backend API version stays `0.3.28`.
+
+> **The close, reconciled, picked from the 29 October queue.** The Overview tab on `/accounting` now prints the page behind its close checklist: the three balances the credit union reports, then every fund counted from its accounts and again from the year's activity, with the difference between the two counts printed instead of asserted. It is the books' own figure — **$717,034.42** on deposit, the operating fund **$107,358.32** both ways, the reserve **$603,780.00**, the levy's work left **$39,600.00**, and the budget **$0.00**.
+>
+> **`src/lib/close-reconciliation.ts` holds the rules, with 11 tests, and every group's total is the sum of its lines.** The operating fund is cash plus receivables, prepaid insurance and the war chest at cost, less bills payable, prepaid October fees and source deductions, and again equity at 1 April plus fees and other income less expenses: both routes land on **$107,358.32**. The reserve does the same ($603,780.00 from cash plus arrears less prepaid fees, and from opening plus contributions plus interest less the **$6,400.00** elevator study). The levy is counted as work left, not as cash that looks like equity: **$31,548.00** in the trust plus **$8,052.00** still owed is **$39,600.00**, which is also the **$216,000.00** assessed less the **$176,400.00** spent. The budget has one count and must come to zero, with the reserve contribution as a deduction because it is a transfer to another fund. Two checks have no amount and are stated: every entry's debits equal its credits, and the 40 lots add to **6,000 points**.
+>
+> **The sheet does not invent a timing difference.** The offer asked for the statement's cash beside the credit union's with every difference named; the sample books hold no unrecorded cheques or deposits in transit, so there is none to name, and a made-up one would have been the only dishonest line on the page. What the books can prove is that each fund reaches the same balance by two independent routes — and the module takes the books as a parameter, so a test moves one balance by **$1.00** and watches a **$1.00** difference appear on the row a reader would check. Board approval, the one close item that is not arithmetic, is named in the basis rather than implied.
+>
+> **`CloseReconciliation.svelte`** prints the letterhead, a head per fund with a mono sub-head for each of the two counts, every label with its ledger code, the two totals, a difference row reading **$0.00 agrees**, the two checks with their status and the basis. The cards, the chart and the September close checklist are `no-print` on that tab, so the overview's paper is the reconciliation.
+>
+> **Printing found the defect.** The sheet first came out as **three** Letter pages: the generic `table { break-inside: avoid }` rule made the whole sheet one unbreakable block, so Chrome put the letterhead and the foot on pages of their own. The table breaks between rows while each fund's `tbody` stays whole, `.recon-doc` joins the **176 mm** rule with the **4 mm gutter**, and the sheet now prints as **two Letter pages**.
+>
+> **Verified:** frontend **674 passed** across 70 files (17 new: 11 rules, 6 accounting route), `check` **0 errors / 0 warnings**, translation audit **1,638 keys × 9 locales** (25 new) across 35 route components, secret gate green, production build green. Printed and measured in Chrome: **two Letter pages**, the sheet **176 mm** wide and **1,231 px** tall, `.no-print` measured `display: none`.
+>
+> **The queue is refreshed, because the pick shipped.** **A payables sheet for the close** (`/accounting`) takes the slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four are waiting.
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — the cash statement with its chain
 
 Commit: this commit (site `0.3.55`). Backend API version stays `0.3.28`.

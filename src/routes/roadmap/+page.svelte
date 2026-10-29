@@ -28,7 +28,7 @@
 	/** Offered 2026-10-29 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, and the cash statement with its chain shipped in v0.3.55; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, and the close reconciliation shipped on /accounting in v0.3.56; these four are what is waiting now.';
 	const uiQueue = [
 		{
 			name: 'A levy statement of its own',
@@ -49,10 +49,10 @@
 				'The AGM stack carries the year, the packet and the reserve plan; the tenancy register is the fourth sheet a council hands to an owner. Add it to the stack, and keep the contents page honest about what is inside.'
 		},
 		{
-			name: 'A reconciliation sheet for the close',
+			name: 'A payables sheet for the close',
 			where: '/accounting',
 			detail:
-				'The statement and the credit union’s balance are both on the page now, but nothing puts them side by side. Print the page a treasurer signs at the close: the statement’s cash, the book’s cash, every timing difference named, and the zero the two have to come to.'
+				'The Payables tab is the last tab on the page with no paper: the bills by vendor and account, the CRA remittance due 15 October, what falls due inside the next 30 days and the total a council approves. Print it as one page — the same $6,500.00 of bills and $117.10 of source deductions the reconciliation now counts, with the days each one has left.'
 		}
 	];
 </script>
