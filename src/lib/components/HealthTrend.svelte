@@ -20,10 +20,17 @@
 	import { healthTrend, monthDetail, type MonthCharge } from '$lib/demo/health';
 	import { money } from '$lib/demo/format';
 	import { accountingHref } from '$lib/period-link';
+	import type { FiledForms } from '$lib/form-k';
 	import type { HealthKey, TrendPoint } from '$lib/health';
 	import Icon from './Icon.svelte';
 
-	let { rows = healthTrend() }: { rows?: TrendPoint[] } = $props();
+	/**
+	 * `filed` is the Form Ks the reader has recorded on this device. The detail
+	 * opened from a point is rebuilt with them, so a form filed after a month
+	 * closed does not erase that month's gap from the list underneath it.
+	 */
+	let { rows = healthTrend(), filed = {} }: { rows?: TrendPoint[]; filed?: FiledForms } =
+		$props();
 
 	/** The period whose records are open under the chart, if any. */
 	let open = $state<string | null>(null);
@@ -38,7 +45,7 @@
 
 	/** The open point, so the detail can print the score that month scored. */
 	const openRow = $derived(rows.find((row) => row.period === open) ?? null);
-	const openDetail = $derived(openRow ? monthDetail(openRow.asOf) : null);
+	const openDetail = $derived(openRow ? monthDetail(openRow.asOf, filed) : null);
 
 	/** The rows the open cut lists, and their own total. */
 	const shown = $derived(

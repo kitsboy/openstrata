@@ -12,6 +12,7 @@
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
 	import { building, depreciation, formF, units } from '$lib/demo/building';
 	import { PERIOD_PARAM, parsePeriod, type PeriodPoint } from '$lib/period-link';
+	import { cashAt, cashRows } from '$lib/fund-history';
 
 	let tab = $state<'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'journal'>('overview');
 
@@ -32,6 +33,13 @@
 	const asOf = $derived(period?.asOf ?? building.asOf);
 	/** The same day written out for the reader, in their language. */
 	const longDate = $derived(formatDate(asOf, $locale, { day: 'numeric', month: 'long', year: 'numeric' }));
+	/** The close the rest of the books are written at, for the lines that cannot move. */
+	const closeDate = formatDate(building.asOf, $locale, { day: 'numeric', month: 'long', year: 'numeric' });
+	// The month's own statement, where the statements reach. `null` on today's
+	// books, and null for a month the bank has not closed either — a month with no
+	// statement is said to be one, not given an interpolated balance.
+	const monthCash = $derived(cashAt(period?.period));
+	const cashMonths = cashRows();
 	// The ladder opens on what is actually late. A book where every lot is current
 	// still has a total, and the toggle brings the other 36 lots back into view.
 	let onlyPastDue = $state(true);
@@ -111,6 +119,12 @@
 			.sort()
 			.at(0) ?? building.asOf;
 
+	/** A month's movement: money in is green and signed, money out carries the minus. */
+	function changeLabel(cents: number): string {
+		if (cents === 0) return '—';
+		return cents > 0 ? `+${money(cents)}` : `−${money(-cents)}`;
+	}
+
 	/** A journal reads debit-positive; money out carries the minus and shows in red. */
 	function signed(cents: number): string {
 		if (cents === 0) return '—';
@@ -170,9 +184,11 @@
 		{/each}
 	</div>
 
-	{#if period && tab !== 'receivables' && tab !== 'journal'}
+	<!-- The ladder and the journal follow the date; the funds tab follows it too,
+	     from its own statements. The rest say they do not. -->
+	{#if period && tab !== 'receivables' && tab !== 'journal' && tab !== 'funds'}
 		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600">
-			{fill($copy.accPeriodCloseNote, { date: longDate, close: formatDate(building.asOf, $locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}
+			{fill($copy.accPeriodCloseNote, { date: longDate, close: closeDate })}
 		</p>
 	{/if}
 
@@ -443,7 +459,10 @@
 				<h2 class="font-bold text-slate-900">{$copy.accFundOperating}</h2>
 				<p class="text-xs text-slate-400">{building.banks.operating.name} · {building.banks.operating.account}</p>
 				<ul class="mt-3 space-y-1 text-sm text-slate-600">
-					<li class="flex justify-between gap-3"><span>{$copy.accCashLabel}</span><span class="tabular-nums">{money(books.operating.cash)}</span></li>
+					<li class="flex justify-between gap-3">
+						<span>{monthCash ? fill($copy.accCashAt, { date: longDate }) : $copy.accCashLabel}</span>
+						<span class="tabular-nums">{money(monthCash?.operating ?? books.operating.cash)}</span>
+					</li>
 					<li class="flex justify-between gap-3"><span>{$copy.accFundReceivables}</span><span class="tabular-nums">{money(books.operating.ar)}</span></li>
 					<li class="flex justify-between gap-3"><span>{$copy.accPrepaidInsurance}</span><span class="tabular-nums">{money(books.operating.prepaidInsurance)}</span></li>
 					<li class="flex justify-between gap-3"><span>{$copy.accWarChestAtCost}</span><span class="tabular-nums">{money(books.operating.warChest)}</span></li>
@@ -460,7 +479,10 @@
 					<li class="flex justify-between gap-3"><span>{$copy.accCrfContributions}</span><span class="tabular-nums">{money(books.crf.contributions)}</span></li>
 					<li class="flex justify-between gap-3"><span>{$copy.accCrfInterest}</span><span class="tabular-nums">{money(books.crf.interest)}</span></li>
 					<li class="flex justify-between gap-3"><span>{books.crf.study}</span><span class="tabular-nums">−{money(books.crf.spent)}</span></li>
-					<li class="flex justify-between gap-3"><span>{$copy.accCashLabel}</span><span class="tabular-nums">{money(books.crf.cash)}</span></li>
+					<li class="flex justify-between gap-3">
+						<span>{monthCash ? fill($copy.accCashAt, { date: longDate }) : $copy.accCashLabel}</span>
+						<span class="tabular-nums">{money(monthCash?.crf ?? books.crf.cash)}</span>
+					</li>
 					<li class="flex justify-between gap-3 font-semibold text-slate-900"><span>{$copy.accFundBalance}</span><span class="tabular-nums">{money(books.crf.equity)}</span></li>
 				</ul>
 				<p class="mt-3 text-xs leading-relaxed text-slate-500">{$copy.accCrfNote}</p>
@@ -473,11 +495,63 @@
 					<li class="flex justify-between gap-3"><span>{$copy.accLevyCollected}</span><span class="tabular-nums">{money(books.levy.collected)}</span></li>
 					<li class="flex justify-between gap-3"><span>{$copy.accStillOwing}</span><span class="tabular-nums">{money(books.levy.owing)}</span></li>
 					<li class="flex justify-between gap-3"><span>{$copy.accLevySpent}</span><span class="tabular-nums">{money(books.levy.spent)}</span></li>
-					<li class="flex justify-between gap-3"><span>{$copy.accCashLabel}</span><span class="tabular-nums">{money(books.levy.cash)}</span></li>
+					<li class="flex justify-between gap-3">
+						<span>{monthCash ? fill($copy.accCashAt, { date: longDate }) : $copy.accCashLabel}</span>
+						<span class="tabular-nums">{money(monthCash?.levy ?? books.levy.cash)}</span>
+					</li>
 					<li class="flex justify-between gap-3 font-semibold text-slate-900"><span>{$copy.accLevyRemaining}</span><span class="tabular-nums">{money(books.levy.remaining)}</span></li>
 				</ul>
 				<p class="mt-3 text-xs leading-relaxed text-slate-500">{fill($copy.accLevyNote, { project: books.levy.project })}</p>
 			</article>
+		</div>
+
+		<!-- The month-by-month record the funds tab did not have. Six statement
+		     closes, each against the one before it, and September landing on the
+		     cards above. -->
+		<div class="mt-4 rounded-2xl border border-border bg-surface-2 p-5">
+			<h2 class="font-bold text-slate-900">{$copy.accCashByMonth}</h2>
+			<p class="mt-1 text-sm text-slate-500">{$copy.accCashByMonthHint}</p>
+			<div class="mt-3 overflow-x-auto">
+				<table class="w-full min-w-[560px] text-sm">
+					<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
+						<tr class="border-b border-border">
+							<th class="px-3 py-2">{$copy.accColMonthEnd}</th>
+							<th class="px-3 py-2 text-right">{$copy.accFundOperating}</th>
+							<th class="px-3 py-2 text-right">{$copy.accContingencyReserve}</th>
+							<th class="px-3 py-2 text-right">{$copy.accParkadeLevy}</th>
+							<th class="px-3 py-2 text-right">{$copy.accColTotal}</th>
+							<th class="px-3 py-2 text-right">{$copy.accColChange}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each cashMonths as row (row.period)}
+							<tr
+								class="border-b border-border last:border-0 {row.period === period?.period
+									? 'bg-amber-50 font-semibold'
+									: ''}"
+								aria-current={row.period === period?.period ? 'true' : undefined}
+							>
+								<td class="px-3 py-2 tabular-nums">{formatDate(row.asOf, $locale, { dateStyle: 'medium' })}</td>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.operating)}</td>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.crf)}</td>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.levy)}</td>
+								<td class="px-3 py-2 text-right tabular-nums">{money(row.total)}</td>
+								<td class="px-3 py-2 text-right tabular-nums {row.change < 0 ? 'text-rose-700' : 'text-emerald-700'}"
+									>{changeLabel(row.change)}</td
+								>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+			{#if period}
+				<p class="mt-3 max-w-3xl text-xs leading-relaxed text-slate-500">
+					{fill(monthCash ? $copy.accCashCloseNote : $copy.accCashNoStatement, {
+						date: longDate,
+						close: closeDate
+					})}
+				</p>
+			{/if}
 		</div>
 	{/if}
 

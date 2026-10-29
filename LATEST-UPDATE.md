@@ -1,3 +1,21 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the funds follow the month, and a Form K can be filed
+
+Commit: this commit (site `0.3.47`). Backend API version stays `0.3.28`.
+
+> **The funds tab can follow the month now, because the statements behind it exist.** Six month-end balances — operating, reserve, parkade levy — with the three added and the change since the month before, closing on the figures the rest of the books report: **$81,797.62 + $603,688.80 + $31,548.00**. The levy visibly falls as the membrane is paid, and the September row is the funds tab's own cash to the cent. With `?period=2026-04` open the cards read **Cash at April 30, 2026** — **$47,583.16**, **$590,000.00**, **$177,948.00** — and the page says plainly that receivables, prepaids and payables are still the September 30 close, because the statements hold month ends and not the balances behind them.
+>
+> **A month the bank has not closed is said to be one.** A hand-typed `?period=2026-10` falls back to the close under a sentence naming the range the statements cover, instead of interpolating a balance nobody signed.
+>
+> **`src/lib/demo/cash.ts` holds the statements, `src/lib/fund-history.ts` the arithmetic** (6 tests): September ties to the funds tab's three figures, the levy's 1 April balance is exactly what was collected, six changes add to what the year moved, and an uncovered month returns `null` rather than a guess.
+>
+> **A Form K can be recorded on the lot's sheet.** `/units/309#forms` takes the date the form arrived — defaulting to the day the gap is counted to — and records it on this device; the card reads **On file — recorded 2026-09-30 in this browser**, says nothing is sent to a host, and offers to take the record back off. The score reads it: three gaps become two and September's point goes **56 → 61**, while August stays **72**, because `isFiled` counts a filing only from its own day. A form recorded today cannot rewrite a month it was not there for (6 tests). The `/units` filter and the plan's tones read the same record, so a lot with its form on file stops being drawn as a gap.
+>
+> **The record is device-local, and says so.** Like the setup ticks, the saved searches and the wizard draft: no account, no network call, and the sample book's register unchanged underneath.
+>
+> **Verified:** frontend **481 passed** (23 new: 6 fund-history, 6 form-k, 5 health, 3 accounting route, 3 lot route), `check` **0 errors / 0 warnings**, translation audit **1,422 keys × 9 locales** (12 new), contrast **218 pairs**, secret gate green, production build green — `build/units/309.html` carries **Record the Form K** and its date field. Chrome was not opened this session; the rendered text was read in jsdom.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the month opens the books
 
 Commit: this commit (site `0.3.46`). Backend API version stays `0.3.28`.

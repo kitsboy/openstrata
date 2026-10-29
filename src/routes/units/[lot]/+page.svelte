@@ -8,12 +8,46 @@
 	import { addDays, dayIn, daysBetween, daysPastDue, periodOf } from '$lib/arrears';
 	import { FORM_K_DAYS } from '$lib/health';
 	import { account, billedMonths, forLot, upcoming, type AccountLine } from '$lib/lot-sheet';
+	import {
+		clearFormK,
+		filedOn,
+		recordFormK,
+		readFiledForms,
+		writeFiledForms,
+		type FiledForms
+	} from '$lib/form-k';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	const asOf = building.asOf;
 	const unit: Unit = $derived(getUnit(data.lot));
+
+	/**
+	 * A Form K the council has recorded, device-local. Read after mount because the
+	 * sheet is prerendered without storage, and passed to nothing that decides the
+	 * money: a filing changes the paperwork, not the balance.
+	 */
+	let filedForms = $state<FiledForms>({});
+	let formKDate = $state(asOf);
+	onMount(() => {
+		filedForms = readFiledForms();
+	});
+	const recordedOn = $derived(filedOn(filedForms, unit.id));
+
+	function fileFormK(event: SubmitEvent) {
+		event.preventDefault();
+		const next = recordFormK(filedForms, unit.id, formKDate);
+		filedForms = next;
+		writeFiledForms(next);
+	}
+
+	function undoFormK() {
+		const next = clearFormK(filedForms, unit.id);
+		filedForms = next;
+		writeFiledForms(next);
+	}
 	const due = $derived(balance(unit));
 	const lotCharges = $derived(charges(asOf).filter((charge) => charge.unitId === unit.id));
 
@@ -199,6 +233,37 @@
 										days: formatNumber(daysBetween(unit.tenantSince, asOf) - FORM_K_DAYS, $locale)
 									})}
 								</span>
+								{#if recordedOn}
+									<div class="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+										<p class="text-xs font-semibold text-emerald-900">
+											{fill($copy.lotSheetFormKFiled, { date: formatDate(recordedOn, $locale) })}
+										</p>
+										<p class="mt-1 text-xs leading-relaxed text-emerald-900/80">
+											{$copy.lotSheetFormKFiledNote}
+										</p>
+										<button
+											class="mt-2 text-xs font-semibold text-emerald-900 underline no-print"
+											onclick={undoFormK}>{$copy.lotSheetFormKClear}</button
+										>
+									</div>
+								{:else}
+									<form class="mt-2 flex flex-wrap items-end gap-2 no-print" onsubmit={fileFormK}>
+										<label class="text-xs font-semibold text-slate-700" for="form-k-date">
+											{$copy.lotSheetFormKDate}
+											<input
+												id="form-k-date"
+												type="date"
+												bind:value={formKDate}
+												class="mt-1 block rounded-lg border border-border bg-surface px-2 py-1 text-xs"
+											/>
+										</label>
+										<button
+											type="submit"
+											class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-700"
+											>{$copy.lotSheetFormKFile}</button
+										>
+									</form>
+								{/if}
 							{/if}
 						</li>
 						{#if unit.id === '201'}

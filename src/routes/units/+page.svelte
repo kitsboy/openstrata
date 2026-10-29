@@ -19,11 +19,21 @@
 		type Unit
 	} from '$lib/demo/building';
 	import { payerUnitId } from '$lib/demo/payer';
+	import { isFiled, readFiledForms, type FiledForms } from '$lib/form-k';
+	import { onMount } from 'svelte';
 
 	let selectedId = $state('305');
 	let floor = $state<'all' | number>('all');
 	let focus = $state('all');
 	let query = $state('');
+
+	// A Form K recorded on this device closes the gap the register wrote down, so
+	// the filter and the plan read the same fact the lot's own sheet shows. Read
+	// after mount: the page is prerendered without storage.
+	let filedForms = $state<FiledForms>({});
+	onMount(() => {
+		filedForms = readFiledForms();
+	});
 
 	$effect(() => {
 		const lot = $page.url.searchParams.get('lot');
@@ -37,7 +47,8 @@
 
 	function matches(unit: Unit): boolean {
 		if (floor !== 'all' && unit.floor !== floor) return false;
-		if (focus === 'formk' && unit.formK !== 'missing') return false;
+		if (focus === 'formk' && (unit.formK !== 'missing' || isFiled(filedForms, unit.id, building.asOf)))
+			return false;
 		if (focus === 'arrears' && unit.feeArrearsMonths === 0 && unit.lateOwing === 0) return false;
 		if (focus === 'levy' && unit.levyOwing === 0) return false;
 		if (focus === 'vacant' && unit.occupancy !== 'vacant') return false;
@@ -58,7 +69,7 @@
 	// itself without a key of colours the reader cannot see.
 	const legend = $derived(
 		(['arrears', 'formk', 'short-term', 'levy', 'vacant', 'tenant', 'owner'] as Tone[])
-			.filter((id) => visible.some((unit) => tone(unit) === id))
+			.filter((id) => visible.some((unit) => tone(unit, filedForms) === id))
 			.map((id) => ({ id, ...toneStyles[id] }))
 	);
 
@@ -163,7 +174,7 @@
 								<div class="flex">
 									{#each row.units as unit, index (unit.id)}
 										<button
-											class="relative border px-2 py-1.5 text-left {toneStyles[tone(unit)].cell} {selectedId === unit.id
+											class="relative border px-2 py-1.5 text-left {toneStyles[tone(unit, filedForms)].cell} {selectedId === unit.id
 												? 'z-10 ring-2 ring-brand-600 ring-inset'
 												: ''}"
 											style="width: {row.shares[index]}%"

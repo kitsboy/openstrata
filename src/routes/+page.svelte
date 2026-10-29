@@ -18,9 +18,17 @@
    * same model (`$lib/health`), and the trend below the cards is that model run
    * at each of the last six month ends — one score, one place to check it.
    */
-  const health = healthNow();
-  const healthMonths = healthTrend();
-  const healthDelta = healthMonths.at(-1)!.score - healthMonths[0].score;
+  // A Form K recorded on a lot's sheet reaches the score through this record.
+  // Read after mount, so a prerendered page keeps the register's number and the
+  // client picks up the filings the reader made on this device.
+  let filedForms = $state<FiledForms>({});
+  onMount(() => {
+    filedForms = readFiledForms();
+  });
+
+  const health = $derived(healthNow(undefined, filedForms));
+  const healthMonths = $derived(healthTrend(undefined, 6, filedForms));
+  const healthDelta = $derived(healthMonths.at(-1)!.score - healthMonths[0].score);
 
 
   // Sidebar navigation: key, i18n key, icon name (single SVG icon system).
@@ -69,6 +77,7 @@
   import HealthScore from '$lib/components/HealthScore.svelte';
   import HealthTrend from '$lib/components/HealthTrend.svelte';
   import { healthNow, healthTrend } from '$lib/demo/health';
+  import { readFiledForms, type FiledForms } from '$lib/form-k';
   import RateSparkline from '$lib/components/RateSparkline.svelte';
   import ChainViz from '$lib/components/ChainViz.svelte';
   import NotificationsFeed from '$lib/components/NotificationsFeed.svelte';
@@ -404,7 +413,7 @@
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>{health.score}<span class="metric-unit">/100</span></strong><div class="health-bar"><span style={`width: ${health.score}%`}></span></div><div class="metric-foot"><span class:down={healthDelta < 0} class="trend">{healthDelta < 0 ? '↘' : healthDelta > 0 ? '↗' : '→'} {Math.abs(healthDelta)} {$copy.healthTrendOverSix}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 
-      <HealthTrend rows={healthMonths} />
+      <HealthTrend rows={healthMonths} filed={filedForms} />
 
       <section class="main-grid">
         <div class="left-stack">

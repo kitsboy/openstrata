@@ -16,6 +16,11 @@
  * 2. **Form K is counted from the two-week window, not from the missing flag
  *    alone.** A tenant who moved in on September 1 was not a gap in August; the
  *    lot 209 and 407 Ks only become overdue on September 15.
+ *
+ * A form the reader has recorded (`$lib/form-k`) is read through the same rule:
+ * it counts from the day it was recorded, so a filing today clears today's gap
+ * and leaves every month that closed before it with the gap it had. The record
+ * is device-local; the sample book's register is untouched.
  */
 
 import { age, daysBetween, periodOf, previousPeriod, summarise, type ChargeKind } from '../arrears';
@@ -29,6 +34,7 @@ import {
 } from '../health';
 import { charges } from './arrears';
 import { building, units } from './building';
+import { isFiled, type FiledForms } from '../form-k';
 import type { DeadlineItem } from '../api/deadlines';
 
 /**
@@ -73,26 +79,32 @@ export function arrearsAt(asOf: string = building.asOf): number {
 	return summarise(age(charges(), asOf)).pastDue;
 }
 
-/** Lots whose Form K was already overdue at `asOf`. */
-export function formKGapsAt(asOf: string = building.asOf): number {
+/**
+ * Lots whose Form K was already overdue at `asOf`, less the ones a form has been
+ * recorded for on or before that day.
+ */
+export function formKGapsAt(asOf: string = building.asOf, filed: FiledForms = {}): number {
 	return units.filter(
 		(unit) =>
-			unit.formK === 'missing' && unit.tenantSince !== null && daysBetween(unit.tenantSince, asOf) >= FORM_K_DAYS
+			unit.formK === 'missing' &&
+			unit.tenantSince !== null &&
+			daysBetween(unit.tenantSince, asOf) >= FORM_K_DAYS &&
+			!isFiled(filed, unit.id, asOf)
 	).length;
 }
 
 /** The three inputs, read off the book at one statement date. */
-export function inputsAt(asOf: string = building.asOf): HealthInputs {
+export function inputsAt(asOf: string = building.asOf, filed: FiledForms = {}): HealthInputs {
 	return {
 		tracked: TRACKED,
 		arPastDueCents: arrearsAt(asOf),
-		formKGaps: formKGapsAt(asOf)
+		formKGaps: formKGapsAt(asOf, filed)
 	};
 }
 
 /** The score at one statement date. */
-export function healthNow(asOf: string = building.asOf): HealthSnapshot {
-	return healthAt(inputsAt(asOf), asOf);
+export function healthNow(asOf: string = building.asOf, filed: FiledForms = {}): HealthSnapshot {
+	return healthAt(inputsAt(asOf, filed), asOf);
 }
 
 /** The last day of a period. */
@@ -163,7 +175,7 @@ export interface MonthDetail {
  * it. A charge dated after the month is not past due then, so it costs nothing
  * and is not listed.
  */
-export function monthDetail(asOf: string = building.asOf): MonthDetail {
+export function monthDetail(asOf: string = building.asOf, filed: FiledForms = {}): MonthDetail {
 	const pastDue = charges()
 		.filter((charge) => !charge.planCents && daysBetween(charge.due, asOf) > 0)
 		.map((charge) => ({
@@ -181,7 +193,8 @@ export function monthDetail(asOf: string = building.asOf): MonthDetail {
 			(unit) =>
 				unit.formK === 'missing' &&
 				unit.tenantSince !== null &&
-				daysBetween(unit.tenantSince, asOf) >= FORM_K_DAYS
+				daysBetween(unit.tenantSince, asOf) >= FORM_K_DAYS &&
+				!isFiled(filed, unit.id, asOf)
 		)
 		.map((unit) => {
 			const since = unit.tenantSince as string;
@@ -211,11 +224,15 @@ export function monthDetail(asOf: string = building.asOf): MonthDetail {
 }
 
 /** Six fiscal months of the sample book, oldest first. */
-export function healthTrend(asOf: string = building.asOf, count = 6): TrendPoint[] {
+export function healthTrend(
+	asOf: string = building.asOf,
+	count = 6,
+	filed: FiledForms = {}
+): TrendPoint[] {
 	return trend(
 		trendPeriods(asOf, count).map((period) => {
 			const day = endOf(period);
-			return { period, asOf: day, inputs: inputsAt(day) };
+			return { period, asOf: day, inputs: inputsAt(day, filed) };
 		})
 	);
 }

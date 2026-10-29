@@ -4,6 +4,8 @@
  * $0.60 of each point goes to the CRF and $3.90 stays in operating.
  */
 
+import { isFiled, type FiledForms } from '../form-k';
+
 export const BTC_CAD_CENTS = 13_582_000;
 export const FEE_POINT_CENTS = 450;
 export const CRF_POINT_CENTS = 60;
@@ -568,10 +570,14 @@ export function formF(unit: Unit): 'clear' | 'withheld' {
 	return 'clear';
 }
 
-export function tone(unit: Unit): Tone {
+/**
+ * The colour a lot carries. A Form K recorded on this device closes the gap the
+ * register wrote down, so the plan and the filters agree with the lot's sheet.
+ */
+export function tone(unit: Unit, filed: FiledForms = {}, asOf: string = building.asOf): Tone {
 	if (unit.feeArrearsMonths > 0 || unit.lateOwing > 0) return 'arrears';
 	if (unit.occupancy === 'short-term') return 'short-term';
-	if (unit.formK === 'missing') return 'formk';
+	if (unit.formK === 'missing' && !isFiled(filed, unit.id, asOf)) return 'formk';
 	if (unit.levyOwing > 0) return 'levy';
 	if (unit.occupancy === 'vacant') return 'vacant';
 	if (unit.occupancy === 'tenant') return 'tenant';

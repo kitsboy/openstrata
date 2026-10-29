@@ -1,11 +1,21 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.46
+**Site/product version:** v0.3.47
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the month opens the books (site, `0.3.46`, health over time plus three follow-ons)
+## Recent milestone — the funds follow the month, and a Form K can be filed (site, `0.3.47`, two follow-ons to `0.3.46`)
+
+- **The funds have a month-by-month record.** The funds tab now carries the credit union's six month-end statements — operating, reserve, parkade levy, the three added, and the change since the month before — closing on the figures the rest of the books report: **$81,797.62**, **$603,688.80**, **$31,548.00**, **$717,034.42**. The levy visibly falls as the membrane is paid. `src/lib/demo/cash.ts` holds the statements as records rather than a formula; a derived balance would be an estimate wearing a statement's clothes.
+- **The funds tab follows the month.** `/accounting?period=2026-04` reads **Cash at April 30, 2026** — **$47,583.16**, **$590,000.00**, **$177,948.00** — instead of September's cash under an April heading, and says which lines are still the September 30 close (receivables, prepaids, payables). A month the bank has not closed (`?period=2026-10`) falls back to the close under a sentence naming the April–September range, rather than interpolating one.
+- **`src/lib/fund-history.ts` holds the arithmetic, with 6 tests.** September's row is the funds tab's own three figures and their total; every row's total is its three columns; each change is this close less the one before; six changes add to the year's movement; the levy's 1 April balance is exactly what was collected (`$207,948`), and April's operating close is the opening plus April's fee income less its allocated expenses.
+- **A Form K can be recorded from the lot's sheet.** `/units/309#forms` takes the date the form arrived, defaulting to the day the gap is counted to, and records it on this device; the card reads **On file — recorded 2026-09-30 in this browser** and says nothing is sent to a host. `src/lib/form-k.ts` (6 tests) refuses a lot id or a day that is not one, degrades on corrupt or hostile storage, and round-trips through localStorage.
+- **The score reads the filing, and only from its own day.** Three gaps become two and September's point goes **56 → 61**; August stays **72**, because `isFiled` requires the recorded day to be on or before the statement date being scored. The trend's open month drops the lot from its list under the same rule, so a month that closed before the form arrived keeps its gap. Arrears are untouched at **$649,900**.
+- **`/units` reads the same record.** The Form K filter and the plan's tones now take the filed set, so a lot with its form on file stops being drawn as a gap.
+- 12 new catalog keys × 9 locales, catalogue **1,422** keys at full parity. Verification: frontend **481 passed** (23 new: 6 fund-history, 6 form-k, 5 health, 3 accounting route, 3 lot route), `check` **0/0**, i18n and contrast audits (**218 pairs**), secret gate green, production build green — `build/units/309.html` carries **Record the Form K** and its date field. Chrome was not opened this session; the rendered text was read in jsdom.
+
+## Prior milestone — the month opens the books (site, `0.3.46`, health over time plus three follow-ons)
 
 - **The dashboard's health is now a series, not a single number.** `HealthTrend.svelte` charts six fiscal months of the score — **82, 82, 82, 74, 72, 56** — each point rebuilt at that month end from the calendar, the dated charges and the lot register, with the three inputs beside it showing what each costs now, what it cost in April and the month it moved. The metric card prints **56** instead of a hard-coded 91, and the gauge's demo deadlines count days from their due dates instead of a stored `127` — card, gauge and trend read one model (`src/lib/health.ts`).
 - **Every column opens to the records.** A clicked month lists the charges past due at that month end and the lots whose Form K window had closed, from the same functions the score read; `MonthDetail` totals to the arrears term at every month end (a test), so the panel cannot explain a different number than it prints.

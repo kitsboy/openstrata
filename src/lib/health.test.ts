@@ -282,3 +282,38 @@ describe('the sample book', () => {
 		expect(healthAt(noArrears, AS_OF).score).toBe(100);
 	});
 });
+
+describe('a Form K the council recorded', () => {
+	// Lot 309's form arrives on the statement date: the gap closes for September
+	// and every month that closed before it keeps the gap it had. This is the one
+	// thing a filing must not do — rewrite a month it was not there for.
+	const filed = { '309': { filedOn: '2026-09-30', by: 'Recorded on this device' } };
+
+	it('closes the gap from the day it was filed', () => {
+		expect(formKGapsAt('2026-09-30', filed)).toBe(2);
+		expect(formKGapsAt('2026-08-31', filed)).toBe(1);
+		expect(formKGapsAt('2026-09-14', filed)).toBe(1);
+	});
+
+	it('takes five points off the month it closed in, and no earlier one', () => {
+		const rows = healthTrend(AS_OF, 6, filed);
+		expect(rows.map((row) => row.score)).toEqual([82, 82, 82, 74, 72, 61]);
+		expect(rows.map((row) => row.penalties.formK)).toEqual([0, 0, 0, 5, 5, 10]);
+	});
+
+	it('drops the lot from the month it is filed in, and only that month', () => {
+		expect(monthDetail('2026-09-30', filed).formK.map((row) => row.unitId)).toEqual(['209', '407']);
+		expect(monthDetail('2026-08-31', filed).formK.map((row) => row.unitId)).toEqual(['309']);
+	});
+
+	it('leaves the money alone', () => {
+		expect(arrearsAt(AS_OF)).toBe(649_900);
+		expect(monthDetail('2026-09-30', filed).pastDueCents).toBe(649_900);
+	});
+
+	it('reaches back when the form was dated earlier than it was recorded', () => {
+		const early = { '309': { filedOn: '2026-07-20', by: 'Recorded on this device' } };
+		expect(formKGapsAt('2026-07-31', early)).toBe(0);
+		expect(formKGapsAt('2026-09-30', early)).toBe(2);
+	});
+});

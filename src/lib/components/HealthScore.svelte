@@ -9,6 +9,7 @@
   import { fetchDeadlines, type DeadlineItem } from '$lib/api/deadlines';
   import { fetchUnits, type ApiUnit } from '$lib/api/units';
   import { demoDeadlinesAt, healthNow } from '$lib/demo/health';
+  import { readFiledForms, type FiledForms } from '$lib/form-k';
   import Icon from './Icon.svelte';
 
   /**
@@ -18,13 +19,17 @@
    * days for a filing 92 days out.
    */
   const DEMO_ITEMS: DeadlineItem[] = demoDeadlinesAt();
-  const DEMO_SCORE = healthNow().score;
+
+  /** Form Ks recorded on this device, read after mount like every local nudge. */
+  let filedForms = $state<FiledForms>({});
+  const demoScore = $derived(healthNow(undefined, filedForms).score);
 
   let items = $state<DeadlineItem[] | null>(null);
   let live = $state(false);
   let loading = $state(false);
 
   onMount(() => {
+    filedForms = readFiledForms();
     const unsubscribe = auth.subscribe((session) => {
       live = session.status === 'signed-in';
       if (live) {
@@ -44,7 +49,7 @@
   const score = $derived.by(() => {
     // Signed in, the live calendar is what we can read; the demo book is scored
     // by the shared model, arrears and Form K included.
-    if (!items) return DEMO_SCORE;
+    if (!items) return demoScore;
     let s = 100;
     for (const d of items) {
       if (d.daysLeft < 0) s -= 20;

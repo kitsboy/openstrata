@@ -11,9 +11,10 @@ import { fireEvent, render } from '@testing-library/svelte';
  * writes and the month this page reads ever drifted apart.
  *
  * The date is a page-level fact now, so it is checked on the tabs that can follow
- * it (the ladder and the journal) and on one that cannot: the fund balances have
- * no month-by-month ledger behind them, and the page says so rather than printing
- * September's cash under an April heading.
+ * it (the ladder, the journal and the funds, which reads the credit union's
+ * statement at that month end) and on one that cannot: the budget and the
+ * payables have no month-by-month ledger behind them, and the page says so
+ * rather than printing September's figures under an April heading.
  */
 const site = vi.hoisted(() => ({ url: 'https://openstrata.test/accounting' }));
 
@@ -90,13 +91,48 @@ describe('/accounting?period=', () => {
 		expect(container.querySelectorAll('tbody').length).toBe(0);
 	});
 
-	it('keeps the fund balances at the close, and says which figures cannot move', async () => {
+	it('keeps the budget and the payables at the close, and says so', async () => {
 		const { container } = renderAt('/accounting?period=2026-04');
 		await openTab(container, 'Overview');
 		const text = container.textContent ?? '';
-		expect(text).toContain('The fund balances, the budget and the payables stay at the September 30, 2026 close');
+		expect(text).toContain('The overview cards, the budget and the payables stay at the September 30, 2026 close');
 		// The banner is page-level: it is still on screen on another tab.
 		expect(text).toContain('Opened at April 30, 2026');
+	});
+
+	it('puts the April statement\u2019s cash on the funds tab', async () => {
+		const { container } = renderAt('/accounting?period=2026-04');
+		await openTab(container, 'Three funds');
+		const text = container.textContent ?? '';
+		expect(text).toContain('Cash at April 30, 2026');
+		// The three balances on the credit union's statement for that month end.
+		expect(text).toContain('$47,583.16');
+		expect(text).toContain('$590,000.00');
+		expect(text).toContain('$177,948.00');
+		// The cash followed the month; the balances behind it did not.
+		expect(text).toContain('Receivables, prepaids and payables are read at the September 30, 2026 close');
+	});
+
+	it('lands the newest month on the cash the cards report', async () => {
+		const { container } = renderAt('/accounting?period=2026-09');
+		await openTab(container, 'Three funds');
+		const text = container.textContent ?? '';
+		expect(text).toContain('Cash at September 30, 2026');
+		expect(text).toContain('$81,797.62');
+		// Three accounts added, the levy trust included. The journal's $685,486.42 is
+		// the two funds alone, which is why it is not this row's total.
+		expect(text).toContain('$603,688.80');
+		expect(text).toContain('$31,548.00');
+		expect(text).toContain('$717,034.42');
+	});
+
+	it('says when the bank has not closed the month', async () => {
+		const { container } = renderAt('/accounting?period=2026-10');
+		await openTab(container, 'Three funds');
+		const text = container.textContent ?? '';
+		expect(text).toContain('has no cash balance to show');
+		// And falls back to the close rather than interpolating one.
+		expect(text).toContain('$81,797.62');
 	});
 
 	it('leaves the page alone when no month is passed', () => {

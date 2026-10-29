@@ -1,3 +1,26 @@
+## Session — 2026-10-28 (fifth)
+
+**Done:**
+- The two follow-ons to `0.3.46` shipped as `0.3.47`.
+- **The funds follow the month.** The funds tab now carries six month-end statements (operating, reserve, parkade levy, total, change) and closes on **$81,797.62 + $603,688.80 + $31,548.00 = $717,034.42**. With `?period=2026-04` open the cards read **Cash at April 30, 2026** ($47,583.16 / $590,000.00 / $177,948.00). `src/lib/demo/cash.ts` (records) and `src/lib/fund-history.ts` (arithmetic, 6 tests).
+- **A Form K can be recorded** at `/units/309#forms`: date field, device-local record, card reads `On file — recorded 2026-09-30 in this browser`. `src/lib/form-k.ts`, 6 tests.
+- **The score reads it**: gaps 3 → 2, September 56 → 61, August still 72. `/units` filter and plan tones read the same record.
+- 12 catalog keys × 9 locales (1,422 at parity).
+
+**Decisions:**
+- The month-end balances are **records, not a formula** — a figure derived from the budget is an estimate wearing a statement's clothes. September is pinned to the funds tab's own cash by a test.
+- A month no statement covers returns `null` and the page says so, rather than interpolating.
+- Only cash follows the month; receivables, prepaids and payables are the close, and the page names them.
+- A filing counts **from the day it was recorded**, so filing today cannot rewrite a month that already closed. That rule is the whole feature — a score that moved August when you filed in September would be lying about August.
+- The Form K record is device-local (same convention as setup ticks and saved searches), not a server write. The sample book's register is unchanged.
+- Both items were requested by Cam outside the UI queue, so the queue is untouched — four offers still waiting (receipt, health over time, workspace search, AGM packet), and "health over time" has now shipped as `0.3.46`, so it should be replaced at the next pick.
+
+**Git State:**
+- SHA: this commit (`0.3.47`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-28 (fourth)
 
 **Done:**

@@ -14,6 +14,37 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.47",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The funds, month by month. The funds tab now carries the credit union's six month-end statements as a table — operating, reserve, parkade levy, the three added, and the change since the month before — closing on the figures the rest of the books report: $81,797.62 operating, $603,688.80 reserve and $31,548.00 in the levy trust, $717,034.42 in all. src/lib/demo/cash.ts holds the statements, and src/lib/fund-history.ts holds the arithmetic (6 tests).",
+          "The funds tab follows the month. /accounting?period=2026-04 reads Cash at April 30, 2026 — $47,583.16 operating, $590,000.00 reserve, $177,948.00 levy — instead of printing September's cash under an April heading, and says which lines are still the September 30 close.",
+          "A month the bank has not closed is said to be one. A hand-typed ?period=2026-10 falls back to the close under a sentence that names the range the statements cover, rather than interpolating a balance nobody signed.",
+          "A Form K can be recorded from the lot's sheet. /units/309#forms takes the date the form arrived (default: the day the gap is counted to) and records it on this device. The card reads On file — recorded 2026-09-30 in this browser, says nothing is sent to a host, and offers to take the record back off. src/lib/form-k.ts (6 tests) holds it.",
+          "The score reads the filing. Three Form K gaps become two and September's point goes 56 → 61, while August stays 72: isFiled counts a filing only from its own day, so a form recorded today cannot rewrite the month it was not there for. The trend's open month drops the lot from its list at the same rule."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "A filing reaches the rest of the page. The /units Form K filter and the plan's tones read the same record, so a lot whose form is on file stops being drawn as a gap.",
+          "The page-level note is narrower and true. It now says the overview cards, the budget and the payables stay at the September 30 close, and that the funds tab follows the month because the statements do."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The statements tie, account by account. Tests assert September's row is the funds tab's own cash for all three accounts and their total, that every row's total is its three columns, that each change is this close less the one before, that six changes add to the year's movement, and that the levy's 1 April balance is exactly what was collected.",
+          "The filing moves what it claims to and nothing else. Tests assert the gap count at the statement date and at the two month ends before it, the whole trend (82, 82, 82, 74, 72, 61), the month detail's Form K list, and that arrears are untouched at $649,900. A route test submits the form on /units/309, reads the recorded date back, files a different day, and removes the record.",
+          "Frontend 481 passed (23 new), Svelte check 0 errors / 0 warnings, translation audit 1,422 keys × 9 locales (12 new), contrast audit 218 pairs, secret gate green, production build green with Record the Form K in build/units/309.html."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.46",
     "date": "2026-10-28",
     "groups": [
