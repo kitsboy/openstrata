@@ -28,6 +28,14 @@
  *    fresh division — so a reader who adds the page up lands on the number the
  *    page prints, to the cent.
  *
+ * 5. **A reason belongs to a variance that exists.** The books carry a phrase for
+ *    some lines — the concierge's September start, the inspection still ahead —
+ *    and the sheet prints it beside the variance, because "how much" without "why"
+ *    is the half of the story a council ends up arguing about. A line exactly on
+ *    plan drops its reason: printing one there would suggest a move that did not
+ *    happen. The reserve contribution drops it too, for the same reason it carries
+ *    no verdict — it is a decision, not a variance.
+ *
  * Label-free by design: the caller supplies the translated account names and the
  * fiscal year, so this module is testable without a catalog.
  */
@@ -59,6 +67,8 @@ export interface BudgetSheetRow {
 	/** Year to date less plan to date. */
 	varianceCents: number;
 	tone: VarianceTone;
+	/** Why the line sits where it does, when the books say and the line moved. */
+	reason?: string;
 }
 
 export interface BudgetGroup {
@@ -123,6 +133,13 @@ export function varianceTone(side: BudgetSide, varianceCents: number): VarianceT
 function sheetRow(side: BudgetSide, line: LedgerLine, monthsElapsed: number): BudgetSheetRow {
 	const plan = planToDateCents(line.annualCents, monthsElapsed);
 	const variance = line.ytdCents - plan;
+	const tone = varianceTone(side, variance);
+	// A reason is printed only where there is a move to explain: an on-plan line
+	// and the reserve contribution keep their silence rather than implying one.
+	const reason =
+		(tone === 'favourable' || tone === 'unfavourable') && line.reason?.trim()
+			? line.reason.trim()
+			: undefined;
 	return {
 		code: line.code,
 		name: line.name,
@@ -131,7 +148,8 @@ function sheetRow(side: BudgetSide, line: LedgerLine, monthsElapsed: number): Bu
 		leftCents: line.annualCents - line.ytdCents,
 		planToDateCents: plan,
 		varianceCents: variance,
-		tone: varianceTone(side, variance)
+		tone,
+		reason
 	};
 }
 

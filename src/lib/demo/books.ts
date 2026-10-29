@@ -23,7 +23,14 @@ export interface LedgerLine {
 	name: string;
 	annualCents: number;
 	ytdCents: number;
+	/** The full explanation a reader can follow. */
 	note?: string;
+	/**
+	 * Why this line sits where it does against the budget, in a phrase — the
+	 * reason the printed sheet puts beside the variance. A line with no story
+	 * behind its variance has none, which is its own honest answer.
+	 */
+	reason?: string;
 }
 
 export interface JournalLine {
@@ -120,12 +127,30 @@ export const payroll = {
 		'CPP is shown at 5.95% with a $3,500 basic exemption, which is the 2025 structure. Confirm the 2026 T4127 tables before the October 15 remittance. This pay is over the monthly exemption, so CPP is due.'
 };
 
+/**
+ * The short reason behind a line's variance, by account code. Kept apart from
+ * `note` because they answer different questions: the note explains the line to
+ * anyone reading the books, while this is the phrase the printed budget puts
+ * beside the number when the year has run from plan.
+ */
+const varianceReasons: Record<string, string> = {
+	'6210': 'Started 1 September',
+	'6230': 'Inspection is 8 October',
+	'6240': 'Snow budget untouched',
+	'6260': 'Parkade gate motor',
+	'6320': 'Billed at year end',
+	'6340': 'Plan only, no cash moved',
+	'6360': 'Load study finished',
+	'6410': 'Gutter day in November'
+};
+
 const expenses: LedgerLine[] = expenseSeed.map(([code, name, annual, ytd, note]) => ({
 	code,
 	name,
 	annualCents: dollar(annual),
 	ytdCents: code === '6215' ? employerBurden : dollar(ytd),
-	note
+	note,
+	reason: varianceReasons[code]
 }));
 
 const incomeLines: LedgerLine[] = incomeSeed.map(([code, name, annual, ytd]) => ({

@@ -28,31 +28,31 @@
 	/** Offered 2026-10-29 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, and the receipt on /pay with workspace search shipped in v0.3.51, and the budget that prints with the year’s deadlines shipped in v0.3.52; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, and the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53; these four are what is waiting now.';
 	const uiQueue = [
-		{
-			name: 'The AGM package in one print',
-			where: '/documents',
-			detail:
-				'The year on one page, the meeting packet and the reserve plan are three separate print buttons today. Add one that yields the set: a contents line, then each sheet on its own page, so a council prints the whole package once instead of three times and hopes the order is right.'
-		},
-		{
-			name: 'Filters that stay put',
-			where: '/units',
-			detail:
-				'The search box and the six tone filters are gone the moment a reader opens a lot and comes back. Keep them on the device, restore them on return, and give the row one button that clears all of it — the plan and the filters read the same record as they do now.'
-		},
-		{
-			name: 'The budget’s reasons, beside the variance',
-			where: '/accounting',
-			detail:
-				'The printed sheet says how far each line is from plan; the data already knows why — the parkade gate motor, the concierge’s September start, the inspection still ahead. Print the reason against the line, so a council reads why rather than only how much.'
-		},
 		{
 			name: 'A levy statement of its own',
 			where: '/accounting',
 			detail:
 				'The parkade levy is a separate trust with its own resolution, assessment, collections and holdback, and it is only ever a card among the funds. Give it a printable page: assessed, collected by lot, spent, holdback held and what remains — reported without handing over the operating books.'
+		},
+		{
+			name: 'The budget in the reader’s language',
+			where: '/accounting',
+			detail:
+				'The printed budget’s account names and its new reasons are English in every locale, so a French reader is handed an English sheet. Move them into the catalog and print the translated line, without losing the account code the auditor looks for.'
+		},
+		{
+			name: 'The Form K register in the package',
+			where: '/documents',
+			detail:
+				'The AGM stack carries the year, the packet and the reserve plan; the tenancy register is the fourth sheet a council hands to an owner. Add it to the stack, and keep the contents page honest about what is inside.'
+		},
+		{
+			name: 'The arrears ladder on paper',
+			where: '/accounting',
+			detail:
+				'Receivables is the one tab with no print: the ladder, the bucket totals and the plan block are screen only. Give it a sheet — oldest money first, the buckets totalled, the lots on payment plans named — so a council can read the arrears at the table.'
 		}
 	];
 </script>

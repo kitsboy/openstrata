@@ -11,12 +11,12 @@ Evergreen House is on `main` (LMS 2847, 40 lots, pages `/units`, `/accounting`, 
 
 Next product work is the UI refinement queue in [ROADMAP.md](ROADMAP.md). Four items are offered and not chosen:
 
-1. The AGM package in one print (`/documents`)
-2. Filters that stay put (`/units`)
-3. The budget's reasons, beside the variance (`/accounting`)
-4. A levy statement of its own (`/accounting`)
+1. A levy statement of its own (`/accounting`)
+2. The budget in the reader's language (`/accounting`)
+3. The Form K register in the package (`/documents`)
+4. The arrears ladder on paper (`/accounting`)
 
-Shipped: the budget that prints with the year's deadlines on one page (v0.3.52, the offered items whose slots the budget's reasons and a levy statement now take), the receipt on `/pay` and a search that reaches lots, journal entries and tax sections (v0.3.51, the offered items whose slots the AGM package and filters that stay put took), the year on one page at `/` and the AGM packet on `/meetings` (v0.3.50, the offered items whose slots a printable budget and a year of deadlines now take), the reserve fund's five-year picture on `/accounting` (v0.3.49, offered), the Form K register at `/units/register` (v0.3.48, offered), the funds following the month with a Form K recorded from the lot's sheet (v0.3.47, requested outside the queue), health over time on `/` (v0.3.46, offered), and aged arrears on `/accounting` with a lot's own sheet at `/units/207` (v0.3.45, picked from the 2026-10-28 offer, which then refilled with the two above). Before that, the floor plan on `/units` and the statement on `/accounting` (v0.3.44), and from the 2026-10-16 offer: September close (`/accounting`, v0.3.40), the next 30 days once (`/tax` and `/calendar`, v0.3.41) and You are here (`/changelog`, v0.3.43). Wherever the queue is copied (here, `static/llms.txt`, the `/roadmap` page), keep it the same four.
+Shipped: the AGM package in one print, filters that stay put, and the budget's reasons beside the variance (v0.3.53, the three offered items whose slots the four above now take), the budget that prints with the year's deadlines on one page (v0.3.52), the receipt on `/pay` and a search that reaches lots, journal entries and tax sections (v0.3.51), the year on one page at `/` and the AGM packet on `/meetings` (v0.3.50), the reserve fund's five-year picture on `/accounting` (v0.3.49, offered), the Form K register at `/units/register` (v0.3.48, offered), the funds following the month with a Form K recorded from the lot's sheet (v0.3.47, requested outside the queue), health over time on `/` (v0.3.46, offered), and aged arrears on `/accounting` with a lot's own sheet at `/units/207` (v0.3.45, picked from the 2026-10-28 offer). Before that, the floor plan on `/units` and the statement on `/accounting` (v0.3.44), and from the 2026-10-16 offer: September close (`/accounting`, v0.3.40), the next 30 days once (`/tax` and `/calendar`, v0.3.41) and You are here (`/changelog`, v0.3.43). Wherever the queue is copied (here, `static/llms.txt`, the `/roadmap` page), keep it the same four.
 
 The interface keeps being refined as the product grows. After every push that changes what a person sees, offer exactly four upgrades and wait. Cam picks one or two. Only those are polished. When a pick ships, replace it so four remain. Do not start this queue before a pick.
 

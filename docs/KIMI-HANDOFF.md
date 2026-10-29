@@ -21,7 +21,28 @@
 
 ---
 
-## Session — 2026-10-29
+## Session — 2026-10-29 (third)
+
+**Done:**
+- Three queue picks shipped as `0.3.53`, together. **The AGM package in one print** (`/documents`): a contents page, then the year's sheet, the meeting packet and a new reserve sheet, **each on its own page** in the order the contents names. `?package=1` opens the stack; a pick from the picker leaves the mode. The stack is built from the records the other pages read (`buildYearSheet(yearBook)` with the dashboard's six health points; the packet component `/meetings` prints), so it cannot disagree with its sources. New `src/lib/components/ReserveSheet.svelte` calls `reservePlan(reservePicture.input)` — the same call the Reserve plan tab makes.
+- **Filters that stay put** (`/units`): `src/lib/unit-filters.ts` (10 tests) keeps the search, tone and floor on the device, restores them on return, and forgets the record when nothing is filtered. One button clears all three. A `?tone=` link wins over the device.
+- **The budget's reasons, beside the variance** (`/accounting`): a short `reason` beside each expense line's `note` in `demo/books`; `budget-sheet.ts` carries it on the row and prints it only where a variance exists. The phrases: the concierge's **1 September** start, the inspection on **8 October**, the **parkade gate motor**, the account billed at year end, the set-aside that moved no cash, the finished load study, the November gutter day, the snow budget.
+- 28 new tests (10 filter rules, 6 units route, 5 documents route, 5 budget rules, 2 accounting route), 625 total. 7 catalog keys × 9 locales (1,583 at parity).
+
+**Decisions:**
+- **A reason belongs to a variance that exists.** An on-plan line and the reserve contribution drop theirs: a phrase beside “on plan” would imply a move that did not happen.
+- **A phrase costs a page, so the eight that matter kept theirs.** Fifteen reasons made the sheet 1,075px and two pages; rows tightened to 1.18 leading with half a pixel of padding, phrases print at 6.2pt italic, and the list was cut to eight — **905px of the 927px** a Letter page holds. The budget is still one page in Chrome; the package is four (year 875px, packet 893px, reserve 526px, contents 486px).
+- **Only a readable filter is restored, and only the part that is readable.** An old tone must not also cost the reader their search; a bad floor falls back alone.
+- **A link beats the device.** `?tone=arrears` from a dashboard activity means the arrears, not whatever was last read on that machine.
+- The three picks are replaced by **a levy statement of its own**, **the budget in the reader's language**, **the Form K register in the package** and **the arrears ladder on paper**, so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.53`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
+## Session — 2026-10-29 (second)
 
 **Done:**
 - Two queue picks shipped as `0.3.51` together. **A receipt you can hand over** (`/pay`): every row of the receipt tape carries a Receipt button, and the picked payment prints on the council's letterhead — amount received, who paid, lot, rail, reference, txid where the rail has one, the rate a bitcoin payment locked at with the sats it bought, and the fee's split. Lot 305: **$576.00** = **$499.20 operating** + **$76.80 reserve**, Lightning at **$135,820**/BTC for **424,091 sats**. The paying sheet, tape and vendor panel are `no-print`; the newest payment is picked on arrival.

@@ -1,11 +1,21 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.52
+**Site/product version:** v0.3.53
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — a budget that prints, and the year's deadlines on one page (site, `0.3.52`, the two queue picks)
+## Recent milestone — a package a council prints once, filters that stay put, and the why beside the variance (site, `0.3.53`, three queue picks)
+
+- **The AGM package in one print (`/documents`).** A contents page, then the year's sheet, the meeting packet and the new reserve sheet, each on its own page, in the order the contents page names. `?package=1` opens the stack; the package button prints it; a pick from the picker leaves the package mode. The stack is assembled from the records the other pages read (`buildYearSheet(yearBook)` with the dashboard's own six health points, and the packet `/meetings` prints), so the package cannot disagree with the pages it replaces.
+- **`src/lib/components/ReserveSheet.svelte` is the reserve fund on paper.** Five fiscal years with opening balance, the budget's contribution, the interest the credit union paid, the scheduled projects and the closing balance, then the shortfall year and the four notes. It reads `reservePlan(reservePicture.input)` — the same call the Reserve plan tab makes.
+- **Filters that stay put (`/units`).** The search, the tone and the floor are kept on the device and restored on return; one button clears all three and removes the record; a `?tone=` link still wins. `src/lib/unit-filters.ts` (10 tests): only a readable filter is restored, **one part at a time**; nothing is stored when nothing is filtered; a query is trimmed and bounded at 80 characters.
+- **The budget's reasons, beside the variance (`/accounting`).** The printed sheet now carries a phrase beside the variance — **1 September** for the concierge, **8 October** for the fire inspection, the **parkade gate motor** for repairs. `src/lib/budget-sheet.ts` holds the rule: a reason belongs to a variance that exists, so an on-plan line and the reserve contribution drop theirs.
+- **The sheet stayed one page by getting tighter.** Fifteen candidate reasons made it 1,075px and two pages; rows are now 1.18 leading at 7.2pt with half a pixel of cell padding, the reason prints at 6.2pt italic, and the list was cut to the eight lines a council is actually asking about. Measured in print media: **905px of the 927px** a Letter page holds.
+- 7 new catalog keys × 9 locales, catalogue **1,583** keys at full parity. Verification: frontend **625 passed** (28 new: 10 filter rules, 6 units route, 5 documents route, 5 budget reasons, 2 accounting route), `check` **0/0**, i18n audit **1,583 keys across 35 route components**, secret gate green, production build green. Printed in Chrome: the budget is **one page** (905px of 927), the package is **four pages** (year 875px, packet 893px, reserve 526px, contents 486px) with nothing past a sheet's right edge.
+- **Queue:** the three picked slots are replaced by **a levy statement of its own** (`/accounting`), **the budget in the reader's language** (`/accounting`), **the Form K register in the package** (`/documents`) and **the arrears ladder on paper** (`/accounting`) — four offers, none started.
+
+## Prior milestone — a budget that prints, and the year's deadlines on one page (site, `0.3.52`, the two queue picks)
 
 - **The Budget tab on `/accounting` is now a printed page.** Every income and expense line with its annual budget, the year to date, what is left and the variance, then the reserve contribution and the result: **$0.00** budgeted for the year, **$15,878.32** to date and **$15,878.32** over plan, which is `books.surplusYtd`. The tabs, the header and the print control are `no-print` on that tab only, so the reserve plan keeps printing with its header.
 - **`src/lib/budget-sheet.ts` holds four rules, with 13 tests.** The plan to date is the annual figure pro-rated to the six months the books cover — **50%** of every line — because nine months of actuals against twelve months of plan would make every line look under, and a variance nobody can trust is worse than no column. Variance is always the year to date less the plan to date, so the sign means one thing on every row and only the verdict changes with the side of the page: spending over plan and income short of plan are unfavourable and print bold. The reserve contribution carries no verdict (`na`) — a fund ahead of its contribution is a council decision, not a slip — and the result is the three groups added rather than a fourth division, so a reader who adds the page up lands on the printed surplus.

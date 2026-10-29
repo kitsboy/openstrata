@@ -159,6 +159,64 @@ describe('the budget sheet', () => {
 	});
 });
 
+describe('the reason beside a variance', () => {
+	it('prints the books’ reason on a line that moved', () => {
+		const byCode = new Map(sheet.expense.rows.map((row) => [row.code, row]));
+		expect(byCode.get('6210')?.reason).toBe('Started 1 September');
+		expect(byCode.get('6230')?.reason).toBe('Inspection is 8 October');
+		expect(byCode.get('6260')?.reason).toBe('Parkade gate motor');
+	});
+
+	it('keeps the reason off a line exactly on plan', () => {
+		// Insurance is expensed straight across the year, so nothing moved and a
+		// reason beside "on plan" would suggest a move that did not happen.
+		const insurance = sheet.expense.rows.find((row) => row.code === '6100')!;
+		expect(insurance.tone).toBe('on');
+		expect(insurance.reason).toBeUndefined();
+	});
+
+	it('keeps the reason off the reserve contribution, which has no verdict', () => {
+		const reserve = budgetSheet({
+			monthsElapsed: 6,
+			income: [],
+			expense: [],
+			reserve: {
+				code: '3500',
+				name: 'CRF contribution',
+				annualCents: 432_000,
+				ytdCents: 216_000,
+				reason: 'Ahead of the budget'
+			}
+		}).reserve.rows[0];
+		expect(reserve.tone).toBe('na');
+		expect(reserve.reason).toBeUndefined();
+	});
+
+	it('trims the phrase it prints, and has none where the books have none', () => {
+		const rows = budgetSheet({
+			monthsElapsed: 6,
+			income: [],
+			expense: [
+				{ code: '9000', name: 'Padded', annualCents: 1_200, ytdCents: 1_200, reason: '  Ran hot  ' },
+				{ code: '9001', name: 'Silent', annualCents: 1_200, ytdCents: 1_200 },
+				{ code: '9002', name: 'Blank', annualCents: 1_200, ytdCents: 1_200, reason: '   ' }
+		],
+			reserve: { code: '3500', name: 'CRF contribution', annualCents: 0, ytdCents: 0 }
+		}).expense.rows;
+		expect(rows[0].reason).toBe('Ran hot');
+		expect(rows[1].reason).toBeUndefined();
+		expect(rows[2].reason).toBeUndefined();
+	});
+
+	it('never prints a reason on a row that has no variance verdict', () => {
+		for (const group of [sheet.income, sheet.expense, sheet.reserve]) {
+			for (const row of group.rows) {
+				if (row.tone === 'on' || row.tone === 'na') expect(row.reason, row.code).toBeUndefined();
+			}
+		}
+	});
+});
+
 describe('a sheet built on nothing', () => {
 	const empty: BudgetSheet = budgetSheet({
 		monthsElapsed: 0,

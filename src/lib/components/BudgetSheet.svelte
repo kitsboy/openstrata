@@ -117,7 +117,11 @@
 						<td class="num">{money(row.annualCents)}</td>
 						<td class="num">{money(row.ytdCents)}</td>
 						<td class="num">{leftLabel(row.leftCents)}</td>
-						<td class="num {row.tone}">{variance(row)}</td>
+						<td class="num {row.tone}">
+							{variance(row)}
+							<!-- The why, under the how much. A line exactly on plan has none. -->
+							{#if row.reason}<span class="variance-why">{row.reason}</span>{/if}
+						</td>
 					</tr>
 				{/each}
 				<tr class="total">
@@ -141,7 +145,9 @@
 	</table>
 	</div>
 
-	<p class="print-note">{fill($copy.budgetSheetPlanNote, { share, months: formatNumber(sheet.monthsElapsed, $locale), date: building.asOfLabel })}</p>
+	<p class="print-note">
+		{fill($copy.budgetSheetPlanNote, { share, months: formatNumber(sheet.monthsElapsed, $locale), date: building.asOfLabel })} {$copy.budgetSheetReasonNote}
+	</p>
 	<p class="print-basis">{$copy.budgetSheetBasis}</p>
 
 	<footer class="print-foot">
@@ -154,7 +160,7 @@
 		width: 100%;
 		max-width: 52rem;
 		margin: 0 auto;
-		padding: 1.6rem 2rem 1.2rem;
+		padding: 1.6rem 2rem 0.9rem;
 		border: 1px solid #dfe4e8;
 		border-radius: 14px;
 		background: #ffffff;
@@ -210,7 +216,7 @@
 	}
 	.print-rule {
 		height: 2px;
-		margin: 9px 0;
+		margin: 7px 0;
 		background: linear-gradient(90deg, #f0801a 0%, #f0801a 22%, #dfe4e8 22%, #dfe4e8 100%);
 	}
 	.print-title-block h1 {
@@ -237,11 +243,11 @@
 		border-collapse: collapse;
 		table-layout: fixed;
 		font-size: 7.2pt;
-		line-height: 1.25;
+		line-height: 1.18;
 	}
 	.budget-table th,
 	.budget-table td {
-		padding: 1px 5px;
+		padding: 0.5px 5px;
 		border-bottom: 1px solid #edf1f3;
 		vertical-align: top;
 	}
@@ -269,7 +275,23 @@
 	}
 	.budget-table th:first-child,
 	.budget-table td.account {
-		width: 34%;
+		width: 28%;
+	}
+	/* The variance column carries the reason under the amount, so it needs the
+	   room the other three money columns can spare. */
+	.budget-table th:last-child,
+	.budget-table td:last-child {
+		width: 24%;
+	}
+	.variance-why {
+		display: block;
+		color: #5a6672;
+		font-family: Georgia, 'Times New Roman', serif;
+		font-style: italic;
+		font-size: 6.2pt;
+		font-weight: 400;
+		line-height: 1.05;
+		white-space: normal;
 	}
 	.budget-table .group-head th {
 		padding-top: 4px;
@@ -300,7 +322,7 @@
 		color: #3f4a55;
 	}
 	.print-note {
-		margin: 6px 0 0;
+		margin: 4px 0 0;
 		padding: 4px 7px;
 		border: 1px solid #e4d8c8;
 		border-radius: 4px;

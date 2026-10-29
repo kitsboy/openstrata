@@ -20,26 +20,70 @@
 	} from '$lib/demo/building';
 	import { payerUnitId } from '$lib/demo/payer';
 	import { isFiled, readFiledForms, type FiledForms } from '$lib/form-k';
+	import {
+		NO_UNIT_FILTERS,
+		UNIT_TONES,
+		filtersNarrow,
+		readUnitFilters,
+		writeUnitFilters,
+		type UnitFilters,
+		type UnitFloor,
+		type UnitTone
+	} from '$lib/unit-filters';
 	import { onMount } from 'svelte';
 
+	const LEVELS = [1, 2, 3, 4] as const;
+
 	let selectedId = $state('305');
-	let floor = $state<'all' | number>('all');
-	let focus = $state('all');
+	let floor = $state<UnitFloor>('all');
+	let focus = $state<UnitTone>('all');
 	let query = $state('');
 
 	// A Form K recorded on this device closes the gap the register wrote down, so
 	// the filter and the plan read the same fact the lot's own sheet shows. Read
 	// after mount: the page is prerendered without storage.
 	let filedForms = $state<FiledForms>({});
+
+	/**
+	 * The filter is a place in the building, not a keystroke. A reader who narrows
+	 * the list to the lots in arrears, opens lot 207's sheet and comes back should
+	 * find the same list waiting — so the search, the tone and the floor are kept on
+	 * the device and restored on return. A `?tone=` link still wins: a dashboard
+	 * activity that names the arrears means the arrears, not whatever was last read.
+	 */
+	let restored = false;
+	let saved = '';
 	onMount(() => {
 		filedForms = readFiledForms();
+		// The page's own URL, not the browser's: a dashboard activity links into the
+		// arrears, and that link is the page the reader is on.
+		const linked = $page.url.searchParams.has('tone');
+		const kept = readUnitFilters(window.localStorage);
+		if (!linked) {
+			query = kept.query;
+			focus = kept.focus;
+			floor = kept.floor;
+		}
+		saved = JSON.stringify({ query, focus, floor });
+		restored = true;
+	});
+
+	/** Written after mount, so a prerendered page never touches storage. */
+	$effect(() => {
+		const next: UnitFilters = { query, focus, floor };
+		const signature = JSON.stringify(next);
+		if (!restored || signature === saved) return;
+		saved = signature;
+		writeUnitFilters(window.localStorage, next);
 	});
 
 	$effect(() => {
 		const lot = $page.url.searchParams.get('lot');
 		const toneQuery = $page.url.searchParams.get('tone');
 		if (lot && isUnitId(lot)) selectedId = lot;
-		if (toneQuery) focus = toneQuery;
+		if (toneQuery && (UNIT_TONES as readonly string[]).includes(toneQuery)) {
+			focus = toneQuery as UnitTone;
+		}
 	});
 
 	const selected = $derived(getUnit(selectedId));
@@ -76,6 +120,14 @@
 	function choose(id: string) {
 		selectedId = id;
 		payerUnitId.set(id);
+	}
+
+	/** One button clears the search, the tone and the floor together. */
+	const narrowed = $derived(filtersNarrow({ query, focus, floor }));
+	function clearFilters() {
+		query = NO_UNIT_FILTERS.query;
+		focus = NO_UNIT_FILTERS.focus;
+		floor = NO_UNIT_FILTERS.floor;
 	}
 
 	const filters = $derived([
@@ -118,7 +170,7 @@
 			class="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm sm:max-w-xs"
 		/>
 		<div class="flex gap-1 overflow-x-auto">
-			{#each [1, 2, 3, 4] as level}
+			{#each LEVELS as level (level)}
 				<button
 					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {floor === level ? 'bg-slab text-slab-ink' : 'bg-surface-2 border border-border text-slate-600'}"
 					onclick={() => (floor = floor === level ? 'all' : level)}
@@ -135,6 +187,13 @@
 				>{label}</button>
 			{/each}
 		</div>
+		{#if narrowed}
+			<button
+				class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600"
+				title={$copy.unitsFiltersKept}
+				onclick={clearFilters}>{$copy.unitsFilterClear}</button
+			>
+		{/if}
 		<!-- The list the Form K filter narrows, on one page a council can print. -->
 		<a
 			class="ml-auto shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600 no-underline"

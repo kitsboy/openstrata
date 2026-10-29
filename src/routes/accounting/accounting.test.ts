@@ -245,6 +245,34 @@ describe('/accounting budget', () => {
 		expect(reserve).toContain('—');
 	});
 
+	it('prints the reason a line moved beside its variance', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Budget');
+		const rows = [...container.querySelectorAll('tbody tr')].map((row) => row.textContent ?? '');
+		const row = (code: string) => rows.find((text) => text.startsWith(code)) ?? '';
+		// Why, not only how much: the gate motor, the concierge's September start,
+		// the inspection that has not happened yet.
+		expect(row('6260')).toContain('Parkade gate motor');
+		expect(row('6210')).toContain('Started 1 September');
+		expect(row('6230')).toContain('Inspection is 8 October');
+		// The sheet says what those phrases are.
+		expect(container.textContent ?? '').toContain(
+			'A line that ran from plan prints the reason beside its variance.'
+		);
+	});
+
+	it('keeps the reason off a line that did not move', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Budget');
+		const rows = [...container.querySelectorAll('tbody tr')].map((row) => row.textContent ?? '');
+		const insurance = rows.find((text) => text.startsWith('6100')) ?? '';
+		expect(insurance).toContain('on plan');
+		// Its note explains the line; it is not printed as a reason, because nothing
+		// moved and a reason beside “on plan” would say something untrue.
+		expect(insurance).not.toContain('Prepaid March 28');
+		expect(insurance).not.toContain('expensed straight');
+	});
+
 	it('lands the printed result on the books’ own surplus', async () => {
 		const { container } = renderAt('/accounting');
 		await openTab(container, 'Budget');
@@ -267,3 +295,4 @@ describe('/accounting budget', () => {
 		expect(container.querySelector('.budget-doc')?.closest('.no-print')).toBeNull();
 	});
 });
+

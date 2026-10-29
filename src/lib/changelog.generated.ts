@@ -14,6 +14,37 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.53",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The AGM package in one print (/documents). The year's sheet, the meeting packet and the reserve plan were three separate print buttons on three pages; /documents now prints them as one stack — a contents page, then each sheet on its own page, in the order the contents page names. ?package=1 opens the stack, the package button prints it, and a document picked from the picker leaves the package mode because a pick is one document, not a set. The pack is assembled from the records the other pages read: the year's sheet is buildYearSheet(yearBook) with the same six health points the dashboard's trend drew, and the packet is the same component /meetings prints, so the package cannot disagree with the pages it replaces.",
+          "src/lib/components/ReserveSheet.svelte is the reserve fund on paper. Five fiscal years with opening balance, the budget's contribution, the interest the credit union paid, the projects the depreciation report schedules and the closing balance, then the year that runs short and the four notes (the report, the rate, the contribution gap, the levy's exclusion). It reads reservePlan(reservePicture.input) — the same call the Reserve plan tab makes — so the sheet and the tab cannot drift.",
+          "Filters that stay put (/units). The search box, the tone filters and the floor are kept on the device and restored when a reader comes back from a lot's sheet; one button clears all three and removes the record. src/lib/unit-filters.ts (10 tests) holds three rules: only a readable filter is restored, one part at a time (an unknown tone costs the reader their search only if it is the search that is unreadable, which it is not); nothing is stored when nothing is filtered, so a reader who never filtered leaves no trace; and a saved query is trimmed and bounded at 80 characters. A ?tone= link wins over the stored filter, because a dashboard activity that names the arrears means the arrears.",
+          "The budget's reasons, beside the variance (/accounting). The printed sheet said how far each line sits from plan; it now prints why, in a phrase beside the amount: the concierge's 1 September start, the fire inspection on 8 October, the parkade gate motor. src/lib/budget-sheet.ts carries the phrase and holds the rule: a reason belongs to a variance that exists, so a line exactly on plan and the reserve contribution drop theirs rather than suggesting a move that did not happen."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "src/lib/demo/books.ts carries the reasons. A reason beside the existing note on each expense line, because the two answer different questions: the note explains the line to anyone reading the books, the reason is the phrase a printed budget puts beside the number. Eight lines carry one today, and a line with no story behind its variance has none — which is its own answer.",
+          "The budget sheet is a little tighter to hold the reasons on one page. Rows are 7.2pt at 1.18 leading with half a pixel of cell padding, the reason prints at 6.2pt italic, and three rules and a padding step were trimmed; measured in print media the sheet is 905px inside the 927px a Letter page holds, so it is still one page. Printing all fifteen candidate reasons made it 1,075px and two pages, which is how the list was cut to the lines a council is actually asking about.",
+          "The queue is refreshed with the three picks' replacements. The levy's own statement, the budget in the reader's language, the Form K register in the package and the arrears ladder on paper are waiting — four offers, none started. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md, CHANGELOG.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "28 new tests: 10 for the filter rules (one-part fallback, a floor from a string or refused off the building, a trimmed and bounded query, a round trip, forgetting the record, corrupt storage, storage that throws), 6 for /units (nothing kept, a restored search, a restored tone and floor, a filter saved as it is typed and forgotten when cleared, a tone link beating the device, an unreadable tone not hiding the building), 5 for /documents (the package as four pages in order, one contents page, one of each sheet, the contents naming what is inside, the controls off the paper), 5 for the budget's reasons (printed on a moved line, dropped on plan, dropped on the reserve, trimmed, never on a row without a verdict) and 2 for /accounting (the reason beside the variance, the note not mistaken for one).",
+          "Printed and measured in Chrome: the budget sheet is 905px tall inside a 927px Letter page and comes out as one page with no clipped cell; the package comes out as four pages, with the year sheet at 875px, the packet at 893px, the reserve sheet at 526px and the contents page at 486px, and no descendant past the sheet's right edge on any of them.",
+          "Frontend 625 passed across 66 files, Svelte check 0 errors / 0 warnings, translation audit 1,583 keys × 9 locales (7 new) across 35 route components, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.52",
     "date": "2026-10-29",
     "groups": [

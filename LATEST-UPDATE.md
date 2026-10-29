@@ -1,3 +1,25 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — a package a council prints once, filters that stay put, and the why beside the variance
+
+Commit: this commit (site `0.3.53`). Backend API version stays `0.3.28`.
+
+> **Three picks from the 29 October queue, shipped together, and all three are about a page or a place a reader comes back to.**
+>
+> **The AGM package in one print (`/documents`).** The year's sheet, the meeting packet and the reserve plan were three print buttons on three pages. `/documents` now prints them as one stack: a **contents page**, then the year's sheet, the packet and the new reserve sheet, **each on its own page**, in the order the contents page names. `?package=1` opens the stack and the package button prints it; a document picked from the picker leaves the package mode, because a pick is one document and not a set. The stack is assembled from the records the other pages read — the year's sheet is `buildYearSheet(yearBook)` with the same six health points the dashboard's trend drew, and the packet is the component `/meetings` prints — so the package cannot disagree with the pages it replaces.
+>
+> **`ReserveSheet.svelte` is the reserve fund on paper.** Five fiscal years with the opening balance, the budget's contribution, the interest the credit union actually paid, the projects the depreciation report schedules and the closing balance, then the year that runs short and the four notes. It reads `reservePlan(reservePicture.input)`, the same call the Reserve plan tab makes.
+>
+> **Filters that stay put (`/units`).** The search, the tone filters and the floor are kept on the device and restored when a reader comes back from a lot's sheet; **one button clears all three** and removes the record. `src/lib/unit-filters.ts` (10 tests) holds three rules: only a readable filter is restored and **one part at a time** (an unknown tone must not also cost the reader their search); **nothing is stored when nothing is filtered**, so a reader who never filtered leaves no trace; and a saved query is trimmed and bounded at 80 characters. A `?tone=` link still wins, because a dashboard activity that names the arrears means the arrears.
+>
+> **The budget's reasons, beside the variance (`/accounting`).** The sheet said how far each line sits from plan; it now says why, in a phrase beside the amount — the concierge's **1 September** start, the fire inspection on **8 October**, the **parkade gate motor**. `src/lib/budget-sheet.ts` holds the rule: a reason belongs to a variance that exists, so a line exactly on plan and the reserve contribution drop theirs rather than suggesting a move that did not happen.
+>
+> **Verified:** frontend **625 passed** (28 new: 10 filter rules, 6 units route, 5 documents route, 5 budget reasons, 2 accounting route), `check` **0 errors / 0 warnings**, translation audit **1,583 keys × 9 locales** (7 new) across 35 route components, secret gate green, production build green. Printed and measured in Chrome: the budget is **905px** inside a **927px** Letter page and comes out as **one page**; the package comes out as **four pages** (year 875px, packet 893px, reserve 526px, contents 486px) with nothing past the sheet's right edge.
+>
+> **Printing the reasons cost the budget its page and got it back.** Fifteen candidate reasons pushed the sheet to 1,075px and two pages, so the rows were set at 1.18 leading with half a pixel of padding, the reason prints at 6.2pt italic, and the list was cut to the eight lines a council is actually asking about. A sheet that loses its second page to a phrase is a sheet that prints its reasons and its totals — not both.
+>
+> **The queue is refreshed, because the picks shipped.** **A levy statement of its own** (`/accounting`), **the budget in the reader's language** (`/accounting`), **the Form K register in the package** (`/documents`) and **the arrears ladder on paper** (`/accounting`) are waiting, so four are — again.
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — a budget that prints, and the year's deadlines on one page
 
 Commit: this commit (site `0.3.52`). Backend API version stays `0.3.28`.
