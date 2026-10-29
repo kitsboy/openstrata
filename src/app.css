@@ -45,9 +45,18 @@
      floating bottom dock printed across the foot of every page. */
   .topbar, .sidebar, .site-footer, .mobile-nav, .marketing-mobile-nav,
   .modal-backdrop, .notifications-panel, .language-menu, .auth-menu,
-  .tooltip-bubble, .toast, .page-breadcrumbs, .page-hero,
+  .tooltip-bubble, .toast, .page-breadcrumbs, .page-hero, .host-connect-row,
+  .skip-link, .os-install-chip, .os-offline-banner,
   .no-print { display: none !important; }
   .app-shell, .main-column, .content { display: block !important; }
+  /* The @page box already carries the paper margin. Keeping the screen gutters
+     pushed a one-page sheet onto a second, blank sheet. */
+  .content {
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .dashboard-body { padding: 0 !important; }
   .glass-card, .panel, .metric-card {
     box-shadow: none !important;
     border-color: #ddd !important;
@@ -71,6 +80,14 @@
     box-shadow: none !important;
     background: #fff !important;
     color: #14181c !important;
+  }
+  /* A sheet that is wider than the @page box is clipped on the right, not
+     wrapped. The two sheets that are whole pages of their own are held to
+     176mm — inside the 14mm side margins — so the paper shows every column. */
+  .year-doc, .packet-doc {
+    width: 176mm !important;
+    max-width: 176mm !important;
+    margin: 0 !important;
   }
   .print-page { margin: 0 !important; }
   .print-page + .print-page { break-before: page; page-break-before: always; }

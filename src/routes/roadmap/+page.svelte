@@ -28,7 +28,7 @@
 	/** Offered 2026-10-28 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, and the reserve fund’s five-year picture shipped on /accounting in v0.3.49; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, and the year on one page and the AGM packet shipped in v0.3.50; these four are what is waiting now.';
 	const uiQueue = [
 		{
 			name: 'A receipt you can hand over',
@@ -37,22 +37,22 @@
 				'One printed page per payment: the amount, the rail, the reference or txid, the rate at lock and the lot, on council letterhead, checked at print size. Today the receipt tape is on screen only.'
 		},
 		{
-			name: 'A year on one page',
-			where: '/',
-			detail:
-				'One printable annual summary for the AGM package: the year’s income and spend by category, the three fund balances, where the compliance score started and ended, and what is still open — read from the books, not retyped.'
-		},
-		{
 			name: 'Search that reaches the workspace',
 			where: 'Cmd/Ctrl+K',
 			detail:
 				'Today the search index finds pages and documents, not the building. Add lot records, ledger entries and tax sections, each result opening the row it names.'
 		},
 		{
-			name: 'The AGM packet',
-			where: '/meetings',
+			name: 'A budget that prints',
+			where: '/accounting',
 			detail:
-				'One printable packet per meeting: the notice, the agenda, the last minutes and the quorum maths on one page, checked at print size rather than shrunk to fit.'
+				'One printed page per budget, line by line: the annual figure, the year to date, what is left and the variance, so a council can review the plan against the actuals on paper. The Budget tab is on screen only, and the variance is not on it.'
+		},
+		{
+			name: 'The year’s deadlines on one page',
+			where: '/calendar',
+			detail:
+				'Twelve months of the fiscal year on one printable grid, each statutory window shaded and the tracked items listed beneath, so a council can pin the year to the wall instead of paging through months.'
 		}
 	];
 </script>

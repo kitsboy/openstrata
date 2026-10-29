@@ -1,3 +1,24 @@
+## Session — 2026-10-28 (eighth)
+
+**Done:**
+- Two queue picks shipped as `0.3.50` together. **A year on one page** (`/`): the dashboard ends in a printable annual sheet — income and spend by category with totals and budget, the three funds and their **$717,034.42** total, the score **82 → 56**, and all **3** tracked items with day counts. **The AGM packet** (`/meetings`): notice, agenda, last minutes and quorum maths on one page — notice due **13 October** (**7 days ahead**), quorum **3 of 5**, AGM **19 May 2027** at **14 of 40**.
+- `src/lib/year-sheet.ts` (9 tests) and `src/lib/meeting-packet.ts` (5 tests), plus a sheet/packet component test each and three route tests. 52 catalog keys × 9 locales (1,513 at parity), 535 frontend tests.
+- Print CSS fixed in `src/app.css`: the shell's screen gutters are zeroed in print (they were adding to the `@page` margin and pushing the annual sheet onto a second, blank sheet), both one-pagers are held to **176 mm**, and the table layout is fixed so a wide table wraps instead of being clipped at the paper edge.
+
+**Decisions:**
+- The annual sheet **reads the books** (`books.feesOperating`, `books.expenseTotal`, `books.surplusYtd`, the three fund balances) rather than recomputing them, and a ledger code no category claims is reported as **unmatched** — a page that silently drops a line would disagree with `/accounting` and nobody would know which was right.
+- The **CRF contribution is not an expense**. A dollar moved to the reserve is still the owners' money; netting it would make the year look poorer than it is. The reserve's balances are in the funds block instead.
+- The **score is passed in**, not recomputed: the dashboard hands the sheet the same six points the trend drew, so a Form K filing cannot reach the paper and miss the gauge.
+- An **overdue** item stays on the sheet under an overdue count. Deleting it would let a signed page forget the deadline the council missed.
+- The packet treats a notice given inside the window as **late** rather than rounding it up, and reads quorum as `floor(seats / 2) + 1` — **3 of 5**, and also **3 of 4**.
+- The two picks are replaced by **a budget that prints** (`/accounting`) and **the year's deadlines on one page** (`/calendar`), so four offers are waiting: receipt, workspace search, printable budget, year of deadlines.
+
+**Git State:**
+- SHA: this commit (`0.3.50`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-28 (seventh)
 
 **Done:**

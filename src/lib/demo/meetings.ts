@@ -10,12 +10,14 @@ export const quorum = {
 
 export const nextAgm = {
 	date: 'May 19, 2027',
+	iso: '2027-05-19',
 	statutory: 'May 31, 2027',
 	note: 'The Strata Property Act wants the AGM within two months of the March 31 year end. May 19 is the night council reserved. May 31 is the last lawful day. Quorum is 14 of 40.'
 };
 
 export const agm = {
 	date: 'May 20, 2026',
+	iso: '2026-05-20',
 	attendance: '22 of 40 lots, in person or by proxy',
 	quorum: 'Met at 6:42 pm',
 	resolutions: [
@@ -30,6 +32,7 @@ export const agm = {
 
 export const lastCouncil = {
 	date: 'September 15, 2026',
+	iso: '2026-09-15',
 	attendance: '5 of 5. Quorum met.',
 	minutes: [
 		'Approved the August bank reconciliations for operating, CRF, and the levy trust.',
@@ -43,6 +46,7 @@ export const lastCouncil = {
 
 export const nextCouncil = {
 	date: 'October 20, 2026',
+	iso: '2026-10-20',
 	time: '7:00–8:30 pm',
 	place: 'Amenity room and the hybrid link in the notice',
 	packageDue: 'October 16, 2026',

@@ -10,6 +10,9 @@
   import HostConnect from '$lib/components/HostConnect.svelte';
   import PayRail from '$lib/components/PayRail.svelte';
   import { books } from '$lib/demo/books';
+  import { yearBook } from '$lib/demo/year';
+  import YearSheet from '$lib/components/YearSheet.svelte';
+  import { buildYearSheet } from '$lib/year-sheet';
 
   const appVersion = packageJson.version;
 
@@ -29,6 +32,26 @@
   const health = $derived(healthNow(undefined, filedForms));
   const healthMonths = $derived(healthTrend(undefined, 6, filedForms));
   const healthDelta = $derived(healthMonths.at(-1)!.score - healthMonths[0].score);
+
+  /**
+   * The printed year reads the same six points the trend above it drew — the
+   * sheet cannot print a score the gauge is not showing, and a Form K recorded on
+   * a lot's sheet reaches both through the same records.
+   */
+  const monthLabel = (period: string) =>
+    formatDate(`${period}-01`, $locale, { month: 'long', year: 'numeric' });
+  const yearSheet = $derived(
+    buildYearSheet({
+      ...yearBook,
+      health: {
+        from: { label: monthLabel(healthMonths[0].period), score: healthMonths[0].score },
+        to: {
+          label: monthLabel(healthMonths.at(-1)!.period),
+          score: healthMonths.at(-1)!.score
+        }
+      }
+    })
+  );
 
 
   // Sidebar navigation: key, i18n key, icon name (single SVG icon system).
@@ -376,6 +399,9 @@
       <StartChoice onChoose={chooseStart} onSignIn={() => (showAuth = true)} />
 
       <div class="dashboard-body">
+      <!-- The dashboard stays on screen. The annual page at the foot of it is the
+           one printed artifact, so everything above it carries `no-print`. -->
+      <div class="no-print">
       <DemoBanner />
       <div class="sticky top-[72px] z-30 mb-4 max-sm:top-16"><PayRail /></div>
       <ResumeChip />
@@ -469,6 +495,25 @@
           <a href="/docs" class="proof-cta">{$copy.status} <span>→</span></a>
         </div>
       </div>
+      </div>
+
+      <section class="mt-10 print:mt-0" aria-labelledby="year-sheet-heading">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-brand-700">{$copy.yearSheetKicker}</p>
+            <h2 id="year-sheet-heading" class="text-xl font-bold text-slate-900">{$copy.yearSheetTitle}</h2>
+            <p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">{$copy.yearSheetLede}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+              onclick={() => window.print()}>{$copy.yearSheetPrint}</button
+            >
+            <span class="text-xs text-slate-500">{$copy.yearSheetPrintNote}</span>
+          </div>
+        </div>
+        <YearSheet sheet={yearSheet} />
+      </section>
       </div>
     </main>
 

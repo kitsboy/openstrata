@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import MeetingPacket from '$lib/components/MeetingPacket.svelte';
 	import { copy, fill } from '$lib/i18n';
 	import { councilSeats, getUnit } from '$lib/demo/building';
 	import { agm, bylawCase, lastCouncil, nextAgm, nextCouncil, quorum, voteGuide } from '$lib/demo/meetings';
@@ -9,7 +10,10 @@
 	<title>{$copy.meetPageTitle}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 print:px-0 print:py-0">
+	<!-- Everything the reader works with stays on screen. The packet below is the
+	     page's one printed artifact, so this half carries `no-print`. -->
+	<div class="no-print">
 	<PageHeader
 		kicker={fill($copy.meetKicker, { need: quorum.agmNeed, lots: quorum.lots })}
 		title={$copy.meetTitle}
@@ -117,5 +121,23 @@
 				</div>
 			{/each}
 		</div>
+	</section>
+	</div>
+
+	<section class="mt-8 print:mt-0" aria-labelledby="meet-packet-heading">
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<div>
+				<h2 id="meet-packet-heading" class="text-xl font-bold text-slate-900">{$copy.meetPacketTitle}</h2>
+				<p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">{$copy.meetPacketLede}</p>
+			</div>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.meetPacketPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.meetPacketPrintNote}</span>
+			</div>
+		</div>
+		<MeetingPacket />
 	</section>
 </div>

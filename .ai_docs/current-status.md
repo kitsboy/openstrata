@@ -1,11 +1,22 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.49
+**Site/product version:** v0.3.50
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the reserve fund, five years out (site, `0.3.49`, the queue pick)
+## Recent milestone — a year on one page, and the AGM packet to hand out (site, `0.3.50`, the two queue picks)
+
+- **The dashboard ends in a printable annual sheet.** Income and spend by category with their totals and budget column; the three fund balances and their **$717,034.42** total; the score from **April 2026's 82 to September 2026's 56**, down **26**; and all **3** tracked items with their dates and day counts, **0 overdue**. The sheet is outside the `no-print` half, so the print control and the dashboard's own furniture do not reach the paper.
+- **`src/lib/year-sheet.ts` holds three rules, with 9 tests.** Every figure is read from the books, never retyped: a code no category claims is returned as `unmatched` rather than dropped, so a new account code is a visible defect. The surplus is income less spend and **never nets the CRF contribution** — a dollar moved to the reserve is still the owners' money. An open item is tracked and dated, and a passed date is counted as overdue rather than removed.
+- **The score is passed in, not recomputed.** The dashboard hands the sheet the same six points its trend drew, so a Form K recorded on a lot's sheet reaches the paper and the gauge together.
+- **`/meetings` prints a packet instead of a workspace.** Notice, agenda, last minutes and the quorum maths on one page: the council meets **20 October 2026**, notice due **13 October** — **7 days ahead**, inside the **7-day window** — quorum **3 of 5**, and the AGM that follows on **May 19, 2027** at **14 of 40**.
+- **`src/lib/meeting-packet.ts` (5 tests)** computes the last lawful day as the meeting less the statutory window (**7** council, **14** AGM), treats a notice given inside the window as **late** rather than rounding it up, and reads quorum as a majority of the seats as whole people — **3 of 5**, and also **3 of 4**. Calendar maths runs at UTC midnight, so DST cannot move a deadline.
+- **Two print defects were found by making the paper.** The `@page` box already carries the 14 mm margin and the app kept its screen gutters on top, so the annual sheet ran onto a second, blank sheet; the print block now zeroes the shell's width, margin and padding. And a sheet held to **176 mm** was still clipped on the right, because a table's min-content width is a floor — two score tables side by side pushed past the sheet and the last column was gone at the paper edge. `minmax(0, 1fr)`, `min-width: 0` and `table-layout: fixed` wrap the cells instead.
+- 52 new catalog keys × 9 locales, catalogue **1,513** keys at full parity. Verification: frontend **535 passed** (27 new: 9 annual rules, 5 packet maths, 5 sheet, 5 packet, 3 route), `check` **0/0**, i18n and contrast audits (**218 pairs**), secret gate green, production build green with the annual sheet in `build/index.html` and the packet in `build/meetings.html`. Both pages printed to A4 PDF in Chrome and read back at page size: one sheet each, no clipped column.
+- **Queue:** the two picked slots are replaced by **a budget that prints** (`/accounting`) and **the year's deadlines on one page** (`/calendar`), so four offers are waiting.
+
+## Prior milestone — the reserve fund, five years out (site, `0.3.49`, the queue pick)
 
 - **A new Reserve plan tab on `/accounting`.** Five fiscal years of the CRF — opening, the budget's contribution, the interest the credit union actually paid, what the depreciation report schedules, and the balance each 31 March ends on. **2026–27** opens at **$586,400.00** and closes at **$627,675.52**; the boiler, elevator and envelope are covered; the **2031 roof leaves the fund $133,291.62 short**, and the page leads with that.
 - **`src/lib/reserve-plan.ts` holds four rules, with 9 tests.** The contribution is the budget's **$43,200**, never the report's recommended **$48,000** — the page states the **$4,800-a-year** gap. Interest is **0.74%**, the rate the statements paid, on the average balance; a year ending below zero earns nothing. A project named for a calendar year is paid in the fiscal year that ends in it (the 2029 elevator in **2028–29**). The parkade membrane is excluded: the levy spent its **$216,000** in its own trust.
@@ -209,4 +220,4 @@ The site is Cloudflare static; a Phase 3 backend host has not been confirmed/dep
 
 ## UI queue
 
-The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **All three picks from the 2026-10-16 offer have shipped** — the September close (`0.3.40`), the next-30-days strip (`0.3.41`) and the release trail (`0.3.43`) — and three new offers replaced the last, so four are waiting: **a floor you can walk** (`/units`), **a ledger you can read as a ledger** (`/accounting`), **search that reaches the workspace** (`Cmd/Ctrl+K`) and **the AGM packet** (`/meetings`), offered 2026-10-28. The `0.3.42` localization pass was requested work, not a queue item — the queue is about UI, and no one picked it.
+The standing UI rule remains: offer four improvements, wait for Cam's pick, then implement only selected items. **The two 2026-10-28 picks shipped at `0.3.50`** — the year on one page (`/`) and the AGM packet (`/meetings`) — and two new offers replaced them, so four are waiting: **a receipt you can hand over** (`/pay`), **search that reaches the workspace** (`Cmd/Ctrl+K`), **a budget that prints** (`/accounting`) and **the year's deadlines on one page** (`/calendar`), offered 2026-10-28. The `0.3.42` localization pass was requested work, not a queue item — the queue is about UI, and no one picked it.

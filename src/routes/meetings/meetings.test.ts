@@ -1,0 +1,40 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/svelte';
+import { locale } from '$lib/i18n';
+import Meetings from './+page.svelte';
+
+/**
+ * /meetings prints one artifact.
+ *
+ * The page around it is the workspace: quorum cards, the council, the agenda and
+ * the vote guide. Everything that stays on screen carries `no-print`, so a
+ * printed page is the packet alone — the same trick the lot sheet and the Form K
+ * register use, checked on the rendered DOM rather than on the stylesheet.
+ */
+describe('/meetings', () => {
+	beforeEach(() => locale.set('en'));
+
+	it('renders the packet with its four pieces', () => {
+		const { container } = render(Meetings);
+		const packet = container.querySelector('.print-doc');
+		expect(packet).toBeTruthy();
+		const text = packet?.textContent ?? '';
+		expect(text).toContain('Notice');
+		expect(text).toContain('Agenda');
+		expect(text).toContain('Council quorum');
+		expect(text).toContain('Minutes — September 15, 2026');
+	});
+
+	it('keeps the packet out of the no-print half, and the workspace in it', () => {
+		const { container } = render(Meetings);
+		const packet = container.querySelector('.print-doc');
+		expect(packet?.closest('.no-print')).toBeNull();
+
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print the packet'))).toBe(true);
+		// The page header is navigation too, so it does not go on the paper.
+		expect(controls.some((text) => text.includes('Meetings and votes'))).toBe(true);
+	});
+});

@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — a year on one page, and the AGM packet to hand out
+
+Commit: this commit (site `0.3.50`). Backend API version stays `0.3.28`.
+
+> **Two picks, shipped together, and both of them are paper.** The dashboard now ends in an annual sheet for the AGM package: income and spend by category with their totals and budget column, the three fund balances at the September 30 close, the compliance score from **April 2026's 82 to September 2026's 56**, and every tracked item with its date and day count. The three funds add to **$81,797.62 + $603,688.80 + $31,548.00 = $717,034.42** — the figures the funds tab reports — and the sheet says **down 26 points since April** because that is what the trend above it drew.
+>
+> **Every figure is read from the books, never retyped.** `src/lib/year-sheet.ts` (9 tests) groups the ledger's own lines by account code. A code no category claims is reported as **unmatched** and left out of the rows, so a new account code is a visible defect rather than totals that quietly disagree with `/accounting`. The operating surplus is income less spend and **never nets the CRF contribution**: a dollar moved to the reserve is still the owners' money, and counting it as an expense would make the year look poorer than it is. An item is open until its date passes and is **counted as overdue** after, not removed — the page a council signs should not lose the item it missed.
+>
+> **The score is passed in, not recomputed.** The dashboard hands the sheet the same six points its trend drew, so a Form K recorded on a lot's own sheet reaches the printed page and the gauge together, and the sheet cannot print a score the page above it is not showing.
+>
+> **`/meetings` prints a packet instead of a workspace.** Notice, agenda, last minutes and the quorum maths on one page: the council meets **20 October 2026**, notice due **13 October** — **7 days ahead of the meeting**, inside the **7-day window** — quorum **3 of 5**, and the annual meeting that follows on **May 19, 2027** at **14 of 40**. `src/lib/meeting-packet.ts` (5 tests) computes the last lawful day from the statutory window, treats a notice given inside the window as **late** rather than rounding it up, and reads quorum as a majority of the seats as whole people — **3 of 5**, and also **3 of 4** — because a floor of half plus one is the only reading that never asks for fewer people than a majority.
+>
+> **Two print defects were found by making the paper and looking.** The `@page` box already carries the 14 mm margin and the app kept its screen gutters on top of it, so the annual sheet ran onto a **second, blank sheet**; the print block now zeroes the shell's width, margin and padding and the year page's controller sits outside the sheet. And a sheet held to **176 mm** was still clipped on the right, because a table's min-content width is a floor: two score tables side by side pushed past the paper and the last column was simply gone. `minmax(0, 1fr)`, `min-width: 0` and `table-layout: fixed` wrap the cells instead. The host-connect row, skip link, install chip and offline banner joined the `no-print` list.
+>
+> **Verified:** frontend **535 passed** (27 new: 9 annual rules, 5 packet maths, 5 sheet, 5 packet, 3 route), `check` **0 errors / 0 warnings**, translation audit **1,513 keys × 9 locales** (52 new), contrast **218 pairs**, secret gate green, production build green with the annual sheet in `build/index.html` and the packet in `build/meetings.html`. Both pages printed to A4 PDF in Chrome and read back at page size.
+>
+> **The queue is refreshed, because the picks shipped.** **A budget that prints** (`/accounting`) and **the year's deadlines on one page** (`/calendar`) take the two slots beside the receipt and workspace search, so four are waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md` and `.ai_docs/current-status.md`.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the reserve fund, five years out
 
 Commit: this commit (site `0.3.49`). Backend API version stays `0.3.28`.

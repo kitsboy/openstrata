@@ -14,6 +14,45 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.50",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "A year on one page (/). The dashboard now ends in a printable annual summary for the AGM package: income and spend by category, each with its own total and its budget column; the three fund balances at the September 30 close and their total — $81,797.62 + $603,688.80 + $31,548.00 = $717,034.42; the compliance score from April 2026: 82 of 100 → September 2026: 56 of 100, down 26; and all 3 tracked items with their dates and day counts, 0 of them overdue. The button is the page's only print control, so what leaves the printer is the sheet and not the dashboard.",
+          "The rules live in src/lib/year-sheet.ts (9 tests). Every figure is read from the books, not retyped. A ledger code no category claims is returned in unmatched and left out of the rows, so a new account code shows up as a defect instead of making the totals quietly disagree with /accounting. The operating surplus is income less spend and never nets the CRF contribution: a dollar moved to the reserve is still the owners' money, and counting it as an expense would make the year look poorer than it is. The reserve's balances appear in the funds block, where they belong.",
+          "An open item is tracked and dated, and an overdue one is counted. A deadline stays on the sheet after its date passes, under an overdue count, because the page a council signs should not lose the item it missed.",
+          "The score is passed in, not recomputed. The dashboard hands the sheet the same six points its trend drew, so a Form K recorded on a lot's sheet reaches both the paper and the gauge, and the sheet cannot print a score the page above it is not showing.",
+          "The AGM packet (/meetings). One page carrying the notice, the agenda, the last minutes and the quorum maths: the council meets 20 October 2026, notice due 13 October — 7 days ahead of the meeting, inside the 7-day window — quorum 3 of 5, and the annual meeting that follows it on May 19, 2027 with 14 of 40.",
+          "The arithmetic lives in src/lib/meeting-packet.ts (5 tests). The last lawful day is the meeting less the statutory window — 7 days for council, 14 for an AGM or special general meeting, the same windows documents.ts prints on the notice itself. A notice given inside the window is late, not rounded up: record the day it was actually given and the same function says whether it was enough. Quorum is a majority of the seats as a whole number of people — 3 of 5, and also 3 of 4 — because a floor of half plus one is the only reading that never asks for fewer people than a majority. Calendar maths runs at UTC midnight, as everywhere else here, so a daylight-saving change cannot move a deadline by a day."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "The annual sheet no longer prints a second, blank sheet. The @page box already carries the 14 mm margin, and the app kept its screen gutters on top of it, so one page of paper became two. The print block now zeroes the shell's width, margin and padding and the page's body padding, and the year page's controller sits outside the sheet.",
+          "A sheet is not wider than the paper. Both one-page sheets are held to 176 mm inside the 14 mm side margins, but a table's min-content width is a floor: the two score tables side by side pushed past the sheet and the last column was clipped at the paper edge, which on screen would have scrolled and on paper is simply gone. minmax(0, 1fr), min-width: 0 and table-layout: fixed let the cells wrap instead, and long money strings break rather than bleed.",
+          "Only the sheet prints. The host-connect row, the skip link, the install chip and the offline banner joined the no-print list; the dashboard's welcome row, task list, metrics, buildings and proof band carry it too, as does everything on /meetings above the packet."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The queue is refreshed with two new offers, per the standing rule. A budget that prints (/accounting) and the year's deadlines on one page (/calendar) take the two picked slots beside the receipt and workspace search, so four are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Six tests render the two sheets: income and spend with their totals, the three fund figures and the total, the score's two ends and its −26, the tracked items with their dates, the packet's four pieces, and both sheets printing in French.",
+          "Both pages printed to A4 PDF in Chrome and read back at page size: one sheet each, no second page, no clipped column, and the packet's notice deadline and quorum legible at 100%.",
+          "Frontend 535 passed (27 new), Svelte check 0 errors / 0 warnings, translation audit 1,513 keys × 9 locales (52 new), contrast audit 218 pairs, secret gate green, production build green with the annual sheet in build/index.html and the packet in build/meetings.html."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.49",
     "date": "2026-10-28",
     "groups": [
