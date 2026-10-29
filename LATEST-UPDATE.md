@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the arrears ladder on paper
+
+Commit: this commit (site `0.3.54`). Backend API version stays `0.3.28`.
+
+> **The arrears ladder on paper, picked from the 29 October queue.** The Receivables tab on `/accounting` now prints one page for the table: the lots with money past due, each charge in the column its age earns, the columns added up, the Form F flag, and one line that accounts for every other lot. The page is the books' own — **$6,499.00** past due across **3 of 40 lots**, the same figure the cards above carry.
+>
+> **`src/lib/arrears-sheet.ts` holds five rules, with 10 tests, and the first decides the sheet.** The ladder is the lots **past due**, not every lot that owes. On the close, **33** of the 40 lots owe only next month's fee. That fee is real money and it is not arrears, and printing 33 rows of it would bury the three lots a council actually acts on. So the sheet prints **207, 104 and 309**, adds its columns to **$8,506.00**, and states the rest of the book in one line: **$6,499.00** past due, **$2,007.00** more of the same lots' next fee, **$23,130.00** not yet due on the other lots, **$31,636.00** standing in all.
+>
+> **The rest of the rules are the ones a reader can check.** The columns add to the printed total rather than to a second computation. “Current” is carried as its own column, because money owed is not money overdue — lot 207's **$666.00** October fee sits beside its **$5,700.00** of late money. A plan balance is a schedule, not overdue debt, so lots **108** and **403** are named under the table with **$1,800.00** and **$2,700.00** standing and never aged into a bucket. And the sheet is built from every lot, so the screen's “past due only” toggle cannot change a printed total.
+>
+> **`ArrearsSheet.svelte`** carries the letterhead, the statement date, three summary figures — past due, past due over 90 days at **65%** of it, and the **322-day** levy on lot 207 — then the eight-column table (owner under the lot, a dash in every empty cell), the plans list, the clear-lot count, the basis and the sample line. The cards, the filter, the ladder, the ⚠️ plan block and the note stay on screen; the header and the period banner come off the paper on that tab, as they do on the budget's.
+>
+> **One print defect was found by printing it.** The sheet's right-hand column is right-aligned — the letterhead's dates, the totals, the plan amounts — so without a gutter the last glyph landed on the sheet's edge: the page showed **“September 30, 202”** and **“payment plan”** clipped. `.arrears-doc` now carries a **4 mm gutter** inside its 176 mm and every character is on the paper.
+>
+> **Verified:** frontend **641 passed** (16 new: 10 sheet rules, 3 sheet component, 3 accounting route), `check` **0 errors / 0 warnings**, translation audit **1,595 keys × 9 locales** (12 new) across 35 route components, secret gate green, production build green. Printed and measured in Chrome: **one Letter page**, the sheet **176 mm** wide inside the 187.9 mm page box, **537 px** of the **927 px** a Letter page holds, no descendant past its right edge and no clipped cell. The April book (`?period=2026-04`) prints its single levy row on one page at 474 px.
+>
+> **The queue is refreshed, because the pick shipped.** **A cash statement with its chain** (`/accounting`) takes the slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four are waiting.
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — a package a council prints once, filters that stay put, and the why beside the variance
 
 Commit: this commit (site `0.3.53`). Backend API version stays `0.3.28`.

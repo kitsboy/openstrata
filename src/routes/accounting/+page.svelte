@@ -4,12 +4,14 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import BudgetSheet from '$lib/components/BudgetSheet.svelte';
+	import ArrearsSheet from '$lib/components/ArrearsSheet.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
 	import { OPENING_CASH, statement } from '$lib/ledger-statement';
 	import { age, summarise } from '$lib/arrears';
+	import { arrearsSheet } from '$lib/arrears-sheet';
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
 	import { building, depreciation, formF, units } from '$lib/demo/building';
 	import { PERIOD_PARAM, parsePeriod, type PeriodPoint } from '$lib/period-link';
@@ -29,6 +31,8 @@
 		'journal'
 	];
 	let tab = $state<TabId>('overview');
+	/** The tabs that print a sheet of their own, so the page's furniture comes off the paper. */
+	const printsOwnSheet = $derived(tab === 'budget' || tab === 'receivables');
 
 	/**
 	 * A month carried in from the compliance-health trend: `?period=2026-09` opens
@@ -93,12 +97,34 @@
 	// Receivables are aged from the day each charge fell due, not from a status
 	// field. `demo/arrears` supplies the dates; `lib/arrears` owns the counting.
 	const aged = $derived(
-		age(charges(), asOf).map((row) => ({
-			...row,
-			unit: units.find((candidate) => candidate.id === row.unitId)!
-		}))
+		age(charges(), asOf).map((row) => {
+			const unit = units.find((candidate) => candidate.id === row.unitId)!;
+			return { ...row, unit, withheld: formF(unit) === 'withheld' };
+		})
 	);
 	const summary = $derived(summarise(aged));
+
+	/**
+	 * The ladder as paper. Built from every lot, never from the filtered `ladder`
+	 * below: a control on screen must not change the total on the sheet.
+	 */
+	const arrearsPrint = $derived(
+		arrearsSheet({
+			lots: aged.map((row) => ({
+				unitId: row.unitId,
+				owner: row.unit.owner,
+				buckets: row.buckets,
+				total: row.total,
+				pastDue: row.pastDue,
+				planned: row.planned,
+				oldest: row.oldest,
+				oldestDays: row.oldestDays,
+				withheld: row.withheld
+			})),
+			asOf,
+			totalLots: units.length
+		})
+	);
 
 	// A lot with nothing on the books has no charges, so the ladder has no row for
 	// it. "Show every lot" still owes a row: the building has 40, not the 37 that
@@ -239,7 +265,7 @@
 	<!-- The budget prints as one sheet, so the page's own furniture comes off the
 	     paper on that tab and stays on it everywhere else (the reserve plan prints
 	     with its header, which is how it shipped). -->
-	<div class={tab === 'budget' ? 'no-print' : ''}>
+	<div class={printsOwnSheet ? 'no-print' : ''}>
 		<PageHeader
 			kicker={fill($copy.accKicker, { year: building.fiscalLabel })}
 			title={$copy.accTitle}
@@ -250,7 +276,7 @@
 	<!-- The date belongs to the page, not to one tab: it opens here and stays in
 	     view while the reader moves between the ladder and the journal. -->
 	{#if period}
-		<div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 {tab === 'budget' ? 'no-print' : ''}">
+		<div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 {printsOwnSheet ? 'no-print' : ''}">
 			<p class="min-w-0 flex-1 text-sm text-amber-950">
 				{fill($copy.accPeriodBanner, { date: longDate })}
 			</p>
@@ -273,7 +299,7 @@
 	<!-- The ladder and the journal follow the date; the funds tab follows it too,
 	     from its own statements. The rest say they do not. -->
 	{#if period && tab !== 'receivables' && tab !== 'journal' && tab !== 'funds' && tab !== 'reserve'}
-		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600 {tab === 'budget' ? 'no-print' : ''}">
+		<p class="mb-4 max-w-3xl rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm leading-relaxed text-slate-600 {printsOwnSheet ? 'no-print' : ''}">
 			{fill($copy.accPeriodCloseNote, { date: longDate, close: closeDate })}
 		</p>
 	{/if}
@@ -363,7 +389,15 @@
 	{/if}
 
 	{#if tab === 'receivables'}
-		<div class="mb-4 grid gap-3 sm:grid-cols-3">
+		<div class="mb-4 flex flex-wrap items-center gap-2 no-print">
+			<button
+				class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+				onclick={() => window.print()}>{$copy.accArrearsSheetPrint}</button
+			>
+			<span class="text-xs text-slate-500">{$copy.accArrearsSheetPrintNote}</span>
+		</div>
+
+		<div class="mb-4 grid gap-3 sm:grid-cols-3 no-print">
 			<div class="rounded-2xl border border-border bg-surface-2 p-4">
 				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{$copy.accAgePastDue}</p>
 				<p class="mt-1 text-2xl font-bold tabular-nums text-rose-700">{money(summary.pastDue)}</p>
@@ -385,13 +419,13 @@
 			</div>
 		</div>
 
-		<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+		<div class="mb-3 flex flex-wrap items-center justify-between gap-3 no-print">
 			<p class="min-w-0 flex-1 basis-[24rem] text-sm text-slate-500">{$copy.accAgeHint}</p>
 			<button class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold" onclick={() => (onlyPastDue = !onlyPastDue)}>
 				{onlyPastDue ? $copy.accShowEveryLot : $copy.accPastDueOnly}
 			</button>
 		</div>
-		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
+		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2 no-print">
 			<table class="w-full min-w-[820px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -436,10 +470,10 @@
 			</table>
 		</div>
 
-		<p class="mt-3 text-sm text-slate-500">{fill($copy.accAgeClear, { clear: units.length - summary.pastDueLots, all: units.length })}</p>
+		<p class="mt-3 text-sm text-slate-500 no-print">{fill($copy.accAgeClear, { clear: units.length - summary.pastDueLots, all: units.length })}</p>
 
 		{#if planned.length > 0}
-			<div class="mt-4 rounded-2xl border border-border bg-surface-2 p-4">
+			<div class="mt-4 rounded-2xl border border-border bg-surface-2 p-4 no-print">
 				<h3 class="text-sm font-bold text-slate-900">{$copy.accAgePlanTitle}</h3>
 				<ul class="mt-2 space-y-1 text-sm text-slate-600">
 					{#each planned as row (row.unitId)}
@@ -452,7 +486,12 @@
 			</div>
 		{/if}
 
-		<p class="mt-3 text-sm text-slate-500">{$copy.accReceivablesNote}</p>
+		<p class="mt-3 text-sm text-slate-500 no-print">{$copy.accReceivablesNote}</p>
+
+		<!-- The paper: the past-due ladder, its columns added up, and one line for
+		     every lot that owes only the next fee. Built from every lot, so the
+		     screen's filter cannot change what the sheet totals. -->
+		<ArrearsSheet sheet={arrearsPrint} />
 	{/if}
 
 	{#if tab === 'payables'}

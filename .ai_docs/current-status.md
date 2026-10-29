@@ -1,11 +1,20 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.53
+**Site/product version:** v0.3.54
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — a package a council prints once, filters that stay put, and the why beside the variance (site, `0.3.53`, three queue picks)
+## Recent milestone — the arrears ladder on paper (site, `0.3.54`, one queue pick)
+
+- **The Receivables tab on `/accounting` prints as one page for the table.** The lots with money past due, each charge in the column its age earns (current / 1–30 / 31–60 / 61–90 / 90+), the columns added up, the **Form F** flag, and one line that accounts for every other lot. It is the books' own figure — **$6,499.00** past due across **3 of 40 lots**, the same number the cards above carry.
+- **`src/lib/arrears-sheet.ts` holds five rules, with 10 tests.** The ladder is the lots **past due**, not every lot that owes: **33** of the 40 lots owe only next month's fee, and 33 rows of a fee that is not late would bury the three a council acts on. “Current” is its own column, because money owed is not money overdue — lot 207's **$666.00** October fee sits beside its **$5,700.00** of late money. A plan balance is a schedule and stays outside every bucket: lots **108** and **403** are named under the table with **$1,800.00** and **$2,700.00** standing. The columns add to the printed total (**$8,506.00** = **$6,499.00** past due + **$2,007.00** of the same lots' next fee), and the sheet is built from every lot, so the screen's “past due only” toggle cannot change a printed total.
+- **`src/lib/components/ArrearsSheet.svelte`.** Letterhead, statement date, three summary figures (past due, past due over 90 days at **65%**, lot 207's **322-day** levy), the eight-column table with the owner under the lot and a dash in every empty cell, the plans list, the clear-lot count, the basis and the sample line. The cards, filter, ladder, plan block and note are `no-print` on that tab, as the budget's are.
+- **One print defect found by printing it.** The sheet's right-hand column is right-aligned, so without a gutter the last glyph landed on the sheet's edge — “September 30, 202” and “payment plan” clipped. `.arrears-doc` now carries a **4 mm gutter** inside its 176 mm.
+- 12 new catalog keys × 9 locales, catalogue **1,595** keys at full parity. Verification: frontend **641 passed** (16 new: 10 rules, 3 sheet, 3 accounting route), `check` **0/0**, i18n audit **1,595 keys across 35 route components**, secret gate green, production build green. Printed in Chrome: **one Letter page** (537px of 927), sheet **176 mm** inside the 187.9 mm page box, no descendant past its right edge, no clipped cell; the April book (`?period=2026-04`) is one page at 474px.
+- **Queue:** the picked slot is replaced by **a cash statement with its chain** (`/accounting`), beside **a levy statement of its own**, **the budget in the reader's language** and **the Form K register in the package** — four offers, none started.
+
+## Prior milestone — a package a council prints once, filters that stay put, and the why beside the variance (site, `0.3.53`, three queue picks)
 
 - **The AGM package in one print (`/documents`).** A contents page, then the year's sheet, the meeting packet and the new reserve sheet, each on its own page, in the order the contents page names. `?package=1` opens the stack; the package button prints it; a pick from the picker leaves the package mode. The stack is assembled from the records the other pages read (`buildYearSheet(yearBook)` with the dashboard's own six health points, and the packet `/meetings` prints), so the package cannot disagree with the pages it replaces.
 - **`src/lib/components/ReserveSheet.svelte` is the reserve fund on paper.** Five fiscal years with opening balance, the budget's contribution, the interest the credit union paid, the scheduled projects and the closing balance, then the shortfall year and the four notes. It reads `reservePlan(reservePicture.input)` — the same call the Reserve plan tab makes.

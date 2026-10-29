@@ -28,7 +28,7 @@
 	/** Offered 2026-10-29 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, and the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, and the arrears ladder on paper shipped in v0.3.54; these four are what is waiting now.';
 	const uiQueue = [
 		{
 			name: 'A levy statement of its own',
@@ -49,10 +49,10 @@
 				'The AGM stack carries the year, the packet and the reserve plan; the tenancy register is the fourth sheet a council hands to an owner. Add it to the stack, and keep the contents page honest about what is inside.'
 		},
 		{
-			name: 'The arrears ladder on paper',
+			name: 'A cash statement with its chain',
 			where: '/accounting',
 			detail:
-				'Receivables is the one tab with no print: the ladder, the bucket totals and the plan block are screen only. Give it a sheet — oldest money first, the buckets totalled, the lots on payment plans named — so a council can read the arrears at the table.'
+				'The journal’s entries are on screen and the ledger verifies, but a council files paper: give the operating account a printed statement for the period — opening balance, every entry with its running balance and hash, closing balance — so the page can be checked against the chain without the app open.'
 		}
 	];
 </script>

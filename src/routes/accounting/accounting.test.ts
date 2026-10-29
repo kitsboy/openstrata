@@ -296,3 +296,49 @@ describe('/accounting budget', () => {
 	});
 });
 
+describe('the receivables ladder on paper', () => {
+	it('prints the past-due ladder as its own sheet', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Who owes');
+		const sheet = container.querySelector('.arrears-doc');
+		expect(sheet).toBeTruthy();
+		expect(sheet?.closest('.no-print')).toBeNull();
+		const text = sheet?.textContent ?? '';
+		expect(text).toContain('The receivables ladder');
+		expect(text).toContain('207');
+		expect(text).toContain('$6,366.00');
+		// The $6,499 past due the page's cards carry, and the 322-day levy.
+		expect(text).toContain('$6,499.00');
+		expect(text).toContain('322 days past due');
+	});
+
+	it('keeps the cards, the filter and the table on screen', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Who owes');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print this ladder'))).toBe(true);
+		// The cards above the table are the screen's, not the paper's.
+		expect(controls.some((text) => text.includes('Past due over 90 days'))).toBe(true);
+	});
+
+	it('prints the whole book whatever the screen is showing', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Who owes');
+		// The screen opens on "past due only"; widening it to every lot must not add
+		// a row to the paper or move its totals. Four rows are the three late lots
+		// and the total line.
+		const rowsBefore = container.querySelectorAll('.arrears-doc tbody tr').length;
+		const toggle = [...container.querySelectorAll('button')].find((candidate) =>
+			candidate.textContent?.includes('Show every lot')
+		);
+		if (toggle) await fireEvent.click(toggle);
+		expect(container.querySelectorAll('.arrears-doc tbody tr').length).toBe(rowsBefore);
+		expect(rowsBefore).toBe(4);
+		// The other 34 lots and the standing total are in the sheet's own line.
+		expect(container.querySelector('.arrears-doc')?.textContent ?? '').toContain(
+			'$31,636.00 stands on the books in all.'
+		);
+	});
+});

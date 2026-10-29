@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.54
+-  summary: "The arrears ladder on paper, picked from the 29 October queue: the Receivables tab on /accounting prints one page for the table. src/lib/arrears-sheet.ts holds five rules with 10 tests, and the first decides the sheet: the ladder is the lots with money past due, not every lot that owes. On the close, 33 of the 40 lots owe next month's fee — real money, but not arrears — so printing those rows would bury the three lots a council actually acts on. The sheet prints those three (207, 104, 309), adds its columns to $8,506.00, and states the rest of the book in one line: $6,499.00 past due, $2,007.00 more for the next fee, $23,130.00 not yet due on the other lots, $31,636.00 standing in all. 'Current' is carried as its own column because money owed is not money overdue; a plan balance is a schedule, named under the table — lots 108 and 403 hold $1,800.00 and $2,700.00 — and never aged into a bucket; and the sheet is built from every lot, so the screen's 'past due only' toggle cannot change the printed total. One print defect was found by printing it: the right-aligned columns ended exactly on the sheet's edge and the last glyph was cut, so the printed sheet carries a 4mm gutter. 16 new tests (10 rules, 3 sheet, 3 accounting route), 641 frontend tests, 12 catalog keys x 9 locales (1,595 at parity), check 0/0, i18n audit green, production build green, and the sheet read back from Chrome: one Letter page, 665px of the 710px the page box holds and 537px of 927 tall, no clipped cell."
 -  version: 0.3.53
 -  summary: "Three picks from the 29 October queue, shipped together, and all three are about a page a council hands to somebody. The AGM package on /documents prints as one stack: a contents page, then the year's sheet, the meeting packet and the new reserve sheet, each on its own page, in the order the contents page promises. The unit list remembers its filters: the search, the tone and the floor are kept on the device and restored when a reader comes back from a lot's sheet, a ?tone= link still wins over them, and one button clears all three and forgets the record. The printed budget now prints the reason a line moved beside its variance. 28 new tests (10 filter rules, 6 units route, 5 documents route, 5 budget rules, 2 accounting route), 625 frontend tests total, 7 catalog keys x 9 locales (1,583 at parity), check 0/0, i18n and secret audits green, production build green, and the two printed artifacts read back from Chrome: the budget on one Letter page at 905px of 927 inside the sheet, and the package on exactly four pages."
 -  version: 0.3.52
@@ -146,6 +148,26 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.54] — 2026-10-29
+
+### Added
+
+- **The arrears ladder on paper (`/accounting`).** The Receivables tab prints as one page for the table: the lots with money past due, each charge aged into the column it belongs in (current / 1–30 / 31–60 / 61–90 / 90+), the columns added up, the Form F flag, and one line that accounts for every other lot. The receipt is the books' own — **$6,499.00** past due, the same figure the cards above carry, across **3 of 40 lots** — and the sheet is rebuilt from every lot, so the screen's “past due only” toggle cannot move a printed total.
+- **`src/lib/arrears-sheet.ts` (10 tests) holds five rules.** The ladder is the lots **past due**, not every lot that owes: **33** of the 40 lots owe only next month's fee, and printing 33 rows of a fee that is not late would bury the three that are. The page still accounts for the whole book — the other lots' **$23,130.00** not yet due and the standing **$31,636.00** are in the line beneath the table, so the paper reconciles to the ledger without a second sheet. The columns add to the printed total (**$8,506.00**, which is **$6,499.00** past due plus **$2,007.00** of the same lots' next fee) rather than to a second computation. A plan balance is a schedule and stays outside every bucket: lots **108** and **403** are named under the table with **$1,800.00** and **$2,700.00** standing. And a lot that owes nothing is counted, not printed as a row of dashes — **3 of 40** have nothing on the books at all.
+- **`src/lib/components/ArrearsSheet.svelte`.** The council's letterhead, the statement date, three summary figures (past due, past due over 90 days at **65%** of it, the **322-day** levy on lot 207), the eight-column table with the owner under the lot and a dash in every empty cell, the plans list, the clear-lot count, the basis and the sample line.
+
+### Changed
+
+- **The Receivables tab's screen half is `no-print`.** The cards, the filter, the ladder, the plan block and the note stay on screen; the header and the period banner come off the paper on that tab exactly as they do on the budget's, so what prints is the sheet and nothing else.
+- **`src/app.css`**: `.arrears-doc` joins the 176 mm print rule, and gets a **4 mm gutter**. Its right-hand column is right-aligned — the letterhead's dates, the totals, the plan amounts — so without the gutter the last glyph sits on the sheet's edge; printing it showed a clipped “2026” and a clipped “payment plan”.
+- **The queue is refreshed.** A **cash statement with its chain** (`/accounting`) takes the shipped slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four offers are waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md`, `LATEST-UPDATE.md` and `.ai_docs/current-status.md`.
+
+### Verified
+
+- **16 new tests:** 10 for the sheet's rules (the past-due lots in age order, the other 34 and the standing total, every column adding to the footer, every lot counted once, the plans outside the ladder, a late lot's next fee in its own column, the oldest money and the 90-day share, the order it was handed, an empty book, a plan-only lot), 3 for the sheet component (the columns and the withheld flag, the footer and the book line, French) and 3 for `/accounting` (the sheet on the page, the cards and filter still on screen, the paper unchanged when the screen widens to every lot).
+- **Printed and measured in Chrome:** one Letter page; the sheet is **176 mm** wide inside the 187.9 mm page box, **537 px** of the **927 px** a Letter page holds, with no descendant past its right edge and no clipped cell. The April book (`?period=2026-04`) prints its single levy row on one page at 474 px.
+- Frontend **641 passed** across 67 files, Svelte check **0 errors / 0 warnings**, translation audit **1,595 keys × 9 locales** (12 new) across 35 route components, secret gate green, production build green.
 
 ## [0.3.53] — 2026-10-29
 

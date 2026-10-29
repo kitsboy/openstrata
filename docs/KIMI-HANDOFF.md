@@ -42,6 +42,27 @@
 
 ---
 
+## Session — 2026-10-29 (fourth)
+
+**Done:**
+- One queue pick shipped as `0.3.54`. **The arrears ladder on paper** (`/accounting`): the Receivables tab prints one page for the table — the lots with money past due, each charge aged into **current / 1–30 / 31–60 / 61–90 / 90+**, the columns totalled, the **Form F** flag, and one line for every other lot. **$6,499.00** past due across **3 of 40 lots**, the same figure the cards carry.
+- `src/lib/arrears-sheet.ts` (10 tests) holds five rules; `src/lib/components/ArrearsSheet.svelte` (3 tests) draws the letterhead, the statement date, three summary figures, the eight-column table, the plans list, the clear-lot count, the basis and the sample line. Three `/accounting` route tests. 12 catalog keys × 9 locales (1,595 at parity), 641 frontend tests total.
+- `.arrears-doc` joins the 176 mm print rule in `src/app.css` with a **4 mm gutter**; the tab's cards, filter, ladder, plan block and note are `no-print`, and the header and period banner come off the paper on that tab as they do on the budget's.
+
+**Decisions:**
+- **The ladder is the lots past due, not every lot that owes.** On the close, 33 of 40 lots owe only next month's fee — real money, not arrears — so printing them would bury the three lots a council acts on. The page still accounts for the whole book in one line beneath the table: **$6,499.00** past due, **$2,007.00** more of the same lots' next fee, **$23,130.00** not yet due on the others, **$31,636.00** standing in all.
+- **“Current” is a column of its own.** Money owed is not money overdue: lot 207's **$666.00** October fee sits beside its **$5,700.00** of late money, and flattening the two would misstate the arrears.
+- **A plan balance is a schedule, not overdue debt.** Lots 108 and 403 are named under the table ($1,800.00 and $2,700.00 standing) and never aged into a bucket.
+- **The sheet is built from every lot**, so the screen's “past due only” toggle cannot change a printed total — the same rule the budget's sheet follows.
+- **Printing found the gutter.** The right-hand column is right-aligned, so the last glyph landed on the sheet's edge (“September 30, 202” and “payment plan” clipped); `.arrears-doc` now pads 4 mm inside its 176 mm.
+- The picked slot is replaced by **a cash statement with its chain** (`/accounting`), so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.54`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (second)
 
 **Done:**

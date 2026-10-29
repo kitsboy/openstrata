@@ -14,6 +14,36 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.54",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The arrears ladder on paper (/accounting). The Receivables tab prints as one page for the table: the lots with money past due, each charge aged into the column it belongs in (current / 1–30 / 31–60 / 61–90 / 90+), the columns added up, the Form F flag, and one line that accounts for every other lot. The receipt is the books' own — $6,499.00 past due, the same figure the cards above carry, across 3 of 40 lots — and the sheet is rebuilt from every lot, so the screen's “past due only” toggle cannot move a printed total.",
+          "src/lib/arrears-sheet.ts (10 tests) holds five rules. The ladder is the lots past due, not every lot that owes: 33 of the 40 lots owe only next month's fee, and printing 33 rows of a fee that is not late would bury the three that are. The page still accounts for the whole book — the other lots' $23,130.00 not yet due and the standing $31,636.00 are in the line beneath the table, so the paper reconciles to the ledger without a second sheet. The columns add to the printed total ($8,506.00, which is $6,499.00 past due plus $2,007.00 of the same lots' next fee) rather than to a second computation. A plan balance is a schedule and stays outside every bucket: lots 108 and 403 are named under the table with $1,800.00 and $2,700.00 standing. And a lot that owes nothing is counted, not printed as a row of dashes — 3 of 40 have nothing on the books at all.",
+          "src/lib/components/ArrearsSheet.svelte. The council's letterhead, the statement date, three summary figures (past due, past due over 90 days at 65% of it, the 322-day levy on lot 207), the eight-column table with the owner under the lot and a dash in every empty cell, the plans list, the clear-lot count, the basis and the sample line."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The Receivables tab's screen half is no-print. The cards, the filter, the ladder, the plan block and the note stay on screen; the header and the period banner come off the paper on that tab exactly as they do on the budget's, so what prints is the sheet and nothing else.",
+          "src/app.css: .arrears-doc joins the 176 mm print rule, and gets a 4 mm gutter. Its right-hand column is right-aligned — the letterhead's dates, the totals, the plan amounts — so without the gutter the last glyph sits on the sheet's edge; printing it showed a clipped “2026” and a clipped “payment plan”.",
+          "The queue is refreshed. A cash statement with its chain (/accounting) takes the shipped slot beside a levy statement of its own, the budget in the reader's language and the Form K register in the package, so four offers are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md, LATEST-UPDATE.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "16 new tests: 10 for the sheet's rules (the past-due lots in age order, the other 34 and the standing total, every column adding to the footer, every lot counted once, the plans outside the ladder, a late lot's next fee in its own column, the oldest money and the 90-day share, the order it was handed, an empty book, a plan-only lot), 3 for the sheet component (the columns and the withheld flag, the footer and the book line, French) and 3 for /accounting (the sheet on the page, the cards and filter still on screen, the paper unchanged when the screen widens to every lot).",
+          "Printed and measured in Chrome: one Letter page; the sheet is 176 mm wide inside the 187.9 mm page box, 537 px of the 927 px a Letter page holds, with no descendant past its right edge and no clipped cell. The April book (?period=2026-04) prints its single levy row on one page at 474 px.",
+          "Frontend 641 passed across 67 files, Svelte check 0 errors / 0 warnings, translation audit 1,595 keys × 9 locales (12 new) across 35 route components, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.53",
     "date": "2026-10-29",
     "groups": [
