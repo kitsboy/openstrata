@@ -126,13 +126,20 @@
 			{/each}
 		</div>
 	</div>
-	<div class="mb-6 flex gap-1 overflow-x-auto">
-		{#each filters as [id, label]}
-			<button
-				class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {focus === id ? 'bg-brand-600 text-white' : 'bg-surface-2 border border-border text-slate-600'}"
-				onclick={() => (focus = id)}
-			>{label}</button>
-		{/each}
+	<div class="mb-6 flex flex-wrap items-center gap-2">
+		<div class="flex gap-1 overflow-x-auto">
+			{#each filters as [id, label]}
+				<button
+					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {focus === id ? 'bg-brand-600 text-white' : 'bg-surface-2 border border-border text-slate-600'}"
+					onclick={() => (focus = id)}
+				>{label}</button>
+			{/each}
+		</div>
+		<!-- The list the Form K filter narrows, on one page a council can print. -->
+		<a
+			class="ml-auto shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600 no-underline"
+			href="/units/register">{$copy.formKRegisterLink} →</a
+		>
 	</div>
 
 	<div class="grid gap-6 lg:grid-cols-[1fr_340px]">

@@ -1,3 +1,24 @@
+## Session — 2026-10-28 (sixth)
+
+**Done:**
+- The Form K register shipped as `0.3.48` — the queue pick. `/units/register` lists every tenanted lot with the day its two-week window closed, whether the form is on file, the days a missing one has been missing and the points it costs: **309 at 77 days, then 209 and 407 at 15**, longest-open first. Summary: **3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them: 5 a gap, capped at 15.**
+- `src/lib/form-k-register.ts`, 9 tests: imports `FORM_K_EACH` / `FORM_K_CAP` from `health.ts`, and the total is the same `formKPenalty` the gauge adds, checked at four statement dates. Five route tests prove the page reads that model.
+- The print button and the way back carry `no-print`; the footnote states the order and the device-local rule. `/units` gained **Form K register →** beside the filters.
+- 19 catalog keys × 9 locales (1,442 at parity), 495 frontend tests.
+
+**Decisions:**
+- Only a **closed** window is a gap. At 10 September lots 209 and 407 have no gap because their tenants had not moved in; a window still open prints its closing day and costs nothing. Without this the page would accuse an owner of failing a deadline that has not arrived.
+- The **cap is spent on the oldest gaps**, so beyond 15 points a row prints no points. The alternative — every gap showing −5 — would make the column add to more than the score charges.
+- The register reads `isFiled`, so a filing recorded on the lot's sheet counts **from its own day**: at 31 August lot 309 still shows 47 days and the three gaps, and August keeps its 72.
+- The register is a workspace page, not a `/documents` template: it is the sample building's live register (device-local filings included), not the Seaside Gardens letterhead set.
+- The pick is replaced by **the reserve fund's five-year picture** (`/accounting`), so four offers are waiting: receipt, reserve five-year table, workspace search, AGM packet.
+
+**Git State:**
+- SHA: this commit (`0.3.48`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-28 (fifth)
 
 **Done:**

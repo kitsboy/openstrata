@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.48
+-  summary: "The Form K register, picked from the 28 October queue: /units/register is the list the compliance score has always counted and never shown — every tenanted lot, the day its two-week window closed, whether the form is on file, the days a missing one has been missing, and the points it costs, longest-open first. src/lib/form-k-register.ts holds the rules with 9 tests and deliberately imports the per-gap charge and the 15-point cap from health.ts instead of restating them, so a row's points and the gauge's cannot drift; the register's total is the same formKPenalty the gauge adds, checked at four statement dates. Three decisions make the page honest. Only a closed window is a gap: scored at 10 September, lots 209 and 407 have no gap at all, because their tenants had not moved in yet, and a window that is still open is listed with the day it closes and costs nothing. The cap is spent on the oldest gaps, so once 15 points are reached the extra rows say they cost nothing rather than pretending to add. And a filing recorded on a lot's own sheet closes its gap from the day it was recorded, which is why the register at 31 August still shows lot 309's 47 days and the September score of 56 rather than the 61 the filing earned. The page itself is a table a council prints: print and back controls carry no-print, the summary sentence states the gaps, the denominator and the charge ('3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them'), and a note says the order is the score's and that a device-local filing counts from its own day. /units gains the way in, beside the filters it narrows. 19 catalog keys x 9 locales (1,442 at full parity), 495 frontend tests (14 new: 9 register rules, 5 route). Verified: check 0/0, i18n and contrast audits, the production build prerendering build/units/register.html with the three gaps on it. Chrome was not opened this session; the rendered text was read in jsdom. The picked slot is replaced by the reserve fund's five-year picture, so four offers are waiting again."
 -  version: 0.3.47
 -  summary: "The funds tab can follow the month now, because the statements behind it exist, and a Form K can be recorded on the lot's sheet, because the score is about the paperwork. The funds tab carries a six-row month-by-month table of the credit union's balances — operating, reserve, parkade levy, total and the change since the month before — ending on the close the rest of the books report ($81,797.62 + $603,688.80 + $31,548.00), with the levy visibly falling as the membrane is paid. src/lib/demo/cash.ts holds the statements as records rather than a formula, and src/lib/fund-history.ts does the arithmetic with 6 tests: September ties to the funds tab's own three figures, the levy's 1 April balance is exactly what was collected, six changes add to what the year moved, and a month no statement covers returns null instead of an interpolation. With ?period=2026-04 open the tab reads 'Cash at April 30, 2026' — $47,583.16, $590,000.00, $177,948.00 — and says plainly that receivables, prepaids and payables are still the September 30 close, because the statements hold month ends and not the balances behind them; October, which the bank has not closed, falls back to the close and says that too. The second half is the Form K. /units/309#forms now takes the date the form arrived and records it on this device, the card reads 'On file — recorded 2026-09-30 in this browser' with the note that nothing is sent to a host, and the compliance score reads it: the three gaps become two and September's point goes 56 to 61, while August keeps 72 because a filing counts only from its own day (src/lib/form-k.ts, 6 tests). The record is device-local like every other nudge here; the sample book's register is unchanged. 12 new catalog keys x 9 locales, catalogue 1,422 at full parity. Verified: 481 frontend tests (23 new), check 0/0, both audits, secret gate, production build green with the filing form in build/units/309.html."
 -  version: 0.3.46
@@ -134,6 +136,24 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.48] — 2026-10-28
+
+### Added
+
+- **The Form K register, on one printable page.** `/units/register` lists every tenanted lot with the day its two-week window closed, whether the form is on file, the days a missing one has been missing and the points it costs — **309 at 77 days, then 209 and 407 at 15**, longest-open first. The summary states the gaps, the denominator and the charge: **3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them: 5 a gap, capped at 15.** Print and back are `no-print`; the table is what leaves the printer. `/units` links it beside the filters it narrows.
+- **The rules live in `src/lib/form-k-register.ts` (9 tests).** The per-gap charge and the cap are imported from `health.ts`, and the register's total is the same `formKPenalty` the gauge adds, checked at four statement dates. The cap is spent on the oldest gaps, so a fourth gap prints no points instead of adding past 15.
+- **An open window is listed, not charged.** At 10 September lots 209 and 407 have no gap — their tenants had not moved in — and a window still open prints its closing day and costs nothing.
+- **A filing closes its gap from its own day.** A Form K recorded on `/units/309` turns the register into **2 of 8, 10 points** with the date beside the lot; at 31 August the same record still shows **47 days**, so the month that already closed keeps the score it earned.
+
+### Changed
+
+- **The queue is refreshed with the pick's replacement.** The reserve fund's five-year picture (`/accounting`) takes the slot beside the receipt, workspace search and the AGM packet, so four offers are waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md` and `.ai_docs/current-status.md`.
+
+### Verified
+
+- **The page reads the model, not a copy of it.** Five route tests render it: eight rows and no owner-occupied lot, the 77-day gap first with its −5, the summary sentence, a device-local filing moving it to 2 of 8 and 10 points, and the print controls carrying `no-print`.
+- Frontend **495 passed** (14 new), Svelte check **0 errors / 0 warnings**, translation audit **1,442 keys × 9 locales** (19 new), contrast audit **218 pairs**, secret gate green, production build green with **3 of 8 tenanted lots** in `build/units/register.html`. Chrome was not opened this session; the rendered text was read in jsdom.
 
 ## [0.3.47] — 2026-10-28
 

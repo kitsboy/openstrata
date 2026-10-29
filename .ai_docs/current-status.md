@@ -1,11 +1,21 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.47
+**Site/product version:** v0.3.48
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-28
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the funds follow the month, and a Form K can be filed (site, `0.3.47`, two follow-ons to `0.3.46`)
+## Recent milestone — the Form K register, on one printable page (site, `0.3.48`, the queue pick)
+
+- **`/units/register` is the list the score counts, made printable.** Every tenanted lot — eight in the sample book — with the day its two-week window closed, whether the form is on file, the days a missing one has been missing and the points it costs: **309 at 77 days, then 209 and 407 at 15**, longest-open first. The summary states the gaps, the denominator and the charge: **3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them: 5 a gap, capped at 15.** The controls are `no-print`; the table is the document.
+- **`src/lib/form-k-register.ts` holds the rules, with 9 tests.** It imports `FORM_K_EACH` and `FORM_K_CAP` from `health.ts` and its total is the same `formKPenalty` the gauge adds, checked at four statement dates, so a row's points and the score's cannot drift. The cap is spent on the oldest gaps: a fourth gap prints no points rather than pretending to add them.
+- **Only a closed window is a gap.** At 10 September, lots 209 and 407 have no gap (their tenants had not moved in yet), and an open window prints its closing day and costs nothing. At 31 August only 309 is tenanted, so only 309 is a gap.
+- **A filing recorded on the lot's sheet closes its gap here, from its own day.** Recording a Form K on `/units/309` turns the register into **2 of 8, 10 points** with the date beside the lot; at 31 August the same record still shows 47 days and the three gaps, so the closed month keeps the 72 it earned.
+- **`/units` links the way in** beside the filters it narrows, and the printed page carries the order and the device-local rule as a footnote.
+- 19 new catalog keys × 9 locales, catalogue **1,442** keys at full parity. Verification: frontend **495 passed** (14 new: 9 register, 5 route), `check` **0/0**, i18n and contrast audits (**218 pairs**), production build green — `build/units/register.html` carries **3 of 8 tenanted lots** and the 77-day row. Chrome was not opened this session; the rendered text was read in jsdom.
+- **Queue:** the picked slot is replaced by the reserve fund's five-year picture (`/accounting`), so four offers are waiting.
+
+## Prior milestone — the funds follow the month, and a Form K can be filed (site, `0.3.47`, two follow-ons to `0.3.46`)
 
 - **The funds have a month-by-month record.** The funds tab now carries the credit union's six month-end statements — operating, reserve, parkade levy, the three added, and the change since the month before — closing on the figures the rest of the books report: **$81,797.62**, **$603,688.80**, **$31,548.00**, **$717,034.42**. The levy visibly falls as the membrane is paid. `src/lib/demo/cash.ts` holds the statements as records rather than a formula; a derived balance would be an estimate wearing a statement's clothes.
 - **The funds tab follows the month.** `/accounting?period=2026-04` reads **Cash at April 30, 2026** — **$47,583.16**, **$590,000.00**, **$177,948.00** — instead of September's cash under an April heading, and says which lines are still the September 30 close (receivables, prepaids, payables). A month the bank has not closed (`?period=2026-10`) falls back to the close under a sentence naming the April–September range, rather than interpolating one.
@@ -15,7 +25,7 @@
 - **`/units` reads the same record.** The Form K filter and the plan's tones now take the filed set, so a lot with its form on file stops being drawn as a gap.
 - 12 new catalog keys × 9 locales, catalogue **1,422** keys at full parity. Verification: frontend **481 passed** (23 new: 6 fund-history, 6 form-k, 5 health, 3 accounting route, 3 lot route), `check` **0/0**, i18n and contrast audits (**218 pairs**), secret gate green, production build green — `build/units/309.html` carries **Record the Form K** and its date field. Chrome was not opened this session; the rendered text was read in jsdom.
 
-## Prior milestone — the month opens the books (site, `0.3.46`, health over time plus three follow-ons)
+## Earlier milestone — the month opens the books (site, `0.3.46`, health over time plus three follow-ons)
 
 - **The dashboard's health is now a series, not a single number.** `HealthTrend.svelte` charts six fiscal months of the score — **82, 82, 82, 74, 72, 56** — each point rebuilt at that month end from the calendar, the dated charges and the lot register, with the three inputs beside it showing what each costs now, what it cost in April and the month it moved. The metric card prints **56** instead of a hard-coded 91, and the gauge's demo deadlines count days from their due dates instead of a stored `127` — card, gauge and trend read one model (`src/lib/health.ts`).
 - **Every column opens to the records.** A clicked month lists the charges past due at that month end and the lots whose Form K window had closed, from the same functions the score read; `MonthDetail` totals to the arrears term at every month end (a test), so the panel cannot explain a different number than it prints.

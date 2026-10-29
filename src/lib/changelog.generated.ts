@@ -14,6 +14,34 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.48",
+    "date": "2026-10-28",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The Form K register, on one printable page. /units/register lists every tenanted lot with the day its two-week window closed, whether the form is on file, the days a missing one has been missing and the points it costs — 309 at 77 days, then 209 and 407 at 15, longest-open first. The summary states the gaps, the denominator and the charge: 3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them: 5 a gap, capped at 15. Print and back are no-print; the table is what leaves the printer. /units links it beside the filters it narrows.",
+          "The rules live in src/lib/form-k-register.ts (9 tests). The per-gap charge and the cap are imported from health.ts, and the register's total is the same formKPenalty the gauge adds, checked at four statement dates. The cap is spent on the oldest gaps, so a fourth gap prints no points instead of adding past 15.",
+          "An open window is listed, not charged. At 10 September lots 209 and 407 have no gap — their tenants had not moved in — and a window still open prints its closing day and costs nothing.",
+          "A filing closes its gap from its own day. A Form K recorded on /units/309 turns the register into 2 of 8, 10 points with the date beside the lot; at 31 August the same record still shows 47 days, so the month that already closed keeps the score it earned."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The queue is refreshed with the pick's replacement. The reserve fund's five-year picture (/accounting) takes the slot beside the receipt, workspace search and the AGM packet, so four offers are waiting. Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "The page reads the model, not a copy of it. Five route tests render it: eight rows and no owner-occupied lot, the 77-day gap first with its −5, the summary sentence, a device-local filing moving it to 2 of 8 and 10 points, and the print controls carrying no-print.",
+          "Frontend 495 passed (14 new), Svelte check 0 errors / 0 warnings, translation audit 1,442 keys × 9 locales (19 new), contrast audit 218 pairs, secret gate green, production build green with 3 of 8 tenanted lots in build/units/register.html. Chrome was not opened this session; the rendered text was read in jsdom."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.47",
     "date": "2026-10-28",
     "groups": [

@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-28 by Buffy — the Form K register, on one printable page
+
+Commit: this commit (site `0.3.48`). Backend API version stays `0.3.28`.
+
+> **The list the score counts is now a page a council can print.** `/units/register` lists every tenanted lot with the day its two-week window closed, whether the form is on file, how many days a missing one has been missing and the points it costs — **309 at 77 days, then 209 and 407 at 15** — longest-open first. The summary reads **3 of 8 tenanted lots have no Form K on file. The score charges 15 points for them: 5 a gap, capped at 15.** The print button and the way back are `no-print`; the table is what leaves the printer.
+>
+> **The points come from the score, not from a copy of it.** `src/lib/form-k-register.ts` (9 tests) imports `FORM_K_EACH` and `FORM_K_CAP` from `health.ts`, and the register's total is the same `formKPenalty` the gauge adds — checked at four statement dates. The cap is spent on the oldest gaps, so a fourth gap prints no points instead of pretending to add them.
+>
+> **Only a closed window is a gap.** Scored at 10 September, lots 209 and 407 have no gap at all — their tenants had not moved in yet — and a window still open prints the day it closes and costs nothing. Verified by the model, not by a comment.
+>
+> **A filing counts from its own day here too.** Record a Form K on `/units/309` and the register drops to **2 of 8, 10 points**, with the filing's date beside the lot; scored at 31 August the same record still shows **47 days** and the three gaps, because August keeps the 72 it earned.
+>
+> **`/units` has the way in**, beside the filters it narrows: **Form K register →**.
+>
+> **Verified:** frontend **495 passed** (14 new: 9 register, 5 route), `check` **0 errors / 0 warnings**, translation audit **1,442 keys × 9 locales** (19 new), contrast **218 pairs**, production build green — `build/units/register.html` carries **3 of 8 tenanted lots** and the 77-day row. Chrome was not opened this session; the rendered text was read in jsdom.
+>
+> **The queue is refreshed, because the pick shipped.** The reserve fund's five-year picture on `/accounting` takes its slot beside the receipt, workspace search and the AGM packet, so four are always waiting. Recorded in `docs/ROADMAP.md`, `/roadmap`, `static/llms.txt`, `WORKPLAN.md`, `docs/WORKPLAN.md` and `.ai_docs/current-status.md`.
+
+---
+
 # openstrata — Last Updated 2026-10-28 by Buffy — the funds follow the month, and a Form K can be filed
 
 Commit: this commit (site `0.3.47`). Backend API version stays `0.3.28`.

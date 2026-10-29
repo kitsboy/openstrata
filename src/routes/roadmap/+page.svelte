@@ -28,7 +28,7 @@
 	/** Offered 2026-10-28 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, and health over time on the dashboard shipped in v0.3.46; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48; these four are what is waiting now.';
 	const uiQueue = [
 		{
 			name: 'A receipt you can hand over',
@@ -37,10 +37,10 @@
 				'One printed page per payment: the amount, the rail, the reference or txid, the rate at lock and the lot, on council letterhead, checked at print size. Today the receipt tape is on screen only.'
 		},
 		{
-			name: 'The Form K register',
-			where: '/units',
+			name: 'The reserve fund’s five-year picture',
+			where: '/accounting',
 			detail:
-				'One printable page listing every lot with a tenant, the day its two-week window closed, whether the form is on file and how many days past the window a missing one is — the list the health score counts, ordered by what it costs.'
+				'One printable table of CRF contributions and interest year by year against what the depreciation report schedules — roof, membrane, elevator — with the balance each year ends on. The funds tab shows this year only.'
 		},
 		{
 			name: 'Search that reaches the workspace',
