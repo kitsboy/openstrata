@@ -1,5 +1,13 @@
 # OpenStrata — Last Updated 2026-10-30 by Buffy
 
+Brief: v0.3.66 adds a translation review status page, selected localized labels and isolated browser tests. Real-user monitoring and human reviews remain open.
+
+Commit: uncommitted; base `c64e009`. See `docs/KIMI-HANDOFF.md` for verification and privacy limitations.
+
+---
+
+# OpenStrata — Last Updated 2026-10-30 by Buffy
+
 Brief: v0.3.65 includes locale splitting, focus improvements and a nine-language review export. Production Core Web Vitals tracing and human translation review remain open.
 
 Commit: this commit (see `git log -1`). See `docs/KIMI-HANDOFF.md` for verification.

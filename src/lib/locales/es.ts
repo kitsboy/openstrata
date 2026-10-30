@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'Fechas de cuotas, consejo y CRA',
+  dashboardHealthTitle: 'Estado de cumplimiento en el panel.',
+  dashboardHealthDetail: 'Cada plazo, formulario K pendiente y saldo por cobrar se sigue y contribuye a la puntuación; no es una cifra decorativa.',
+  roadmapOffered: 'propuesto, sin comenzar',
   balanceLoading: "Cargando saldo…",
   balanceUnavailable: "Saldo en vivo no disponible",
     levyLetterShow: 'Carta de la cuota',

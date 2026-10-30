@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'Дати внесків, ради та CRA',
+  dashboardHealthTitle: 'Стан відповідності на панелі.',
+  dashboardHealthDetail: 'Кожен термін, відсутня форма K і дебіторська заборгованість відстежуються та впливають на оцінку — це не показник для вигляду.',
+  roadmapOffered: 'запропоновано, не розпочато',
   balanceLoading: "Завантаження балансу…",
   balanceUnavailable: "Поточний баланс недоступний",
     levyLetterShow: 'Лист про внесок',

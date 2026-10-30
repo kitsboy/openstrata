@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'Dates des frais, du conseil et de l’ARC',
+  dashboardHealthTitle: 'La conformité dans le tableau de bord.',
+  dashboardHealthDetail: 'Chaque échéance, formulaire K manquant et solde débiteur est suivi et contribue au score — ce n’est pas un chiffre décoratif.',
+  roadmapOffered: 'proposé, non commencé',
   balanceLoading: "Chargement du solde…",
   balanceUnavailable: "Solde en direct indisponible",
     levyLetterShow: 'Lettre de cotisation',

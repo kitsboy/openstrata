@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'Terminy opłat, rady i CRA',
+  dashboardHealthTitle: 'Stan zgodności na pulpicie.',
+  dashboardHealthDetail: 'Każdy termin, brak formularza K i saldo należności są śledzone i wpływają na wynik — nie jest to ozdobna liczba.',
+  roadmapOffered: 'zaproponowane, jeszcze nierozpoczęte',
   balanceLoading: "Ładowanie salda…",
   balanceUnavailable: "Saldo na żywo jest niedostępne",
     levyLetterShow: 'Pismo o składce',

@@ -90,7 +90,7 @@
 					<span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-sm font-bold text-brand-700">{i + 1}</span>
 					<h3 class="font-bold text-slate-800">{item.name}</h3>
 				</div>
-				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{item.where} · offered, not started</p>
+				<p class="text-xs font-bold uppercase tracking-wide text-slate-400">{item.where} · {$copy.roadmapOffered}</p>
 				<p class="mt-2 text-sm text-slate-600">{item.detail}</p>
 			</Card>
 		{/each}

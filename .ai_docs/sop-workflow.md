@@ -8,6 +8,7 @@ npm run build            Production build to build/
 npm run preview          Preview production build
 npm run check            SvelteKit type checking
 npm run test             Vitest run (frontend)
+npx playwright install chromium && npm run test:e2e   isolated browser sign-in and payment simulation
 npm run audit:i18n       locale parity (error) + hard-coded copy scan (warning)
 npm run --silent export:i18n > translation-review.csv   generate a nine-locale review sheet
 npm run audit:contrast   WCAG contrast for every token pair, plus fill-literal and var() guards

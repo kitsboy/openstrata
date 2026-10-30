@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'Mga petsa ng bayarin, konseho, at CRA',
+  dashboardHealthTitle: 'Kalagayan ng pagsunod sa dashboard.',
+  dashboardHealthDetail: 'Bawat deadline, kulang na Form K at balanseng dapat kolektahin ay sinusubaybayan at nakakaapekto sa score — hindi ito pandekorasyong numero.',
+  roadmapOffered: 'iminungkahi, hindi pa nasisimulan',
   balanceLoading: "Kinukuha ang balanse…",
   balanceUnavailable: "Hindi available ang live na balanse",
     levyLetterShow: 'Liham ng levy',

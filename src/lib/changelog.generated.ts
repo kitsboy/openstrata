@@ -14,6 +14,32 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.66",
+    "date": "2026-10-30",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Translation-review status dashboard records the scope and revision of human reviews without treating catalog coverage as approval.",
+          "Browser tests exercise sign-in and sign-out using a mocked API, and the Interac simulation without contacting a bank."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Localized selected dashboard, footer, manual and roadmap labels; new translations remain drafts."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "Real-user Web Vitals collection requires privacy and consent review before production activation. No real-user baseline has been measured.",
+          "Translation and BC legal/financial review remain outstanding; data-driven English and the internal status dashboard are not fully localized."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.65",
     "date": "2026-10-30",
     "groups": [

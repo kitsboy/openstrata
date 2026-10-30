@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'शुल्क, परिषद और CRA की तारीखें',
+  dashboardHealthTitle: 'डैशबोर्ड पर अनुपालन स्थिति।',
+  dashboardHealthDetail: 'हर समय सीमा, अधूरा फ़ॉर्म K और प्राप्य शेष ट्रैक किया जाता है और स्कोर में योगदान देता है — यह दिखावटी संख्या नहीं है।',
+  roadmapOffered: 'प्रस्तावित, शुरू नहीं हुआ',
   balanceLoading: "शेष राशि लोड हो रही है…",
   balanceUnavailable: "लाइव शेष राशि उपलब्ध नहीं है",
     levyLetterShow: 'उपकर पत्र',

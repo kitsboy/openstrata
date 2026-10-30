@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.66
+-  summary: "Translation-review status dashboard, localized interface labels and isolated browser coverage for sign-in and simulated Interac payment. Real-user performance monitoring remains blocked pending privacy and consent review."
 -  version: 0.3.65
 -  summary: "Non-English catalogs load on demand with English fallback and a dashboard JavaScript budget. Dashboard and mobile search share the global dialog, with keyboard focus improvements and editable search results. Live balance failures no longer display sample figures, dashboard labels are more readable, and the mobile payment tape no longer widens the page. The stricter parity audit found and filled 23 previously missing Spanish renewal strings; these drafts and the current translations still require native-speaker and legal review."
 -  version: 0.3.64
@@ -170,6 +172,19 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.66] — 2026-10-30
+
+### Added
+- Translation-review status dashboard records the scope and revision of human reviews without treating catalog coverage as approval.
+- Browser tests exercise sign-in and sign-out using a mocked API, and the Interac simulation without contacting a bank.
+
+### Changed
+- Localized selected dashboard, footer, manual and roadmap labels; new translations remain drafts.
+
+### Known issues
+- Real-user Web Vitals collection requires privacy and consent review before production activation. No real-user baseline has been measured.
+- Translation and BC legal/financial review remain outstanding; data-driven English and the internal status dashboard are not fully localized.
 
 ## [0.3.65] — 2026-10-30
 

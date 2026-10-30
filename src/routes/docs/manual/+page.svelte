@@ -10,7 +10,7 @@
 
 <div class="manual-hub">
   <div class="manual-hub-header">
-    <div class="start-flag" aria-label="Start here">
+    <div class="start-flag" aria-label={$copy.manualStartHere}>
       <span class="start-flag-dot" aria-hidden="true"></span>
       <span class="start-flag-label">{$copy.manualStartHere}</span>
     </div>

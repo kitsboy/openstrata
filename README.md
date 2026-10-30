@@ -25,6 +25,12 @@ If you see the SvelteKit dev server running on http://localhost:5173, you're goo
 
 For the dashboard JavaScript budget, run `npm run build` followed by `npm run audit:performance`. This measures the built initial JavaScript graph, not real-user page speed. Locale catalogs load on demand; see `docs/TRANSLATION-REVIEW.md` for the reviewer checklist and CSV export. Native-speaker and BC legal review remain outstanding.
 
+### Real-user performance
+
+The existing Sentry browser SDK has tracing configured at a 30% sample rate when `VITE_PUBLIC_SENTRY_DSN` is set; its BrowserTracing integration automatically collects supported LCP, INP and CLS measurements. It is dormant without a DSN. **Do not enable it in production yet**: the published family privacy policy promises a policy change and a real consent banner before adding third-party tracking. Review the actual Sentry payloads, sensitive URLs, retention, consent and CSP before activation; the family policy also needs correction for OpenStrata's account functionality. After authorized activation and sufficient traffic, use Sentry's Web Vitals dashboard and report the 75th percentile with sample size, timeframe, page and device class. No real-user baseline has been measured here.
+
+Browser checks: install Chromium with `npx playwright install chromium`, then run `npm run test:e2e`. Sign-in uses a mocked API and the Interac test is a simulation; neither checks a live backend or bank.
+
 ### 2. Explore the Site
 
 Visit the demo site and play around:

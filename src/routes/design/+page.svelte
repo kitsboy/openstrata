@@ -100,7 +100,7 @@
       </div>
       <div class="rounded-2xl border border-border bg-surface-2 p-6">
         <p class="text-[10px] font-bold text-slate-400 uppercase mb-4">{$copy.designStatesIcons}</p>
-        <EmptyState icon="search" title="Empty state" message="A mark, a next step, a CTA." actionLabel={$copy.newStrata} />
+        <EmptyState icon="search" title={$copy.emptySearchTitle} message={$copy.emptySearchHint} actionLabel={$copy.newStrata} />
         <div class="mt-4 flex items-center gap-3 text-slate-500">
           <Icon name="home" class="h-4 w-4" /><Icon name="shield" class="h-4 w-4" /><Icon name="coins" class="h-4 w-4" /><Icon name="bitcoin" class="h-4 w-4 text-bitcoin" /><Icon name="lightning" class="h-4 w-4 text-lightning" /><Glossary term="crf" />
         </div>

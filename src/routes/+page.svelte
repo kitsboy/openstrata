@@ -486,7 +486,7 @@
             <button class="action-card orange" onclick={() => (showNewStrata = true)}><span class="action-glyph"><Icon name="plus" class="h-4 w-4" /></span><span><strong>{$copy.createStrata}</strong><small>{$copy.createStrataHint}</small></span><b>→</b></button>
             <button class="action-card purple" onclick={() => goto('/meetings')}><span class="action-glyph"><Icon name="calendar" class="h-4 w-4" /></span><span><strong>{$copy.planMeeting}</strong><small>{$copy.planMeetingHint}</small></span><b>→</b></button>
             <button class="action-card blue" onclick={() => goto('/legal')}><span class="action-glyph"><Icon name="scale" class="h-4 w-4" /></span><span><strong>{$copy.findLegalSource}</strong><small>{$copy.findLegalSourceHint}</small></span><b>→</b></button>
-            <button class="action-card green" onclick={() => goto('/calendar')}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>Fees, council, and CRA dates</small></span><b>→</b></button>
+            <button class="action-card green" onclick={() => goto('/calendar')}><span class="action-glyph"><Icon name="wrench" class="h-4 w-4" /></span><span><strong>{$copy.logRequest}</strong><small>{$copy.dashboardDates}</small></span><b>→</b></button>
           </div>
         </div>
 
@@ -505,7 +505,7 @@
       <div class="proof-band">
         <div class="proof-card">
           <div class="proof-mark orange"><Icon name="shield" class="h-5 w-5" /></div>
-          <div class="proof-body"><strong>{$copy.complianceHealth} on the dashboard.</strong><span>Every deadline, Form K gap and AR balance is a tracked item with a stake in the score — not a vanity number.</span></div>
+          <div class="proof-body"><strong>{$copy.dashboardHealthTitle}</strong><span>{$copy.dashboardHealthDetail}</span></div>
           <a href="/compliance" class="proof-cta">{$copy.governance} <span>→</span></a>
         </div>
         <div class="proof-card">

@@ -1,6 +1,6 @@
 # Translation review — OpenStrata
 
-The catalog is **not certified**. Automated parity and placeholder tests do not establish accuracy. The Spanish renewal-calendar strings and balance-status labels are machine-drafted. Earlier French review covered older copy only. English also needs editorial and BC legal review.
+The catalog is **not certified**. Automated parity and placeholder tests do not establish accuracy. The Spanish renewal-calendar strings, balance-status labels, and new dashboard/roadmap labels are machine-drafted. Earlier French review covered older copy only. English also needs editorial and BC legal review.
 
 ## Generate the review sheet
 
@@ -11,6 +11,10 @@ npm run --silent export:i18n > translation-review.csv
 ```
 
 The UTF-8 CSV has one row per key: `key`, English source, `fr`, `es`, `zh`, `hi`, `fil`, `pl`, `uk`, `sw`, and `review_notes`. An empty locale cell means no override; the site falls back to English. Preserve `{placeholder}` names exactly, including capitalization. Open the file as UTF-8 and do not alter numeric values or legal meaning. The sheet is a snapshot of the current working tree, so record its Git commit and whether there are local changes before sending it for review. Do not commit filled-in reviewer sheets containing personal information.
+
+## Status dashboard
+
+The site displays current-catalog review status at `/docs/translation-review`. Its records are maintained in `src/routes/docs/translation-review/+page.svelte`; update a locale only after documented sign-off, recording scope, date and reviewed Git revision. Never infer approval from catalog coverage or an older review. Keep names and completed sheets private. Reassess affected scope after catalog changes. BC legal/financial approval is separate and remains outstanding.
 
 ## Reviewer checklist
 

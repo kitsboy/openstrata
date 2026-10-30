@@ -64,6 +64,7 @@
 			{/each}
 		</div>
 		<p class="mt-4 text-sm text-slate-400">{$copy.alsoLabel}: <code class="text-xs bg-slate-100 px-1 rounded">SOURCE-OF-TRUTH.md</code> {$copy.atProjectRoot}</p>
+		<p class="mt-3 text-sm"><a href="/docs/translation-review" class="text-brand-600 hover:underline">Translation review status</a></p>
 	</section>
 
 	<!-- User manual — orientation for non-technical readers -->

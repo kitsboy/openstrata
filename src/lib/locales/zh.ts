@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: '费用、理事会和税务局日期',
+  dashboardHealthTitle: '仪表板上的合规状况。',
+  dashboardHealthDetail: '每个截止日期、缺失的 K 表格和应收余额都会被追踪并影响评分，而不是一个装饰数字。',
+  roadmapOffered: '已提议，尚未开始',
   balanceLoading: "正在加载余额…",
   balanceUnavailable: "实时余额不可用",
     levyLetterShow: '分摊信',

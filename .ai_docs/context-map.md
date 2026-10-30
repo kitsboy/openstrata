@@ -76,6 +76,8 @@ src/
       JobsDropdown.svelte, DonateModal.svelte
     demo/                   Evergreen House sample (building, books, tax, schedule, meetings, payments)
     locales/                Eight on-demand non-English translation catalogs; English and locale store in i18n.ts
+  routes/docs/translation-review/  Manual current-catalog human review status
+ e2e/                       Isolated Playwright sign-in and payment-simulation flows
     data.ts, nav.ts, icons.ts
     compliance.ts, marketing.ts, strata-tool.ts
 public/

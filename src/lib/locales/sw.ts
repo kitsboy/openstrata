@@ -1,6 +1,10 @@
 import type { Translation } from '../i18n';
 
 export default {
+  dashboardDates: 'Tarehe za ada, baraza na CRA',
+  dashboardHealthTitle: 'Hali ya uzingatiaji kwenye dashibodi.',
+  dashboardHealthDetail: 'Kila tarehe ya mwisho, Fomu K inayokosekana na salio la madeni hufuatiliwa na huchangia alama — si nambari ya mapambo.',
+  roadmapOffered: 'imependekezwa, haijaanza',
   balanceLoading: "Inapakia salio…",
   balanceUnavailable: "Salio la moja kwa moja halipatikani",
     levyLetterShow: 'Barua ya mchango',

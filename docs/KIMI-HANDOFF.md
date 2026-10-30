@@ -1,3 +1,18 @@
+## Session — 2026-10-30 (review status and critical browser flows)
+
+**Done:**
+- Site v0.3.66 adds `/docs/translation-review`, with current-catalog reviews explicitly unreviewed. Maintainers record signed-off scope, date and Git revision there; reviewer identities and sheets stay private. Qualified BC legal/financial sign-off remains separate.
+- Localized selected dashboard, footer, roadmap and manual labels. New translations are drafts; data-driven English and the internal English review dashboard still need work. The audit scanner does not find every hard-coded string.
+- Playwright tests run sign-in and sign-out with intercepted API responses, plus the Interac simulation, blocking external traffic. They do not verify real bank payments or a live API. CI installs Chromium and runs them.
+- Verified 2 browser tests, 16 focused component/catalog tests, Svelte check 0/0, translation audit, production build and 213,705 gzip bytes against a 230,000-byte JS budget. `npm audit --omit=dev` reports 8 advisories including high-severity Undici; no dependency remediation was attempted.
+
+**Decisions / Kimi:**
+- No real-user Core Web Vitals baseline was collected. Existing Sentry SDK supports vitals when configured, but do not activate it until the family privacy policy, consent, sensitive URLs, retention and CSP are reviewed. The family policy also inaccurately says OpenStrata has no accounts. Coordinate privacy/legal review on THOR; do not treat this as completed monitoring.
+- Cross-reference the review workflow and test commands in existing THOR records; confirm integration without duplicating project records.
+
+**Git State:**
+- Base SHA: `c64e009`; work is uncommitted. Use `git status` and `git log --oneline origin/main..HEAD` for current state.
+
 ## Session — 2026-10-30 (focus and translation review follow-up)
 
 **Done:**

@@ -1,9 +1,17 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.65
+**Site/product version:** v0.3.66
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-30
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — translation review and browser flows (site, `0.3.66`)
+
+- `/docs/translation-review` lists current-catalog reviews; all are unreviewed. Update records only with documented scope, date and Git revision, and keep reviewer information private. BC legal/financial review remains separate.
+- Localized selected dashboard, footer, roadmap and manual labels in nine languages; new translations are drafts. Data-driven content and the English-only internal review dashboard remain untranslated; the warning scanner is not exhaustive.
+- Playwright covers mocked sign-in/sign-out and Interac simulation with external network blocked. CI installs Chromium and runs the browser tests; no live backend or bank was tested.
+- Real-user Web Vitals are not active from this work and no baseline exists. The already-installed Sentry SDK collects supported vitals when configured, but the published family privacy policy promises policy and consent changes before third-party tracking; assess privacy, sensitive URLs, retention and CSP before enabling. The family policy also incorrectly says OpenStrata has no accounts.
+- Verified: browser tests 2/2, 16 focused tests, Svelte check 0/0, i18n audit, production build and initial JS budget (213,705 gzip bytes / 230,000). `npm audit --omit=dev` reports 8 advisories including high-severity Undici; unresolved.
 
 ## Recent milestone — leaner locales and accessible dashboard (site, `0.3.65`)
 

@@ -1,6 +1,6 @@
 {
   "name": "openstrata",
-  "version": "0.3.65",
+  "version": "0.3.66",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "export:i18n": "node scripts/export-translations.mjs",
     "audit:performance": "node scripts/check-performance-budget.mjs",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
     "check:security": "node scripts/check-secret-hygiene.mjs",
     "hooks:install": "git config core.hooksPath .githooks && echo 'Git hooks enabled: pre-push applies the migrations before they reach main.'",
@@ -25,6 +26,7 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@sveltejs/adapter-cloudflare": "^7.0.0",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.70.3",
