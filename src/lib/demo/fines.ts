@@ -12,6 +12,7 @@
  */
 
 import type { BylawFine } from '../fine-register';
+import type { BylawComplaint } from '../hearing-notice';
 
 export const bylawFines: BylawFine[] = [
 	{
@@ -27,3 +28,37 @@ export const bylawFines: BylawFine[] = [
 		paidIso: null
 	}
 ];
+
+/**
+ * The complaint behind lot 309's fine, as the hearing notice needs it: the day it
+ * arrived, the three things that came with it (the dates, the photographs of
+ * luggage, and two nights of enterphone logs the September minutes describe) and
+ * how the letter may describe the person who filed it. The name stays out of the
+ * notice: the owner being fined is the one on trial, not the neighbour.
+ */
+export const bylawComplaint: BylawComplaint = {
+	lot: '309',
+	bylaw: '9.2 — no stays under 30 days',
+	receivedIso: '2026-08-28',
+	complainantRole: 'another owner in the building',
+	evidence: [
+		{
+			date: '2026-08-21',
+			what: 'Enterphone log: two guests admitted to lot 309 at 8:42 pm and 10:15 pm, each saying they had booked a night.'
+		},
+		{
+			date: '2026-08-22',
+			what: 'Photographs of luggage in the third-floor corridor outside lot 309, taken at 4:10 pm.'
+		},
+		{
+			date: '2026-08-23',
+			what: 'A listing screenshot naming lot 309 for two nights, sent with the photographs.'
+		}
+	]
+};
+
+/** The hearing itself: the time and place the notice has to give the owner. */
+export const bylawHearing = {
+	time: '7:00 pm',
+	place: 'Amenity room, 4100 Cambie Street, and the hybrid link in this letter'
+} as const;

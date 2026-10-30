@@ -4,11 +4,13 @@
 	import ProxyCard from '$lib/components/ProxyCard.svelte';
 	import AgmNoticeLetter from '$lib/components/AgmNoticeLetter.svelte';
 	import FineRegisterSheet from '$lib/components/FineRegisterSheet.svelte';
+	import HearingNoticeSheet from '$lib/components/HearingNoticeSheet.svelte';
 	import { copy, fill } from '$lib/i18n';
 	import { agmNotice } from '$lib/agm-notice';
 	import { building, councilSeats, getUnit } from '$lib/demo/building';
-	import { bylawFines } from '$lib/demo/fines';
+	import { bylawComplaint, bylawFines, bylawHearing } from '$lib/demo/fines';
 	import { fineRegister } from '$lib/fine-register';
+	import { hearingNotice } from '$lib/hearing-notice';
 	import {
 		agm,
 		bylawCase,
@@ -34,6 +36,19 @@
 		fiscalYearEnd: building.fiscalEnd
 	});
 	const fines = fineRegister(bylawFines, building.asOf);
+
+	// The letter that started the one fine on the books. Its window is the
+	// register's own fourteen days and its ceiling is the bylaw's, so the notice,
+	// the register and the minutes cannot disagree about a date or an amount.
+	const hearing = hearingNotice({
+		complaint: bylawComplaint,
+		noticeIso: bylawFines[0].noticeIso,
+		hearingIso: bylawFines[0].hearingIso,
+		hearingTime: bylawHearing.time,
+		hearingPlace: bylawHearing.place,
+		days: bylawFines[0].days,
+		ceilingPerDayCents: bylawFines[0].ceilingPerDayCents
+	});
 </script>
 
 <svelte:head>
@@ -129,7 +144,7 @@
 
 	<section class="mt-8 rounded-2xl border border-border bg-surface-2 p-5">
 		<h2 class="font-bold text-slate-900">{fill($copy.meetBylawFile, { lot: bylawCase.lot })}</h2>
-		<p class="mt-1 text-sm text-slate-600">{bylawCase.bylaw}. Fine {bylawCase.fine}. {bylawCase.ceiling}</p>
+		<p class="mt-1 text-sm text-slate-600">{bylawCase.bylaw}. Fine {bylawCase.fine}. {bylawCase.ceiling}</p>		<p class="mt-2 text-sm leading-relaxed text-slate-600">{$copy.hearingNoticeLede}</p>
 		<ol class="mt-4 space-y-3">
 			{#each bylawCase.steps as step}
 				<li class="grid gap-1 sm:grid-cols-[180px_1fr]">
@@ -172,9 +187,11 @@
 		<!-- The card the owner sends back. Its deadline is the meeting's own notice
 		     arithmetic, and its quorum is the AGM's third of the lots. -->
 		<ProxyCard />
-		<!-- The notice itself, addressed to the owners, and the fines the books
-		     carry with the process behind each. -->
+		<!-- The notice itself, addressed to the owners, the complaint notice the
+		     one fine started with, and the fines the books carry with the process
+		     behind each. -->
 		<AgmNoticeLetter {notice} />
+		<HearingNoticeSheet notice={hearing} />
 		<FineRegisterSheet register={fines} />
 	</section>
 </div>

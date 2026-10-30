@@ -122,10 +122,28 @@ export const payroll = {
 	expense: gross + employerBurden,
 	due: 'October 15, 2026',
 	payDate: 'September 30, 2026',
+	/** The same two days as ISO, for the worksheet's arithmetic. */
+	dueIso: '2026-10-15',
+	payDateIso: '2026-09-30',
 	eiNote: '2026 EI employee rate 1.63%, employer 1.4×, maximum insurable earnings $68,900, maximum employee premium $1,123.07.',
 	cppNote:
 		'CPP is shown at 5.95% with a $3,500 basic exemption, which is the 2025 structure. Confirm the 2026 T4127 tables before the October 15 remittance. This pay is over the monthly exemption, so CPP is due.'
 };
+
+/**
+ * The rate basis the September pay was computed on. Structured here so the
+ * remittance worksheet states exactly what it used — including the fact that the
+ * CPP figures follow the 2025 structure the books already flag as needing the
+ * current T4127 tables before the October 15 remittance.
+ */
+export const payrollRates = {
+	eiEmployeeBps: 163,
+	eiEmployerMultiplier: 1.4,
+	cppBps: 595,
+	cppExemptCents: cppExemption,
+	rateYear: '2025',
+	confirmed: false
+} as const;
 
 /**
  * The short reason behind a line's variance, by account code. Kept apart from

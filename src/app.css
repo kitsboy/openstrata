@@ -87,6 +87,7 @@
   .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc,
   .cash-doc, .recon-doc, .levy-doc, .register-doc, .payable-doc,
   .trial-doc, .fee-doc, .proxy-doc, .ff-doc, .agm-letter-doc, .fines-doc,
+  .hearing-doc, .payroll-doc, .insurance-doc,
   .vendor-doc, .reserve-statement-doc, .arrears-letter-doc {
     width: 176mm !important;
     max-width: 176mm !important;
@@ -107,6 +108,9 @@
   .ff-doc,
   .agm-letter-doc,
   .fines-doc,
+  .hearing-doc,
+  .payroll-doc,
+  .insurance-doc,
   .vendor-doc,
   .reserve-statement-doc,
   .arrears-letter-doc {
@@ -117,12 +121,13 @@
   /* The Journal tab prints the cash statement and then the trial balance, so the
      second sheet starts a page rather than running under the chain head. */
   .cash-doc + .trial-doc { break-before: page; page-break-before: always; }
-  /* `/meetings` prints four sheets: the packet, the proxy, the AGM notice and the
-     fine register. Each starts its own page rather than running under the one
-     above it. */
+  /* `/meetings` prints five sheets: the packet, the proxy, the AGM notice, the
+     bylaw hearing notice and the fine register. Each starts its own page rather
+     than running under the one above it. */
   .packet-doc + .proxy-doc,
   .proxy-doc + .agm-letter-doc,
-  .agm-letter-doc + .fines-doc {
+  .agm-letter-doc + .hearing-doc,
+  .hearing-doc + .fines-doc {
     break-before: page;
     page-break-before: always;
   }

@@ -469,10 +469,21 @@ export const building = {
 		broker: 'Harbour Insurance Brokers (demo)',
 		policy: 'HH-2847-26',
 		term: 'April 1, 2026 – March 31, 2027',
+		termStart: '2026-04-01',
+		termEnd: '2027-03-31',
 		premiumCents: 4_860_000,
 		waterDeductibleCents: 2_500_000,
 		quakeDeductible: '10% of the insured value, minimum $100,000',
-		appraisal: 'Booked October 22, 2026, before the broker markets the April 2027 renewal'
+		/**
+		 * The earthquake deductible as the policy writes it: a percentage with a
+		 * floor. The insured value is null on purpose — the appraisal is booked for
+		 * 22 October and has not happened, so these books cannot turn the formula
+		 * into a dollar figure and the sheet must not invent one.
+		 */
+		quake: { rateBps: 1000, minimumCents: 10_000_000, insuredValueCents: null },
+		appraisal: 'Booked October 22, 2026, before the broker markets the April 2027 renewal',
+		appraisalIso: '2026-10-22',
+		renewalIso: '2027-04-01'
 	},
 	amenities: ['Roof deck', 'Bike room (20 racks)', 'Workshop bay', 'Enterphone', 'Recycling room', '8 EV-ready stalls, 4 chargers installed'],
 	visitors: '4 visitor stalls, V1–V4, 2-hour limit overnight with a pass from the caretaker'

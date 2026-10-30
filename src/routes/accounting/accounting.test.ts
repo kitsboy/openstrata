@@ -671,3 +671,46 @@ describe('the reserve contribution statement', () => {
 		expect(text).toContain('$133,291.62');
 	});
 });
+
+/**
+ * The two sheets that join a record the page already held to the money it never
+ * showed: the month's pay, and the policy against its budget line.
+ */
+describe('/accounting payroll and insurance tabs', () => {
+	it('prints the month’s pay with the remittance and the building’s cost', () => {
+		const { container } = renderAt('/accounting?tab=payroll');
+		const sheet = container.querySelector('.payroll-doc') as HTMLElement | null;
+		expect(sheet).toBeTruthy();
+		const text = sheet?.textContent ?? '';
+
+		expect(text).toContain('Payroll remittance worksheet');
+		expect(text).toContain('$960.00');
+		expect(text).toContain('$904.58');
+		expect(text).toContain('$117.10');
+		expect(text).toContain('$1,021.68');
+		expect(text).toContain('October 15, 2026');
+		// The basis is dated and unconfirmed, and the sheet says so.
+		expect(text).toContain('2025 structure');
+		expect(text).toContain('TD1');
+		// Every check on the page agrees.
+		expect(text).not.toContain('Does not agree');
+	});
+
+	it('prints the policy against its budget line, with both dates', () => {
+		const { container } = renderAt('/accounting?tab=insurance');
+		const sheet = container.querySelector('.insurance-doc') as HTMLElement | null;
+		expect(sheet).toBeTruthy();
+		const text = sheet?.textContent ?? '';
+
+		expect(text).toContain('Insurance summary');
+		expect(text).toContain('$48,600.00');
+		expect(text).toContain('$24,300.00');
+		expect(text).toContain('$25,000.00');
+		expect(text).toContain('10.0%');
+		expect(text).toContain('October 22, 2026');
+		expect(text).toContain('April 1, 2027');
+		expect(text).toContain('$101.25');
+		// The quake deductible stays a rule while no insured value is carried.
+		expect(text).toContain('no insured value');
+	});
+});

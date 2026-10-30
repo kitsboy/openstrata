@@ -7,15 +7,17 @@
 	import ArrearsSheet from '$lib/components/ArrearsSheet.svelte';
 	import CashStatement from '$lib/components/CashStatement.svelte';
 	import CloseReconciliation from '$lib/components/CloseReconciliation.svelte';
+	import InsuranceSheet from '$lib/components/InsuranceSheet.svelte';
 	import LevySheet from '$lib/components/LevySheet.svelte';
 	import PayablesSheet from '$lib/components/PayablesSheet.svelte';
+	import PayrollSheet from '$lib/components/PayrollSheet.svelte';
 	import ReserveStatementSheet from '$lib/components/ReserveStatementSheet.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
 	import TrialBalanceSheet from '$lib/components/TrialBalanceSheet.svelte';
 	import VendorSpendSheet from '$lib/components/VendorSpendSheet.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
-	import { books } from '$lib/demo/books';
+	import { books, payroll as payRecord, payrollRates } from '$lib/demo/books';
 	import { OPENING_CASH, statement } from '$lib/ledger-statement';
 	import { OPERATING_ACCOUNT, OPERATING_OPENING, cashStatement } from '$lib/cash-statement';
 	import { BOOK_RECONCILIATION } from '$lib/close-reconciliation';
@@ -34,28 +36,34 @@
 	import { budgetSheet } from '$lib/budget-sheet';
 	import { vendorSpend } from '$lib/vendor-spend';
 	import { reserveStatement } from '$lib/reserve-statement';
+	import { payrollSheet } from '$lib/payroll-sheet';
+	import { insuranceSummary } from '$lib/insurance-summary';
 
 	type TabId =
 		| 'overview'
 		| 'budget'
 		| 'receivables'
-		| 'payables'
-		| 'vendors'
+	| 'payables'
+	| 'payroll'
+	| 'vendors'
 		| 'funds'
 		| 'levy'
 		| 'reserve'
 		| 'shares'
+		| 'insurance'
 		| 'journal';
 	const TAB_IDS: readonly TabId[] = [
 		'overview',
 		'budget',
 		'receivables',
 		'payables',
+		'payroll',
 		'vendors',
 		'funds',
 		'levy',
 		'reserve',
 		'shares',
+		'insurance',
 		'journal'
 	];
 	let tab = $state<TabId>('overview');
@@ -65,6 +73,8 @@
 			tab === 'budget' ||
 			tab === 'receivables' ||		tab === 'journal' ||
 		tab === 'payables' ||
+		tab === 'payroll' ||
+		tab === 'insurance' ||
 		tab === 'vendors' ||
 		tab === 'shares' ||
 		tab === 'levy'
@@ -297,11 +307,13 @@
 		{ id: 'budget', label: $copy.accTabBudget },
 		{ id: 'receivables', label: $copy.accTabReceivables },
 		{ id: 'payables', label: $copy.accTabPayables },
+		{ id: 'payroll', label: $copy.accTabPayroll },
 		{ id: 'vendors', label: $copy.accTabVendors },
 		{ id: 'funds', label: $copy.accTabFunds },
 		{ id: 'levy', label: $copy.accTabLevy },
 		{ id: 'reserve', label: $copy.accTabReserve },
 		{ id: 'shares', label: $copy.accTabReserveShares },
+		{ id: 'insurance', label: $copy.accTabInsurance },
 		{ id: 'journal', label: $copy.accTabJournal }
 	] as const);
 
@@ -338,6 +350,58 @@
 	 * depreciation report's recommendation, with the plan's first short year beside
 	 * it — the sentence the AGM votes on.
 	 */
+	/**
+	 * The month's pay as a worksheet: the net, the remittance and the building's
+	 * own cost, with every share checked against the two lines the books post.
+	 */
+	const pay = $derived(
+		payrollSheet({
+			employee: payRecord.employee,
+			role: payRecord.role,
+			periodLabel: 'September 2026',
+			payDate: payRecord.payDateIso,
+			dueDate: payRecord.dueIso,
+			hours: payRecord.hours,
+			rateCents: payRecord.rateCents,
+			grossCents: payRecord.gross,
+			eiEmployeeCents: payRecord.eiEmployee,
+			cppEmployeeCents: payRecord.cppEmployee,
+			eiEmployerCents: payRecord.eiEmployer,
+			cppEmployerCents: payRecord.cppEmployer,
+			netCents: payRecord.net,
+			remittanceCents: payRecord.remittance,
+			postedWagesCents: books.expenses.find((line) => line.code === '6210')?.ytdCents ?? 0,
+			postedEmployerCents: books.expenses.find((line) => line.code === '6215')?.ytdCents ?? 0,
+			td1OnFile: true,
+			rates: payrollRates,
+			asOf: building.asOf
+		})
+	);
+
+	/**
+	 * The policy joined to the budget line it is paid from, with the two dates a
+	 * council has to diarise: the appraisal and the renewal.
+	 */
+	const insurance = $derived(
+		insuranceSummary({
+			policy: building.insurance.policy,
+			broker: building.insurance.broker,
+			termStart: building.insurance.termStart,
+			termEnd: building.insurance.termEnd,
+			fiscalEnd: building.fiscalEnd,
+			premiumCents: building.insurance.premiumCents,
+			budgetAnnualCents: books.expenses.find((line) => line.code === '6100')?.annualCents ?? 0,
+			expensedYtdCents: books.expenses.find((line) => line.code === '6100')?.ytdCents ?? 0,
+			monthsElapsed: books.monthsElapsed,
+			waterDeductibleCents: building.insurance.waterDeductibleCents,
+			quake: building.insurance.quake,
+			appraisalIso: building.insurance.appraisalIso,
+			renewalIso: building.insurance.renewalIso,
+			asOf: building.asOf,
+			lots: building.lots
+		})
+	);
+
 	const shares = $derived(
 		reserveStatement({
 			lots: units,
@@ -671,6 +735,22 @@
 		<PayablesSheet sheet={BOOK_PAYABLES} />
 	{/if}
 
+	{#if tab === 'payroll'}
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.payrollLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.payrollPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.payrollPrintNote}</span>
+			</div>
+		</div>
+		<PayrollSheet sheet={pay} />
+	{/if}
+
 	{#if tab === 'vendors'}
 		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
 			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
@@ -915,6 +995,22 @@
 			</div>
 		</div>
 		<ReserveStatementSheet statement={shares} />
+	{/if}
+
+	{#if tab === 'insurance'}
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.insuranceLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.insurancePrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.insurancePrintNote}</span>
+			</div>
+		</div>
+		<InsuranceSheet summary={insurance} />
 	{/if}
 
 	{#if tab === 'journal'}

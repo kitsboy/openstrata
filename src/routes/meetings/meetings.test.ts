@@ -4,13 +4,13 @@ import { locale } from '$lib/i18n';
 import Meetings from './+page.svelte';
 
 /**
- * /meetings prints four artifacts.
+ * /meetings prints five artifacts.
  *
  * The page around them is the workspace: quorum cards, the council, the agenda
  * and the vote guide. Everything that stays on screen carries `no-print`, so a
- * printed page is the packet, the proxy card, the AGM notice and the fine
- * register — the same trick the lot sheet and the Form K register use, checked
- * on the rendered DOM rather than on the stylesheet.
+ * printed page is the packet, the proxy card, the AGM notice, the bylaw hearing
+ * notice and the fine register — the same trick the lot sheet and the Form K
+ * register use, checked on the rendered DOM rather than on the stylesheet.
  */
 describe('/meetings', () => {
 	beforeEach(() => locale.set('en'));
@@ -29,7 +29,7 @@ describe('/meetings', () => {
 	it('prints the proxy card behind the packet, with the AGM’s own deadline', () => {
 		const { container } = render(Meetings);
 		const sheets = [...container.querySelectorAll('.print-doc')];
-		expect(sheets).toHaveLength(4);
+		expect(sheets).toHaveLength(5);
 		const proxy = sheets[1].textContent ?? '';
 		expect(proxy).toContain('Proxy card');
 		// The card is due with the AGM notice: fourteen days before 19 May.
@@ -56,10 +56,25 @@ describe('/meetings', () => {
 		expect(notice).toContain('Vote needed: Majority');
 	});
 
+	it('prints the complaint notice as a letter, with the window and the ceiling', () => {
+		const { container } = render(Meetings);
+		const sheets = [...container.querySelectorAll('.print-doc')];
+		const hearing = sheets[3].textContent ?? '';
+		expect(hearing).toContain('Notice of bylaw complaint and hearing');
+		expect(hearing).toContain('To the owner of lot 309');
+		expect(hearing).toContain('September 12, 2026');
+		// The letter names the complainant by their relationship, never by name.
+		expect(hearing).toContain('another owner in the building');
+		expect(hearing).not.toContain('Solberg');
+		// No fine is decided at the notice stage; the ceiling on one day is $200.
+		expect(hearing).toContain('The most the bylaw allows');
+		expect(hearing).toContain('$200.00');
+	});
+
 	it('prints the fine register from the notice to the unpaid posting', () => {
 		const { container } = render(Meetings);
 		const sheets = [...container.querySelectorAll('.print-doc')];
-		const fines = sheets[3].textContent ?? '';
+		const fines = sheets[4].textContent ?? '';
 		expect(fines).toContain('Bylaw fine register');
 		expect(fines).toContain('9.2 — no stays under 30 days');
 		expect(fines).toContain('2026-09-12');

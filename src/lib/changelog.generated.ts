@@ -14,6 +14,40 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.61",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The notice of complaint, as a letter to the owner (/meetings). The bylaw file records that notice was served; the owner has never had a page. The meeting pack gains a fifth sheet: lot 309, bylaw 9.2 — no stays under 30 days, complaint received 28 August 2026, notice served the 29th, the response window closing 12 September, the hearing 15 September at 7:00 pm in the amenity room and by the hybrid link, the three pieces of evidence dated 21–23 August, and the most the bylaw allows for the day noticed — $200.00, at $200 a day. No fine is stated, because none had been decided when the letter was served. The complainant is described as another owner in the building, never by name. Reference OS-BHN-2026-08.",
+          "src/lib/hearing-notice.ts (8 tests) holds five rules. The window is the fine register's own fourteen days from service, so the letter, the register and the minutes cannot disagree about a date. A hearing set before the window closes prints on the letter as out of order, with both dates, rather than being quietly fixed. The amount is a maximum until a fine is decided on or before the issue date, when it prints as levied with the day it was decided — never both. The notice never carries the complainant's name; a test hands it a complaint that does carry one and checks the name is absent from the whole object. And a notice the complaint cannot support — no dated evidence, no days of contravention, or a complaint dated after the notice — is withheld with the reason rather than served.",
+          "The payroll remittance worksheet (/accounting). A new Payroll tab prints the month: 40 hours at $24.00 is $960.00 gross, EI withheld $15.65 and CPP $39.77 leave $904.58 net; the employer's EI is $21.91 at the books' own 1.4× and its CPP $39.77, so the remittance due 15 October 2026 is $117.10. The building spends $1,021.68 — wages plus the employer's $61.68 — which is exactly what lines 6210 and 6215 add to. The wage annualises to $11,520.00; no income tax is withheld, and the TD1 on file is named as the basis for nil tax while the TD1 itself stays in the employee's file. Reference OS-PAY-2026-09.",
+          "src/lib/payroll-sheet.ts (7 tests) holds six rules. Gross is hours times rate and net is gross less the employee's two deductions, so neither figure has to be trusted. The remittance is both shares added and checked against the payable the books carry; the employer's EI is the employee's premium times the multiplier and employer CPP equals employee CPP, both checked so a rate that changed in one place cannot slip through. The cost to the building is wages plus the employer's share, checked against the two expense lines. The due date is the 15th of the month after the pay date, computed from the pay date. And a rate basis the books call unconfirmed — the 2025 CPP structure with the $3,500 exemption — prints a caveat and cannot be called ready to file until the current T4127 tables confirm it.",
+          "The insurance summary (/accounting). A new Insurance tab prints the policy against the budget: $48,600.00 premium (the same figure as account 6100), $4,050.00 a month, $24,300.00 expensed across six months, the $25,000.00 water deductible and the earthquake deductible as the policy writes it — 10.0% of the insured value with a $100,000.00 floor. These books carry no insured value, so the sheet keeps that a rule and prints no dollar figure rather than inventing one. The appraisal prints on 22 October 2026 (22 days after the close) and the renewal on 1 April 2027 (183 days), with the check that the appraisal precedes the broker's marketing and the term ends on the fiscal year end. The premium is $101.25 a lot a month. Reference OS-INS-2026-04.",
+          "src/lib/insurance-summary.ts (7 tests) holds five rules. The premium is the policy's and is checked against the budget line that pays it; the year to date is the ledger's and is checked against an even spread of the premium across the term; the quake deductible stays a formula while no insured value is carried, and resolves with the floor applied once a value exists; the days to the appraisal and the renewal are counted from the statement date with their order checked; the term is checked against the fiscal year end; and the cost per lot a month is derived from the premium, the months and the lots."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "/meetings prints five Letter pages. Packet, proxy card, AGM notice, bylaw hearing notice and fine register each start their own page (app.css), and the print hint reads *Five Letter pages* in all nine locales.",
+          "Three sheets join the print rules. .hearing-doc, .payroll-doc and .insurance-doc are held to 176 mm with a 4 mm gutter. The meeting pack's letters print long dates, so the owner reads *September 12, 2026* rather than an ISO string.",
+          "The accounting page grows two tabs. Payroll sits after Payables and Insurance after Reserve shares; both print the sheet alone while the page's furniture, tabs and ledes stay off the paper.",
+          "The queue is refreshed. The three shipped slots are replaced by a special-levy letter to the lots still owing (/units/[lot], carried over), a bylaw hearing minute extract (/meetings), an owner's insurance notice (/units/[lot]) and a renewal calendar for the next twelve months (/calendar) — four offers, none started."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "25 new tests: 8 for the hearing notice, 7 for the payroll worksheet, 7 for the insurance summary, 2 for /accounting (both tabs) and 1 for /meetings (the letter's window, its unnamed complainant and its ceiling).",
+          "Printed and measured in Chrome: /meetings on five Letter pages (892.80, 487.02, 908.19, 768.95, 375.14), the payroll worksheet on one at 737.58px, the insurance summary on one at 737.78px. Every sheet 665.19px (176 mm) wide, no overflow, no .no-print inside; French and Hindi hold one page each for the letter and the insurance summary, Chinese and Polish one for the worksheet.",
+          "Frontend 799 passed across 84 files, Svelte check 0 errors / 0 warnings, translation audit 1,975 keys × 9 locales (85 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.60",
     "date": "2026-10-29",
     "groups": [

@@ -1,3 +1,31 @@
+## Session — 2026-10-29 (eleventh)
+
+**Done:**
+- Three offers from the 29 October queue shipped together as `0.3.61`.
+- **The bylaw hearing notice** (`/meetings`). The fifth sheet of the meeting pack prints the letter lot 309 was served: bylaw **9.2**, complaint **28 August 2026**, notice served **29 August**, window closing **12 September**, hearing **15 September at 7:00 pm** in the amenity room, three pieces of evidence dated **21–23 August**, and the ceiling — **$200.00** at **$200** a day for the one day noticed. No fine is stated; none had been decided. The complainant is **another owner in the building**, never named. `src/lib/hearing-notice.ts` (8 tests) and `HearingNoticeSheet.svelte`; `demo/fines.ts` now carries the complaint and the hearing's time and place.
+- **The payroll remittance worksheet** (`/accounting`, new **Payroll** tab). **40** hours at **$24.00** = **$960.00** gross; EI **$15.65**, CPP **$39.77**, net **$904.58**; employer EI **$21.91** (1.4×) and CPP **$39.77**, remittance **$117.10** due **15 October 2026**; cost to the building **$1,021.68**, which is lines **6210 + 6215**; annualised **$11,520.00**, no income tax, TD1 on file. `src/lib/payroll-sheet.ts` (7 tests), `payrollRates` and the ISO pay/due dates in `demo/books.ts`.
+- **The insurance summary** (`/accounting`, new **Insurance** tab). **$48,600.00** premium (account **6100**), **$4,050.00** a month, **$24,300.00** expensed over six months, **$25,000.00** water deductible, quake **10.0%** with a **$100,000.00** floor kept as a rule because no insured value is carried, appraisal **22 October 2026** (22 days), renewal **1 April 2027** (183 days), **$101.25** a lot a month. `src/lib/insurance-summary.ts` (7 tests); `demo/building.ts` gains the term's ISO dates, the appraisal and renewal days and the quake formula.
+- Three sheets join the **176 mm** print rule with a **4 mm** gutter: `.hearing-doc`, `.payroll-doc`, `.insurance-doc`. `/meetings` now prints five Letter pages.
+- 85 catalog keys × 9 locales (1,975 at parity), 799 frontend tests across 84 files (25 new: 8 notice, 7 payroll, 7 insurance, 2 accounting route, 1 meetings route), check 0/0, i18n audit green, contrast 218 pairs, secret gate green, production build green. Printed and measured in Chrome: meetings **five** pages (**892.80**, **487.02**, **908.19**, **768.95**, **375.14**), payroll **one** at **737.58px**, insurance **one** at **737.78px**; every sheet **176 mm** wide with no overflow; French and Hindi hold one page each for the letter and the summary, Chinese and Polish one for the worksheet.
+
+**Decisions:**
+- **No fine before the hearing.** At the notice stage the most the bylaw can impose is days × ceiling. Printing that as an amount owing would demand money no council has voted, so the letter says **maximum**, and only a fine decided on or before the issue date prints as **levied** with its day.
+- **A hearing before the window closes is a defect on the paper, not a correction in private.** The owner is the person entitled to the fourteen days, so both dates print and the letter says the hearing cannot proceed. Fixing it silently would hide the one fact the owner needed.
+- **The notice does not name the complainant.** The owner being fined is the one on trial, not the neighbour; the register keeps the name, and the letter describes the complainant by their relationship to the building. A test passes a complaint carrying a name and asserts it never reaches the notice.
+- **A complaint with nothing behind it produces no notice.** No dated evidence, no days of contravention, or a complaint dated after the notice, and the letter is withheld with the reason rather than served with blanks.
+- **The payroll worksheet recomputes rather than trusts.** Gross is hours × rate, net is what is left, and the employer's shares are derived from the multiplier — so a rate changed on one line and not the other shows up as *does not agree* instead of balancing by accident.
+- **A rate basis the books call unconfirmed is printed as unconfirmed.** The CPP figures use the 2025 structure with the $3,500 exemption; the books themselves ask for the current T4127 tables, so the worksheet names that and refuses to call itself ready to file. A worksheet that implied filing readiness would be worse than none.
+- **The quake deductible stays a formula.** 10% of the insured value with a $100,000 floor is the policy's wording, and these books carry no insured value. Printing a dollar figure would have meant inventing one; the module computes it only when a value exists, and a test supplies one to prove the floor works.
+- **The premium must be the budget line.** The certificate quotes the policy's own premium and checks it against account 6100, the line that pays it, so a policy and a budget that drift apart print the difference instead of hiding it.
+- **The appraisal is checked against the marketing it precedes.** A date after the renewal marketing starts means the renewal is priced off an old value; the sheet prints the order rather than the claim that it is fine.
+- The three picked slots are replaced by **a special-levy letter to the lots still owing** (`/units/[lot]`, carried over), **a bylaw hearing minute extract** (`/meetings`), **an owner's insurance notice** (`/units/[lot]`) and **a renewal calendar for the next twelve months** (`/calendar`), so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.61`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (tenth)
 
 **Done:**
