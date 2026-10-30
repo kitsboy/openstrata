@@ -165,3 +165,87 @@ describe('/units/[lot] — the arrears letter', () => {
 		expect(text).toContain('agreed schedule');
 	});
 });
+
+/**
+ * The lot's other two letters.
+ *
+ * The parkade levy and the building's policy are both things an owner asks the
+ * council for in writing. Each is behind its own button so the working page and
+ * the letter are never on the same sheet, and a lot that owes no levy is not
+ * offered a demand for nothing.
+ */
+describe('/units/[lot] — the levy letter', () => {
+	beforeEach(() => localStorage.clear());
+
+	async function open(container: HTMLElement, label: string) {
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === label
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+	}
+
+	it('demands lot 207 its share, not the share it has already paid', async () => {
+		const { container } = render(LotSheet, { data: { lot: '207' } });
+		await open(container, 'Levy letter');
+		const letter = container.querySelector('.levy-letter-doc')!;
+		expect(letter).toBeTruthy();
+		expect(letter.closest('.no-print')).toBeNull();
+		const text = letter.textContent ?? '';
+		expect(text).toContain('OS-LV-2026-09-207');
+		// 148 points at $36 is $5,328; a third paid leaves $3,552.
+		expect(text).toContain('$5,328.00');
+		expect(text).toContain('$3,552.00');
+		expect(text).toContain('This letter asks for');
+		// The trust the books carry, with both routes on the page.
+		expect(text).toContain('$216,000.00');
+		expect(text).toContain('$176,400.00');
+		expect(text).toContain('$39,600.00');
+		// The meeting the council would agree a plan at, and the day the levy fell due.
+		expect(text).toContain('October 20, 2026');
+		expect(text).toContain('November 12, 2025');
+		expect(container.querySelector('.hidden')).toBeTruthy();
+	});
+
+	it('asks a plan lot for its instalment and shows the balance it is working down', async () => {
+		const { container } = render(LotSheet, { data: { lot: '108' } });
+		await open(container, 'Levy letter');
+		const text = container.querySelector('.levy-letter-doc')?.textContent ?? '';
+		expect(text).toContain('$1,800.00');
+		expect(text).toContain('$300.00 a month');
+	});
+
+	it('offers no levy letter to a lot whose share is paid', () => {
+		const { container } = render(LotSheet, { data: { lot: '305' } });
+		const labels = [...container.querySelectorAll('button')].map((node) =>
+			node.textContent?.trim()
+		);
+		expect(labels).not.toContain('Levy letter');
+		expect(container.querySelector('.levy-letter-doc')).toBeNull();
+	});
+});
+
+describe('/units/[lot] — the insurance notice', () => {
+	beforeEach(() => localStorage.clear());
+
+	it('tells the owner what the strata insures, what they insure and the deductibles', async () => {
+		const { container } = render(LotSheet, { data: { lot: '207' } });
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === 'Insurance notice'
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+		const notice = container.querySelector('.insurance-notice-doc')!;
+		expect(notice).toBeTruthy();
+		const text = notice.textContent ?? '';
+		expect(text).toContain('OS-IN-2026-09-207');
+		expect(text).toContain('HH-2847-26');
+		expect(text).toContain('$25,000.00');
+		// The earthquake deductible stays a rule: 10% with a $100,000 floor.
+		expect(text).toContain('10%');
+		expect(text).toContain('$100,000.00');
+		expect(text).toContain('March 31, 2027');
+		// And the corporation's deductible is not charged to the owner.
+		expect(text).toContain('asks you for neither deductible');
+	});
+});

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { locale } from '$lib/i18n';
 import Meetings from './+page.svelte';
 
@@ -95,5 +95,49 @@ describe('/meetings', () => {
 		expect(controls.some((text) => text.includes('Print the meeting pack'))).toBe(true);
 		// The page header is navigation too, so it does not go on the paper.
 		expect(controls.some((text) => text.includes('Meetings and votes'))).toBe(true);
+	});
+});
+
+/**
+ * The minute extract, behind a button.
+ *
+ * The packet carries the register but not the decision as a minute: a council
+ * that prints the mail run does not need it, and a lawyer or a notary who asks
+ * for one wants that page alone. Opening it keeps the five sheets on screen and
+ * takes them off the paper, so the print is the extract and nothing else.
+ */
+describe('/meetings — the minute extract', () => {
+	beforeEach(() => locale.set('en'));
+
+	async function open(container: HTMLElement) {
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === 'Minute extract'
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+	}
+
+	it('is not counted among the sheets until it is opened', () => {
+		const { container } = render(Meetings);
+		expect(container.querySelector('.minutes-doc')).toBeNull();
+		expect(container.querySelectorAll('.print-doc')).toHaveLength(5);
+	});
+
+	it('prints the decision with the vote as cast and the fine as posted', async () => {
+		const { container } = render(Meetings);
+		await open(container);
+		const minute = container.querySelector('.minutes-doc')!;
+		expect(minute).toBeTruthy();
+		expect(minute.closest('.no-print')).toBeNull();
+		// The packet steps off the paper while the extract is open.
+		expect(container.querySelector('[class*="print:hidden"]')).not.toBeNull();
+		const text = minute.textContent ?? '';
+		expect(text).toContain('OS-BM-2026-09');
+		expect(text).toContain('Extract from the minutes');
+		expect(text).toContain('The motion carried 4–0, with 1 abstaining');
+		expect(text).toContain('$200.00');
+		expect(text).toContain('September 15, 2026');
+		// The lot still owes the fine, so its Form F stays withheld.
+		expect(text).toContain('Form F is withheld');
 	});
 });

@@ -25,7 +25,7 @@ const FINE_POSTED: Record<string, string> = {
  * When an unpaid levy became payable. The parkade levy passed at the special
  * general meeting of 12 November 2025; lot 207 paid a third that day and stopped.
  */
-const LEVY_DUE: Record<string, string> = {
+export const LEVY_DUE: Record<string, string> = {
 	'207': '2025-11-12'
 };
 

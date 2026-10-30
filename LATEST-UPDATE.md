@@ -1,3 +1,29 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the levy letter, the minute extract and the insurance notice
+
+Commit: this commit (site `0.3.62`). Backend API version stays `0.3.28`.
+
+> **Three picks from the 29 October queue, and each one is a page that until now existed only as a list on somebody else's screen.**
+>
+> **The special levy, as a demand to the owner who owes it (`/units/[lot]`).** Behind a **Levy letter** button: lot **207** holds **148** entitlement points at **$36** a point, so its share of the **$216,000.00** assessment is **$5,328.00**; a third was paid when the resolution passed on **12 November 2025**, and **$3,552.00** is still owing. The letter asks for that, **322** days after it fell due, and names the council's meeting of **20 October 2026** as the day a plan has to be agreed. Lot **108** owes **$1,800.00** on an agreed **$300.00** a month and is asked for the instalment, not the balance. Reference **OS-LV-2026-09-207**.
+>
+> **`src/lib/levy-letter.ts` (8 unit tests) holds five rules.** The share is rebuilt from the lot's points at the resolution's rate and never typed, and a record owing more than its own share is capped at the share and **refused**, not collected. A plan is a schedule: the ask is the instalment and the age is not printed at all. No interest is charged — the books record none — and no lien is threatened, because a lien is a council decision. The trust prints from the books with its two routes checked on the page (cash plus what owners still owe, against assessed less the contract), and a meeting that is not still ahead leaves the letter with **no deadline** rather than a date in the past.
+>
+> **The bylaw hearing as a minute (`/meetings`).** A **Minute extract** button prints one page from the same register row and the meeting that heard it: **OS-BM-2026-09**, bylaw **9.2**, served **29 August 2026**, window closed **12 September**, heard **15 September**, chair **Helen Cho**, **5 of 5** members against a quorum of **3**, the motion carried **4–0** with **1** abstaining, the **$200.00** fine posted **16 September** and still standing on lot **309** at the close, so **Form F is withheld**.
+>
+> **`src/lib/hearing-minutes.ts` (7 tests) holds five rules.** No minute of a decision can carry the date of a meeting held before the hearing. The vote prints **as cast**, with abstentions outside the majority a council counts. A vote taken **without quorum** imposes nothing. A motion that **did not carry** imposes nothing and prints no posting. And when the register finds the fine's own process out of order, the defect is **named** and no amount is recorded as imposed. Opening the extract takes the five packet sheets off the paper, so the print is one page rather than six.
+>
+> **The owner's insurance notice (`/units/[lot]`).** Policy **HH-2847-26** through **Harbour Insurance Brokers**, term to **31 March 2027** with **182** days of cover left at the close, the two halves of the insurance bylaw **quoted** rather than paraphrased, the **$25,000.00** water deductible, and the earthquake deductible as the policy writes it — **10%** of the insured value with a **$100,000.00** floor. These books carry no insured value, so it stays a rule. No bylaw on file charges the corporation's deductible to an owner, so the notice says so and asks for neither.
+>
+> **`src/lib/insurance-notice.ts` (6 tests) holds four rules.** Cover is confirmed only inside the term, and a term that ended before the notice's own date says it **cannot** confirm cover. The corporation's deductible is not the owner's debt while no bylaw says it is. The quake deductible stays a formula. And both halves of the cover are quoted from the bylaw, so the notice cannot drift from what the owners adopted. `demo/insurance-notice.ts` splits the bylaw at its own full stop and reads the rest from the building record.
+>
+> **Print.** `.levy-letter-doc`, `.insurance-notice-doc` and `.minutes-doc` join the **176 mm** rule with the **4 mm** gutter. The extract claims its own page (`break-before` with `!important`) because it is not an adjacent sibling of the register — the first attempt shared page five and printed as part of the packet.
+>
+> **Verified:** frontend **826 passed** across 87 files (36 new: 8 levy, 6 insurance, 7 minutes, 12 lot route, 2 meetings route, 1 i18n), `check` **0 errors / 0 warnings**, translation audit **2,036 keys × 9 locales** (61 new) at parity across 35 route components, contrast audit **218 pairs**, secret gate green, production build green. Chrome read all three back: the levy letter **one** Letter page at **604.30px**, the insurance notice **one** at **542.72px**, the minute extract **one** at **452.72px**, every sheet **665.19px** (**176 mm**) wide with no overflow; French, Chinese and Hindi hold one page each for all three.
+>
+> **The queue is refreshed, because three picks shipped.** Four offers are waiting: **a renewal calendar for the next twelve months** (`/calendar`, carried over), **a lien status sheet for lot 207** (`/units/[lot]`), **Form K reminder letters to the lots past the window** (`/units/register`) and **a bank deposit reconciliation with its timing differences** (`/accounting`).
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — the hearing notice, the payroll worksheet and the insurance summary
 
 Commit: this commit (site `0.3.61`). Backend API version stays `0.3.28`.

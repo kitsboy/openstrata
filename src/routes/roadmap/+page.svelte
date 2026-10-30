@@ -25,34 +25,34 @@
 		{ name: 'BCFSA', url: 'bcfsa.ca', status: 'Regulator', role: 'Audit-ready exports' }
 	];
 
-	/** Offered 2026-10-29 (refreshed after v0.3.61). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
+	/** Offered 2026-10-29 (refreshed after v0.3.62). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, the close reconciliation shipped on /accounting in v0.3.56, the levy statement, the budget in the reader’s language and the Form K register in the package shipped in v0.3.57, and the payables sheet, the trial balance, the proxy card and the fee schedule shipped in v0.3.58, the Form F certificate, the AGM notice and the fine register shipped in v0.3.59, the vendor spend summary, the arrears letter to one owner and the reserve contribution statement shipped in v0.3.60, and the hearing notice, the payroll worksheet and the insurance summary shipped in v0.3.61; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, the close reconciliation shipped on /accounting in v0.3.56, the levy statement, the budget in the reader’s language and the Form K register in the package shipped in v0.3.57, and the payables sheet, the trial balance, the proxy card and the fee schedule shipped in v0.3.58, the Form F certificate, the AGM notice and the fine register shipped in v0.3.59, the vendor spend summary, the arrears letter to one owner and the reserve contribution statement shipped in v0.3.60, the hearing notice, the payroll worksheet and the insurance summary shipped in v0.3.61, and the special-levy letter, the hearing minute extract and the insurance notice shipped in v0.3.62; these four are what is waiting now.';
 	const uiQueue = [
-		{
-			name: 'A special-levy letter to the lots still owing',
-			where: '/units/[lot]',
-			detail:
-				'Three lots still owe the parkade levy; the levy statement is the council’s page. Print the owner’s copy: the assessment, what is paid, the balance, the agreed plan and the trust’s deadline.'
-		},
-		{
-			name: 'A bylaw hearing minute extract',
-			where: '/meetings',
-			detail:
-				'The minutes record the vote; nothing prints the extract a lawyer or the CRT asks for. One page: the complaint, the notice and its window, the hearing, the vote with its abstention, the fine, the posting and what it does to Form F.'
-		},
-		{
-			name: 'An owner’s insurance notice',
-			where: '/units/[lot]',
-			detail:
-				'Bylaw 7 tells owners to insure their own contents; the strata’s policy and deductibles are on the council’s page. Print the notice the secretary sends after a claim: what the strata covers, what the owner must cover and the deductible they would face.'
-		},
 		{
 			name: 'A renewal calendar for the next twelve months',
 			where: '/calendar',
 			detail:
 				'The contracts register, the insurance renewal and the appraisal all carry dates, and the calendar lists none of them as renewals. One printed year of renewals with the days left, the vendor and the line each one hits.'
+		},
+		{
+			name: 'A lien status sheet for lot 207',
+			where: '/units/[lot]',
+			detail:
+				'Lot 207 has had a demand letter, a lawyer’s opinion and a council vote on a lien, and none of it is on one page. Print the file: what is owing, when each step was taken, what the council resolved and what the lawyer said it costs, with the date the next step is due.'
+		},
+		{
+			name: 'Form K reminder letters to the lots past the window',
+			where: '/units/register',
+			detail:
+				'Two lots are past the two-week Form K deadline and the register counts them. Print the letter the secretary sends: the tenancy the records show, the day the window closed, the bylaw’s own text and the day to reply, one page per lot.'
+		},
+		{
+			name: 'A bank deposit reconciliation with its timing differences',
+			where: '/accounting',
+			detail:
+				'The operating account’s cash is in the books and in the bank; nothing shows the cheques written but not cleared or the deposit in transit. Print the reconciliation, both balances, every timing difference with its date, and the two sides tying at the end.'
 		}
 	];
 </script>

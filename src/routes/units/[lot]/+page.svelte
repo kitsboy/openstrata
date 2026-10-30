@@ -9,6 +9,10 @@
 	import { FORM_K_DAYS } from '$lib/health';
 	import { account, billedMonths, forLot, upcoming, type AccountLine } from '$lib/lot-sheet';
 	import ArrearsLetterSheet from '$lib/components/ArrearsLetterSheet.svelte';
+	import LevyLetterSheet from '$lib/components/LevyLetterSheet.svelte';
+	import InsuranceNoticeSheet from '$lib/components/InsuranceNoticeSheet.svelte';
+	import { lotLevyLetter } from '$lib/demo/levy-letter';
+	import { lotInsuranceNotice } from '$lib/demo/insurance-notice';
 	import FormFCertificateSheet from '$lib/components/FormFCertificateSheet.svelte';
 	import { formFCertificate } from '$lib/form-f-certificate';
 	import { arrearsLetter } from '$lib/arrears-letter';
@@ -65,6 +69,18 @@
 	 */
 	let letter = $state(false);
 	const ownerLetter = $derived(arrearsLetter(unit, charges(asOf), asOf, LATE_FEE_CENTS));
+
+	/**
+	 * The other two letters this lot can be sent, behind their own buttons: the
+	 * demand for its share of the parkade levy, and the notice of what the
+	 * building's policy does and does not cover. A settled lot has no levy letter
+	 * at all, so the button is not offered rather than printing a letter for
+	 * nothing.
+	 */
+	let levyLetterOpen = $state(false);
+	let insuranceOpen = $state(false);
+	const levyDoc = $derived(lotLevyLetter(unit.id));
+	const insuranceDoc = $derived(lotInsuranceNotice(unit.id));
 
 	const due = $derived(balance(unit));
 	const lotCharges = $derived(charges(asOf).filter((charge) => charge.unitId === unit.id));
@@ -141,7 +157,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-	<div class:hidden={certificate || letter}>
+	<div class:hidden={certificate || letter || levyLetterOpen || insuranceOpen}>
 	<PageHeader
 		kicker={fill($copy.lotSheetKicker, {
 			date: formatDate(asOf, $locale, { dateStyle: 'long' })
@@ -166,6 +182,16 @@
 		<button
 			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
 			onclick={() => (letter = true)}>{$copy.arrearsLetterShow}</button
+		>
+		{#if levyDoc?.issuable}
+			<button
+				class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+				onclick={() => (levyLetterOpen = true)}>{$copy.levyLetterShow}</button
+			>
+		{/if}
+		<button
+			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+			onclick={() => (insuranceOpen = true)}>{$copy.insuranceNoticeShow}</button
 		>
 		<span class="text-xs text-slate-500">{$copy.lotSheetPrintNote}</span>
 	</div>
@@ -377,5 +403,39 @@
 			</div>
 		</div>
 		<ArrearsLetterSheet letter={ownerLetter} />
+	{/if}
+
+	{#if levyLetterOpen && levyDoc}
+		<div class="no-print mb-4 flex flex-wrap items-end justify-end gap-3">
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+					onclick={() => (levyLetterOpen = false)}>{$copy.levyLetterHide}</button
+				>
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.levyLetterPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.arrearsLetterPrintNote}</span>
+			</div>
+		</div>
+		<LevyLetterSheet letter={levyDoc} />
+	{/if}
+
+	{#if insuranceOpen && insuranceDoc}
+		<div class="no-print mb-4 flex flex-wrap items-end justify-end gap-3">
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+					onclick={() => (insuranceOpen = false)}>{$copy.insuranceNoticeHide}</button
+				>
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.insuranceNoticePrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.arrearsLetterPrintNote}</span>
+			</div>
+		</div>
+		<InsuranceNoticeSheet notice={insuranceDoc} />
 	{/if}
 </div>

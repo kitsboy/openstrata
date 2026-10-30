@@ -1,11 +1,23 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.61
+**Site/product version:** v0.3.62
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the hearing notice, the payroll worksheet and the insurance summary (site, `0.3.61`, three queue picks)
+## Recent milestone — the levy letter, the minute extract and the insurance notice (site, `0.3.62`, three queue picks)
+
+- **The special levy as a demand (`/units/[lot]`).** A **Levy letter** button opens lot **207**'s letter: **148** points at **$36** give a share of **$5,328.00** of the **$216,000.00** assessment, a third paid on **12 November 2025**, **$3,552.00** still owing and asked for **322** days later, with **20 October 2026** as the day a plan must be agreed. Lot **108** is asked for its **$300.00** instalment on a **$1,800.00** balance. Reference **OS-LV-2026-09-207**.
+- **`src/lib/levy-letter.ts`, 8 tests.** The share is points at the resolution's rate, never typed, and a record owing more than its share is capped and refused; a plan's ask is the instalment and its age is not printed; no interest and no lien; the trust's two routes are checked on the page and a gap prints; a meeting that has passed leaves no deadline.
+- **The hearing as a minute (`/meetings`).** A **Minute extract** button prints **OS-BM-2026-09**: bylaw **9.2**, served **29 August 2026**, window closed **12 September**, heard **15 September**, chair **Helen Cho**, **5 of 5** against quorum **3**, carried **4–0** with **1** abstaining, the **$200.00** fine posted **16 September**, still owing, **Form F withheld**. Opening it takes the five packet sheets off the paper, so the print is one page.
+- **`src/lib/hearing-minutes.ts`, 7 tests.** No minute before the hearing; the vote prints as cast; no quorum imposes nothing; a lost motion imposes nothing and prints no posting; a register defect is named rather than recorded as a fine.
+- **The owner's insurance notice (`/units/[lot]`).** Policy **HH-2847-26**, term to **31 March 2027** with **182** days left, both halves of the insurance bylaw quoted, the **$25,000.00** water deductible, and quake at **10%** with a **$100,000.00** floor kept a rule. No bylaw charges the corporation's deductible to an owner, so the notice says so.
+- **`src/lib/insurance-notice.ts`, 6 tests.** Cover is confirmed only inside the term and an expired term says it cannot confirm cover; the deductible stays the corporation's; the quake formula resolves only with a value; both halves of the cover are quoted.
+- **Print.** `.levy-letter-doc`, `.insurance-notice-doc` and `.minutes-doc` join the **176 mm** rule with the **4 mm** gutter; the extract carries `break-before: page !important` because it is not an adjacent sibling of the register.
+- **Queue:** the three picked slots are replaced by **a renewal calendar for the next twelve months** (`/calendar`, carried over), **a lien status sheet for lot 207** (`/units/[lot]`), **Form K reminder letters to the lots past the window** (`/units/register`) and **a bank deposit reconciliation with its timing differences** (`/accounting`) — four offers, none started.
+- 61 new catalog keys × 9 locales, catalogue **2,036** keys at full parity. Verification: frontend **826 passed** across 87 files (36 new), `check` **0/0**, i18n audit **2,036 keys across 35 route components**, contrast **218 pairs**, secret gate green, production build green. Printed in Chrome: levy letter **one** at **604.30px**, insurance notice **one** at **542.72px**, minute extract **one** at **452.72px**, all **176 mm** wide; French, Chinese and Hindi one page each.
+
+## Prior milestone — the hearing notice, the payroll worksheet and the insurance summary (site, `0.3.61`, three queue picks)
 
 - **The notice of complaint as a letter (`/meetings`).** The meeting pack gains its fifth sheet: lot **309**, bylaw **9.2 — no stays under 30 days**, complaint received **28 August 2026**, notice served the **29th**, window closing **12 September**, hearing **15 September at 7:00 pm** in the amenity room, three pieces of evidence dated **21–23 August**, and the ceiling — **$200.00** at **$200** a day for the day noticed. No fine is printed, because none was decided when the letter was served. The complainant is **another owner in the building**, not a name. Reference **OS-BHN-2026-08**.
 - **`src/lib/hearing-notice.ts`, 8 tests.** The window is the fine register's own fourteen days; a hearing before it closes prints as out of order with both dates; the amount is a maximum until a fine is decided on or before the issue date, then levied with its date; the complainant's name never appears, tested with a complaint that carries one; and no evidence, no days or a complaint dated after the notice withholds the letter.
@@ -17,7 +29,7 @@
 - **Queue:** the three picked slots are replaced by **a special-levy letter to the lots still owing** (`/units/[lot]`, carried over), **a bylaw hearing minute extract** (`/meetings`), **an owner's insurance notice** (`/units/[lot]`) and **a renewal calendar for the next twelve months** (`/calendar`) — four offers, none started.
 - 85 new catalog keys × 9 locales, catalogue **1,975** keys at full parity. Verification: frontend **799 passed** across 84 files (25 new), `check` **0/0**, i18n audit **1,975 keys across 35 route components**, contrast **218 pairs**, secret gate green, production build green. Printed in Chrome: meetings **five** pages (**892.80**, **487.02**, **908.19**, **768.95**, **375.14**), the payroll worksheet **one** at **737.58px**, the insurance summary **one** at **737.78px**, all **176 mm** wide; French and Hindi one page each for the letter and the summary, Chinese and Polish one for the worksheet.
 
-## Prior milestone — the vendor spend summary, the owner's letter and the reserve shares (site, `0.3.60`, three queue picks)
+## Earlier — the vendor spend summary, the owner's letter and the reserve shares (site, `0.3.60`, three queue picks)
 
 - **The vendor spend summary (`/accounting`).** A new **Vendors** tab joins the contracts register to the expense budget: **11** vendors, **$165,260.00** budgeted and **$72,771.68** paid, each row naming the codes it is paid from and the share of the line used. The **17** lines no contract claims follow — **$122,020.00** budgeted, **$54,670.00** paid — and the foot checks the two columns against the **$287,280.00** expense budget. Seawall's **$176,400.00** is named as paid from the levy trust, outside operating spend.
 - **`src/lib/vendor-spend.ts`, 7 tests.** Spend is the books' own year to date, never a contract rate; one account belongs to one vendor, so a code claimed twice moves to the unclaimed block and is reported; rows plus that block equal the budget to the cent; and a vendor paid from another fund is named apart. The contracts register now carries the `accounts` each vendor is paid from.

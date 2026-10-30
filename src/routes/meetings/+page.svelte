@@ -5,12 +5,14 @@
 	import AgmNoticeLetter from '$lib/components/AgmNoticeLetter.svelte';
 	import FineRegisterSheet from '$lib/components/FineRegisterSheet.svelte';
 	import HearingNoticeSheet from '$lib/components/HearingNoticeSheet.svelte';
+	import HearingMinutesSheet from '$lib/components/HearingMinutesSheet.svelte';
 	import { copy, fill } from '$lib/i18n';
 	import { agmNotice } from '$lib/agm-notice';
-	import { building, councilSeats, getUnit } from '$lib/demo/building';
+	import { building, councilSeats, formF, getUnit } from '$lib/demo/building';
 	import { bylawComplaint, bylawFines, bylawHearing } from '$lib/demo/fines';
 	import { fineRegister } from '$lib/fine-register';
 	import { hearingNotice } from '$lib/hearing-notice';
+	import { hearingMinutes } from '$lib/hearing-minutes';
 	import {
 		agm,
 		bylawCase,
@@ -49,6 +51,20 @@
 		days: bylawFines[0].days,
 		ceilingPerDayCents: bylawFines[0].ceilingPerDayCents
 	});
+
+	// The minute a lawyer, an adjudicator or a buyer's notary asks for: the same
+	// register row, the meeting that heard it, and the lot's own Form F state.
+	const minute = hearingMinutes({
+		row: fines.rows[0],
+		meetingIso: lastCouncil.iso,
+		asOf: building.asOf,
+		seats: councilSeats.length,
+		quorum: quorum.councilNeed,
+		chair: getUnit(councilSeats[0].unitId).owner,
+		formFWithheld: formF(getUnit(fines.rows[0].fine.lot)) === 'withheld'
+	});
+
+	let minutesOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -183,15 +199,42 @@
 				<span class="text-xs text-slate-500">{$copy.meetPacketPrintNote}</span>
 			</div>
 		</div>
-		<MeetingPacket />
-		<!-- The card the owner sends back. Its deadline is the meeting's own notice
-		     arithmetic, and its quorum is the AGM's third of the lots. -->
-		<ProxyCard />
-		<!-- The notice itself, addressed to the owners, the complaint notice the
-		     one fine started with, and the fines the books carry with the process
-		     behind each. -->
-		<AgmNoticeLetter {notice} />
-		<HearingNoticeSheet notice={hearing} />
-		<FineRegisterSheet register={fines} />
+		<div class={minutesOpen ? 'print:hidden' : ''}>
+			<MeetingPacket />
+			<!-- The card the owner sends back. Its deadline is the meeting's own notice
+			     arithmetic, and its quorum is the AGM's third of the lots. -->
+			<ProxyCard />
+			<!-- The notice itself, addressed to the owners, the complaint notice the
+			     one fine started with, and the fines the books carry with the process
+			     behind each. -->
+			<AgmNoticeLetter {notice} />
+			<HearingNoticeSheet notice={hearing} />
+			<FineRegisterSheet register={fines} />
+		</div>
+		<!-- The extract of the decision itself, behind a button: a council that
+		     prints the packet does not need it, and the reader who asks for one
+		     wants that page and nothing else. -->
+		<div class="no-print mb-4 mt-8 flex flex-wrap items-end justify-between gap-3">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">{$copy.minutesLede}</p>
+			<div class="flex flex-wrap items-center gap-2">
+				{#if minutesOpen}
+					<button
+						class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+						onclick={() => (minutesOpen = false)}>{$copy.minutesHide}</button
+					>
+					<button
+						class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+						onclick={() => window.print()}>{$copy.minutesPrint}</button
+					>
+					<span class="text-xs text-slate-500">{$copy.minutesPrintNote}</span>
+				{:else}
+					<button
+						class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+						onclick={() => (minutesOpen = true)}>{$copy.minutesShow}</button
+					>
+				{/if}
+			</div>
+		</div>
+		{#if minutesOpen}<HearingMinutesSheet minutes={minute} />{/if}
 	</section>
 </div>

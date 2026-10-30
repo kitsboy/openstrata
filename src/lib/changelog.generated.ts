@@ -14,6 +14,39 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.62",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The special levy as a demand to its owner (/units/[lot]). The levy statement is the council's page and the lot's sheet shows a balance; neither is a letter the owner can hold. A new Levy letter button prints lot 207's copy: 148 entitlement points at $36 a point give a share of $5,328.00 of the $216,000.00 assessment, a third paid when the resolution passed on 12 November 2025, so $3,552.00 is still owing and asked for 322 days later, with the council's meeting of 20 October 2026 as the day a plan must be agreed. Lot 108 owes $1,800.00 and is asked for its $300.00 instalment instead of the balance. Reference OS-LV-2026-09-207. The trust prints beneath the ask: $216,000.00 assessed, $207,948.00 collected, $176,400.00 paid to the contractor, $31,548.00 in the trust and $39,600.00 of work left.",
+          "src/lib/levy-letter.ts (8 tests) holds five rules. The share is the lot's points at the resolution's rate, rebuilt rather than typed, and a record owing more than its own share is capped at the share and refused instead of collected. A plan is a schedule: the ask is the instalment and the age is not printed at all. No interest is charged, because the books record none, and no lien is threatened, because a lien is a council decision. The trust's two routes are checked on the page — cash plus what owners still owe against assessed less the contract — and a meeting that is not still ahead leaves the letter with no deadline rather than a date in the past. demo/levy-letter.ts reads the trust from books.levy, the rate from LEVY_POINT_CENTS and the dates from demo/arrears.",
+          "The bylaw hearing as a minute (/meetings). The register is a table and the notice is a letter; neither is the extract a lawyer or an adjudicator asks for. A new Minute extract button prints OS-BM-2026-09: bylaw 9.2, served 29 August 2026, window closed 12 September, heard 15 September, chair Helen Cho, 5 of 5 members against a quorum of 3, the motion carried 4–0 with 1 abstaining, the $200.00 fine posted 16 September and still standing on lot 309 at the close, so Form F is withheld.",
+          "src/lib/hearing-minutes.ts (7 tests) holds five rules. No minute of a decision can carry the date of a meeting held before the hearing. The vote prints as cast, with abstentions outside the majority a council counts. A vote taken without quorum imposes nothing. A motion that did not carry imposes nothing and prints no posting. And when the fine register finds the process out of order, the defect is named and no amount is recorded as imposed.",
+          "The owner's insurance notice (/units/[lot]). The policy is on the building record and the summary on /accounting; the owner who has had a leak has never been told which half of the cover is theirs. A new Insurance notice prints policy HH-2847-26 through Harbour Insurance Brokers, its term to 31 March 2027 with 182 days of cover left at the close, the two halves of the insurance bylaw quoted rather than paraphrased, the $25,000.00 water deductible, and the earthquake deductible as the policy writes it — 10% of the insured value with a $100,000.00 floor, kept a rule because these books carry no insured value. No bylaw on file charges the corporation's deductible to an owner, so the notice says so and asks for neither.",
+          "src/lib/insurance-notice.ts (6 tests) holds four rules. Cover is confirmed only inside the term, and a term that ended before the notice's own date says it cannot confirm cover. The corporation's deductible is not the owner's debt while no bylaw says it is. The quake deductible stays a formula until a record carries an insured value. And both halves of the cover are quoted from the bylaw, so the notice cannot drift from what the owners adopted."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Three sheets join the print rules. .levy-letter-doc, .insurance-notice-doc and .minutes-doc are held to 176 mm with a 4 mm gutter.",
+          "The extract claims its own page. It sits behind a button after the register, so it is not an adjacent sibling of .fines-doc; the first build shared page five with the register and printed as part of the packet. break-before: page !important was needed because the component's scoped rule won the property. Opening the extract also takes the five packet sheets off the paper, so the print is one page rather than six.",
+          "The queue is refreshed. The three shipped slots are replaced by a renewal calendar for the next twelve months (/calendar, carried over), a lien status sheet for lot 207 (/units/[lot]), Form K reminder letters to the lots past the window (/units/register) and a bank deposit reconciliation with its timing differences (/accounting)."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "36 new tests: 8 for the levy letter, 6 for the insurance notice, 7 for the minute extract, 12 on the lot route (three letters), 2 on /meetings (the extract) and 1 i18n slot check.",
+          "Printed and measured in Chrome: the levy letter one Letter page at 604.30px, the insurance notice one at 542.72px, the minute extract one at 452.72px after the packet stepped aside — every sheet 665.19px (176 mm) wide with no overflow. French, Chinese and Hindi hold one page each for all three.",
+          "Frontend 826 passed across 87 files, Svelte check 0 errors / 0 warnings, translation audit 2,036 keys × 9 locales (61 new) at parity, contrast 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.61",
     "date": "2026-10-29",
     "groups": [

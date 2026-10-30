@@ -88,7 +88,8 @@
   .cash-doc, .recon-doc, .levy-doc, .register-doc, .payable-doc,
   .trial-doc, .fee-doc, .proxy-doc, .ff-doc, .agm-letter-doc, .fines-doc,
   .hearing-doc, .payroll-doc, .insurance-doc,
-  .vendor-doc, .reserve-statement-doc, .arrears-letter-doc {
+  .vendor-doc, .reserve-statement-doc, .arrears-letter-doc,
+  .levy-letter-doc, .insurance-notice-doc, .minutes-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
@@ -113,7 +114,10 @@
   .insurance-doc,
   .vendor-doc,
   .reserve-statement-doc,
-  .arrears-letter-doc {
+  .arrears-letter-doc,
+  .levy-letter-doc,
+  .insurance-notice-doc,
+  .minutes-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }
@@ -130,6 +134,14 @@
   .hearing-doc + .fines-doc {
     break-before: page;
     page-break-before: always;
+  }
+  /* The minute extract sits behind its own button after the register, so the
+     sheet is not an adjacent sibling of `.fines-doc` and has to claim the page
+     itself. Alone on its own print it is the first block, where a break before
+     is ignored. */
+  .minutes-doc {
+    break-before: page !important;
+    page-break-before: always !important;
   }
   .print-doc table, .print-doc tr, .print-doc .print-note,
   .print-doc .print-signatures, .print-doc .print-table-wrap {

@@ -1,3 +1,22 @@
+## Session — 2026-10-29 (twelfth)
+
+**Done:**
+- Three offers from the 29 October queue shipped together as `0.3.62`.
+- **The special levy as a demand** (`/units/[lot]`, new `Levy letter` button). Lot **207** holds **148** points at **$36**, a share of **$5,328.00** of the **$216,000.00** assessment; a third was paid on **12 November 2025**, so **$3,552.00** is asked for **322** days later, with **20 October 2026** as the day a plan must be agreed. Lot **108** is asked for its **$300.00** instalment on a **$1,800.00** balance and its age is not printed. `src/lib/levy-letter.ts` (8 tests), `LevyLetterSheet.svelte`, `demo/levy-letter.ts` (reads the trust from `books.levy`, the rate from `LEVY_POINT_CENTS`, the dates from `demo/arrears`).
+- **The hearing as a minute** (`/meetings`, new `Minute extract` button). **OS-BM-2026-09**: bylaw **9.2**, served **29 August 2026**, window closed **12 September**, heard **15 September**, chair **Helen Cho**, **5 of 5** against quorum **3**, carried **4–0** with **1** abstaining, the **$200.00** fine posted **16 September** and still owing, so **Form F withheld**. `src/lib/hearing-minutes.ts` (7 tests), `HearingMinutesSheet.svelte`; the page builds it from `fines.rows[0]`, `lastCouncil.iso`, `councilSeats` and `quorum.councilNeed`.
+- **The owner's insurance notice** (`/units/[lot]`, new `Insurance notice` button). Policy **HH-2847-26** through **Harbour Insurance Brokers**, term to **31 March 2027** with **182** days left, both halves of the insurance bylaw quoted, **$25,000.00** water deductible, quake **10%** with a **$100,000.00** floor kept a rule, and the corporation's deductible charged to no owner. `src/lib/insurance-notice.ts` (6 tests), `InsuranceNoticeSheet.svelte`, `demo/insurance-notice.ts` (splits the bylaw at its own full stop).
+- Three sheets join the **176 mm** print rule with a **4 mm** gutter: `.levy-letter-doc`, `.insurance-notice-doc`, `.minutes-doc`. The extract needed `break-before: page !important` — it is not an adjacent sibling of `.fines-doc`, so the first build shared page five with the register. Opening the extract also takes the five packet sheets off the paper (`print:hidden` wrapper), so the print is one page.
+- 61 catalog keys × 9 locales (2,036 at parity), 826 frontend tests across 87 files (36 new: 8 levy, 6 insurance, 7 minutes, 12 lot route, 2 meetings route, 1 i18n), check 0/0, i18n audit green, contrast 218 pairs, secret gate green, production build green. Chrome: levy letter **one** page **604.30px**, insurance notice **one** **542.72px**, minute extract **one** **452.72px**, all **176 mm** wide; French, Chinese and Hindi one page each for all three.
+
+**Decisions:**
+- **The share is arithmetic, and the record cannot exceed it.** Points × the resolution's rate rebuilds $5,328.00 from the lot, so a reader can check it; a record owing more than that prints a defect and no letter, because a demand larger than the resolution charged would be a collection nobody voted.
+- **A plan is asked for its instalment, and is not aged.** The owner keeping their word gets a different letter from the owner who stopped; the arrears ladder already worked this way in v0.3.60, and the two pages now agree.
+- **No interest, no lien.** These books record no interest on the levy, and a lien is a council decision — the September minutes leave the lot 207 vote to 20 October. A letter that invented either would be threatening money the corporation has not resolved to collect.
+- **The deadline is a real meeting, or none.** The council's next meeting is the day a plan is agreed; once it has passed the letter prints no date rather than one behind the reader.
+- **A minute cannot be dated before its hearing, and cannot impose without quorum.** Those are the two failures that would make a bylaw record indefensible, so both print as defects with no amount, and the fine's own register defect is named rather than dressed as a resolution.
+- **The corporation's deductible is not the owner's debt.** Nothing in the bylaws on file charges it to an owner, so the notice says exactly that. Telling an owner they owe $25,000 because a pipe failed would be a demand these books cannot support.
+- **The quake deductible stays a formula.** 10% with a $100,000 floor is the policy's wording, and no insured value is on the books; the notice prints the rule and no dollar figure.
+
 ## Session — 2026-10-29 (eleventh)
 
 **Done:**
