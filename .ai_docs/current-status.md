@@ -1,9 +1,15 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.63
+**Site/product version:** v0.3.64
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-30
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — shared polish and dashboard reliability (site, `0.3.64`)
+
+- Shared screen surfaces use theme-aware borders, a restrained interactive accent and a clearer search focus state; dashboard navigation exposes its current page and drawer state. The compact search button opens `/search` rather than hiding an unusable input.
+- Live dashboard balances are requested once per fund instead of twice. Sign-out or a new session clears live balances and charts and ignores late responses from the old session; the existing timeout remains a fallback.
+- Verified: dashboard regression tests (2), Svelte check (0 errors/warnings), contrast audit (218 pairs), production build. The build reports a large shared chunk (1,169.56 kB, 366.25 kB gzip); no page-speed measurement or visual review was performed.
 
 ## Recent milestone — the renewals calendar, the lien file and the Form K letters (site, `0.3.63`, three queue picks)
 

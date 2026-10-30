@@ -1,3 +1,11 @@
+# OpenStrata — Last Updated 2026-10-30 by Buffy
+
+Brief: v0.3.64 refines shared interface states and makes dashboard live balances session-safe without duplicate requests.
+
+Commit: this commit (see `git log -1`). Backend API remains v0.3.28. See `docs/KIMI-HANDOFF.md` and `.ai_docs/current-status.md` for verification and remaining work.
+
+---
+
 # openstrata — Last Updated 2026-10-30 by Buffy — the renewals calendar, the lien file and the Form K letters
 
 Commit: this commit (site `0.3.63`). Backend API version stays `0.3.28`.

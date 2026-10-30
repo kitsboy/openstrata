@@ -1,7 +1,7 @@
 # OpenStrata Design System
 
 **Status:** GUI foundation v0.3  
-**Last updated:** 2026-10-16
+**Last updated:** 2026-10-30
 
 ## Product character
 
@@ -72,7 +72,8 @@ so an accent can be bright as a fill and dark enough as a label.
 - Main content is capped at 1410px and uses dense data grids.
 - Cards use a maximum 13px radius, quiet borders, and restrained shadows.
 - Card fills are `var(--paper)`, which flips with the theme by construction — no per-surface dark-mode override is needed and none should be added.
-- Mobile replaces the sidebar with a bottom action bar and a slide-in navigation drawer.
+- Mobile replaces the sidebar with a bottom action bar and a slide-in navigation drawer. The compact dashboard search button opens the full search page; the active sidebar destination is exposed to assistive technology.
+- Shared cards and header edges use theme-aware borders, with a restrained accent on interactive hover and a visible search focus treatment.
 - Primary content collapses from four metric columns to two, then one column.
 - Repeated elements maintain stable dimensions so status changes do not shift the layout.
 

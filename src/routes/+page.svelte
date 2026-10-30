@@ -200,28 +200,47 @@
     // fetch is best-effort — a failure just leaves the demo fallbacks. A
     // short safety timer guarantees the skeleton never hangs forever when the
     // host is unreachable.
+    let generation = 0;
+    let loadingTimer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = auth.subscribe((session) => {
+      const current = ++generation;
+      clearTimeout(loadingTimer);
+      crfBalance = null;
+      operatingBalance = null;
+      reserveSpark = demoSpark;
+      incomeSpark = [12, 14, 13, 15, 16, 15];
+      balancesLoading = session.status === 'signed-in';
       if (session.status === 'signed-in') {
-        balancesLoading = true;
-        fetchLedgerBalance('crf').then((b) => (crfBalance = b.balanceBasis)).catch(() => {});
-        fetchLedgerBalance('operating').then((b) => (operatingBalance = b.balanceBasis)).catch(() => {});
+        const crf = fetchLedgerBalance('crf').then((b) => {
+          if (current === generation) crfBalance = b.balanceBasis;
+        });
+        const operating = fetchLedgerBalance('operating').then((b) => {
+          if (current === generation) operatingBalance = b.balanceBasis;
+        });
         fetchLedgerSeries('crf', 6)
           .then((points) => {
-            if (points.length >= 2) reserveSpark = points.map((p) => p.netBasis / 100);
+            if (current === generation && points.length >= 2) reserveSpark = points.map((p) => p.netBasis / 100);
           })
           .catch(() => {});
         fetchLedgerSeries('operating', 6)
           .then((points) => {
-            if (points.length >= 2) incomeSpark = points.map((p) => p.incomeBasis / 100);
+            if (current === generation && points.length >= 2) incomeSpark = points.map((p) => p.incomeBasis / 100);
           })
           .catch(() => {});
-        setTimeout(() => (balancesLoading = false), 2500);
-        Promise.allSettled([fetchLedgerBalance('crf'), fetchLedgerBalance('operating')]).then(() => {
-          balancesLoading = false;
+        loadingTimer = setTimeout(() => {
+          if (current === generation) balancesLoading = false;
+        }, 2500);
+        Promise.allSettled([crf, operating]).then(() => {
+          if (current === generation) {
+            clearTimeout(loadingTimer);
+            balancesLoading = false;
+          }
         });
       }
     });
     return () => {
+      generation++;
+      clearTimeout(loadingTimer);
       unsubscribe();
       window.removeEventListener('openstrata:saved-searches-changed', onSavedChanged);
     };
@@ -324,7 +343,7 @@
         <div class="nav-group">
           <div class="nav-label">{group.label === 'Workspace' ? $copy.workspace : $copy.runBuilding}</div>
           {#each group.items as item}
-            <a href={navTargets[item[0]]} class:active={isActive(navTargets[item[0]])} class="nav-item no-underline">
+            <a href={navTargets[item[0]]} class:active={isActive(navTargets[item[0]])} aria-current={isActive(navTargets[item[0]]) ? 'page' : undefined} class="nav-item no-underline">
               <Icon name={item[2]} class="h-[19px] w-[19px] nav-icon" /><span>{$copy[item[0]]}</span>
               {#if item[0] === 'legal'}<span class="nav-count">12</span>{/if}
             </a>
@@ -354,10 +373,11 @@
   <div class="main-column">
     <div class="host-connect-row"><HostConnect /></div>
     <header class="topbar">
-      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><BrandMark size={22} /><strong>open<span>strata</span></strong></div>
+      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} aria-expanded={showMobileMenu} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><BrandMark size={22} /><strong>open<span>strata</span></strong></div>
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
         <label class="search-box"><Icon name="search" class="h-4 w-4" /><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
+        <button class="icon-button mobile-search" aria-label={$copy.search} onclick={() => goto('/search')}><Icon name="search" class="h-4 w-4" /></button>
         <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}</button>
         <button class="icon-button accent-toggle" onclick={cycleAccent} aria-label={$copy.themeBrokerage} title="{$copy.themeBrand}: {$accent === 'orange' ? 'orange' : 'green'}">{#if $accent === 'orange'}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#f97348"></span>{:else}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#2d6a4f"></span>{/if}</button>
         <div class="language-wrap">

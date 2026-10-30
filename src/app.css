@@ -581,7 +581,7 @@ kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; color
 .auth-menu-user em { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--orange-text); font-size: 9px; font-style: normal; font-weight: 800; }
 .auth-menu button { display: flex; justify-content: space-between; width: 100%; padding: 8px 9px; border-radius: 7px; color: var(--muted); background: transparent; font-size: 11px; text-align: left; }
 .auth-menu button:hover { color: var(--ink); background: var(--color-surface-3); }
-.mobile-brand, .menu-button { display: none; }
+.mobile-brand, .menu-button, .mobile-search { display: none; }
 .content { width: min(100%, 1280px); margin: 0 auto; padding: 36px 36px 80px; }
 
 /* Welcome row: date + greeting on the left, primary CTA on the right.
@@ -896,7 +896,7 @@ kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; color
 .mobile-nav button { display: grid; place-items: center; gap: 2px; min-width: 53px; color: var(--muted); background: transparent; font-size: 8px; font-weight: 800; }.mobile-nav button span { font-size: 18px; font-weight: 400; }.mobile-nav button.active { color: var(--orange-text); }.mobile-nav .mobile-add { width: 43px; min-width: 43px; height: 43px; border-radius: 14px; color: #fff; background: var(--orange-solid); box-shadow: 0 6px 15px rgba(249,115,72,.25); }.mobile-nav .mobile-add span { font-size: 25px; }
 }
 @media (max-width: 620px) {
-  .topbar { min-height: 64px; padding: 0 15px; }.topbar-actions { gap: 4px; }.accent-toggle { display: none; }.search-box { width: 32px; padding: 0 7px; border-color: transparent; background: transparent; }.search-box input, .search-box kbd, .language-current, .language-button .chevron, .profile-name, .profile-button .chevron { display: none; }.search-box span { font-size: 22px; }.language-button { padding: 0 6px; }.notification-button { width: 31px; }.profile-button { padding-left: 4px; }.content { padding: 31px 15px 110px; }.welcome-row { align-items: flex-start; flex-direction: column; gap: 17px; margin-bottom: 24px; }.welcome-row h1 { font-size: 29px; }.primary-button { width: 100%; justify-content: center; }.metric-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 28px; }.metric-card { min-height: 132px; padding: 13px; }.metric-label { font-size: 8px; }.metric-card > strong { margin: 14px 0 10px; font-size: 22px; }.metric-icon { width: 23px; height: 23px; font-size: 13px; }.metric-foot { flex-direction: column; align-items: flex-start; gap: 3px; font-size: 8px; }.main-grid { gap: 34px; }.section-heading h2, .panel-heading h2 { font-size: 15px; }.building-grid { grid-template-columns: 1fr; }.building-card { display: block; }.building-top { align-items: center; }.building-info { margin: 15px 0; }.building-progress, .building-status { display: flex; }.building-progress { flex-direction: column; }.building-status { margin-top: 13px; }.action-grid { grid-template-columns: 1fr; }.right-stack { display: flex; }.site-footer { padding: 40px 20px 90px; }.footer-top { gap: 33px; }.footer-links { gap: 12px; }.footer-links h3 { font-size: 9px; }.footer-links a { font-size: 9px; }.footer-bottom { align-items: flex-start; flex-direction: column; gap: 10px; line-height: 1.5; }.toast { right: 15px; bottom: 91px; left: 15px; justify-content: center; }.modal { padding: 25px 20px; }.modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; justify-content: center; }
+  .topbar { min-height: 64px; padding: 0 15px; }.topbar-actions { gap: 4px; }.accent-toggle, .search-box { display: none; }.mobile-search { display: inline-flex; }.language-current, .language-button .chevron, .profile-name, .profile-button .chevron { display: none; }.search-box span { font-size: 22px; }.language-button { padding: 0 6px; }.notification-button { width: 31px; }.profile-button { padding-left: 4px; }.content { padding: 31px 15px 110px; }.welcome-row { align-items: flex-start; flex-direction: column; gap: 17px; margin-bottom: 24px; }.welcome-row h1 { font-size: 29px; }.primary-button { width: 100%; justify-content: center; }.metric-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 28px; }.metric-card { min-height: 132px; padding: 13px; }.metric-label { font-size: 8px; }.metric-card > strong { margin: 14px 0 10px; font-size: 22px; }.metric-icon { width: 23px; height: 23px; font-size: 13px; }.metric-foot { flex-direction: column; align-items: flex-start; gap: 3px; font-size: 8px; }.main-grid { gap: 34px; }.section-heading h2, .panel-heading h2 { font-size: 15px; }.building-grid { grid-template-columns: 1fr; }.building-card { display: block; }.building-top { align-items: center; }.building-info { margin: 15px 0; }.building-progress, .building-status { display: flex; }.building-progress { flex-direction: column; }.building-status { margin-top: 13px; }.action-grid { grid-template-columns: 1fr; }.right-stack { display: flex; }.site-footer { padding: 40px 20px 90px; }.footer-top { gap: 33px; }.footer-links { gap: 12px; }.footer-links h3 { font-size: 9px; }.footer-links a { font-size: 9px; }.footer-bottom { align-items: flex-start; flex-direction: column; gap: 10px; line-height: 1.5; }.toast { right: 15px; bottom: 91px; left: 15px; justify-content: center; }.modal { padding: 25px 20px; }.modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
@@ -1292,6 +1292,22 @@ main h1 { letter-spacing: -.028em; }
   ::view-transition-new(root) { animation: os-vt-in .24s ease both; }
   @keyframes os-vt-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
   @keyframes os-vt-out { from { opacity: 1; } to { opacity: 0; } }
+}
+
+/* Shared visual finish: a quiet edge on navigation and clearer card hierarchy,
+   using the existing theme tokens so the same treatment works in both modes. */
+@media screen {
+  .topbar, .mesh-bg > header { border-bottom-color: var(--line); }
+  .metric-card, .building-card, .action-card, .glass-card {
+    border-color: var(--line);
+  }
+  .action-card:hover, .building-card:hover, .glass-card:hover {
+    border-color: color-mix(in srgb, var(--orange) 40%, var(--line));
+  }
+  .search-box:focus-within {
+    border-color: var(--brand-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-text) 14%, transparent);
+  }
 }
 
 /* Marketing card language — the same bold voice as dashboard card headings.

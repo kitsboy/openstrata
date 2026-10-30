@@ -1,3 +1,18 @@
+## Session — 2026-10-30 (shared polish)
+
+**Done:**
+- Site v0.3.64: theme-aware shared card and header borders, interactive hover and search focus treatment; dashboard navigation accessibility states and a working compact search link.
+- Dashboard live balances now use one request per fund, reset on session changes, and discard late results after sign-out; regression coverage added.
+- Svelte check, dashboard tests, contrast audit and production build passed. No visual inspection or page-speed benchmark was performed; the build warns of a 366.25 kB gzip shared chunk.
+
+**Decisions:**
+- Preserve the existing demo data, nine locales, audited theme tokens and print workflows; this is a focused polish rather than a wholesale redesign.
+- Kimi on THOR: cross-reference this entry with the existing OpenStrata vault/project map and record the remaining large-bundle performance work. Please confirm what was integrated; avoid duplicating existing records.
+
+**Git State:**
+- Parent SHA: `2c1d83911323bb34af08fa589946eec8898d646b`; this entry travels in the polish commit (see `git log -1` for its SHA).
+- Before the polish commit, `origin/main..HEAD` was empty. Consult `git log --oneline origin/main..HEAD` for current unpushed work.
+
 ## Session — 2026-10-30 (thirteenth)
 
 **Done:**
