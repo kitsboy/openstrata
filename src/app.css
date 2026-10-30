@@ -86,7 +86,8 @@
      176mm — inside the 14mm side margins — so the paper shows every column. */
   .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc,
   .cash-doc, .recon-doc, .levy-doc, .register-doc, .payable-doc,
-  .trial-doc, .fee-doc, .proxy-doc, .ff-doc, .agm-letter-doc, .fines-doc {
+  .trial-doc, .fee-doc, .proxy-doc, .ff-doc, .agm-letter-doc, .fines-doc,
+  .vendor-doc, .reserve-statement-doc, .arrears-letter-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
@@ -105,7 +106,10 @@
   .fee-doc,
   .ff-doc,
   .agm-letter-doc,
-  .fines-doc {
+  .fines-doc,
+  .vendor-doc,
+  .reserve-statement-doc,
+  .arrears-letter-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }

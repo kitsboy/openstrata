@@ -28,31 +28,31 @@
 	/** Offered 2026-10-29 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, the close reconciliation shipped on /accounting in v0.3.56, the levy statement, the budget in the reader’s language and the Form K register in the package shipped in v0.3.57, and the payables sheet, the trial balance, the proxy card and the fee schedule shipped in v0.3.58, and the Form F certificate, the AGM notice and the fine register shipped in v0.3.59; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, the close reconciliation shipped on /accounting in v0.3.56, the levy statement, the budget in the reader’s language and the Form K register in the package shipped in v0.3.57, and the payables sheet, the trial balance, the proxy card and the fee schedule shipped in v0.3.58, the Form F certificate, the AGM notice and the fine register shipped in v0.3.59, and the vendor spend summary, the arrears letter to one owner and the reserve contribution statement shipped in v0.3.60; these four are what is waiting now.';
 	const uiQueue = [
-		{
-			name: 'A vendor spend summary for the year',
-			where: '/accounting',
-			detail:
-				'The contracts cards list renewals, but no page totals what each vendor has been paid this year against what was budgeted, which is the first question a council asks of a quote.'
-		},
-		{
-			name: 'The arrears ladder as a letter to one owner',
-			where: '/units/[lot]',
-			detail:
-				'The ladder is the council’s view; the owner gets nothing they can hold. Print the same aged balance as a letter: the lot, each charge and its age, the total, the payment options and the day a plan has to be agreed.'
-		},
-		{
-			name: 'A reserve-fund contribution statement for the budget',
-			where: '/accounting',
-			detail:
-				'The budget sets the CRF contribution and the reserve plan projects it, but no page shows the year’s contribution against the depreciation report’s recommendation, which is the sentence the AGM votes on.'
-		},
 		{
 			name: 'A bylaw hearing notice for the owner',
 			where: '/meetings',
 			detail:
 				'The register records that notice was served; the owner never sees the page. Print the notice of complaint with the bylaw, the evidence, the fourteen days, the hearing date and the right to be heard.'
+		},
+		{
+			name: 'A payroll remittance worksheet',
+			where: '/accounting',
+			detail:
+				'The pay run is in the journal and the CRA date is on the calendar, but no page adds the employee and employer CPP and EI to the amount remitted and prints it for the file.'
+		},
+		{
+			name: 'An insurance summary with the appraisal and renewal dates',
+			where: '/accounting',
+			detail:
+				'The policy, premium, water and quake deductibles, the appraisal date and the renewal sit in the building record and in no printed document a council hands over.'
+		},
+		{
+			name: 'A special-levy letter to the lots still owing',
+			where: '/units/[lot]',
+			detail:
+				'Three lots still owe the parkade levy; the levy statement is the council’s page. Print the owner’s copy: the assessment, what is paid, the balance, the agreed plan and the trust’s deadline.'
 		}
 	];
 </script>

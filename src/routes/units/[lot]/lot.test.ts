@@ -117,3 +117,51 @@ describe('/units/[lot] — the Form F certificate', () => {
 		expect(text).toContain('$576.00');
 	});
 });
+
+/**
+ * The same arrears, as a letter to the owner.
+ *
+ * The ladder and the lot's sheet are the council's view; the letter is the page
+ * that goes to the owner. It has to ask only for money that has fallen due, name
+ * the next fee without collecting it, and give the day the bylaw adds a late fee.
+ */
+describe('/units/[lot] — the arrears letter', () => {
+	beforeEach(() => localStorage.clear());
+
+	async function openLetter(container: HTMLElement) {
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === 'Letter to the owner'
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+	}
+
+	it('asks lot 309 for the fine, and prints October separately', async () => {
+		const { container } = render(LotSheet, { data: { lot: '309' } });
+		await openLetter(container);
+		const letter = container.querySelector('.arrears-letter-doc')!;
+		expect(letter).toBeTruthy();
+		expect(letter.closest('.no-print')).toBeNull();
+		const text = letter.textContent ?? '';
+		expect(text).toContain('OS-AL-2026-09-309');
+		expect(text).toContain('$200.00');
+		expect(text).toContain('Bylaw fine');
+		expect(text).toContain('14');
+		// October's fee is stated, and is not part of what is asked for.
+		expect(text).toContain('$792.00');
+		expect(text).toContain('not part of this amount');
+		// The bylaw's own day: the 5th of the month after the letter.
+		expect(text).toContain('October 5, 2026');
+		// The working page steps aside so the print is the letter alone.
+		expect(container.querySelector('.hidden')).toBeTruthy();
+	});
+
+	it('prints a levy on a schedule as a schedule, not as arrears', async () => {
+		const { container } = render(LotSheet, { data: { lot: '108' } });
+		await openLetter(container);
+		const text = container.querySelector('.arrears-letter-doc')?.textContent ?? '';
+		expect(text).toContain('$1,800.00');
+		expect(text).toContain('$300.00 a month');
+		expect(text).toContain('agreed schedule');
+	});
+});

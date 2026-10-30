@@ -1,3 +1,31 @@
+## Session — 2026-10-29 (tenth)
+
+**Done:**
+- Three offers from the 29 October queue shipped together as `0.3.60`.
+- **The vendor spend summary** (`/accounting`). A new **Vendors** tab joins the contracts register to the expense budget: **11** vendors, **$165,260.00** budgeted and **$72,771.68** paid, each row naming the ledger codes it is paid from and the share of the line used. The **17** lines no contract claims follow as one block (**$122,020.00** budgeted, **$54,670.00** paid), and the foot checks both columns against the **$287,280.00** expense budget. Seawall Membrane's **$176,400.00** is named as paid from the levy trust and stays out of operating spend. `src/lib/vendor-spend.ts` (7 tests) and `VendorSpendSheet.svelte`; the register in `demo/books.ts` now carries the `accounts` each contract is paid from.
+- **The arrears ladder as a letter to one owner** (`/units/[lot]`). `Letter to the owner` opens the owner's copy of the ladder: reference **OS-AL-2026-09-309**, every charge due with its age, what clears the account, the next fee as not yet due, and the day a plan must be agreed. Lot **207** is asked for **$5,700.00** (**322** days at the oldest), lot **309** for its **$200.00** fine and **14** days with October's **$792.00** separate, and lot **108** shows its **$1,800.00** levy as an agreed **$300.00** a month schedule and asks for nothing. `src/lib/arrears-letter.ts` (7 tests) and `ArrearsLetterSheet.svelte`.
+- **The reserve contribution statement** (`/accounting`). A new **Reserve shares** tab prints all **40** lots with points, the budget's **$43,200.00**, the depreciation report's **$48,000.00** recommendation and the **$4,800.00** gap — **$8.00** a point a year against **$7.20** — with the fund's **$21,600.00**, its arrears and the **2030–31** shortfall of **$133,291.62**. `src/lib/reserve-statement.ts` (6 tests) and `ReserveStatementSheet.svelte`.
+- Three sheets join the **176 mm** print rule with a **4 mm** gutter: `.vendor-doc`, `.reserve-statement-doc`, `.arrears-letter-doc`.
+- 65 catalog keys × 9 locales (1,883 at parity), 774 frontend tests across 81 files (25 new: 7 vendor, 7 letter, 6 reserve, 3 accounting route, 2 lot route), check 0/0, i18n audit green, contrast 218 pairs, secret gate green, production build green. Printed and measured in Chrome: vendor **one** page at **754.98px**, reserve shares **one** at **910.36px**, owner letters **one** each at **753.84px** (207), **631.88px** (309) and **655.16px** (108); every sheet **176 mm** wide with no overflow; French and Chinese also one page.
+
+**Decisions:**
+- **A vendor's spend is the ledger, not the contract note.** The note says “$3,000 a month”; the line says $18,000 for six months. The line is what was paid, so the line is what prints, and a contract whose rate and line disagree is a question for the council rather than a number the sheet averages away.
+- **One account belongs to one vendor.** Two vendors claiming 6200 would each print the whole line and the page would total the budget twice. A contested code moves to the unclaimed block, prints once, and is named as a defect above it.
+- **The vendor rows have to add to the budget.** Contracted plus unclaimed equals the expense budget on both columns, checked at the foot of the page, so a line that goes missing shows up as a difference instead of as silence.
+- **Levy money stays out of operating spend.** The membrane contractor is paid from the levy trust; folding its $176,400 into the operating page would overstate running costs and double-count a project the levy page already accounts for, so it is named apart with the fund that pays it.
+- **A letter asks only for money that has fallen due.** The next fee prints on its own line as not yet due, and the amount to clear excludes it. A letter that collected a bill nobody is late on would be wrong on its face.
+- **The deadline is the building's, not the letter's.** The bylaw adds a $50 late fee on the 5th, so the day a plan must be agreed is the 5th of the month after the letter. Inventing a nicer deadline would contradict the books.
+- **A plan is a schedule, not arrears.** Lot 108's levy prints with its $300 instalment and is left out of the arrears figure and the oldest age — the owner keeping their word should not get the letter written for the owner who stopped paying.
+- **A lot's reserve share is its entitlement.** An equal split across 40 lots would misstate every row; the budget column is rebuilt from the CRF rate so the rows land on the budget's own line, not a typed total.
+- **The recommendation is allocated by largest remainder.** $48,000 across 6,000 points happens to divide exactly ($8.00 a point), but the allocator does not rely on that: any figure that does not divide still adds to the report's total, and the tie-break is by lot id so the same books produce the same row.
+- The three picked slots are replaced by **a bylaw hearing notice for the owner** (`/meetings`, carried over), **a payroll remittance worksheet** (`/accounting`), **an insurance summary with the appraisal and renewal dates** (`/accounting`) and **a special-levy letter to the lots still owing** (`/units/[lot]`), so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.60`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (ninth)
 
 **Done:**

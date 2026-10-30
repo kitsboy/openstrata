@@ -3,13 +3,15 @@
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { LEVY_PLAN_CENTS, charges } from '$lib/demo/arrears';
-	import { balance, building, formF, getUnit, monthlyFeeCents, type Unit } from '$lib/demo/building';
+	import { LATE_FEE_CENTS, balance, building, formF, getUnit, monthlyFeeCents, type Unit } from '$lib/demo/building';
 	import { events } from '$lib/demo/schedule';
 	import { addDays, dayIn, daysBetween, daysPastDue, periodOf } from '$lib/arrears';
 	import { FORM_K_DAYS } from '$lib/health';
 	import { account, billedMonths, forLot, upcoming, type AccountLine } from '$lib/lot-sheet';
+	import ArrearsLetterSheet from '$lib/components/ArrearsLetterSheet.svelte';
 	import FormFCertificateSheet from '$lib/components/FormFCertificateSheet.svelte';
 	import { formFCertificate } from '$lib/form-f-certificate';
+	import { arrearsLetter } from '$lib/arrears-letter';
 	import {
 		clearFormK,
 		filedOn,
@@ -57,6 +59,12 @@
 	 */
 	let certificate = $state(false);
 	const formFCert = $derived(formFCertificate(unit, charges(asOf), asOf));
+	/**
+	 * The same money as a letter to the owner, behind its own button. One page at a
+	 * time: a letter and a working sheet are never on the paper together.
+	 */
+	let letter = $state(false);
+	const ownerLetter = $derived(arrearsLetter(unit, charges(asOf), asOf, LATE_FEE_CENTS));
 
 	const due = $derived(balance(unit));
 	const lotCharges = $derived(charges(asOf).filter((charge) => charge.unitId === unit.id));
@@ -133,7 +141,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-	<div class:hidden={certificate}>
+	<div class:hidden={certificate || letter}>
 	<PageHeader
 		kicker={fill($copy.lotSheetKicker, {
 			date: formatDate(asOf, $locale, { dateStyle: 'long' })
@@ -154,6 +162,10 @@
 		<button
 			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
 			onclick={() => (certificate = true)}>{$copy.ffCertShow}</button
+		>
+		<button
+			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+			onclick={() => (letter = true)}>{$copy.arrearsLetterShow}</button
 		>
 		<span class="text-xs text-slate-500">{$copy.lotSheetPrintNote}</span>
 	</div>
@@ -347,5 +359,23 @@
 			</div>
 		</div>
 		<FormFCertificateSheet certificate={formFCert} />
+	{/if}
+
+	{#if letter}
+		<div class="no-print mb-4 flex flex-wrap items-end justify-between gap-3">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">{$copy.arrearsLetterLede}</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+					onclick={() => (letter = false)}>{$copy.arrearsLetterHide}</button
+				>
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.arrearsLetterPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.arrearsLetterPrintNote}</span>
+			</div>
+		</div>
+		<ArrearsLetterSheet letter={ownerLetter} />
 	{/if}
 </div>

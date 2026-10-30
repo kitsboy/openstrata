@@ -1,11 +1,23 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.59
+**Site/product version:** v0.3.60
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the Form F certificate, the AGM notice and the fine register (site, `0.3.59`, three queue picks)
+## Recent milestone — the vendor spend summary, the owner's letter and the reserve shares (site, `0.3.60`, three queue picks)
+
+- **The vendor spend summary (`/accounting`).** A new **Vendors** tab joins the contracts register to the expense budget: **11** vendors, **$165,260.00** budgeted and **$72,771.68** paid, each row naming the codes it is paid from and the share of the line used. The **17** lines no contract claims follow — **$122,020.00** budgeted, **$54,670.00** paid — and the foot checks the two columns against the **$287,280.00** expense budget. Seawall's **$176,400.00** is named as paid from the levy trust, outside operating spend.
+- **`src/lib/vendor-spend.ts`, 7 tests.** Spend is the books' own year to date, never a contract rate; one account belongs to one vendor, so a code claimed twice moves to the unclaimed block and is reported; rows plus that block equal the budget to the cent; and a vendor paid from another fund is named apart. The contracts register now carries the `accounts` each vendor is paid from.
+- **The arrears letter to one owner (`/units/[lot]`).** `Letter to the owner` opens the letter: reference **OS-AL-2026-09-309**, every charge due with its age, what clears the account, the next fee as not yet due, and the day a plan must be agreed. Lot **207** is asked for **$5,700.00** (**322** days at the oldest); lot **309** for its **$200.00** fine and **14** days with October's **$792.00** separate; lot **108** shows its **$1,800.00** levy as an agreed **$300.00** a month schedule and asks for nothing.
+- **`src/lib/arrears-letter.ts`, 7 tests.** Only money fallen due is asked for; age runs from each due date to the letter's date; a plan is a schedule and stays out of arrears and the oldest age; the deadline is the 5th of the month after the letter, when the bylaw adds its **$50**. Every lot's due-now plus next fee equals its own balance, tested across all forty.
+- **The reserve contribution statement (`/accounting`).** A new **Reserve shares** tab prints all **40** lots with points, the budget's **$43,200.00**, the report's **$48,000.00** recommendation and the gap — **$4,800.00**, or **$8.00** a point a year against **$7.20**. The fund's **$21,600.00**, its arrears and the **2030–31** shortfall of **$133,291.62** print beside the rate.
+- **`src/lib/reserve-statement.ts`, 6 tests.** A lot's share is its entitlement; the budget column is the CRF rate times points times twelve; the recommendation is allocated by largest remainder so no cent is lost; and receipts, arrears and the shortfall sit beside the rate.
+- **Three sheets join the print rules.** `.vendor-doc`, `.reserve-statement-doc`, `.arrears-letter-doc` at **176 mm** with a **4 mm** gutter. Printing found one defect: the reserve statement's 40 rows ran to **950.97px** and two pages, so the rows tightened to one page at **910.36px**.
+- **Queue:** the three picked slots are replaced by **a bylaw hearing notice for the owner** (`/meetings`, carried over), **a payroll remittance worksheet** (`/accounting`), **an insurance summary with the appraisal and renewal dates** (`/accounting`) and **a special-levy letter to the lots still owing** (`/units/[lot]`) — four offers, none started.
+- 65 new catalog keys × 9 locales, catalogue **1,883** keys at full parity. Verification: frontend **774 passed** across 81 files (25 new), `check` **0/0**, i18n audit **1,883 keys across 35 route components**, contrast **218 pairs**, secret gate green, production build green. Printed in Chrome: vendor **one** page (754.98px), shares **one** (910.36px), letters **one** each (753.84 / 631.88 / 655.16), all 176 mm; French and Chinese one page.
+
+## Prior milestone — the Form F certificate, the AGM notice and the fine register (site, `0.3.59`, three queue picks)
 
 - **The Form F certificate prints from the lot (`/units/[lot]`).** A button opens the page a buyer's notary asks for: letterhead, lot and owner, the balance at the statement date, every charge that makes it up, the state in a stamped line and a signature under it. Lot **309** prints **withheld** for its **$200.00** fine posted **16 September 2026**, reference **OS-FF-2026-09-309**, deliverable **7 October**; lot **305** prints **issued** on a **$0.00** balance. The working page steps aside (`class:hidden`) so print is the certificate alone, and a *Back to the lot* button returns.
 - **`src/lib/form-f-certificate.ts`, 6 tests.** The state is the certificate's own arithmetic and is checked against the lot's own `formF` rule on all forty lots, so the screen and the paper cannot drift; only a charge that has fallen due is owing, so lot 305's **$576.00** October fee prints separately and is not counted; a certificate is never dated before the books it quotes; and the delivery window is Form B's seven days, because the two forms travel together.

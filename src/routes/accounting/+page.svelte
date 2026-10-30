@@ -9,8 +9,10 @@
 	import CloseReconciliation from '$lib/components/CloseReconciliation.svelte';
 	import LevySheet from '$lib/components/LevySheet.svelte';
 	import PayablesSheet from '$lib/components/PayablesSheet.svelte';
+	import ReserveStatementSheet from '$lib/components/ReserveStatementSheet.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
 	import TrialBalanceSheet from '$lib/components/TrialBalanceSheet.svelte';
+	import VendorSpendSheet from '$lib/components/VendorSpendSheet.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
@@ -24,30 +26,36 @@
 	import { age, summarise } from '$lib/arrears';
 	import { arrearsSheet } from '$lib/arrears-sheet';
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
-	import { building, depreciation, formF, units } from '$lib/demo/building';
+	import { CRF_POINT_CENTS, building, depreciation, formF, units } from '$lib/demo/building';
 	import { PERIOD_PARAM, parsePeriod, type PeriodPoint } from '$lib/period-link';
 	import { cashAt, cashRows } from '$lib/fund-history';
 	import { reservePlan } from '$lib/reserve-plan';
 	import { reservePicture } from '$lib/demo/reserve';
 	import { budgetSheet } from '$lib/budget-sheet';
+	import { vendorSpend } from '$lib/vendor-spend';
+	import { reserveStatement } from '$lib/reserve-statement';
 
 	type TabId =
 		| 'overview'
 		| 'budget'
 		| 'receivables'
 		| 'payables'
+		| 'vendors'
 		| 'funds'
 		| 'levy'
 		| 'reserve'
+		| 'shares'
 		| 'journal';
 	const TAB_IDS: readonly TabId[] = [
 		'overview',
 		'budget',
 		'receivables',
 		'payables',
+		'vendors',
 		'funds',
 		'levy',
 		'reserve',
+		'shares',
 		'journal'
 	];
 	let tab = $state<TabId>('overview');
@@ -55,10 +63,11 @@
 	const printsOwnSheet = $derived(
 		tab === 'overview' ||
 			tab === 'budget' ||
-			tab === 'receivables' ||
-			tab === 'journal' ||
-			tab === 'payables' ||
-			tab === 'levy'
+			tab === 'receivables' ||		tab === 'journal' ||
+		tab === 'payables' ||
+		tab === 'vendors' ||
+		tab === 'shares' ||
+		tab === 'levy'
 	);
 
 	/**
@@ -288,9 +297,11 @@
 		{ id: 'budget', label: $copy.accTabBudget },
 		{ id: 'receivables', label: $copy.accTabReceivables },
 		{ id: 'payables', label: $copy.accTabPayables },
+		{ id: 'vendors', label: $copy.accTabVendors },
 		{ id: 'funds', label: $copy.accTabFunds },
 		{ id: 'levy', label: $copy.accTabLevy },
 		{ id: 'reserve', label: $copy.accTabReserve },
+		{ id: 'shares', label: $copy.accTabReserveShares },
 		{ id: 'journal', label: $copy.accTabJournal }
 	] as const);
 
@@ -306,6 +317,42 @@
 		formatNumber(reservePicture.input.annualRateBps / 100, $locale, {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2
+		})
+	);
+
+	/**
+	 * The contracts register joined to the expense budget. Every vendor's money is
+	 * the line it is paid from; the levy's contractor is named outside the
+	 * operating totals rather than folded into them.
+	 */
+	const vendor = $derived(
+		vendorSpend({
+			lines: books.expenses,
+			contracts: books.contracts,
+			outsidePaid: { 'Seawall Membrane Co.': books.levy.spent }
+		})
+	);
+
+	/**
+	 * The same CRF contribution the budget sets, split owner by owner against the
+	 * depreciation report's recommendation, with the plan's first short year beside
+	 * it — the sentence the AGM votes on.
+	 */
+	const shares = $derived(
+		reserveStatement({
+			lots: units,
+			crfPointCents: CRF_POINT_CENTS,
+			recommendedAnnualCents: depreciation.recommendedAnnualCents,
+			monthsElapsed: books.monthsElapsed,
+			receivedCents: books.crf.contributions,
+			arrearsCents: books.crf.ar,
+			report: reservePicture.report,
+			shortfall: reserve.firstShortfall
+				? {
+						year: reserve.firstShortfall.label,
+						cents: -reserve.firstShortfall.closingCents
+					}
+				: null
 		})
 	);
 </script>
@@ -624,6 +671,22 @@
 		<PayablesSheet sheet={BOOK_PAYABLES} />
 	{/if}
 
+	{#if tab === 'vendors'}
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.vendorSheetLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.vendorSheetPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.vendorSheetPrintNote}</span>
+			</div>
+		</div>
+		<VendorSpendSheet spend={vendor} />
+	{/if}
+
 	{#if tab === 'funds'}
 		<div class="grid gap-4 lg:grid-cols-3">
 			<article class="rounded-2xl border border-border bg-surface-2 p-5">
@@ -836,6 +899,22 @@
 				})}
 			</p>
 		</section>
+	{/if}
+
+	{#if tab === 'shares'}
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.reserveSheetLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.reserveSheetPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.reserveSheetPrintNote}</span>
+			</div>
+		</div>
+		<ReserveStatementSheet statement={shares} />
 	{/if}
 
 	{#if tab === 'journal'}

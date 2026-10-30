@@ -14,6 +14,39 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.60",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The vendor spend summary (/accounting). A new Vendors tab joins the contracts register to the expense budget: 11 vendors, $165,260.00 budgeted and $72,771.68 paid, each row naming the ledger codes it is paid from and the share of the line the year has used. The 17 lines no contract claims follow as one block — $122,020.00 budgeted, $54,670.00 paid — and the foot prints the check: contracted plus unclaimed equals the $287,280.00 expense budget on both columns. Seawall Membrane's $176,400.00 is named as paid from the levy trust and stays out of operating spend.",
+          "src/lib/vendor-spend.ts (7 tests) holds four rules. A vendor's spend is the books' own year-to-date figure, never a rate retyped from the contract note. One account belongs to one vendor: a code two vendors claim is removed from both rows, printed with the unclaimed lines and reported as a defect, so one line is never paid twice. The rows plus the unclaimed block are the budget to the cent, which is the page's check. And a contract with no operating line is listed apart with the fund that pays it.",
+          "The arrears letter to one owner (/units/[lot]). Behind a button on the lot's sheet: the owner, the address, the reference (OS-AL-2026-09-309), every charge due with its age, what clears the account, the next fee stated as not yet due, and the day a plan must be agreed. Lot 207 is asked for $5,700.00 across three fees, three late fees and its $3,552.00 levy, 322 days old; lot 309 for its $200.00 fine and 14 days, with October's $792.00 printed separately; lot 108 shows its $1,800.00 levy as an agreed $300.00 a month schedule and asks for nothing.",
+          "src/lib/arrears-letter.ts (7 tests) holds four rules. Only money that has fallen due is asked for. Age is each due date counted to the letter's date — a charge due that day is zero days late. A plan is a schedule: it stays out of the arrears figure and out of the oldest age. The deadline is the building's own bylaw — the 5th of the month after the letter, when the $50 late fee attaches. A test checks every lot's due-now plus next fee against balance(unit).total.",
+          "The reserve contribution statement (/accounting). A new Reserve shares tab prints all 40 lots, owner by owner: points, the budget's $43,200.00 contribution, the depreciation report's $48,000.00 recommendation, and the gap — $4,800.00 in all, $8.00 a point a year against the budget's $7.20. The fund's $21,600.00 received, its arrears and the reserve plan's first short year (2030–31, $133,291.62) print beside the rate.",
+          "src/lib/reserve-statement.ts (6 tests) holds four rules. A lot's share is its entitlement, never an equal split. The budget column is the CRF rate times the lot's points times twelve, so the rows land on the budget's own line. The recommendation is allocated by entitlement with a largest-remainder rule, so the rows add to the report's own total rather than a rounded approximation. And the fund's receipts, arrears and shortfall are on the same page as the rate, so the vote is taken on the fund's real position."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The lot's letter sits behind its own button. Letter to the owner opens it; the working page and the form both step aside with the same class:hidden rule the certificate uses, and Back to the lot returns. A letter and a certificate are never on the paper together.",
+          "Three sheets join the print rules. .vendor-doc, .reserve-statement-doc and .arrears-letter-doc are held to 176 mm with a 4 mm gutter, and the contracts register now carries the accounts each vendor is paid from so the join is data, not a second list.",
+          "The queue is refreshed. The three shipped slots are replaced by a bylaw hearing notice for the owner (/meetings, carried over), a payroll remittance worksheet (/accounting), an insurance summary with the appraisal and renewal dates (/accounting) and a special-levy letter to the lots still owing (/units/[lot]) — four offers, none started."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "25 new tests: 7 for the vendor join, 7 for the owner letter, 6 for the reserve statement, 3 for /accounting (both tabs and the print button) and 2 for /units/[lot] (the letter's amount and its plan).",
+          "Printed and measured in Chrome: the vendor summary one Letter page at 754.98px, the reserve statement one at 910.36px — it first ran to 950.97px and two pages, which the row padding fixed — and the owner letter one each at 753.84px (207), 631.88px (309) and 655.16px (108). Every sheet 665.19px wide (176 mm), no overflow and no .no-print inside; French and Chinese also hold one page.",
+          "Frontend 774 passed across 81 files, Svelte check 0 errors / 0 warnings, translation audit 1,883 keys × 9 locales (65 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.59",
     "date": "2026-10-29",
     "groups": [

@@ -622,3 +622,52 @@ describe('the trial balance on paper', () => {
 		expect(text).toContain('7010');
 	});
 });
+
+describe('the vendor spend summary', () => {
+	it('pays each vendor from its own budget line, and leaves the levy out', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Vendors');
+		const sheet = container.querySelector('.vendor-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		const rows = [...sheet.querySelectorAll('tbody tr')].map((row) => row.textContent ?? '');
+		// Eleven vendors hold an operating line; the membrane contractor does not.
+		expect(rows).toHaveLength(11);
+		expect(rows.some((row) => row.includes('Bill Hargreaves') && row.includes('$36,000.00') && row.includes('$18,000.00'))).toBe(true);
+		expect(rows.some((row) => row.includes('Seawall Membrane'))).toBe(false);
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('$176,400.00');
+		expect(text).toContain('paid from another fund');
+		// The page's own check: both columns land on the expense budget.
+		expect(text).toContain('Both columns add to the budget.');
+		expect(text).not.toContain('do not add to the budget');
+	});
+
+	it('keeps the print button off the paper', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Vendors');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print the vendor summary'))).toBe(true);
+	});
+});
+
+describe('the reserve contribution statement', () => {
+	it('splits the budget and the report’s recommendation across all forty lots', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Reserve shares');
+		const sheet = container.querySelector('.reserve-statement-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		expect(sheet.querySelectorAll('tbody tr')).toHaveLength(40);
+		const text = sheet.textContent ?? '';
+		// The budget's own line, the report's recommendation, and the gap.
+		expect(text).toContain('$43,200.00');
+		expect(text).toContain('$48,000.00');
+		expect(text).toContain('$4,800.00');
+		// And the year the five-year plan first runs short.
+		expect(text).toContain('2030–31');
+		expect(text).toContain('$133,291.62');
+	});
+});
