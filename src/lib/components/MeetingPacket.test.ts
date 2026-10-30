@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, waitFor } from '@testing-library/svelte';
 import MeetingPacket from './MeetingPacket.svelte';
 import { locale } from '$lib/i18n';
 import { nextCouncil, lastCouncil } from '$lib/demo/meetings';
@@ -44,11 +44,11 @@ describe('the meeting packet', () => {
 		expect(text).toContain('14 of 40');
 	});
 
-	it('prints in the reader’s language', () => {
+	it('prints in the reader’s language', async () => {
 		locale.set('fr');
 		const { container } = render(MeetingPacket);
+		await waitFor(() => expect(container.textContent).toContain('Dossier de réunion du conseil'));
 		const text = container.textContent ?? '';
-		expect(text).toContain('Dossier de réunion du conseil');
 		expect(text).toContain('Ordre du jour');
 		expect(text).toContain('Avis');
 	});

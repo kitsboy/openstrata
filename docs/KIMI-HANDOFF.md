@@ -1,3 +1,33 @@
+## Session — 2026-10-30 (focus and translation review follow-up)
+
+**Done:**
+- The previous uncommitted v0.3.65 locale split and usability work is included with this follow-up. Authentication, confirmation, donation, Interac, tour and dashboard dialogs now contain and restore keyboard focus; language and careers dropdowns close on Escape or focus leaving; the collapsed mobile sidebar is inert.
+- Added a nine-locale CSV export (`npm run --silent export:i18n`) and `docs/TRANSLATION-REVIEW.md` checklist. No native-speaker or BC legal sign-off has been obtained.
+- Fixed lazy-locale print tests to wait for translated content and regenerated the changelog with dated 0.3.64 and 0.3.65 notes. Final frontend suite: 869 tests / 91 files; Svelte check 0/0, i18n audit, 218-pair contrast audit, build and performance budget passed. Final initial dashboard JS: 213,372 gzip bytes against 230,000.
+
+**Decisions / Kimi:**
+- Production Core Web Vitals trace could not run because Chrome DevTools MCP is not configured; the bundle budget is not field LCP, INP or CLS. Arrange the trace and native-speaker and qualified BC legal reviews; record results without treating the export as approval.
+- Cross-reference existing project records in the THOR vault and confirm integration. The translation export and checklist live in the repo and require no vault changes from this machine.
+
+**Git State:**
+- Parent SHA: `b83fc432771d8b459caf7dab65b50328a984c002`; this entry is carried by the requested commit. Use `git log -1` and `git log --oneline origin/main..HEAD` for current state.
+
+## Session — 2026-10-30 (locale and usability pass)
+
+**Done:**
+- Site v0.3.65 (local changes): eight locale chunks load on demand, with English fallback and stale-load protection; `npm run audit:performance` checks a 230,000-byte gzip initial dashboard JS budget.
+- Shared search from the dashboard; modal focus containment and restoration, Escape focus on grouped navigation, editable search results, larger dashboard labels. Live balance failures are explicit and do not show demo balances or charts as live.
+- At 390px the payment tape scrolls internally without widening the page. Reviewed dashboard, units and accounting visually at 390px and 1440px, checked seven core routes for overflow, and tested mobile search focus/Escape.
+- 35 focused tests, Svelte check, translation/contrast audits and production build passed. Dashboard initial JS graph measured 212,231 gzip bytes; the earlier monolithic shared chunk was 366,250 bytes gzip. No comparable production load-speed measurement. Translation audit reports 12 hard-coded-copy warnings.
+
+**Decisions / Kimi handoff:**
+- Native-speaker review is still needed for all nine current catalogs, including the new machine-drafted balance messages and the 23 Spanish renewal-calendar strings previously falling back to English. The parity audit now parses both quote styles correctly. Prior French review covered older copy only. Qualified BC legal/financial review is also needed before production reliance; see `DESIGN.md` for the review checklist.
+- DevTools performance MCP is unavailable, so local first-paint observation is not a Core Web Vitals audit. The budget is a build-size guard, not a field metric. Only search and grouped navigation got focused keyboard improvements, not every dialog on the site.
+- Kimi on THOR: cross-reference this session with the existing project map and review queue; confirm integration and avoid duplicate records.
+
+**Git State:**
+- Starting SHA: `b83fc432771d8b459caf7dab65b50328a984c002`; changes are uncommitted at handoff time. `origin/main..HEAD` was empty.
+
 ## Session — 2026-10-30 (shared polish)
 
 **Done:**

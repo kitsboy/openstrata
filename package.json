@@ -1,6 +1,6 @@
 {
   "name": "openstrata",
-  "version": "0.3.64",
+  "version": "0.3.65",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "audit:i18n": "node scripts/audit-i18n.mjs",
+    "export:i18n": "node scripts/export-translations.mjs",
+    "audit:performance": "node scripts/check-performance-budget.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "check:security": "node scripts/check-secret-hygiene.mjs",

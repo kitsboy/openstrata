@@ -8,6 +8,7 @@
   // Steps 2–4 stay lean and narrow: one icon, one title, one line each.
   import { copy } from '$lib/i18n';
   import Icon from '$lib/components/Icon.svelte';
+  import { focusModal } from '$lib/focus-modal';
   import Illustrations from '$lib/components/Illustrations.svelte';
   import { icons } from '$lib/icons';
 
@@ -68,17 +69,16 @@
 </script>
 
 {#if shown}
-  <div class="tour-backdrop" role="presentation" onkeydown={(e) => e.key === 'Escape' && close(true)}>
+  <div class="tour-backdrop" role="presentation">
     <button class="tour-scrim" type="button" aria-label={$copy.closeDialog} onclick={() => close(true)}></button>
     <div
       class="tour-card"
       class:tour-card-wide={step === 0}
       role="dialog"
       aria-modal="true"
-      tabindex="0"
+      tabindex="-1"
+      use:focusModal={() => close(true)}
       aria-label={$copy.tourIntro}
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.key === 'Escape' && close(true)}
     >
       <button class="tour-close" aria-label={$copy.closeDialog} onclick={() => close(true)}><Icon name="close" class="h-3.5 w-3.5" /></button>
 

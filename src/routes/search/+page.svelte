@@ -47,9 +47,8 @@
 </section>
 
 <div class="mx-auto max-w-4xl px-6 pb-20">
-  {#if !query}
     <form
-      class="flex gap-3"
+      class="mb-6 flex gap-3"
       onsubmit={(event) => {
         event.preventDefault();
         const value = new FormData(event.currentTarget as HTMLFormElement).get('q');
@@ -58,6 +57,7 @@
     >
       <input
         name="q"
+        value={query}
         class="w-full rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-slate-800 outline-none focus:border-brand-400"
         placeholder={$copy.search}
         aria-label={$copy.search}
@@ -68,6 +68,7 @@
         <Icon name="search" class="h-4 w-4" /> {$copy.search}
       </button>
     </form>
+  {#if !query}
     <p class="mt-4 text-sm text-slate-500">{$copy.searchPageIntro}</p>
   {:else if results.length === 0}
     <p class="glass-card rounded-2xl p-6 text-slate-600">{$copy.searchNoResults} “{query}”</p>

@@ -75,6 +75,7 @@ src/
       BarChart.svelte, Icon.svelte, LineChart.svelte
       JobsDropdown.svelte, DonateModal.svelte
     demo/                   Evergreen House sample (building, books, tax, schedule, meetings, payments)
+    locales/                Eight on-demand non-English translation catalogs; English and locale store in i18n.ts
     data.ts, nav.ts, icons.ts
     compliance.ts, marketing.ts, strata-tool.ts
 public/

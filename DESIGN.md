@@ -127,13 +127,15 @@ payment page is the one place a visitor acts on what is on screen:
   across every route in both themes.
 - High-frequency actions are available on mobile without opening the menu.
 - Reduced-motion users receive minimal transitions.
-- Modals use native dialog semantics.
+- Search traps keyboard focus while open, restores it on close and uses the same index on dashboard and shared pages. Grouped menus return focus to their trigger on Escape.
 - Legal, financial, and compliance actions must expose their status and approval requirements.
 - Language selection is available in the global shell and is designed for future locale files rather than hard-coded page forks.
 
 ## Supported interface locales
 
-English, French, Spanish, Simplified Chinese, Hindi, Filipino, Polish, Ukrainian, and Swahili are represented in the shell. Production translation must be reviewed by native speakers; legal content must receive jurisdiction-specific legal and language review before publishing.
+English, French, Spanish, Simplified Chinese, Hindi, Filipino, Polish, Ukrainian, and Swahili are represented in the shell. The English catalog is in `src/lib/i18n.ts`; each other locale loads on demand from `src/lib/locales/`. Until its chunk loads (or if it fails), English is shown. Automated key and placeholder checks do not establish translation quality.
+
+**Human review is outstanding.** Arrange native-speaker review for every locale, including English; earlier French review covered only older copy and does not approve the current catalog. Have reviewers check the dashboard, search, payment and financial language, date/number formatting, and the two new balance-status messages in context. Record locale, reviewer, date, catalog version and corrections; legal and financial copy also requires a qualified BC jurisdiction-specific reviewer before production reliance. Hard-coded English and canonical legal source text remain outside catalog parity and need separate review.
 
 ## Content conventions
 

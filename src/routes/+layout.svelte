@@ -72,10 +72,15 @@
         event.preventDefault();
         searchOpen = true;
       }
-      if (event.key === 'Escape') searchOpen = false;
+      if (event.key === 'Escape') { searchOpen = false; mobileNavOpen = false; }
     }
+    const openSearch = () => { searchOpen = true; };
     window.addEventListener('keydown', onKeydown);
-    return () => window.removeEventListener('keydown', onKeydown);
+    window.addEventListener('openstrata:open-search', openSearch);
+    return () => {
+      window.removeEventListener('keydown', onKeydown);
+      window.removeEventListener('openstrata:open-search', openSearch);
+    };
   });
 </script>
 
@@ -138,7 +143,7 @@
         <button class="hidden sm:flex items-center gap-1.5 rounded-lg bg-bitcoin/10 px-3.5 py-2 text-sm font-semibold text-bitcoin hover:bg-bitcoin/20 transition-colors" onclick={() => (donateOpen = true)}>
           <Icon name="lightning" class="h-4 w-4" /> {$copy.donate}
         </button>
-        <button class="xl:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100" onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}>
+        <button class="xl:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100" onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu} aria-expanded={mobileNavOpen}>
           {#if mobileNavOpen}<Icon name="close" class="h-4 w-4" />{:else}<Icon name="menu" class="h-4 w-4" />{/if}
         </button>
       </div>
@@ -179,7 +184,7 @@
     <a href="/" class:active={String($page.url.pathname) === '/'} class="no-underline"><Icon name="home" class="h-4 w-4" /><span>{$copy.overview}</span></a>
     <a href="/tools" class:active={$page.url.pathname === '/tools'} class="no-underline"><Icon name="building" class="h-4 w-4" /><span>{$copy.buildings}</span></a>
     <a href="/legal" class:active={$page.url.pathname === '/legal'} class="no-underline"><Icon name="scale" class="h-4 w-4" /><span>{$copy.legal}</span></a>
-    <button onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu}><Icon name="menu" class="h-4 w-4" /><span>{$copy.menu}</span></button>
+    <button onclick={() => (mobileNavOpen = !mobileNavOpen)} aria-label={$copy.menu} aria-expanded={mobileNavOpen}><Icon name="menu" class="h-4 w-4" /><span>{$copy.menu}</span></button>
   </nav>
 
   <footer class="no-print border-t border-border bg-surface-2">

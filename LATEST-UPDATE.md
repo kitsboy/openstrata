@@ -1,5 +1,13 @@
 # OpenStrata — Last Updated 2026-10-30 by Buffy
 
+Brief: v0.3.65 includes locale splitting, focus improvements and a nine-language review export. Production Core Web Vitals tracing and human translation review remain open.
+
+Commit: this commit (see `git log -1`). See `docs/KIMI-HANDOFF.md` for verification.
+
+---
+
+# OpenStrata — Last Updated 2026-10-30 by Buffy
+
 Brief: v0.3.64 refines shared interface states and makes dashboard live balances session-safe without duplicate requests.
 
 Commit: this commit (see `git log -1`). Backend API remains v0.3.28. See `docs/KIMI-HANDOFF.md` and `.ai_docs/current-status.md` for verification and remaining work.

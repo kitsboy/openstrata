@@ -1,17 +1,42 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   english,
   formatCurrency,
   formatDate,
   formatNumber,
   locales,
-  overrides,
   type Translation
 } from './i18n';
 
+import fr from './locales/fr';
+import es from './locales/es';
+import zh from './locales/zh';
+import hi from './locales/hi';
+import fil from './locales/fil';
+import pl from './locales/pl';
+import uk from './locales/uk';
+import sw from './locales/sw';
+import { get } from 'svelte/store';
+import { copy, locale } from './i18n';
+
+const overrides: Partial<Record<(typeof locales)[number]['code'], Partial<Translation>>> = { fr, es, zh, hi, fil, pl, uk, sw };
 const translationKeys = Object.keys(english) as Array<keyof Translation>;
 
 describe('i18n catalog', () => {
+  it('loads the selected locale and does not apply a stale selection', async () => {
+    const stop = copy.subscribe(() => {});
+    try {
+      locale.set('fr');
+      await vi.waitFor(() => expect(get(copy).search).toBe(fr.search));
+      locale.set('hi');
+      locale.set('en');
+      await Promise.resolve();
+      expect(get(copy).search).toBe(english.search);
+    } finally {
+      locale.set('en');
+      stop();
+    }
+  });
   it('every non-English locale code maps to an override block', () => {
     for (const locale of locales) {
       if (locale.code === 'en') continue; // English is the base catalog, not an override

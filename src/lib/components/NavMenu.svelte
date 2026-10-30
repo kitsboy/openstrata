@@ -22,6 +22,7 @@
   let root: HTMLElement | null = $state(null);
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
   let panel: HTMLElement | null = $state(null);
+  let trigger: HTMLButtonElement | null = $state(null);
   // True while the menu is open because the pointer arrived, not because a
   // click or key press asked for it.
   let openedByHover = false;
@@ -82,7 +83,10 @@
       if (root && !root.contains(event.target as Node)) open = false;
     }
     function onKeydown(event: KeyboardEvent) {
-      if (event.key === 'Escape') open = false;
+      if (event.key === 'Escape') {
+        if (root?.contains(document.activeElement)) trigger?.focus();
+        open = false;
+      }
     }
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeydown);
@@ -104,6 +108,7 @@
 >
   <button
     type="button"
+    bind:this={trigger}
     class="nav-trigger"
     class:active
     aria-expanded={open}

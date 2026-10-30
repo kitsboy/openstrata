@@ -1304,7 +1304,15 @@ main h1 { letter-spacing: -.028em; }
   .action-card:hover, .building-card:hover, .glass-card:hover {
     border-color: color-mix(in srgb, var(--orange) 40%, var(--line));
   }
-  .search-box:focus-within {
+  .search-box { text-align: left; }
+  .search-box .search-placeholder { min-width: 0; flex: 1; overflow: hidden; font-size: 12px; line-height: normal; text-overflow: ellipsis; white-space: nowrap; transform: none; }
+  .metric-card > strong.balance-status { font-size: 14px; line-height: 1.4; letter-spacing: 0; }
+  .nav-label, .eyebrow, .date-kicker, .metric-label, .metric-foot, .building-info p,
+  .progress-label, .progress-label strong, .building-status, .action-card small,
+  .activity-copy small, .event-copy small, .sidebar-help span, .sidebar-footer { font-size: 11px; }
+  .action-card strong, .activity-copy strong, .event-copy strong { font-size: 12px; }
+  .action-card small, .activity-copy small, .event-copy small { white-space: normal; }
+  .search-box:focus-visible {
     border-color: var(--brand-text);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-text) 14%, transparent);
   }

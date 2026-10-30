@@ -22,6 +22,7 @@
 	 */
 	import { replaceState } from '$app/navigation';
 	import Icon from './Icon.svelte';
+	import { focusModal } from '$lib/focus-modal';
 	import { copy } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import {
@@ -188,9 +189,6 @@
 		if (stage === 'result') reset();
 	}
 
-	function onKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') close();
-	}
 
 	/** Write the return the same way a live provider would, so a reload resumes. */
 	function writeReturn(id: string, next: HandshakeStatus) {
@@ -301,8 +299,6 @@
 	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
-
 <div class="interac">
 	<button type="button" class="interac-open" onclick={openDialog}>
 		<span class="interac-open-glyph"><Icon name="lock" class="h-4 w-4" /></span>
@@ -322,6 +318,7 @@
 				aria-modal="true"
 				aria-labelledby="interac-title"
 				tabindex="-1"
+				use:focusModal={close}
 				onclick={(event) => event.stopPropagation()}
 			>
 				<header class="interac-head">

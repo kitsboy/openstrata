@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, waitFor } from '@testing-library/svelte';
 import PayReceipt from './PayReceipt.svelte';
 import { locale } from '$lib/i18n';
 import { money, satsLabel } from '$lib/demo/format';
@@ -69,11 +69,11 @@ describe('the receipt sheet', () => {
 		expect(container.textContent ?? '').not.toContain('Transaction');
 	});
 
-	it('prints in the reader’s language', () => {
+	it('prints in the reader’s language', async () => {
 		locale.set('fr');
 		const { container } = render(PayReceipt, { receipt: receiptFacts(cheque) });
+		await waitFor(() => expect(container.textContent).toContain('Reçu de paiement'));
 		const text = container.textContent ?? '';
-		expect(text).toContain('Reçu de paiement');
 		expect(text).toContain('Payé par');
 		expect(text).toContain('Lot');
 	});

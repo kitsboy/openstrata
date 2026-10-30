@@ -8,7 +8,16 @@ import {
 	scopeIndex,
 	searchShareHref
 } from '$lib/search';
-import { english, translations } from '$lib/i18n';
+import { english } from '$lib/i18n';
+import fr from '$lib/locales/fr';
+import es from '$lib/locales/es';
+import zh from '$lib/locales/zh';
+import hi from '$lib/locales/hi';
+import fil from '$lib/locales/fil';
+import pl from '$lib/locales/pl';
+import uk from '$lib/locales/uk';
+import sw from '$lib/locales/sw';
+const translations = Object.fromEntries(Object.entries({ en: {}, fr, es, zh, hi, fil, pl, uk, sw }).map(([code, values]) => [code, { ...english, ...values }]));
 import { printDocuments } from '$lib/documents';
 import { manualSections } from '$lib/manual';
 import { units } from '$lib/demo/building';

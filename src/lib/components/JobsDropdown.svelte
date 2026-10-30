@@ -2,6 +2,14 @@
 	import { jobCategories } from '$lib/data';
 
 	let open = $state(false);
+	let trigger: HTMLButtonElement;
+	let root: HTMLDivElement;
+	function onKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && open && root.contains(document.activeElement)) { open = false; trigger.focus(); }
+	}
+	function onFocusIn(event: FocusEvent) {
+		if (open && !root.contains(event.target as Node | null)) open = false;
+	}
 	let activeCategory = $state<string>(jobCategories[0].id);
 
 	const activeJobs = $derived(
@@ -27,12 +35,13 @@
 	});
 </script>
 
-<div class="relative" data-jobs-dropdown>
+<svelte:window onkeydown={onKeydown} onfocusin={onFocusIn} />
+<div class="relative" bind:this={root} data-jobs-dropdown>
 	<button
+		bind:this={trigger}
 		class="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:border-brand-300 hover:text-brand-700 transition-all"
 		onclick={toggle}
 		aria-expanded={open}
-		aria-haspopup="true"
 	>
 		<svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -46,7 +55,6 @@
 	{#if open}
 		<div
 			class="absolute bottom-full left-0 mb-2 w-[min(520px,calc(100vw-2rem))] rounded-2xl glass-card shadow-2xl overflow-hidden animate-slide-up z-50"
-			role="menu"
 		>
 			<div class="bg-gradient-to-r from-brand-600 to-brand-500 px-5 py-4 text-white">
 				<h3 class="font-bold text-lg">Join the OpenStrata Team</h3>
@@ -61,7 +69,6 @@
 								? 'border-brand-500 text-brand-700 bg-brand-50'
 								: 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
 						onclick={() => (activeCategory = cat.id)}
-						role="menuitem"
 					>
 						{cat.label}
 					</button>
@@ -73,7 +80,6 @@
 					<a
 						href="mailto:hello@giveabit.io?subject=Application: {encodeURIComponent(job.title)}"
 						class="block rounded-xl p-4 hover:bg-brand-50 transition-colors group no-underline"
-						role="menuitem"
 					>
 						<div class="flex items-start justify-between gap-3">
 							<div>

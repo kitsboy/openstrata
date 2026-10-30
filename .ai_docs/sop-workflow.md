@@ -9,7 +9,9 @@ npm run preview          Preview production build
 npm run check            SvelteKit type checking
 npm run test             Vitest run (frontend)
 npm run audit:i18n       locale parity (error) + hard-coded copy scan (warning)
+npm run --silent export:i18n > translation-review.csv   generate a nine-locale review sheet
 npm run audit:contrast   WCAG contrast for every token pair, plus fill-literal and var() guards
+npm run audit:performance  after npm run build: dashboard initial JS gzip budget (230,000 bytes)
 npm run check:security   secret-hygiene gate — every tracked file, base64 decoded, fixtures classified (CI)
 
 CI runs check:security, check, audit:i18n, audit:contrast, the tests and the production build

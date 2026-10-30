@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 
 const root = process.cwd();
 const routesDir = path.join(root, 'src', 'routes');
@@ -30,26 +31,20 @@ const warnings = [];
 // continuation lines of newly added keys), so the body has to be allowed to span
 // newlines — matching only single-line blocks made this whole audit explode with
 // "Could not locate the French override block" the moment one locale was wrapped.
-const LOCALE_BLOCK = /^ {2}([a-z]{2,3}): \{ \.\.\.english, ([\s\S]*?)( \},?)$/gm;
 const localeBlocks = new Map();
-for (const match of catalog.matchAll(LOCALE_BLOCK)) {
-  // Keys are lowercase-camelCase identifiers immediately followed by a quote
-  // (a string value). Requiring the quote avoids matching "Word:" patterns
-  // that appear inside translated values (e.g. French "BCFSA :", Spanish
-  // "Sellado:", or "marketing.ts:").
-  // A key sits where a property can sit: after `{`, after a comma, or at the
-  // start of a line — never in the middle of a value. Matching `\bword: '`
-  // anywhere read French copy that ends in " :" as a key, because the closing
-  // quote sits right after the colon: `unitsParking: 'Stationnement /
-  // rangement :'` reported `rangement` (and `résidant` as `sidant`) as keys in
-  // fr and missing everywhere else. The parity check then failed on a
-  // translation that was correct.
-  localeBlocks.set(
-    match[1],
-    new Set(
-      [...match[2].matchAll(/(?:^|,|\{)\s*([a-z][A-Za-z0-9]*)\s*:\s*'/gm)].map((m) => m[1])
-    )
-  );
+for (const code of ['fr', 'es', 'zh', 'hi', 'fil', 'pl', 'uk', 'sw']) {
+  const file = path.join(root, 'src', 'lib', 'locales', `${code}.ts`);
+  const source = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+  const assignment = source.statements.find(ts.isExportAssignment);
+  const expression = assignment?.expression;
+  const object = expression && ts.isSatisfiesExpression(expression) ? expression.expression : expression;
+  if (!object || !ts.isObjectLiteralExpression(object)) throw new Error(`Could not locate locale catalog: ${code}`);
+  const keys = new Set();
+  for (const property of object.properties) {
+    if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) throw new Error(`Unexpected locale property in ${code}`);
+    keys.add(property.name.text);
+  }
+  localeBlocks.set(code, keys);
 }
 
 const frKeys = localeBlocks.get('fr');

@@ -65,6 +65,19 @@ describe('/ (the dashboard)', () => {
 		}
 	});
 
+	it('does not show demo balances when live balance requests fail', async () => {
+		const balances = vi.spyOn(ledger, 'fetchLedgerBalance').mockRejectedValue(new Error('offline'));
+		const series = vi.spyOn(ledger, 'fetchLedgerSeries').mockRejectedValue(new Error('offline'));
+		const { container, unmount } = render(Home);
+		try {
+			auth.set({ status: 'signed-in', apiMode: 'configured', user: { id: '1', email: 'a@example.test', displayName: 'A', role: 'admin' }, council: { id: '1', name: 'Test' } });
+			await waitFor(() => expect(container.querySelector('.balance-status')?.textContent).toContain('Live balance unavailable'));
+			expect(container.querySelector('.balance-status')?.closest('.metric-card')?.textContent).not.toContain('603,780');
+		} finally {
+			unmount(); balances.mockRestore(); series.mockRestore();
+		}
+	});
+
 	it('prints the year on one page, not the dashboard around it', () => {
 		const { container } = render(Home);
 		const sheet = container.querySelector('.print-doc');

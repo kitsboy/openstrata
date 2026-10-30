@@ -22,6 +22,7 @@
   let results = $state<SearchEntry[]>([]);
   let selected = $state(0);
   let inputEl: HTMLInputElement | undefined = $state();
+  let modalEl: HTMLElement | undefined = $state();
   let recents = $state<string[]>([]);
   let saved = $state<string[]>([]);
   /** Query pinned during this modal session — flips the button to a ✓ once. */
@@ -51,7 +52,12 @@
       recents = readRecentSearches();
       saved = readSavedSearches();
       justSaved = null;
-      requestAnimationFrame(() => inputEl?.focus());
+      const previous = document.activeElement as HTMLElement | null;
+      const frame = requestAnimationFrame(() => inputEl?.focus());
+      return () => {
+        cancelAnimationFrame(frame);
+        if (previous?.isConnected) previous.focus();
+      };
     }
   });
 
@@ -123,13 +129,19 @@
   const querySaved = $derived(query.trim().length > 0 && isSaved(saved, query.trim()));
 
   function onKeydown(event: KeyboardEvent) {
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'Tab' && modalEl) {
+      const controls = [...modalEl.querySelectorAll<HTMLElement>('button, input, a[href]')].filter((el) => !el.hasAttribute('disabled'));
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    } else if (event.key === 'ArrowDown' && event.target === inputEl) {
       event.preventDefault();
       selected = Math.min(selected + 1, results.length - 1);
-    } else if (event.key === 'ArrowUp') {
+    } else if (event.key === 'ArrowUp' && event.target === inputEl) {
       event.preventDefault();
       selected = Math.max(selected - 1, 0);
-    } else if (event.key === 'Enter') {
+    } else if (event.key === 'Enter' && event.target === inputEl) {
       event.preventDefault();
       if (results[selected]) choose(results[selected]);
       else if (query.trim()) searchEverywhere();
@@ -147,6 +159,7 @@
   >
     <div
       class="search-modal"
+      bind:this={modalEl}
       role="dialog"
       aria-modal="true"
       aria-label={$copy.search}

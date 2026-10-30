@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, waitFor } from '@testing-library/svelte';
 import ArrearsSheet from './ArrearsSheet.svelte';
 import { arrearsSheet, type SheetLot } from '$lib/arrears-sheet';
 import { locale } from '$lib/i18n';
@@ -76,11 +76,11 @@ describe('the receivables sheet', () => {
 		expect(text).toContain('36 of 40 lots have nothing on the books at all.');
 	});
 
-	it('prints in the reader’s language', () => {
+	it('prints in the reader’s language', async () => {
 		locale.set('fr');
 		const { container } = render(ArrearsSheet, { sheet });
+		await waitFor(() => expect(container.textContent).toContain('L’échelle des comptes clients'));
 		const text = container.textContent ?? '';
-		expect(text).toContain('L’échelle des comptes clients');
 		expect(text).toContain('Formulaire F');
 		expect(text).toContain('Retenu');
 	});

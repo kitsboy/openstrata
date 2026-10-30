@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { donateInfo } from '$lib/data';
 	import Icon from './Icon.svelte';
+	import { focusModal } from '$lib/focus-modal';
 	import QRCode from 'qrcode';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
@@ -62,12 +63,7 @@
 		open = false;
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') close();
-	}
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 {#if open}
 	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
@@ -84,6 +80,7 @@
 			aria-labelledby="donate-title"
 			aria-modal="true"
 			tabindex="-1"
+			use:focusModal={close}
 		>
 			<button
 				class="absolute top-4 right-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"

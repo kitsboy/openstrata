@@ -1,9 +1,25 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.64
+**Site/product version:** v0.3.65
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-30
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — leaner locales and accessible dashboard (site, `0.3.65`)
+
+- Added modal focus containment and restoration to auth, confirmation, donation, Interac, tour and dashboard dialogs. Language and careers dropdowns close on Escape or focus leaving; the collapsed mobile sidebar is inert. Search keeps its existing focus boundary.
+- `npm run --silent export:i18n` exports nine locale columns and reviewer notes; `docs/TRANSLATION-REVIEW.md` gives the review and BC legal sign-off checklist. Human review is outstanding.
+- Final verification: **869 frontend tests across 91 files**, Svelte check 0/0, i18n audit, contrast 218 pairs, production build and 230,000-byte initial JS budget (**213,372 gzip bytes**). French component tests wait for lazy chunks; changelog regenerated with dated v0.3.64/v0.3.65 notes.
+- Production Core Web Vitals trace could not run: Chrome DevTools MCP is unavailable. No field LCP, INP or CLS measurements or claim of a production speedup.
+
+## Previous milestone — leaner locales and accessible dashboard (site, `0.3.65`)
+
+- Eight non-English catalogs are separate on-demand chunks under `src/lib/locales/`; English is the prerender and load-failure fallback. A newer locale selection cannot be overwritten by a late response. `audit:i18n` and catalog tests still check parity and placeholders.
+- Dashboard search now opens the same global modal on mobile and desktop; search traps and restores focus, grouped menus return focus on Escape, and search results can be edited in place. Key dashboard labels are larger.
+- Failed live balance requests show an unavailable state, not sample balances; charts do not use demo data in a live session. The mobile payment tape remains independently scrollable without widening the viewport.
+- Dashboard initial JS graph (earlier build): **212,231 gzip bytes** after the build, budget **230,000** (`npm run audit:performance`); previous monolithic shared chunk alone was **366,250 gzip bytes**. These are bundle sizes, not comparable load-time measurements. Local first contentful paint observed at 196ms before changes, uncontrolled and not a production benchmark; Chrome DevTools performance MCP was unavailable.
+- Verified: 35 focused tests, Svelte check (0/0), contrast audit (218 pairs), translation audit (2,118 English keys; 12 review warnings), production build and performance budget. Desktop and 390px layouts checked locally for dashboard, units and accounting; other core routes checked for overflow. Mobile search focus and Escape tested; `/pay` overflow fixed. No full interaction or light-theme visual audit.
+- Native-speaker review for the current nine-locale catalog remains outstanding; legal and financial content needs qualified BC review. `DESIGN.md` contains the review handoff. New balance labels and 23 Spanish renewal-calendar strings (previously falling back to English) are machine-drafted, not certified translations. The parity audit now parses catalog properties rather than relying on quote-sensitive text matching.
 
 ## Recent milestone — shared polish and dashboard reliability (site, `0.3.64`)
 

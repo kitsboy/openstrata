@@ -2,6 +2,7 @@
   // Destructive-action confirmation — one explicit confirm step before anything
   // irreversible (remove unit, sign out, remove xpub).
   import { copy } from '$lib/i18n';
+  import { focusModal } from '$lib/focus-modal';
   import Icon from '$lib/components/Icon.svelte';
 
   let {
@@ -21,7 +22,7 @@
 
 {#if open}
   <div class="confirm-backdrop" role="presentation" onclick={(e) => e.target === e.currentTarget && (open = false)}>
-    <dialog open class="confirm-modal" aria-labelledby="confirm-title">
+    <dialog open class="confirm-modal" aria-labelledby="confirm-title" aria-modal="true" tabindex="-1" use:focusModal={() => (open = false)}>
       <div class="confirm-mark" aria-hidden="true"><Icon name="alert" class="h-5 w-5" /></div>
       <h2 id="confirm-title">{title}</h2>
       <p>{message}</p>

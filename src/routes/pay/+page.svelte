@@ -490,7 +490,7 @@
 	<section class="mt-8">
 		<h2 class="font-bold text-slate-900">{$copy.payTapeTitle}</h2>
 		<p class="mt-1 text-sm text-slate-500">{$copy.payTapeNote}</p>
-		<div class="mt-3 overflow-x-auto rounded-2xl border border-border bg-surface-2">
+		<div class="payment-tape mt-3 overflow-x-auto rounded-2xl border border-border bg-surface-2">
 			<table class="w-full min-w-[680px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -567,6 +567,8 @@
 </div>
 
 <style>
+	/* Keep the wide payment tape inside its own scrollport on small screens. */
+	.payment-tape { contain: paint; }
 	/* The sheet is built from tokens only: no literal fill, so it flips with the
 	   theme like every other card, and every ink here is a step the contrast
 	   audit already holds in both themes. */

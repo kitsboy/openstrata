@@ -16,6 +16,7 @@
    * pick up live data automatically.
    */
   import { onMount } from 'svelte';
+  import { focusModal } from '$lib/focus-modal';
   import { signIn, signUp } from '$lib/api/auth';
   import { ApiError, ApiUnavailableError } from '$lib/api/client';
   import { copy } from '$lib/i18n';
@@ -40,12 +41,7 @@
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   onMount(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !busy) close();
-    };
-    window.addEventListener('keydown', onKey);
     return () => {
-      window.removeEventListener('keydown', onKey);
       if (closeTimer) clearTimeout(closeTimer);
     };
   });
@@ -136,7 +132,7 @@
 </script>
 
 <div class="modal-backdrop auth-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && !busy && close()}>
-  <dialog open class="auth-shell" aria-labelledby="auth-title" aria-modal="true">
+  <dialog open class="auth-shell" aria-labelledby="auth-title" aria-modal="true" tabindex="-1" use:focusModal={() => { if (!busy) close(); }}>
     <button class="auth-close" aria-label={$copy.closeDialog} onclick={exploreDemo}><Icon name="close" class="h-3.5 w-3.5" /></button>
 
     {#if success}

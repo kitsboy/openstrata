@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.65
+-  summary: "Non-English catalogs load on demand with English fallback and a dashboard JavaScript budget. Dashboard and mobile search share the global dialog, with keyboard focus improvements and editable search results. Live balance failures no longer display sample figures, dashboard labels are more readable, and the mobile payment tape no longer widens the page. The stricter parity audit found and filled 23 previously missing Spanish renewal strings; these drafts and the current translations still require native-speaker and legal review."
 -  version: 0.3.64
 -  summary: "Shared theme-aware card and header polish, a clearer dashboard search focus state, accessible navigation states and a working mobile search button. Live dashboard balances now request each fund once and discard stale results on sign-out or session change. Dashboard regression tests, Svelte check, contrast audit and production build passed; the build still warns about a large shared JavaScript chunk."
 -  version: 0.3.63
@@ -168,6 +170,23 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.65] — 2026-10-30
+
+### Changed
+- Non-English catalogs load on demand; dashboard and mobile search use the shared search dialog and key labels are more readable.
+- Authentication, confirmation, payment, donation, tour and dashboard dialogs contain and restore keyboard focus; language and careers dropdowns close on Escape.
+- Failed live balance requests show an unavailable state instead of sample figures, and the payment tape scrolls within the mobile viewport.
+- The translation review CSV export and checklist support native-speaker and BC legal review; no review is implied by the export.
+
+### Known issues
+- Production Core Web Vitals tracing requires Chrome DevTools tooling; the JavaScript size budget is not a field-speed measurement.
+- Current translations, including the new Spanish renewal copy, still need human review.
+
+## [0.3.64] — 2026-10-30
+
+### Fixed
+- Dashboard balances make one request per fund and discard responses after a session change; mobile search is reachable and shared surface states are refined.
 
 ## [0.3.63] — 2026-10-30
 

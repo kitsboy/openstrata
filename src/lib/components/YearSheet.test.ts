@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, waitFor } from '@testing-library/svelte';
 import YearSheet from './YearSheet.svelte';
 import { buildYearSheet } from '$lib/year-sheet';
 import { yearBook } from '$lib/demo/year';
@@ -57,11 +57,11 @@ describe('the year on one page', () => {
 		expect(text).toContain('3 tracked items, 0 of them overdue.');
 	});
 
-	it('prints in the reader’s language, money included', () => {
+	it('prints in the reader’s language, money included', async () => {
 		locale.set('fr');
 		const { container } = render(YearSheet, { sheet });
+		await waitFor(() => expect(container.textContent).toContain('Revenus par catégorie'));
 		const text = container.textContent ?? '';
-		expect(text).toContain('Revenus par catégorie');
 		expect(text).toContain('Dépenses par catégorie');
 		expect(text).toContain('Exercice');
 	});

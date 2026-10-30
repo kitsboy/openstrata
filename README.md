@@ -23,6 +23,8 @@ npm run dev
 
 If you see the SvelteKit dev server running on http://localhost:5173, you're good to go!
 
+For the dashboard JavaScript budget, run `npm run build` followed by `npm run audit:performance`. This measures the built initial JavaScript graph, not real-user page speed. Locale catalogs load on demand; see `docs/TRANSLATION-REVIEW.md` for the reviewer checklist and CSV export. Native-speaker and BC legal review remain outstanding.
+
 ### 2. Explore the Site
 
 Visit the demo site and play around:

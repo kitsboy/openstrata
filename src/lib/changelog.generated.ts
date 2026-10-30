@@ -14,6 +14,40 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.65",
+    "date": "2026-10-30",
+    "groups": [
+      {
+        "label": "Changed",
+        "items": [
+          "Non-English catalogs load on demand; dashboard and mobile search use the shared search dialog and key labels are more readable.",
+          "Authentication, confirmation, payment, donation, tour and dashboard dialogs contain and restore keyboard focus; language and careers dropdowns close on Escape.",
+          "Failed live balance requests show an unavailable state instead of sample figures, and the payment tape scrolls within the mobile viewport.",
+          "The translation review CSV export and checklist support native-speaker and BC legal review; no review is implied by the export."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "Production Core Web Vitals tracing requires Chrome DevTools tooling; the JavaScript size budget is not a field-speed measurement.",
+          "Current translations, including the new Spanish renewal copy, still need human review."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.3.64",
+    "date": "2026-10-30",
+    "groups": [
+      {
+        "label": "Fixed",
+        "items": [
+          "Dashboard balances make one request per fund and discard responses after a session change; mobile search is reachable and shared surface states are refined."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.63",
     "date": "2026-10-30",
     "groups": [

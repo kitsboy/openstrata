@@ -1,6 +1,8 @@
 <script lang="ts">
   import packageJson from '../../package.json';
-  import { copy, locale, locales, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
+  import { focusModal } from '$lib/focus-modal';
+  import { copy, locale, formatCurrency, formatDate, formatNumber } from '$lib/i18n';
+  import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
   import { auth, signOut } from '$lib/api/auth';
   import { fetchLedgerBalance, fetchLedgerSeries } from '$lib/api/ledger';
   import { theme, toggleTheme } from '$lib/theme';
@@ -87,8 +89,6 @@
   import AuthModal from '$lib/components/AuthModal.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import BrandMark from '$lib/components/BrandMark.svelte';
-  import EmptyState from '$lib/components/EmptyState.svelte';
-  import Skeleton from '$lib/components/Skeleton.svelte';
   import Sparkline from '$lib/components/Sparkline.svelte';
   import Tour from '$lib/components/Tour.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -115,10 +115,18 @@
   import { accent, cycleAccent } from '$lib/theme';
   import { onMount } from 'svelte';
 
-  let showLanguageMenu = $state(false);
   let showMobileMenu = $state(false);
+  let mobileViewport = $state(false);
+  let menuOpener: HTMLElement | null = null;
+  function openMobileMenu(event: MouseEvent) {
+    menuOpener = event.currentTarget as HTMLElement;
+    showMobileMenu = true;
+  }
+  function closeMobileMenu(restore = true) {
+    showMobileMenu = false;
+    if (restore && menuOpener?.isConnected) menuOpener.focus();
+  }
   let showNewStrata = $state(false);
-  let search = $state('');
   let toast = $state('');
   let toastType = $state<'ok' | 'error'>('ok');
   let showTour = $state(false);
@@ -160,15 +168,28 @@
   let crfBalance = $state<number | null>(null);
   let operatingBalance = $state<number | null>(null);
   let balancesLoading = $state(false);
+  function openSearch() {
+    window.dispatchEvent(new CustomEvent('openstrata:open-search'));
+  }
   // Sparkline feeds: demo walk for signed-out visitors, live series when a
   // session resolves (skeleton + no demo flash in between).
   const demoSpark = [34, 36, 35, 39, 41, 40];
   let reserveSpark = $state<number[]>(demoSpark);
   let incomeSpark = $state<number[]>([12, 14, 13, 15, 16, 15]);
+  let reserveSeriesReady = $state(false);
+  let incomeSeriesReady = $state(false);
 
   const NOTIFICATIONS_KEY = 'openstrata-notifications';
 
   onMount(() => {
+    const mobileMedia = window.matchMedia('(max-width: 900px)');
+    const updateMobile = () => { mobileViewport = mobileMedia.matches; };
+    updateMobile();
+    mobileMedia.addEventListener('change', updateMobile);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showMobileMenu) { event.stopPropagation(); closeMobileMenu(); }
+    };
+    window.addEventListener('keydown', closeOnEscape);
     try {
       const saved = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) ?? '[]');
       if (Array.isArray(saved)) notifications = saved.map(String).slice(0, 12);
@@ -209,6 +230,8 @@
       operatingBalance = null;
       reserveSpark = demoSpark;
       incomeSpark = [12, 14, 13, 15, 16, 15];
+      reserveSeriesReady = false;
+      incomeSeriesReady = false;
       balancesLoading = session.status === 'signed-in';
       if (session.status === 'signed-in') {
         const crf = fetchLedgerBalance('crf').then((b) => {
@@ -219,12 +242,12 @@
         });
         fetchLedgerSeries('crf', 6)
           .then((points) => {
-            if (current === generation && points.length >= 2) reserveSpark = points.map((p) => p.netBasis / 100);
+            if (current === generation && points.length >= 2) { reserveSpark = points.map((p) => p.netBasis / 100); reserveSeriesReady = true; }
           })
           .catch(() => {});
         fetchLedgerSeries('operating', 6)
           .then((points) => {
-            if (current === generation && points.length >= 2) incomeSpark = points.map((p) => p.incomeBasis / 100);
+            if (current === generation && points.length >= 2) { incomeSpark = points.map((p) => p.incomeBasis / 100); incomeSeriesReady = true; }
           })
           .catch(() => {});
         loadingTimer = setTimeout(() => {
@@ -240,6 +263,8 @@
     });
     return () => {
       generation++;
+      mobileMedia.removeEventListener('change', updateMobile);
+      window.removeEventListener('keydown', closeOnEscape);
       clearTimeout(loadingTimer);
       unsubscribe();
       window.removeEventListener('openstrata:saved-searches-changed', onSavedChanged);
@@ -266,21 +291,12 @@
     $auth.user ? `${$copy[greetingKey]}, ${$auth.user.displayName.split(/\s+/)[0]}` : $copy[greetingKey]
   );
 
-  const selectedLanguage = $derived($locale);
-  const selectedLanguageName = $derived(
-    locales.find((item) => item.code === selectedLanguage)?.nativeName ?? 'English'
-  );
   const liveMode = $derived($auth.status === 'signed-in');
   const workspaceName = $derived(liveMode && $auth.council ? $auth.council.name : 'Evergreen House');
   const profileInitials = $derived(
     $auth.user
       ? $auth.user.displayName.split(/\s+/).map((part) => part[0] ?? '').join('').slice(0, 2).toUpperCase()
       : 'OS'
-  );
-  const filteredBuildings = $derived(
-    buildings.filter((building) =>
-      `${building.name} ${building.location}`.toLowerCase().includes(search.toLowerCase())
-    )
   );
 
   function openAction(message: string) {
@@ -322,14 +338,14 @@
 
 <div class="app-shell">
   <a class="skip-link" href="#content">{$copy.skipToContent}</a>
-  <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label={$copy.primaryNavigation}>
+  <aside class:mobile-open={showMobileMenu} class="sidebar" aria-label={$copy.primaryNavigation} inert={mobileViewport && !showMobileMenu}>
     <div class="brand-lockup">
       <BrandMark size={30} />
       <div>
         <div class="brand-name">open<span>strata</span></div>
         <div class="brand-subtitle">community operations</div>
       </div>
-      <button class="icon-button sidebar-close" aria-label={$copy.closeNavigation} onclick={() => (showMobileMenu = false)}>×</button>
+      <button class="icon-button sidebar-close" aria-label={$copy.closeNavigation} onclick={() => closeMobileMenu()}>×</button>
     </div>
 
     <div class="workspace-switcher">
@@ -368,29 +384,19 @@
     <div class="sidebar-footer"><span class="status-dot"></span><span>{$copy.allSystemsOperational}</span><button class="mini-settings" aria-label={$copy.openSettings}><Icon name="settings" class="h-3.5 w-3.5" /></button></div>
   </aside>
 
-  {#if showMobileMenu}<button class="scrim" aria-label={$copy.closeNavigation} onclick={() => (showMobileMenu = false)}></button>{/if}
+  {#if showMobileMenu}<button class="scrim" aria-label={$copy.closeNavigation} onclick={() => closeMobileMenu()}></button>{/if}
 
   <div class="main-column">
     <div class="host-connect-row"><HostConnect /></div>
     <header class="topbar">
-      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} aria-expanded={showMobileMenu} onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" /></button><BrandMark size={22} /><strong>open<span>strata</span></strong></div>
+      <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} aria-expanded={showMobileMenu} onclick={openMobileMenu}><Icon name="menu" class="h-4 w-4" /></button><BrandMark size={22} /><strong>open<span>strata</span></strong></div>
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
-        <label class="search-box"><Icon name="search" class="h-4 w-4" /><input aria-label={$copy.search} bind:value={search} placeholder={$copy.search} /><kbd>⌘ K</kbd></label>
-        <button class="icon-button mobile-search" aria-label={$copy.search} onclick={() => goto('/search')}><Icon name="search" class="h-4 w-4" /></button>
+        <button class="search-box" aria-label={$copy.search} onclick={openSearch}><Icon name="search" class="h-4 w-4" /><span class="search-placeholder">{$copy.search}</span><kbd>⌘ K</kbd></button>
+        <button class="icon-button mobile-search" aria-label={$copy.search} onclick={openSearch}><Icon name="search" class="h-4 w-4" /></button>
         <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}</button>
         <button class="icon-button accent-toggle" onclick={cycleAccent} aria-label={$copy.themeBrokerage} title="{$copy.themeBrand}: {$accent === 'orange' ? 'orange' : 'green'}">{#if $accent === 'orange'}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#f97348"></span>{:else}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#2d6a4f"></span>{/if}</button>
-        <div class="language-wrap">
-          <button class="language-button" aria-expanded={showLanguageMenu} onclick={() => (showLanguageMenu = !showLanguageMenu)}><Icon name="globe" class="h-4 w-4" /><span class="language-current">{selectedLanguageName}</span><Icon name="chevron-down" class="h-3 w-3" /></button>
-          {#if showLanguageMenu}
-            <div class="language-menu">
-              <div class="menu-heading">{$copy.chooseLanguage}</div>
-              {#each locales as language}
-                <button class:chosen={language.code === selectedLanguage} onclick={() => { locale.set(language.code); showLanguageMenu = false; }}><span>{language.nativeName}</span>{#if language.code === selectedLanguage}<b>✓</b>{/if}</button>
-              {/each}
-            </div>
-          {/if}
-        </div>
+        <LanguageSwitcher />
         <button class="icon-button notification-button" aria-expanded={showNotifications} aria-label={$copy.notifications} onclick={() => (showNotifications = !showNotifications)}><Icon name="bell" class="h-4 w-4" /><i></i></button>
         {#if showNotifications}
           <div class="notifications-panel" role="menu" aria-label={$copy.notifications}>
@@ -453,9 +459,9 @@
       {/if}
 
       <section class="metric-grid" aria-label={$copy.communityOverview}>
-        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(1, $locale, { minimumIntegerDigits: 2 })}</strong><Sparkline values={incomeSpark} tone="orange" /><div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
+        <article class="metric-card metric-primary"><div class="metric-top"><span class="metric-label">{$copy.communities}</span><span class="metric-icon"><Icon name="home" class="h-4 w-4" /></span></div><strong>{formatNumber(1, $locale, { minimumIntegerDigits: 2 })}</strong>{#if !liveMode || incomeSeriesReady}<Sparkline values={incomeSpark} tone="orange" />{/if}<div class="metric-foot">		<span class="trend up">↗ 1 {$copy.thisMonth}</span><span>{$copy.activeWorkspaces}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.openActions}</span><span class="metric-icon amber-icon"><Icon name="alert" class="h-4 w-4" /></span></div><strong>{formatNumber(7, $locale, { minimumIntegerDigits: 2 })}</strong><div class="metric-foot">		<span class="trend warning">2 {$copy.urgent}</span><span>{$copy.acrossBuildings}</span></div></article>
-        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div>{#if balancesLoading && crfBalance === null}<div class="metric-skeleton"><Skeleton height="26px" width="120px" /></div>{:else}<strong>{formatCurrency(crfBalance ?? books.crf.equity / 100, $locale, { maximumFractionDigits: 0 })}</strong>{/if}<Sparkline values={reserveSpark} tone="blue" /><div class="metric-foot">{#if operatingBalance !== null}<span>{formatCurrency(operatingBalance, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{:else}<span>{formatCurrency(books.operating.cash / 100, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}</span>{/if}<span>{$copy.yearToDate}</span></div></article>
+        <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.reserveFunds}</span><span class="metric-icon blue-icon"><Icon name="dollar" class="h-4 w-4" /></span></div>{#if liveMode && crfBalance === null}<strong class="balance-status" role="status">{balancesLoading ? $copy.balanceLoading : $copy.balanceUnavailable}</strong>{:else}<strong>{formatCurrency(crfBalance ?? books.crf.equity / 100, $locale, { maximumFractionDigits: 0 })}</strong>{/if}{#if !liveMode || reserveSeriesReady}<Sparkline values={reserveSpark} tone="blue" />{/if}<div class="metric-foot"><span>{#if liveMode && operatingBalance === null}{balancesLoading ? $copy.balanceLoading : $copy.balanceUnavailable}{:else}{formatCurrency(operatingBalance ?? books.operating.cash / 100, $locale, { maximumFractionDigits: 0 })} {$copy.operatingFund}{/if}</span><span>{$copy.yearToDate}</span></div></article>
         <article class="metric-card"><div class="metric-top"><span class="metric-label">{$copy.complianceHealth}</span><span class="metric-icon purple-icon"><Icon name="shield" class="h-4 w-4" /></span></div><strong>{health.score}<span class="metric-unit">/100</span></strong><div class="health-bar"><span style={`width: ${health.score}%`}></span></div><div class="metric-foot"><span class:down={healthDelta < 0} class="trend">{healthDelta < 0 ? '↘' : healthDelta > 0 ? '↗' : '→'} {Math.abs(healthDelta)} {$copy.healthTrendOverSix}</span><span>{$copy.acrossBuildings}</span></div></article>
       </section>
 
@@ -465,15 +471,13 @@
         <div class="left-stack">
           <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => goto('/units')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
-            {#each filteredBuildings as building}
+            {#each buildings as building}
               <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>
                 <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); goto(building.href); }}>•••</button></div>
                 <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-3 w-3" /></span>{building.issue}<span class="status-arrow">→</span></div>
               </div>
-            {:else}
-              <EmptyState scene="empty" icon="search" title="{$copy.noBuildings} “{search}”" message={$copy.emptySearchHint} actionLabel={$copy.newStrata} onAction={() => (showNewStrata = true)} />
             {/each}
           </div>
 
@@ -540,12 +544,12 @@
     <footer class="site-footer">
       <div class="footer-top"><div class="footer-brand"><div class="brand-lockup footer-lockup"><BrandMark size={28} /><div><div class="brand-name">open<span>strata</span></div><div class="brand-subtitle">community operations</div></div></div><p>{$copy.footerTag}</p><span class="footer-note">{$copy.builtEverywhere}</span></div>			<div class="footer-links"><div><h3>{$copy.product}</h3><a href="/">{$copy.overview}</a><a href="/units">{$copy.navUnits}</a><a href="/accounting">{$copy.navAccounting}</a><a href="/pay">{$copy.navPay}</a><a href="/tax">{$copy.navTaxCra}</a><a href="/calendar">{$copy.navCalendar}</a><a href="/meetings">{$copy.navMeetings}</a></div><div><h3>{$copy.trustLegal}</h3><a href="/custody">{$copy.custodyLink}</a><a href="/legal">{$copy.legal}</a><a href="/compliance">{$copy.complianceKb}</a><a href="/templates">{$copy.templates}</a><a href="/faq">{$copy.faqTitle}</a><a href="/privacy">{$copy.privacy}</a><a href="/terms">{$copy.terms}</a></div><div><h3>{$copy.resources}</h3><a href="/blog">{$copy.blogTitle}</a><a href="/changelog">{$copy.changelogLink}</a><a href="/rss">{$copy.rssTitle}</a><a href="/rss.xml" class="rss-chip" title={$copy.subscribeViaRss} aria-label={$copy.subscribeViaRss}><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.18 17.82a2.18 2.18 0 1 0 0 4.36 2.18 2.18 0 0 0 0-4.36zM4 4.44v3.6C12.9 8.04 20 15.1 20 24h3.6C23.6 14.6 13.4 4.44 4 4.44zM4 10.1v3.6c5.7 0 10.3 4.6 10.3 10.3h3.6C17.9 14.9 9.1 10.1 4 10.1z"/></svg> RSS</a><a href="/spec">{$copy.specTitle}</a><a href="mailto:hello@giveabit.io">{$copy.contact}</a></div></div></div><div class="footer-bottom"><span>© 2026 OpenStrata · A Give A Bit project · v{appVersion}</span><span>{$copy.legalDisclaimer}</span><span><a href="/docs">{$copy.status}</a> <a href="https://github.com/kitsboy/openstrata" target="_blank" rel="noopener noreferrer">{$copy.githubLabel} ↗</a></span><span class="footer-cookie-notice">{$copy.footerCookieNotice}</span></div>
     </footer>
-  </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/units" class:active={isActive('/units')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><a href="/pay" class:active={isActive('/pay')}><Icon name="lightning" class="h-4 w-4" />{$copy.navPay}</a><a href="/accounting" class:active={isActive('/accounting')}><Icon name="coins" class="h-4 w-4" />{$copy.finances}</a><button onclick={() => (showMobileMenu = true)}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
+  </div>        <nav class="mobile-nav" aria-label={$copy.mobileNavigation}><a href="/" class:active={isActive('/')}><Icon name="home" class="h-4 w-4" />{$copy.overview}</a><a href="/units" class:active={isActive('/units')}><Icon name="building" class="h-4 w-4" />{$copy.buildings}</a><a href="/pay" class:active={isActive('/pay')}><Icon name="lightning" class="h-4 w-4" />{$copy.navPay}</a><a href="/accounting" class:active={isActive('/accounting')}><Icon name="coins" class="h-4 w-4" />{$copy.finances}</a><button aria-expanded={showMobileMenu} onclick={openMobileMenu}><Icon name="menu" class="h-4 w-4" />{$copy.menu}</button></nav>
 </div>
 
 {#if selectedBuilding}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (selectedBuilding = null)}>
-    <dialog open class="modal" aria-labelledby="building-detail-title">
+    <dialog open class="modal" aria-labelledby="building-detail-title" aria-modal="true" tabindex="-1" use:focusModal={() => (selectedBuilding = null)}>
       <button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (selectedBuilding = null)}><Icon name="close" class="h-3.5 w-3.5" /></button>
       <div class="modal-icon"><Icon name="building" class="h-5 w-5" /></div>
       <div class="eyebrow">{$copy.yourBuildings}</div>
@@ -571,7 +575,7 @@
 
 {#if showNewStrata}
   <div class="modal-backdrop" role="presentation" onclick={(event) => event.target === event.currentTarget && (showNewStrata = false)}>
-    <dialog open class="modal" aria-labelledby="new-strata-title"><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}><Icon name="close" class="h-3.5 w-3.5" /></button><div class="modal-icon"><Icon name="plus" class="h-5 w-5" /></div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label for="new-strata-name">{$copy.communityName}<input id="new-strata-name" bind:value={newStrataName} class:input-invalid={!!newStrataError} aria-invalid={!!newStrataError} placeholder={$copy.communityNamePlaceholder} /></label>{#if newStrataError}<p class="inline-error" role="alert"><Icon name="alert" class="h-3 w-3" /> {newStrataError}</p>{/if}<label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => { showNewStrata = false; newStrataError = ''; }}>{$copy.cancel}</button>	<button class="primary-button" onclick={submitNewStrata}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
+    <dialog open class="modal" aria-labelledby="new-strata-title" aria-modal="true" tabindex="-1" use:focusModal={() => { showNewStrata = false; newStrataError = ''; }}><button class="modal-close" aria-label={$copy.closeDialog} onclick={() => (showNewStrata = false)}><Icon name="close" class="h-3.5 w-3.5" /></button><div class="modal-icon"><Icon name="plus" class="h-5 w-5" /></div><div class="eyebrow">{$copy.formationWorkspace}</div><h2 id="new-strata-title">{$copy.startNewStrata}</h2><p>{$copy.formationDescription}</p>		<label for="new-strata-name">{$copy.communityName}<input id="new-strata-name" bind:value={newStrataName} class:input-invalid={!!newStrataError} aria-invalid={!!newStrataError} placeholder={$copy.communityNamePlaceholder} /></label>{#if newStrataError}<p class="inline-error" role="alert"><Icon name="alert" class="h-3 w-3" /> {newStrataError}</p>{/if}<label>{$copy.jurisdiction}<select><option>British Columbia, Canada</option><option>Alberta, Canada</option><option>Ontario, Canada</option></select></label><div class="modal-actions"><button class="secondary-button" onclick={() => { showNewStrata = false; newStrataError = ''; }}>{$copy.cancel}</button>	<button class="primary-button" onclick={submitNewStrata}>{$copy.createWorkspace} <span>→</span></button></div><small>{$copy.legalReview}</small></dialog>
   </div>
 {/if}
 
