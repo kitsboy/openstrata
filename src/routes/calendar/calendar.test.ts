@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import Calendar from './+page.svelte';
 
 /**
@@ -103,5 +103,57 @@ describe('/calendar year sheet', () => {
 		const text = sheet.textContent ?? '';
 		expect(text).toContain('April 1, 2026 – March 31, 2027');
 		expect(text).toContain('365 days');
+	});
+});
+
+/**
+ * The renewals the registers carry dates for, behind a button.
+ *
+ * The year sheet is the calendar's own paper, so opening the renewals takes it
+ * off the page rather than printing two artifacts from one press. The dates are
+ * the contracts register's and the insurance record's; the test reads them back
+ * to prove the sheet is the register's arithmetic and not a second list.
+ */
+describe('/calendar renewals', () => {
+	async function open(container: HTMLElement, label: string) {
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === label
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+	}
+
+	it('opens on the eight dated renewals and closes the year sheet', async () => {
+		const { container } = render(Calendar);
+		await open(container, 'Renewals ahead');
+
+		expect(container.querySelector('.year-cal-doc')).toBeNull();
+		const sheet = container.querySelector('.renewal-cal-doc')!;
+		expect(sheet).toBeTruthy();
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('OS-RC-2026-09');
+		expect(text).toContain('Coast Fire Protection');
+		expect(text).toContain('Oct 8, 2026');
+		expect(text).toContain('8 days');
+		expect(text).toContain('Apr 1, 2027');
+		expect(text).toContain('6 renewals and 2 dated steps');
+	});
+
+	it('lists the contracts with no day apart instead of inventing one', async () => {
+		const { container } = render(Calendar);
+		await open(container, 'Renewals ahead');
+		const text = container.querySelector('.renewal-cal-doc')?.textContent ?? '';
+		expect(text).toContain('No day in the register');
+		expect(text).toContain('Harbour Janitorial');
+		expect(text).toContain('Month to month');
+		expect(text).toContain('Step');
+	});
+
+	it('goes back to the year', async () => {
+		const { container } = render(Calendar);
+		await open(container, 'Renewals ahead');
+		await open(container, 'Back to the year');
+		expect(container.querySelector('.renewal-cal-doc')).toBeNull();
+		expect(container.querySelector('.year-cal-doc')).toBeTruthy();
 	});
 });

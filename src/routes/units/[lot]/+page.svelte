@@ -11,8 +11,10 @@
 	import ArrearsLetterSheet from '$lib/components/ArrearsLetterSheet.svelte';
 	import LevyLetterSheet from '$lib/components/LevyLetterSheet.svelte';
 	import InsuranceNoticeSheet from '$lib/components/InsuranceNoticeSheet.svelte';
+	import LienStatusSheet from '$lib/components/LienStatusSheet.svelte';
 	import { lotLevyLetter } from '$lib/demo/levy-letter';
 	import { lotInsuranceNotice } from '$lib/demo/insurance-notice';
+	import { lotLienStatus } from '$lib/demo/lien';
 	import FormFCertificateSheet from '$lib/components/FormFCertificateSheet.svelte';
 	import { formFCertificate } from '$lib/form-f-certificate';
 	import { arrearsLetter } from '$lib/arrears-letter';
@@ -81,6 +83,14 @@
 	let insuranceOpen = $state(false);
 	const levyDoc = $derived(lotLevyLetter(unit.id));
 	const insuranceDoc = $derived(lotInsuranceNotice(unit.id));
+
+	/**
+	 * The lien file, when this lot has one open. Lot 207 is the only lot whose
+	 * council has a vote booked, so the button is not offered anywhere else — a
+	 * page about a lien that does not exist would be the worst kind of paper.
+	 */
+	let lienOpen = $state(false);
+	const lienDoc = $derived(lotLienStatus(unit.id));
 
 	const due = $derived(balance(unit));
 	const lotCharges = $derived(charges(asOf).filter((charge) => charge.unitId === unit.id));
@@ -157,7 +167,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-	<div class:hidden={certificate || letter || levyLetterOpen || insuranceOpen}>
+	<div class:hidden={certificate || letter || levyLetterOpen || insuranceOpen || lienOpen}>
 	<PageHeader
 		kicker={fill($copy.lotSheetKicker, {
 			date: formatDate(asOf, $locale, { dateStyle: 'long' })
@@ -193,6 +203,12 @@
 			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
 			onclick={() => (insuranceOpen = true)}>{$copy.insuranceNoticeShow}</button
 		>
+		{#if lienDoc?.issuable}
+			<button
+				class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+				onclick={() => (lienOpen = true)}>{$copy.lienStatusShow}</button
+			>
+		{/if}
 		<span class="text-xs text-slate-500">{$copy.lotSheetPrintNote}</span>
 	</div>
 
@@ -437,5 +453,22 @@
 			</div>
 		</div>
 		<InsuranceNoticeSheet notice={insuranceDoc} />
+	{/if}
+
+	{#if lienOpen && lienDoc}
+		<div class="no-print mb-4 flex flex-wrap items-end justify-end gap-3">
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+					onclick={() => (lienOpen = false)}>{$copy.lienStatusHide}</button
+				>
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.lienStatusPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.lienStatusPrintNote}</span>
+			</div>
+		</div>
+		<LienStatusSheet lien={lienDoc} />
 	{/if}
 </div>

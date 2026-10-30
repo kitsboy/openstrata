@@ -2,6 +2,8 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Next30 from '$lib/components/Next30.svelte';
 	import YearCalendarSheet from '$lib/components/YearCalendar.svelte';
+	import RenewalCalendarSheet from '$lib/components/RenewalCalendarSheet.svelte';
+	import { renewalYear } from '$lib/demo/renewals';
 	import {
 		categoryMeta,
 		events,
@@ -27,6 +29,14 @@
 	 */
 	const fiscalStartYear = Number(building.fiscalStart.slice(0, 4));
 	const yearSheet = yearCalendar(fiscalStartYear, events);
+
+	/**
+	 * The renewals the registers already carry dates for, behind a button. One
+	 * printed artifact at a time: opening the renewal sheet takes the year calendar
+	 * off the paper rather than printing two sheets from one press.
+	 */
+	const renewalSheet = renewalYear(building.asOf);
+	let renewalsOpen = $state(false);
 
 	/** Month names and weekday heads come from Intl, not a hard-coded list. */
 	const monthName = $derived(
@@ -171,13 +181,35 @@
 				<p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">{$copy.yearCalLede}</p>
 			</div>
 			<div class="flex flex-wrap items-center gap-2">
-				<button
-					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
-					onclick={() => window.print()}>{$copy.yearCalPrint}</button
-				>
-				<span class="text-xs text-slate-500">{$copy.yearCalPrintNote}</span>
+				{#if renewalsOpen}
+					<button
+						class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+						onclick={() => (renewalsOpen = false)}>{$copy.renewalCalHide}</button
+					>
+					<button
+						class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+						onclick={() => window.print()}>{$copy.renewalCalPrint}</button
+					>
+				{:else}
+					<button
+						class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+						onclick={() => (renewalsOpen = true)}>{$copy.renewalCalShow}</button
+					>
+					<button
+						class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+						onclick={() => window.print()}>{$copy.yearCalPrint}</button
+					>
+				{/if}
+				<span class="text-xs text-slate-500">
+					{renewalsOpen ? $copy.renewalCalPrintNote : $copy.yearCalPrintNote}
+				</span>
 			</div>
 		</div>
-		<YearCalendarSheet calendar={yearSheet} />
+		{#if renewalsOpen}
+			<p class="mb-4 max-w-3xl text-sm leading-relaxed text-slate-600 no-print">{$copy.renewalCalLede}</p>
+			<RenewalCalendarSheet calendar={renewalSheet} />
+		{:else}
+			<YearCalendarSheet calendar={yearSheet} />
+		{/if}
 	</section>
 </div>

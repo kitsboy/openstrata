@@ -14,6 +14,46 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.63",
+    "date": "2026-10-30",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The next twelve months of renewals (/calendar). The contracts register names a renewal for every vendor, the insurance record holds the appraisal and the term end, and the calendar listed none of them as a renewal. A new Renewals ahead button prints one Letter page: 6 renewals and 2 dated steps between 30 September 2026 and 30 September 2027 — Coast Fire Protection in 8 days, the insurance appraisal in 22 as a step, Cedar & Co in 61, Metro Energy Advisors in 92, the broker's marketing start in 112 as a step, Richmond Elevator in 123, Bill Hargreaves in 182 and the policy renewal in 183. Each row names the account that pays it, translated from the catalog: 6230 Fire and life safety, 6100 Insurance, 6240 Landscaping and snow, 6200 Caretaker contract. The six contracts with no day — month to month, each fiscal year, an open file, the levy project, an employment, the software — print apart as *No day in the register* with the register's own wording, and Seawall Membrane is named as having no line rather than given one. Reference OS-RC-2026-09.",
+          "src/lib/renewal-calendar.ts (12 tests) holds five rules. The window is twelve months from the statement date with both ends counted. A date that has passed goes to a *gone by* list with the days since, never to the table as a negative countdown. No date is invented for a contract that renews without one. Every row names its account or is counted as unfunded and printed anyway. And a step is tagged so the appraisal cannot be mistaken for a contract that renews. The seven dated contracts gained a renewalIso beside the prose they already carried, and a test reads every one back against its own sentence so the two cannot drift.",
+          "Lot 207's lien file, in order (/units/[lot]). The ladder ages the money, the minutes record that the lawyer was told to draft an opinion, and the October agenda carries the vote; no page put them in sequence. A new Lien status button prints OS-LN-2026-09-207: $5,700.00 secured from $1,998.00 of fees that have fallen due, $150.00 of late fees and the $3,552.00 levy, with October's $666.00 fee dated 1 October 2026 printed apart; the demand of 20 August 2026, 41 days ago; the opinion directed 15 September; the vote on 20 October, 20 days out; the registration *waiting* with no date. The sheet says no lien is registered, prints 5 seats against a quorum of 3, and names the council's own recorded vote as the gate rather than the three-quarters vote it does not need.",
+          "src/lib/lien-status.ts (9 tests) holds six rules. A lien exists only when a registration is recorded and the vote carried, so a vote to decline cannot leave one on the title. The amount is money that has fallen due, with the next fee printed apart. Legal spend of $1,850.00 against the $5,400.00 line is printed and never added to the amount. A vote dated before the demand supporting it is a defect that produces no page. A step with no date is *waiting*, not scheduled. And no interest or cost is charged, because the books record none. demo/lien.ts reads the money from charges, the dates from the lot's note and the two meetings, and the legal line from the books.",
+          "The Form K reminder letters (/units/register). The register has counted three gaps since v0.3.48; it never produced the letter. A new Reminder letters button prints two: lot 209 and lot 407, each naming the tenant, the day they moved in on 1 September 2026, the window that closed on the 15th, 15 days since, and the council meeting of 20 October that will see the register. Lot 309 is held out — a short-term stay has no tenancy to acknowledge and the bylaw file is its record, which the council's own October agenda says too. Neither letter carries an amount.",
+          "src/lib/form-k-letter.ts (10 tests) holds five rules. Only a closed window on a tenancy is written to; a lot on file, an open window and a short-term lot are refused with the reason. The dates and the count are the register's own, and a count that disagrees with its dates produces no letter. fineCents is typed null, because the bylaw's $200 a day attaches to a stay under thirty days and not to a late Form K. A meeting that is no longer ahead sets no date. demo/form-k-letters.ts maps every register row, so a filing recorded on a lot's sheet closes its letter too."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Three sheets join the print rules. .renewal-cal-doc, .lien-doc and .fk-letter-doc are held to 176 mm with a 4 mm gutter, and .fk-letter-doc + .fk-letter-doc starts a page so each reminder is its own letter.",
+          "/calendar prints one artifact at a time. Opening the renewals takes the year calendar off the page and the button becomes *Back to the year*, so one press never yields two sheets.",
+          "The queue is refreshed. The three shipped slots are replaced by a bank deposit reconciliation with its timing differences (/accounting, carried over), a reconciliation of the month's levy collections to the trust (/accounting), a turnover sheet for a sale closing (/units/[lot]) and a reserve-fund study comparison (/accounting)."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "A nowrap account column clipped the renewal sheet. Chrome measured 22px of the code and line name past the sheet's edge — invisible on screen, cut on paper. The column now wraps.",
+          "The lien's next-fee sentence dated October's fee with September. It printed *dated September* because it read the statement date's month; the parts now carry the charge's own day, and the route test pins 1 October 2026."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "39 new tests: 12 for the renewal calendar, 9 for the lien file, 10 for the Form K letter, 6 on /calendar, 3 on /units/register and 2 on the lot route.",
+          "Printed and measured in Chrome: the renewal calendar one Letter page at 808.41px (846.02 in French), the lien file one at 795.30px (747.19 in Hindi), the two reminder letters one page each at 607.41px (571.47 in Chinese) — every sheet 665.19px (176 mm) wide with no overflow.",
+          "Frontend 865 passed across 90 files, Svelte check 0 errors / 0 warnings, translation audit 2,116 keys × 9 locales (80 new) at parity, contrast 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.62",
     "date": "2026-10-29",
     "groups": [

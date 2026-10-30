@@ -249,3 +249,58 @@ describe('/units/[lot] — the insurance notice', () => {
 		expect(text).toContain('asks you for neither deductible');
 	});
 });
+
+/**
+ * The lien file, behind its own button.
+ *
+ * Lot 207 is the only lot with a lien on a council agenda, so the sheet is the
+ * status of a decision that has not been taken: the money, the four steps in
+ * order, and the sentence that no lien is registered. A lot without a file is
+ * offered nothing, because a page about a lien that does not exist would be the
+ * worst paper this app could print.
+ */
+describe('/units/[lot] — the lien file', () => {
+	beforeEach(() => localStorage.clear());
+
+	it('prints lot 207’s file with the money and the step that is still ahead', async () => {
+		const { container } = render(LotSheet, { data: { lot: '207' } });
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === 'Lien status'
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+
+		const sheet = container.querySelector('.lien-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('OS-LN-2026-09-207');
+		// Three fees, three late fees and the levy; the October fee is apart.
+		expect(text).toContain('$1,998.00');
+		expect(text).toContain('$150.00');
+		expect(text).toContain('$3,552.00');
+		expect(text).toContain('$5,700.00');
+		expect(text).toContain('$666.00');
+		expect(text).toContain('dated October 1, 2026');
+		// The demand, its age, and the vote that has not happened.
+		expect(text).toContain('August 20, 2026');
+		expect(text).toContain('41 days');
+		expect(text).toContain('Oct 20, 2026');
+		expect(text).toContain('In 20 days');
+		expect(text).toContain('Council has not voted');
+		expect(text).toContain('no lien is registered against the title');
+		// The legal line, and the refusal to total it into the debt.
+		expect(text).toContain('$1,850.00');
+		expect(text).toContain('$5,400.00');
+		expect(text).toContain('adds none to the amount');
+	});
+
+	it('offers no lien file to a lot that has none', () => {
+		const { container } = render(LotSheet, { data: { lot: '305' } });
+		const labels = [...container.querySelectorAll('button')].map((node) =>
+			node.textContent?.trim()
+		);
+		expect(labels).not.toContain('Lien status');
+		expect(container.querySelector('.lien-doc')).toBeNull();
+	});
+});

@@ -89,7 +89,8 @@
   .trial-doc, .fee-doc, .proxy-doc, .ff-doc, .agm-letter-doc, .fines-doc,
   .hearing-doc, .payroll-doc, .insurance-doc,
   .vendor-doc, .reserve-statement-doc, .arrears-letter-doc,
-  .levy-letter-doc, .insurance-notice-doc, .minutes-doc {
+  .levy-letter-doc, .insurance-notice-doc, .minutes-doc,
+  .renewal-cal-doc, .lien-doc, .fk-letter-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
@@ -117,7 +118,10 @@
   .arrears-letter-doc,
   .levy-letter-doc,
   .insurance-notice-doc,
-  .minutes-doc {
+  .minutes-doc,
+  .renewal-cal-doc,
+  .lien-doc,
+  .fk-letter-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }
@@ -142,6 +146,12 @@
   .minutes-doc {
     break-before: page !important;
     page-break-before: always !important;
+  }
+  /* `/units/register` sends one reminder per lot past the window, so each letter
+     starts its own page instead of running under the one above it. */
+  .fk-letter-doc + .fk-letter-doc {
+    break-before: page;
+    page-break-before: always;
   }
   .print-doc table, .print-doc tr, .print-doc .print-note,
   .print-doc .print-signatures, .print-doc .print-table-wrap {

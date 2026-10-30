@@ -396,20 +396,25 @@ const journal: JournalEntry[] = [
  * contract note. An empty list means the vendor is not paid from the operating
  * budget at all — Seawall Membrane is paid from the parkade levy's own trust —
  * and the sheet names that rather than folding levy money into operating spend.
+ *
+ * `renewalIso` is the same day as `renewal`, typed once so the renewal calendar
+ * can count to it; null where the register deliberately gives no day ("month to
+ * month", "each fiscal year", "open"). A date the register does not state is not
+ * derived from the prose.
  */
 export const contracts = [
-	{ vendor: 'Harbour Insurance Brokers', service: 'Building policy HH-2847-26', renewal: 'April 1, 2027', note: 'Appraisal October 22 so the broker can market the renewal in January.', accounts: ['6100'] },
-	{ vendor: 'Bill Hargreaves', service: 'Caretaker, $3,000 a month', renewal: 'March 31, 2027', note: 'Contractor. WCB on file. Not on the T4.', accounts: ['6200'] },
-	{ vendor: 'Samira El-Masri', service: 'Evening concierge', renewal: 'Employment, open', note: 'First employee. RP account opened September 1.', accounts: ['6210', '6215'] },
-	{ vendor: 'Harbour Janitorial', service: 'Weekly common-area clean', renewal: 'Month to month', note: 'September invoice is in accounts payable.', accounts: ['6250'] },
-	{ vendor: 'Cedar & Co', service: 'Landscaping, April to November', renewal: 'November 30, 2026', note: 'Snow is a separate call-out if needed.', accounts: ['6240'] },
-	{ vendor: 'Richmond Elevator', service: 'Quarterly maintenance', renewal: 'January 31, 2027', note: 'Annual safety inspection November 4.', accounts: ['6220'] },
-	{ vendor: 'Coast Fire Protection', service: 'Annual fire inspection', renewal: 'October 8, 2026', note: 'Lobby, 9:00 am. Panel keys with the caretaker.', accounts: ['6230'] },
-	{ vendor: 'Seawall Membrane Co.', service: 'Parkade membrane, levy project', renewal: 'Closes when the holdback is released', note: 'Contract equals the $216,000 levy. Progress billed $176,400.', accounts: [] as const, fund: 'levy' },
-	{ vendor: 'North Shore Tax Co-op', service: 'Compilation, T2, T1044', renewal: 'Each fiscal year', note: 'Today’s filing is the prior year. This year’s fee is still in the budget.', accounts: ['6320'] },
-	{ vendor: 'False Creek Law', service: 'Lien opinion, lot 207', renewal: 'File stays open', note: 'Council vote on October 20.', accounts: ['6310'] },
-	{ vendor: 'Metro Energy Advisors', service: 'EPR 2026', renewal: 'December 31, 2026 deadline', note: '$4,200 spent of a $6,500 budget.', accounts: ['6350'] },
-	{ vendor: 'OpenStrata', service: 'Sovereign plan', renewal: 'Monthly', note: '$6 a lot. Watch-only. No custody of the war chest.', accounts: ['6370'] }
+	{ vendor: 'Harbour Insurance Brokers', service: 'Building policy HH-2847-26', renewal: 'April 1, 2027', renewalIso: '2027-04-01', note: 'Appraisal October 22 so the broker can market the renewal in January.', accounts: ['6100'] },
+	{ vendor: 'Bill Hargreaves', service: 'Caretaker, $3,000 a month', renewal: 'March 31, 2027', renewalIso: '2027-03-31', note: 'Contractor. WCB on file. Not on the T4.', accounts: ['6200'] },
+	{ vendor: 'Samira El-Masri', service: 'Evening concierge', renewal: 'Employment, open', renewalIso: null, note: 'First employee. RP account opened September 1.', accounts: ['6210', '6215'] },
+	{ vendor: 'Harbour Janitorial', service: 'Weekly common-area clean', renewal: 'Month to month', renewalIso: null, note: 'September invoice is in accounts payable.', accounts: ['6250'] },
+	{ vendor: 'Cedar & Co', service: 'Landscaping, April to November', renewal: 'November 30, 2026', renewalIso: '2026-11-30', note: 'Snow is a separate call-out if needed.', accounts: ['6240'] },
+	{ vendor: 'Richmond Elevator', service: 'Quarterly maintenance', renewal: 'January 31, 2027', renewalIso: '2027-01-31', note: 'Annual safety inspection November 4.', accounts: ['6220'] },
+	{ vendor: 'Coast Fire Protection', service: 'Annual fire inspection', renewal: 'October 8, 2026', renewalIso: '2026-10-08', note: 'Lobby, 9:00 am. Panel keys with the caretaker.', accounts: ['6230'] },
+	{ vendor: 'Seawall Membrane Co.', service: 'Parkade membrane, levy project', renewal: 'Closes when the holdback is released', renewalIso: null, note: 'Contract equals the $216,000 levy. Progress billed $176,400.', accounts: [] as const, fund: 'levy' },
+	{ vendor: 'North Shore Tax Co-op', service: 'Compilation, T2, T1044', renewal: 'Each fiscal year', renewalIso: null, note: 'Today’s filing is the prior year. This year’s fee is still in the budget.', accounts: ['6320'] },
+	{ vendor: 'False Creek Law', service: 'Lien opinion, lot 207', renewal: 'File stays open', renewalIso: null, note: 'Council vote on October 20.', accounts: ['6310'] },
+	{ vendor: 'Metro Energy Advisors', service: 'EPR 2026', renewal: 'December 31, 2026 deadline', renewalIso: '2026-12-31', note: '$4,200 spent of a $6,500 budget.', accounts: ['6350'] },
+	{ vendor: 'OpenStrata', service: 'Sovereign plan', renewal: 'Monthly', renewalIso: null, note: '$6 a lot. Watch-only. No custody of the war chest.', accounts: ['6370'] }
 ] as const;
 
 const budgetDelta = expenseAnnual + crfContributionAnnual - otherIncomeAnnual - feeAnnual;
