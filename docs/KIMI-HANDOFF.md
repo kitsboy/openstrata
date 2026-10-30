@@ -1,3 +1,27 @@
+## Session — 2026-10-29 (seventh)
+
+**Done:**
+- Three queue picks shipped together as `0.3.57`.
+- **The parkade levy has a statement of its own** (`/accounting`). A new **Parkade levy** tab prints the trust on one page: **$216,000.00** assessed at **$36.00** a point, **$207,948.00** collected, **$8,052.00** still owed, **$176,400.00** paid to Seawall Membrane, **$31,548.00** in the trust and **$39,600.00** of work left. The lots that still owe are named largest balance first (**207** **$3,552.00** with no schedule, **403** **$2,700.00** at **$450.00** a month, **108** **$1,800.00** at **$300.00**); the **37** that paid in full are one line, **$199,224.00**. `src/lib/levy-sheet.ts` (16 tests) and `LevySheet.svelte`; four `/accounting` route tests.
+- **The printed budget speaks the reader's language.** `src/lib/budget-copy.ts` joins each four-digit code to its catalog key — **37** names and **8** reasons — and `printedLine` replaces only those two fields, so the arithmetic cannot move with the language. A code the catalog does not know keeps the books' name rather than blanking the line.
+- **The AGM package carries the Form K register** (`/documents`): five sheets now — contents, the year, the packet, the reserve plan, the register — from the same `formKRegister` call `/units/register` makes, so a filing recorded on a lot's sheet closes its gap on the paper. The contents page names four documents and the hint says four. One `/documents` route test.
+- 63 catalog keys × 9 locales (1,701 at parity), 695 frontend tests across 71 files (21 new), check 0/0, i18n audit green, contrast 218 pairs, secret gate green, production build green. Printed in Chrome: the package on **five Letter pages**, the levy on **one**.
+
+**Decisions:**
+- **The levy's assessment is the lots added, never a typed total.** Each lot's share is its entitlement at the resolution's **$36.00** a point, and the sheet fails if the resolution's **$216,000.00** disagrees with the 40 rows. That is what makes the page a statement rather than a demand: a reader can rebuild every figure from the rows above it.
+- **The trust has to come out even two ways**, and the difference prints instead of being asserted: cash plus what owners owe against assessed less what the contractor has been paid. A test moves the cash by **$1.00** and watches the gap appear on the row a reader checks.
+- **No holdback is invented.** A holdback is withheld from a payment and these books record none, so the sheet says that in its basis rather than printing a retention the ledger cannot support. The contract is shown billed (**$176,400.00**), not net of money nobody recorded.
+- **A payment plan is not arrears, and not a payment either.** Lots **403** and **108** stay in the owing table with their schedule beside the balance; the page never subtracts a schedule from what is owed.
+- **The translated name is joined by code, not by English text.** Two accounts could share a name and a renamed account must not lose its translation, so `budget-copy.ts` keys on the four-digit code, and an unknown code falls back to the books' name instead of printing nothing.
+- **The package's register is the same call the register page makes**, so a device-local filing closes its gap on the paper and on `/units/register` at once; a second copy of the sort and the 15-point cap would have let the two pages disagree.
+- The three picked slots are replaced by **a trial balance on paper** (`/accounting`), **a proxy card with the notice** (`/meetings`) and **the fee schedule by lot** (`/units`), beside the carried-over **payables sheet for the close**, so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.57`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (sixth)
 
 **Done:**

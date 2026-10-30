@@ -240,9 +240,10 @@ describe('/accounting budget', () => {
 		expect(row('6110')).toContain('$720.00 over');
 		// The concierge started on 1 September, so the line is far under plan.
 		expect(row('6210')).toContain('$7,440.00 under');
-		// The reserve contribution is a decision, not a slip.
-		const reserve = rows.find((text) => text.includes('CRF contribution (separate fund)') && text.includes('$43,200.00'));
-		expect(reserve).toContain('—');
+		// The reserve contribution is a decision, not a slip. Its row carries the
+		// translated account name for code 3500, not the group head's phrasing.
+		expect(row('3500')).toContain('$43,200.00');
+		expect(row('3500')).toContain('—');
 	});
 
 	it('prints the reason a line moved beside its variance', async () => {
@@ -498,5 +499,65 @@ describe('the close reconciliation on paper', () => {
 		expect(text).toContain('The books to September 30, 2026');
 		expect(text).toContain('$107,358.32');
 		expect(text).not.toContain('{date}');
+	});
+});
+
+describe('the parkade levy on paper', () => {
+	it('prints the trust as its own sheet, over the operating books', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Parkade levy');
+		const sheet = container.querySelector('.levy-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		const text = sheet.textContent ?? '';
+		// Assessed, collected, still owed, paid to the contractor, and the two
+		// figures the trust balances on.
+		expect(text).toContain('Assessed');
+		expect(text).toContain('$216,000.00');
+		expect(text).toContain('$207,948.00');
+		expect(text).toContain('$8,052.00');
+		expect(text).toContain('$176,400.00');
+		expect(text).toContain('$31,548.00');
+		expect(text).toContain('$39,600.00');
+		expect(text).toContain('$0.00');
+		expect(text).toContain('agrees');
+		expect(text).not.toContain('does not agree');
+	});
+
+	it('names the three lots that still owe and counts the thirty-seven that paid', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Parkade levy');
+		const lots = container.querySelector('.levy-table.lots')!;
+		const rows = [...lots.querySelectorAll('tbody tr')].map((row) => row.textContent ?? '');
+		// Largest balance first: 207 has no schedule, 403 and 108 are on plans.
+		expect(rows).toHaveLength(3);
+		expect(rows[0]).toContain('207');
+		expect(rows[0]).toContain('$3,552.00');
+		expect(rows[1]).toContain('403');
+		expect(rows[1]).toContain('$450.00 a month');
+		expect(rows[2]).toContain('108');
+		expect(rows[2]).toContain('$300.00 a month');
+		// The settled lots are one line of money, not thirty-seven rows of zero.
+		const foot = lots.querySelector('tfoot')?.textContent ?? '';
+		expect(foot).toContain('37 lots have paid their share in full: $199,224.00.');
+	});
+
+	it('says the assessment is the lots added at the point rate', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Parkade levy');
+		const text = container.querySelector('.levy-doc')?.textContent ?? '';
+		expect(text).toContain('$36.00 a point');
+		// And it says what it will not claim: a holdback the books do not record.
+		expect(text).toContain('A holdback is withheld from a payment and these books record none');
+	});
+
+	it('keeps the tabs and the print button off the paper', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Parkade levy');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print this statement'))).toBe(true);
+		expect(container.querySelector('h1')?.closest('.no-print')).toBeTruthy();
 	});
 });

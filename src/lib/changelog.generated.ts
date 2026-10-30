@@ -14,6 +14,36 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.57",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The parkade levy as its own statement (/accounting). A new Parkade levy tab prints the trust on one page, apart from the operating books: $216,000.00 assessed at $36.00 a point, $207,948.00 collected, $8,052.00 still owed, $176,400.00 paid to Seawall Membrane, $31,548.00 in the trust and $39,600.00 of work left. The lots that still owe are named largest balance first — 207 $3,552.00 with no schedule, 403 $2,700.00 at $450.00 a month, 108 $1,800.00 at $300.00 — and the 37 that paid in full are one line of money, $199,224.00, rather than thirty-seven rows of zero.",
+          "src/lib/levy-sheet.ts (16 tests) holds the rules. The assessment is the lots' entitlement at the resolution's rate and never a typed total, so a reader can rebuild $216,000.00 from the 40 rows; the sheet fails if the resolution's own figure disagrees with what the lots add to. Collected is assessed less what is still owed, so the two halves always add back. The trust has to come out even two ways — cash plus what owners owe, against assessed less what the contractor has been paid — and the difference is printed on the row a reader would check; a test moves the cash by $1.00 and watches it appear. A lot can never owe more than its own share, a payment plan is named beside a balance and never subtracted from it, and the sheet refuses to print a holdback: a holdback is withheld from a payment, these books record none, and the basis says so instead of inventing a retention the ledger cannot support.",
+          "src/lib/components/LevySheet.svelte. The letterhead and reference block, the trust table (assessed, collected, owing, spent, cash, work left, and the check reading $0.00 agrees), the lots table with points, assessed, paid, owing and the agreed plan, the settled line in its foot, the sentence that the assessment is the lots added at the point rate, the basis and the sample line.",
+          "The printed budget in the reader's language (/accounting). src/lib/budget-copy.ts joins each four-digit code to the catalog key that holds its translated name and its reason — 37 names and 8 reasons — and printedLine replaces only those two fields, so the sheet's arithmetic cannot move when the language does. A line reading 6100 Insurance becomes 6100 Assurances in French with the code still in front, and a code the catalog does not know keeps the books' name rather than going blank.",
+          "The Form K register in the AGM package (/documents). The stack is now five sheets — contents, the year, the packet, the reserve plan and the register — built from the same formKRegister call /units/register makes, so a filing recorded on a lot's sheet in this browser closes its gap on the printed page too. The contents page lists all four documents and the hint says four, not three."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "The queue is refreshed. The payables sheet for the close (/accounting) keeps its slot beside three new offers: a trial balance on paper (/accounting), a proxy card with the notice (/meetings) and the fee schedule by lot (/units). Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md, LATEST-UPDATE.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "21 new tests: 16 for the levy's rules (a lot's share, the owing lots in order, the settled lots counted, the shares adding to the assessment, collected adding back, the trust even two ways, a moved balance printing its difference, a resolution total the lots cannot rebuild, a remaining figure that does not tie, a clamped share, the tie-break, and an empty building), 4 for /accounting (the sheet and its figures, the three lots named with their plans and the settled line, the point rate and the refused holdback, and the tabs off the paper) and 1 for /documents (the register on its own page, plus the contents page naming four sheets).",
+          "Printed and measured in Chrome: the AGM package on five Letter pages (contents, year, packet, reserve, register) and the levy statement on one, with the tabs and the print button measured as display: none.",
+          "Frontend 695 passed across 71 files, Svelte check 0 errors / 0 warnings, translation audit 1,701 keys × 9 locales (63 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.56",
     "date": "2026-10-29",
     "groups": [

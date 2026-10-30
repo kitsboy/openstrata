@@ -54,19 +54,20 @@ describe('/documents — the AGM package', () => {
 		expect(container.querySelector('.package-doc')).toBeNull();
 	});
 
-	it('prints the three sheets as one stack, each on its own page', async () => {
+	it('prints the four sheets as one stack, each on its own page', async () => {
 		window.print = vi.fn();
 		const { container } = renderAt('/documents');
 		await fireEvent.click(button(container, 'Print the AGM package'));
 		await flush();
 
 		const pages = [...container.querySelectorAll('.print-page')];
-		// Contents, the year, the packet, the reserve plan.
-		expect(pages).toHaveLength(4);
+		// Contents, the year, the packet, the reserve plan, the Form K register.
+		expect(pages).toHaveLength(5);
 		expect(container.querySelectorAll('.package-doc')).toHaveLength(1);
 		expect(container.querySelectorAll('.year-doc')).toHaveLength(1);
 		expect(container.querySelectorAll('.packet-doc')).toHaveLength(1);
 		expect(container.querySelectorAll('.reserve-doc')).toHaveLength(1);
+		expect(container.querySelectorAll('.register-doc')).toHaveLength(1);
 
 		// The order the contents page promises is the order the pages break in.
 		const order = pages.map((page) =>
@@ -76,10 +77,23 @@ describe('/documents — the AGM package', () => {
 					? 'year'
 					: page.querySelector('.packet-doc')
 						? 'packet'
-						: 'reserve'
+						: page.querySelector('.reserve-doc')
+							? 'reserve'
+							: 'register'
 		);
-		expect(order).toEqual(['contents', 'year', 'packet', 'reserve']);
+		expect(order).toEqual(['contents', 'year', 'packet', 'reserve', 'register']);
 		expect(window.print).toHaveBeenCalledTimes(1);
+	});
+
+	it('carries the register the health score charges for, on its own page', async () => {
+		window.print = vi.fn();
+		const { container } = renderAt('/documents?package=1');
+		await flush();
+		const register = container.querySelector('.register-doc')?.textContent ?? '';
+		// The same tenanted lots /units/register lists, from the same call.
+		expect(register).toContain('Form K register');
+		expect(register).toContain('Lot');
+		expect(register).toContain('Days past');
 	});
 
 	it('names what is in the stack, with the page’s own subtitles', async () => {
@@ -91,6 +105,9 @@ describe('/documents — the AGM package', () => {
 		expect(contents).toContain('The year on one page');
 		expect(contents).toContain('Council meeting packet');
 		expect(contents).toContain('The reserve fund, five years out');
+		expect(contents).toContain('Form K register');
+		// Four sheets named, and the hint says four rather than three.
+		expect(contents).toContain('One button, four sheets');
 		// Prepared for the paper: the close the books were written at.
 		expect(contents).toContain('Prepared September 30, 2026');
 	});

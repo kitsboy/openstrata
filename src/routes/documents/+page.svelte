@@ -12,9 +12,9 @@
    * so there is exactly one printable notice in the codebase.
    *
    * The third mode is the AGM package: a contents line, then the year's sheet,
-   * the meeting packet and the reserve plan, each on its own page. A council that
-   * used to print three pages from three tabs now prints one stack whose order is
-   * the stack's own.
+   * the meeting packet, the reserve plan and the Form K register, each on its own
+   * page. A council that used to print four pages from four places now prints one
+   * stack whose order is the stack's own.
    */
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
@@ -25,11 +25,13 @@
   import YearSheet from '$lib/components/YearSheet.svelte';
   import MeetingPacket from '$lib/components/MeetingPacket.svelte';
   import ReserveSheet from '$lib/components/ReserveSheet.svelte';
+  import FormKRegisterSheet from '$lib/components/FormKRegisterSheet.svelte';
   import Icon from '$lib/components/Icon.svelte';
-  import { building } from '$lib/demo/building';
+  import { building, units } from '$lib/demo/building';
   import { yearBook } from '$lib/demo/year';
   import { healthTrend } from '$lib/demo/health';
   import { readFiledForms, type FiledForms } from '$lib/form-k';
+  import { formKRegister } from '$lib/form-k-register';
   import { buildYearSheet } from '$lib/year-sheet';
   import {
     applyNoticeParams,
@@ -102,11 +104,19 @@
     })
   );
 
-  /** The contents line names the three sheets, in the order they print. */
+  /**
+   * The register the package carries, from the same call /units/register makes.
+   * A filing recorded on this device closes its lot's gap here too, because both
+   * pages read `formKRegister` rather than their own copy of the sort and the cap.
+   */
+  const register = $derived(formKRegister(units, filedForms, building.asOf));
+
+  /** The contents line names the four sheets, in the order they print. */
   const contents = $derived([
     { n: 1, title: $copy.yearSheetTitle, note: $copy.yearSheetLede },
     { n: 2, title: $copy.meetPacketHeading, note: $copy.meetPacketLede },
-    { n: 3, title: $copy.accReserveTitle, note: $copy.accReserveLede }
+    { n: 3, title: $copy.accReserveTitle, note: $copy.accReserveLede },
+    { n: 4, title: $copy.formKRegisterTitle, note: $copy.formKRegisterLede }
   ]);
 
   const prepared = $derived(
@@ -262,6 +272,9 @@
     </div>
     <div class="print-page mb-12">
       <ReserveSheet />
+    </div>
+    <div class="print-page mb-12">
+      <FormKRegisterSheet {register} />
     </div>
   {:else if mode === 'all'}
     {#each printDocuments as doc (doc.slug)}

@@ -7,6 +7,7 @@
 	import ArrearsSheet from '$lib/components/ArrearsSheet.svelte';
 	import CashStatement from '$lib/components/CashStatement.svelte';
 	import CloseReconciliation from '$lib/components/CloseReconciliation.svelte';
+	import LevySheet from '$lib/components/LevySheet.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
@@ -14,6 +15,8 @@
 	import { OPENING_CASH, statement } from '$lib/ledger-statement';
 	import { OPERATING_ACCOUNT, OPERATING_OPENING, cashStatement } from '$lib/cash-statement';
 	import { BOOK_RECONCILIATION } from '$lib/close-reconciliation';
+	import { BOOK_LEVY_SHEET } from '$lib/levy-sheet';
+	import { printedLine } from '$lib/budget-copy';
 	import { age, summarise } from '$lib/arrears';
 	import { arrearsSheet } from '$lib/arrears-sheet';
 	import { charges, LEVY_PLAN_CENTS } from '$lib/demo/arrears';
@@ -24,20 +27,33 @@
 	import { reservePicture } from '$lib/demo/reserve';
 	import { budgetSheet } from '$lib/budget-sheet';
 
-	type TabId = 'overview' | 'budget' | 'receivables' | 'payables' | 'funds' | 'reserve' | 'journal';
+	type TabId =
+		| 'overview'
+		| 'budget'
+		| 'receivables'
+		| 'payables'
+		| 'funds'
+		| 'levy'
+		| 'reserve'
+		| 'journal';
 	const TAB_IDS: readonly TabId[] = [
 		'overview',
 		'budget',
 		'receivables',
 		'payables',
 		'funds',
+		'levy',
 		'reserve',
 		'journal'
 	];
 	let tab = $state<TabId>('overview');
 	/** The tabs that print a sheet of their own, so the page's furniture comes off the paper. */
 	const printsOwnSheet = $derived(
-		tab === 'overview' || tab === 'budget' || tab === 'receivables' || tab === 'journal'
+		tab === 'overview' ||
+			tab === 'budget' ||
+			tab === 'receivables' ||
+			tab === 'journal' ||
+			tab === 'levy'
 	);
 
 	/**
@@ -220,26 +236,36 @@
 	 * and the reserve contribution, read from the books. The sheet's own rules —
 	 * the pro-rated plan, the variance's direction, the reserve's missing verdict —
 	 * live in `budget-sheet` so the printed page and its tests cannot disagree.
+	 *
+	 * The names and the reasons are translated by account code (`budget-copy`), so
+	 * the sheet a French reader is handed is French, while every row keeps the code
+	 * the auditor looks for.
 	 */
 	const budget = $derived(
 		budgetSheet({
 			monthsElapsed: books.monthsElapsed,
 			income: [
-				{
-					code: '4000',
-					name: 'Strata fees',
-					annualCents: books.feeAnnual,
-					ytdCents: books.feesOperating + books.feesCrf
-				},
-				...books.incomeLines
+				printedLine(
+					{
+						code: '4000',
+						name: 'Strata fees',
+						annualCents: books.feeAnnual,
+						ytdCents: books.feesOperating + books.feesCrf
+					},
+					$copy
+				),
+				...books.incomeLines.map((line) => printedLine(line, $copy))
 			],
-			expense: books.expenses,
-			reserve: {
-				code: '3500',
-				name: 'CRF contribution',
-				annualCents: books.crfContributionAnnual,
-				ytdCents: books.feesCrf
-			}
+			expense: books.expenses.map((line) => printedLine(line, $copy)),
+			reserve: printedLine(
+				{
+					code: '3500',
+					name: 'CRF contribution',
+					annualCents: books.crfContributionAnnual,
+					ytdCents: books.feesCrf
+				},
+				$copy
+			)
 		})
 	);
 
@@ -251,6 +277,7 @@
 		{ id: 'receivables', label: $copy.accTabReceivables },
 		{ id: 'payables', label: $copy.accTabPayables },
 		{ id: 'funds', label: $copy.accTabFunds },
+		{ id: 'levy', label: $copy.accTabLevy },
 		{ id: 'reserve', label: $copy.accTabReserve },
 		{ id: 'journal', label: $copy.accTabJournal }
 	] as const);
@@ -671,6 +698,22 @@
 				</p>
 			{/if}
 		</div>
+	{/if}
+
+	{#if tab === 'levy'}
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.accLevySheetLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.accLevySheetPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.accLevySheetPrintNote}</span>
+			</div>
+		</div>
+		<LevySheet sheet={BOOK_LEVY_SHEET} />
 	{/if}
 
 	{#if tab === 'reserve'}

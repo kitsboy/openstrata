@@ -9,8 +9,8 @@
 	 *
 	 * Paper values, not theme tokens, like every printable sheet here: dark mode
 	 * cannot change what a council hands round. The arithmetic lives in
-	 * `budget-sheet.ts`; this component only supplies translated account names and
-	 * formats the figures.
+	 * `budget-sheet.ts` and the translated names and reasons come from
+	 * `budget-copy.ts`, so this component formats what it is given.
 	 */
 	import { copy, fill, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
@@ -19,10 +19,12 @@
 
 	let { sheet }: { sheet: BudgetSheet } = $props();
 
-	/** A row's own name, except the two the catalog names. */
+	/**
+	 * A row's name with its code in front. The name is already in the reader's
+	 * language — the page translated it by code before building the sheet — and the
+	 * code stays because it is what an auditor, not a translator, looks for.
+	 */
 	function accountLabel(row: BudgetSheetRow): string {
-		if (row.code === '4000') return $copy.accRowStrataFees;
-		if (row.code === '3500') return $copy.accRowCrfContribution;
 		return `${row.code} ${row.name}`;
 	}
 

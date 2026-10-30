@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the levy statement, the budget in the reader's language, the register in the package
+
+Commit: this commit (site `0.3.57`). Backend API version stays `0.3.28`.
+
+> **Three picks from the 29 October queue, shipped together, and each turns a tab into a page a council hands over.**
+>
+> **The parkade levy has a statement of its own (`/accounting`).** A new **Parkade levy** tab prints the trust on one page, apart from the operating books: **$216,000.00** assessed at **$36.00** a point, **$207,948.00** collected, **$8,052.00** still owed, **$176,400.00** paid to Seawall Membrane, **$31,548.00** in the trust and **$39,600.00** of work left. The lots that still owe are named largest balance first — **207** **$3,552.00** with no schedule, **403** **$2,700.00** at **$450.00** a month, **108** **$1,800.00** at **$300.00** — and the **37** that paid in full are one line of money, **$199,224.00**, not thirty-seven rows of zero.
+>
+> **`src/lib/levy-sheet.ts` holds the rules, with 16 tests.** The assessment is the lots' entitlement at the resolution's rate and never a typed total, so **$216,000.00** can be rebuilt from the 40 rows, and the sheet fails if the resolution's own figure disagrees with them. Collected is assessed less what is still owed, so the two halves always add back. The trust has to come out even two ways — cash plus what owners owe, against assessed less what the contractor has been paid — and the difference prints on the row a reader would check; a test moves the cash by **$1.00** and watches it appear. A lot cannot owe more than its own share, a plan is named beside a balance and never subtracted from it, and the sheet refuses to print a **holdback**: a holdback is withheld from a payment, these books record none, and the basis says so rather than inventing a retention the ledger cannot support.
+>
+> **The printed budget speaks the reader's language (`/accounting`).** `src/lib/budget-copy.ts` joins each four-digit code to the catalog key holding its translated name and reason — **37** names and **8** reasons — and replaces only those two fields, so the arithmetic cannot move when the language does. A French reader now gets `6100 Assurances` with the code still in front, and a code the catalog does not know keeps the books' name rather than blanking the line.
+>
+> **The AGM package carries the Form K register (`/documents`).** The stack is five sheets now — contents, the year, the packet, the reserve plan and the register — built from the same `formKRegister` call `/units/register` makes, so a filing recorded on a lot's sheet in this browser closes its gap on the printed page too. The contents page lists four documents and the hint says four, not three.
+>
+> **Verified:** frontend **695 passed** across 71 files (21 new: 16 levy rules, 4 accounting route, 1 documents route), `check` **0 errors / 0 warnings**, translation audit **1,701 keys × 9 locales** (63 new) across 35 route components, contrast audit **218 pairs**, secret gate green, production build green. Printed and measured in Chrome: the package on **five Letter pages**, the levy statement on **one**, with the tabs and the print button `display: none` on the paper.
+>
+> **The queue is refreshed, because three picks shipped.** **A payables sheet for the close** (`/accounting`) keeps its slot beside **a trial balance on paper** (`/accounting`), **a proxy card with the notice** (`/meetings`) and **the fee schedule by lot** (`/units`), so four are waiting.
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — the close, reconciled
 
 Commit: this commit (site `0.3.56`). Backend API version stays `0.3.28`.
