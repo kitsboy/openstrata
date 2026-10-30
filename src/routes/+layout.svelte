@@ -17,7 +17,7 @@
   import { copy } from '$lib/i18n';
   import { theme, toggleTheme } from '$lib/theme';
   import { browser } from '$app/environment';
-  import { bootstrap } from '$lib/api/auth';
+  import { bootstrap, startSessionKeepAlive } from '$lib/api/auth';
   import { onMount } from 'svelte';
   import { onNavigate } from '$app/navigation';
   import packageJson from '../../package.json';
@@ -38,7 +38,14 @@
   onMount(() => {
     bootstrap();
     document.documentElement.dataset.appReady = 'true';
-    return () => { delete document.documentElement.dataset.appReady; };
+    // Renew the access token a minute before it expires. Without this a session
+    // that began before lunch simply stops working mid-afternoon, and the next
+    // click lands on a sign-in screen with unsaved work behind it.
+    const stopKeepAlive = startSessionKeepAlive();
+    return () => {
+      stopKeepAlive();
+      delete document.documentElement.dataset.appReady;
+    };
   });
 
   // Route view transitions: fade + 4px slide between pages when the browser

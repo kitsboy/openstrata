@@ -1,3 +1,20 @@
+## Session — 2026-10-30 (renewable sessions, signed-in devices, wider accessibility)
+
+**Done:**
+- Site v0.3.68 stores the rotating refresh token the backend has issued since `8d5c6b4` and never used. It is renewed a minute before the access token expires, rotated on every exchange, and exchanged once when several requests answer 401 together (single-flight), with one retry for an authenticated call that still fails. A refused refresh clears both credentials; an unreachable host keeps them. 12 tests in `src/lib/api/session.test.ts`.
+- A **Signed-in devices** panel on `/tools` lists the account's sessions, marks the current one, and ends the rest with `DELETE /auth/sessions` while keeping this device signed in. It renders only for a live session. Eleven keys across nine locales, machine-drafted.
+- `e2e/accessibility.spec.ts` now covers nine routes (`/calendar`, `/meetings`, `/tax`, `/documents` added). It found two real failures, both fixed at the cause: the meeting sheets' letterhead was **2.68:1** at 18.67px (now one global rule at **4.5:1**) and the tax desk's Done/Open markers were below 4.5:1 (now 700-weight).
+- Verified: **887 frontend tests across 93 files**, Svelte check 0/0, browser suite **12 passed**, translation audit, contrast audit 218 pairs, secret gate, production build, initial dashboard JS **214,831 gzip bytes** of 230,000.
+
+**Decisions / Kimi:**
+- The renewal depends on `POST /auth/refresh` and on `auth_session` rows existing in the deployed database. A host that does not issue refresh tokens still works — sessions then last one hour, which is the old behaviour, not a broken state. **No refresh has been exercised against a real deployed host**; the tests stub the transport.
+- The devices panel is real UI over a real API but has not been seen against a live backend either. The audit trail remains API-only.
+- The accessibility suite enforces serious and critical findings on nine routes; moderate findings are still not enforced, and no automated pass is a substitute for a person using a screen reader.
+- Translation drafts for the new panel need native-speaker review like the rest of the catalog; BC legal/financial review is still outstanding.
+
+**Git State:**
+- This entry travels in the v0.3.68 commit; use `git log -1` and `git log --oneline origin/main..HEAD` for the exact SHA.
+
 ## Session — 2026-10-30 (consent-gated monitoring and automated accessibility)
 
 **Done:**

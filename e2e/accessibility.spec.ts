@@ -6,7 +6,11 @@ const pages = [
   ['pay', '/pay'],
   ['units', '/units'],
   ['accounting', '/accounting'],
-  ['docs', '/docs']
+  ['docs', '/docs'],
+  ['calendar', '/calendar'],
+  ['meetings', '/meetings'],
+  ['tax', '/tax'],
+  ['documents', '/documents']
 ] as const;
 
 test.beforeEach(async ({ page }) => {

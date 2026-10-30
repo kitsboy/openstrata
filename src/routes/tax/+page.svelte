@@ -78,7 +78,7 @@
 					<ul class="mt-2 space-y-1">
 						{#each section.checklist as item}
 							<li class="flex items-start gap-2 text-sm text-slate-700">
-								<span class="mt-0.5 font-bold {item.done ? 'text-emerald-600' : 'text-amber-600'}">{item.done ? $copy.taxDone : $copy.taxOpen}</span>
+								<span class="mt-0.5 font-bold {item.done ? 'text-emerald-700' : 'text-amber-700'}">{item.done ? $copy.taxDone : $copy.taxOpen}</span>
 								<span>{item.label}</span>
 							</li>
 						{/each}

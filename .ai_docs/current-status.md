@@ -1,9 +1,17 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.66
+**Site/product version:** v0.3.68
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-30
 **Domain:** openstrata.giveabit.io
+
+## Recent milestone — a session that outlives its access token, and the devices it runs on (site, `0.3.68`)
+
+- **Refresh tokens on the site.** The backend has rotated refresh tokens since `8d5c6b4`; the client stored neither, so an access token expired after an hour and the next click signed the user out. `src/lib/api/token.ts` now holds `openstrata-refresh`; `auth.ts` renews a minute before expiry (`tokenExpiryMs` reads only `exp`), rotates on every exchange, and treats a refused refresh as the end of the session while an unreachable host keeps the credentials. The exchange is single-flight, so concurrent 401s present one token rather than rotating it repeatedly (which the backend reads as theft). `client.ts` retries an authenticated call once after a refresh; the handler is injected, so the transport keeps no knowledge of the auth store. 12 tests in `src/lib/api/session.test.ts`.
+- **Signed-in devices.** `SessionPanel.svelte` on `/tools` lists the caller's sessions with the current one marked and ends the others via `DELETE /auth/sessions`, keeping this device signed in. This closes the "sessions list is API-only, read with curl" limitation; the audit trail is still API-only.
+- **Accessibility coverage now nine routes.** `/calendar`, `/meetings`, `/tax` and `/documents` joined the axe WCAG 2.1 A/AA scan. It found two genuine contrast failures: the letterhead on all five meeting sheets at **2.68:1** (brand orange, 18.67px bold on white) and the tax desk's Done/Open markers at 600-weight emerald/amber. Fixed at the cause — one global `.print-doc .print-org` rule at **4.5:1** and 700-weight markers — not by relaxing the check.
+- Eleven new catalog keys across nine locales for the devices panel; drafts, like the rest.
+- Verified: **887 frontend tests across 93 files**, check 0/0, browser suite **12 passed** (nine accessibility routes, mocked sign-in/out, Interac simulation, dialog focus), i18n and contrast audits (218 pairs), secret gate, production build, initial dashboard JS **214,831 gzip bytes** of 230,000. Not verified: human translation review, a live host or bank, field Core Web Vitals.
 
 ## Recent milestone — consent-gated monitoring, automated accessibility (site, `0.3.67`)
 

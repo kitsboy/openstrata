@@ -1,5 +1,27 @@
 # OpenStrata — Last Updated 2026-10-30 by Buffy
 
+Brief: v0.3.68 lets a session renew itself past the access token's hour, gives the account a panel of its signed-in devices, and extends the accessibility suite to nine routes. Human translation review and field Core Web Vitals remain open.
+
+Commit: this commit (see `git log -1`). Backend API remains v0.3.28. See `docs/KIMI-HANDOFF.md` for verification and the limits.
+
+> **Five follow-ups, and the first two are one defect seen from two sides.**
+>
+> **The session renews itself (`src/lib/api/auth.ts`, `token.ts`, `client.ts`).** The backend has issued rotating refresh tokens since `8d5c6b4`; the site stored neither, so an access token simply died after an hour and the next click landed on a sign-in screen with the work behind it. Both credentials are stored now, the refresh token is rotated on every exchange (keeping the spent one would make the next refresh look like a stolen copy, which the backend ends the session for), the renewal is scheduled a minute before expiry, and an authenticated call that still answers 401 is retried once after a refresh — the tab that slept through its timer. The exchange is **single-flight**: a dashboard whose eight requests all wake up to a 401 presents one refresh token instead of rotating it eight times. A refused refresh clears both credentials and signs the device out; an unreachable host keeps them, because a dropped connection is not a revocation. The timer is capped below `setTimeout`'s 32-bit ceiling and re-arms rather than being clamped to a millisecond.
+>
+> **Signed-in devices (`SessionPanel.svelte` on `/tools`).** The backend has been able to list and end sessions since `8d5c6b4`, and only through `curl` — so "sign out the laptop I left at the office" had an API and no control. The panel lists every session on the account, marks the current one, and ends the rest with **Sign out everywhere else**, keeping this device signed in. It is rendered only for a live session, so the demo never shows a fabricated list.
+>
+> **Accessibility covers four more routes.** `e2e/accessibility.spec.ts` now scans `/calendar`, `/meetings`, `/tax` and `/documents` as well: nine routes at WCAG 2.1 A/AA, failing on serious or critical findings and printing the rule and the offending nodes.
+>
+> **Two real contrast defects, fixed at the cause.** The letterhead rule on all five meeting sheets was **2.68:1** — brand orange at 18.67px bold on white. Each component carried its own copy of `.print-org`, so one global rule now sets every sheet's letterhead to the darker cut of the same hue (**4.5:1**), and a new letter cannot forget it. The tax desk's **Done**/**Open** markers were emerald-600 and amber-600 on the panel surface, under the 4.5:1 floor; both are 700 now.
+>
+> **The new surface is translated.** Eleven keys across nine locales, so the devices panel does not become the one English panel in a French workspace; they are machine drafts like the rest of the catalog.
+>
+> **Verified:** frontend **887 passed across 93 files** (12 new for the session rules), `check` **0 errors / 0 warnings**, browser suite **12 passed** (nine accessibility routes, mocked sign-in/out, the Interac simulation, dialog focus), translation audit, contrast audit **218 pairs**, secret gate, production build, initial dashboard JS **214,831 gzip bytes** of **230,000**. Not verified: human translation review, a live bank or API, any field Core Web Vitals baseline, and a refresh against a real host.
+
+---
+
+# OpenStrata — Last Updated 2026-10-30 by Buffy
+
 Brief: v0.3.67 gates error monitoring on recorded consent, adds an automated WCAG 2.1 A/AA browser check, and clears the high and moderate dependency advisories. Human translation review and real-user vitals remain open.
 
 Commit: this commit (see `git log -1`). Backend API remains v0.3.28. See `docs/KIMI-HANDOFF.md` for the verification and the limits.

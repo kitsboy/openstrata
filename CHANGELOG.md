@@ -2,6 +2,8 @@
 title: Changelog
 project: openstrata
 version_history:
+-  version: 0.3.68
+-  summary: "The site renews its own session instead of ending it after an hour. The refresh token is stored beside the access token, rotated on every exchange, renewed a minute before expiry, and exchanged once for a dashboard load whose eight requests all answer 401 together, with a single retry for a tab that slept through its timer. A new Signed-in devices panel on /tools lists every session on the account with the current one marked and ends the rest while keeping this device signed in — the shared-laptop case that had an API and no control. The browser accessibility suite now covers /calendar, /meetings, /tax and /documents as well, nine routes in all, and found two real contrast failures rather than hypothetical ones: the letterhead on all five meeting sheets printed at 2.68:1 at 18.67px, and the tax desk's Done and Open markers sat below 4.5:1 on the panel surface. Both are fixed at the cause. Not verified: human translation review, a live bank or API, and any field Core Web Vitals baseline."
 -  version: 0.3.66
 -  summary: "Translation-review status dashboard, localized interface labels and isolated browser coverage for sign-in and simulated Interac payment. Real-user performance monitoring remains blocked pending privacy and consent review."
 -  version: 0.3.65
@@ -172,6 +174,28 @@ owner: Nova (Product Management & Documentation)
 ---
 
 # Changelog
+
+## [0.3.68] — 2026-10-30
+
+### Added
+- Refresh-token sessions: `openstrata-refresh` is stored beside the access token, rotated on every exchange, and renewed a minute before the access token expires. An authenticated call that answers 401 is retried once after a refresh. The exchange is single-flight, so a dashboard whose requests all fail together presents one refresh token rather than rotating it eight times.
+- A **Signed-in devices** panel on `/tools`: every session on the account, the current one marked, and **Sign out everywhere else**, which ends the others and keeps this device signed in. Eleven keys across nine locales.
+- The browser accessibility suite now covers `/calendar`, `/meetings`, `/tax` and `/documents` — nine routes in all, each scanned for serious and critical WCAG 2.1 A/AA findings.
+
+### Changed
+- A refused refresh clears both credentials and signs the session out locally; an unreachable host keeps them, because a dropped connection is not a revocation.
+
+### Fixed
+- The letterhead on all five meeting sheets printed at 2.68:1 (18.67px bold on white). One rule now sets every printed sheet's letterhead to the darker cut of the same hue, 4.5:1.
+- The tax desk's **Done** and **Open** markers were emerald-600 and amber-600 on the panel surface, below the 4.5:1 floor; both are 700 now.
+- The keep-alive timer is capped below `setTimeout`'s 32-bit ceiling and re-arms, so a long-lived token cannot be renewed in a tight loop.
+
+### Verified
+- Frontend 887 tests across 93 files (12 new for the session rules), Svelte check 0 errors / 0 warnings, browser suite green on nine accessibility routes plus mocked sign-in/sign-out and the Interac simulation, translation audit, contrast audit 218 pairs, production build.
+
+### Known issues
+- A host that does not issue a refresh token leaves sessions one hour long; the client treats an absent token as "no renewal", not as an error.
+- Human translation review, a live bank or API integration, and field Core Web Vitals remain unverified.
 
 ## [0.3.66] — 2026-10-30
 

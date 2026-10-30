@@ -173,6 +173,14 @@
   .print-rule { background: #c9cfd4 !important; }
 }
 
+/* The letterhead rule on every printed sheet.
+   The brand orange (#f0801a) is 2.68:1 on white: fine as a hairline, unreadable
+   as 14pt text, and axe fails it on all five meeting sheets at once because each
+   component carries its own copy of the same `.print-org` rule. This is the
+   darker cut of the same hue, 4.5:1 on paper, applied to every sheet from one
+   place so a new letter cannot forget it. */
+.print-doc .print-org { color: #a8672a !important; }
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {

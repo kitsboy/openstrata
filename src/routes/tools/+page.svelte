@@ -22,6 +22,7 @@
   import LedgerExplorer from '$lib/components/LedgerExplorer.svelte';
   import ExportCenter from '$lib/components/ExportCenter.svelte';
   import MemberManager from '$lib/components/MemberManager.svelte';
+  import SessionPanel from '$lib/components/SessionPanel.svelte';
   import RateBadge from '$lib/components/RateBadge.svelte';
   import Glossary from '$lib/components/Glossary.svelte';
   import RosaChat from '$lib/components/RosaChat.svelte';
@@ -448,6 +449,7 @@
 		</div>
 		<ExportCenter />
 		<MemberManager />
+		<SessionPanel />
 		<SubAccounts />
 		<MeetingsTool />
 		<XpubImport />

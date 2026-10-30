@@ -14,6 +14,47 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.68",
+    "date": "2026-10-30",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Refresh-token sessions: openstrata-refresh is stored beside the access token, rotated on every exchange, and renewed a minute before the access token expires. An authenticated call that answers 401 is retried once after a refresh. The exchange is single-flight, so a dashboard whose requests all fail together presents one refresh token rather than rotating it eight times.",
+          "A Signed-in devices panel on /tools: every session on the account, the current one marked, and Sign out everywhere else, which ends the others and keeps this device signed in. Eleven keys across nine locales.",
+          "The browser accessibility suite now covers /calendar, /meetings, /tax and /documents — nine routes in all, each scanned for serious and critical WCAG 2.1 A/AA findings."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "A refused refresh clears both credentials and signs the session out locally; an unreachable host keeps them, because a dropped connection is not a revocation."
+        ]
+      },
+      {
+        "label": "Fixed",
+        "items": [
+          "The letterhead on all five meeting sheets printed at 2.68:1 (18.67px bold on white). One rule now sets every printed sheet's letterhead to the darker cut of the same hue, 4.5:1.",
+          "The tax desk's Done and Open markers were emerald-600 and amber-600 on the panel surface, below the 4.5:1 floor; both are 700 now.",
+          "The keep-alive timer is capped below setTimeout's 32-bit ceiling and re-arms, so a long-lived token cannot be renewed in a tight loop."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "Frontend 887 tests across 93 files (12 new for the session rules), Svelte check 0 errors / 0 warnings, browser suite green on nine accessibility routes plus mocked sign-in/sign-out and the Interac simulation, translation audit, contrast audit 218 pairs, production build."
+        ]
+      },
+      {
+        "label": "Known issues",
+        "items": [
+          "A host that does not issue a refresh token leaves sessions one hour long; the client treats an absent token as \"no renewal\", not as an error.",
+          "Human translation review, a live bank or API integration, and field Core Web Vitals remain unverified."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.66",
     "date": "2026-10-30",
     "groups": [
