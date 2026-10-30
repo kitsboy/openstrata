@@ -1,0 +1,131 @@
+
+> openstrata@0.3.66 test:e2e
+> playwright test
+
+
+Running 8 tests using 4 workers
+
+[WebServer] 10:06:14 a.m. [vite] (ssr) Error when evaluating SSR module /src/routes/units/+page.svelte: /Users/cam/projects/openstrata/src/routes/units/+page.svelte:260:44 Expected token =
+[WebServer] https://svelte.dev/e/expected_token
+[WebServer]   Plugin: vite-plugin-svelte:compile
+[WebServer]   File: /Users/cam/projects/openstrata/src/routes/units/+page.svelte:260:44
+[WebServer]    258 |                        style="width: {row.shares[index]}%"
+[WebServer]    259 |                        aria-pressed={selectedId === unit.id}
+[WebServer]    260 |                        <!-- No aria-label here: the cell's own text (lot, size, owner) is
+[WebServer]                                                                  ^
+[WebServer]    261 |                             the name, so a screen reader hears exactly what is on screen and
+[WebServer]    262 |                             the name cannot drift from the visible copy. -->
+[WebServer] 
+[WebServer] [500] GET /units
+[WebServer] 
+  ✓  3 e2e/accessibility.spec.ts:26:3 › units has no serious or critical WCAG 2.1 A/AA violations (1.5s)
+  ✓  2 e2e/accessibility.spec.ts:26:3 › pay has no serious or critical WCAG 2.1 A/AA violations (2.1s)
+  ✘  1 e2e/accessibility.spec.ts:26:3 › dashboard has no serious or critical WCAG 2.1 A/AA violations (2.1s)
+  ✓  5 e2e/accessibility.spec.ts:26:3 › docs has no serious or critical WCAG 2.1 A/AA violations (1.2s)
+  ✓  4 e2e/accessibility.spec.ts:26:3 › accounting has no serious or critical WCAG 2.1 A/AA violations (3.1s)
+  ✘  7 e2e/critical-flows.spec.ts:42:1 › keeps keyboard focus inside the sign-in dialog and restores it (721ms)
+  ✓  6 e2e/critical-flows.spec.ts:17:1 › signs in with an isolated API response and signs out (2.6s)
+  ✓  8 e2e/critical-flows.spec.ts:62:1 › rehearses Interac payment without contacting a bank (1.9s)
+
+
+  1) e2e/accessibility.spec.ts:26:3 › dashboard has no serious or critical WCAG 2.1 A/AA violations 
+
+    Error: scrollable-region-focusable (serious): vite-error-overlay,.frame — Fix any of the following: Element should have focusable content Element should be focusable
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 55
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure elements that have scrollable content are accessible by keyboard in Safari",
+    +     "help": "Scrollable region must have keyboard access",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable?application=playwright",
+    +     "id": "scrollable-region-focusable",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": null,
+    +             "id": "focusable-content",
+    +             "impact": "serious",
+    +             "message": "Element should have focusable content",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "focusable-element",
+    +             "impact": "serious",
+    +             "message": "Element should be focusable",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element should have focusable content
+    +   Element should be focusable",
+    +         "html": "<pre class=\"frame\" part=\"frame\">",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           Array [
+    +             "vite-error-overlay",
+    +             ".frame",
+    +           ],
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.keyboard",
+    +       "wcag2a",
+    +       "wcag211",
+    +       "wcag213",
+    +       "TTv5",
+    +       "TT4.a",
+    +       "EN-301-549",
+    +       "EN-9.2.1.1",
+    +       "EN-9.2.1.3",
+    +       "RGAAv4",
+    +       "RGAA-7.3.2",
+    +     ],
+    +   },
+    + ]
+
+      46 |       )
+      47 |       .join('\n');
+    > 48 |     expect(blocking, summary).toEqual([]);
+         |                               ^
+      49 |   });
+      50 | }
+      51 |
+        at /Users/cam/projects/openstrata/e2e/accessibility.spec.ts:48:31
+
+    Error Context: test-results/accessibility-dashboard-ha-0a393-al-WCAG-2-1-A-AA-violations/error-context.md
+
+  2) e2e/critical-flows.spec.ts:42:1 › keeps keyboard focus inside the sign-in dialog and restores it 
+
+    Error: focus left the dialog after 1 tab(s)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      53 |       return shell ? shell.contains(document.activeElement) : false;
+      54 |     });
+    > 55 |     expect(inside, `focus left the dialog after ${step + 1} tab(s)`).toBe(true);
+         |                                                                      ^
+      56 |   }
+      57 |   await page.keyboard.press('Escape');
+      58 |   await expect(dialog).toBeHidden();
+        at /Users/cam/projects/openstrata/e2e/critical-flows.spec.ts:55:70
+
+    Error Context: test-results/critical-flows-keeps-keybo-6aecd-n-in-dialog-and-restores-it/error-context.md
+
+  2 failed
+    e2e/accessibility.spec.ts:26:3 › dashboard has no serious or critical WCAG 2.1 A/AA violations ─
+    e2e/critical-flows.spec.ts:42:1 › keeps keyboard focus inside the sign-in dialog and restores it 
+  6 passed (7.0s)

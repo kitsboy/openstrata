@@ -392,7 +392,7 @@
       <div class="mobile-brand"><button class="icon-button menu-button" aria-label={$copy.openNavigation} aria-expanded={showMobileMenu} onclick={openMobileMenu}><Icon name="menu" class="h-4 w-4" /></button><BrandMark size={22} /><strong>open<span>strata</span></strong></div>
       <div class="breadcrumbs"><span>Give A Bit {$copy.workspace}</span><b>/</b><strong>{$copy.overview}</strong></div>
       <div class="topbar-actions">
-        <button class="search-box" aria-label={$copy.search} onclick={openSearch}><Icon name="search" class="h-4 w-4" /><span class="search-placeholder">{$copy.search}</span><kbd>⌘ K</kbd></button>
+        <button class="search-box" onclick={openSearch} title={$copy.search}><Icon name="search" class="h-4 w-4" /><span class="search-placeholder">{$copy.search}</span><kbd>⌘ K</kbd></button>
         <button class="icon-button mobile-search" aria-label={$copy.search} onclick={openSearch}><Icon name="search" class="h-4 w-4" /></button>
         <button class="icon-button" onclick={toggleTheme} aria-label={$copy.toggleTheme} title={$copy.toggleTheme}>{#if $theme === 'dark'}<Icon name="sun" class="h-4 w-4" />{:else}<Icon name="moon" class="h-4 w-4" />{/if}</button>
         <button class="icon-button accent-toggle" onclick={cycleAccent} aria-label={$copy.themeBrokerage} title="{$copy.themeBrand}: {$accent === 'orange' ? 'orange' : 'green'}">{#if $accent === 'orange'}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#f97348"></span>{:else}<span class="h-3.5 w-3.5 rounded-full border border-border" style="background:#2d6a4f"></span>{/if}</button>
@@ -472,9 +472,13 @@
           <div class="section-heading"><div><h2>{$copy.yourBuildings}</h2><p>{$copy.buildingsSubtitle}</p></div><button class="text-button" onclick={() => goto('/units')}>{$copy.viewAll}<span>→</span></button></div>
           <div class="building-grid">
             {#each buildings as building}
-              <div class="building-card" onclick={() => (selectedBuilding = building)} role="button" tabindex="0" onkeydown={(event) => event.key === 'Enter' && (selectedBuilding = building)}>
-                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span><button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={(event) => { event.stopPropagation(); goto(building.href); }}>•••</button></div>
-                <div class="building-info"><h3>{building.name}</h3><p>{building.location} <span>·</span> {building.units}</p></div>
+              <!-- One real button per card (the name) is stretched over the
+                   whole card by `.building-open::after`, so the keyboard and
+                   the pointer reach the same target without a clickable div. -->
+              <div class="building-card">
+                <button class="more-button" aria-label="{$copy.moreOptionsFor} {building.name}" onclick={() => goto(building.href)}>•••</button>
+                <div class="building-top"><div class={`building-avatar ${building.tone}`}>{building.glyph}</div><span class={`health-chip ${building.tone}`}><i></i>{building.health}% {$copy.health}</span></div>
+                <div class="building-info"><h3><button type="button" class="building-open" onclick={() => (selectedBuilding = building)}>{building.name}</button></h3><p>{building.location} <span>·</span> {building.units}</p></div>
                 <div class="building-progress"><div class="progress-label"><span>{$copy.communityHealth}</span><strong>{building.health}%</strong></div><div class="progress-track"><span class={building.tone} style={`width: ${building.health}%`}></span></div></div>
                 <div class={`building-status ${building.tone}`}><span class="status-symbol"><Icon name={building.tone === 'green' ? 'check' : building.tone === 'amber' ? 'alert' : 'arrow-up-right'} class="h-3 w-3" /></span>{building.issue}<span class="status-arrow">→</span></div>
               </div>
@@ -592,3 +596,43 @@
     onConfirm={() => signOut()}
   />
 {/if}
+
+<style>
+  /* The card title is a real button for keyboard users; it must still read as
+     the card's heading, not as a button. */
+  .building-card {
+    position: relative;
+  }
+  /* The name button's stretched hit area: the card stays a plain div, but every
+     click that is not on the ••• button lands on the button itself. */
+  .building-open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  .more-button {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 1;
+  }
+  .building-open {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .building-open:hover,
+  .building-open:focus-visible {
+    text-decoration: underline;
+  }
+  .building-open:focus-visible {
+    outline: 2px solid var(--brand-text);
+    outline-offset: 2px;
+  }
+</style>

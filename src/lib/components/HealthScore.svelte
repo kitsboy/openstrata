@@ -61,7 +61,7 @@
   });
 
   const grade = $derived(score >= 90 ? 'excellent' : score >= 70 ? 'good' : score >= 50 ? 'fair' : 'poor');
-  const ringColor = $derived(score >= 90 ? 'text-success' : score >= 70 ? 'text-brand-600' : score >= 50 ? 'text-amber-500' : 'text-danger');
+  const ringColor = $derived(score >= 90 ? 'text-success' : score >= 70 ? 'text-brand-600' : score >= 50 ? 'text-amber-700' : 'text-danger');
 </script>
 
 <section class="glass-card w-full rounded-2xl p-6">

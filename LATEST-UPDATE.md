@@ -1,8 +1,30 @@
 # OpenStrata — Last Updated 2026-10-30 by Buffy
 
+Brief: v0.3.67 gates error monitoring on recorded consent, adds an automated WCAG 2.1 A/AA browser check, and clears the high and moderate dependency advisories. Human translation review and real-user vitals remain open.
+
+Commit: this commit (see `git log -1`). Backend API remains v0.3.28. See `docs/KIMI-HANDOFF.md` for the verification and the limits.
+
+> **Five follow-ups from the 30 October queue, and four of them are about a state the site could only imply.**
+>
+> **Monitoring is consent-gated (`src/lib/monitoring.ts`).** `Sentry.init` used to run whenever `VITE_PUBLIC_SENTRY_DSN` was set — a DSN alone switched on third-party error reporting, which the published family privacy policy says will not happen before a policy change and a real consent control. `decideMonitoring` is now the whole rule as a value: no DSN or no explicit `granted` decision means off, and nothing in the codebase sets that decision. `sanitizeUrl` keeps the path and drops the query and fragment, because council addresses carry lot ids, payment references and bill-link tokens; no account identity is attached and Session Replay stays off. `src/hooks.client.ts` uses the shared rule and `hooks.client.test.ts` asserts it, so a future `if (dsn)` cannot quietly come back.
+>
+> **An accessibility suite (`e2e/accessibility.spec.ts`).** axe-core runs the WCAG 2.1 A/AA tags against the dashboard, `/pay`, `/units`, `/accounting` and `/docs`, with external network and `/api/` blocked, and fails only on serious or critical findings — printing the rule and the offending nodes, so a failure names its own cause. It found real defects rather than theoretical ones: the units plan put an HTML comment inside a button's opening tag, so the per-lot cells had no accessible name and screen readers heard the comment's text; the dashboard's building card was a `div` with a click handler, and is now a plain card with the name button stretched over it, so the keyboard reaches the same target as the pointer; and the calendar's day buttons, the health score and trend, and the close reconciliation had unnamed controls and contrast below the threshold on their own surfaces.
+>
+> **The sitemap lists only indexable routes.** `/search` sends `noindex, follow` and was still advertised in `static/sitemap.xml`; asking a crawler to index a page that tells it not to is a contradiction Search Console reports as a sitemap error. The route is now absent and the generator says why, so it does not creep back. **69** routes, every one indexable.
+>
+> **The pay sheet's line-item labels are localized.** The charges and credits printed on a receipt now resolve from the catalog in all nine locales, so a French or Hindi receipt no longer mixes translated headings with English line items. The translation audit still reports hard-coded copy on English-only internal pages; those are recorded as warnings rather than being papered over.
+>
+> **Dependency advisories, remediated and recorded.** `npm audit fix` cleared the high-severity Undici and the moderate findings. **7 low-severity** advisories remain in the development toolchain (`deepmerge`, reached through `@sveltejs/vite-plugin-svelte`), and the only published fix is the breaking `@sveltejs/kit` 3 major; the major bump is recorded as a decision rather than forced here.
+>
+> **Verified:** frontend **875 passed across 92 files**, `check` **0 errors / 0 warnings**, browser suite **8 passed** (five accessibility routes, plus mocked sign-in/sign-out and the Interac simulation), translation audit, contrast audit **218 pairs**, production build, initial dashboard JS **213,947 gzip bytes** against the **230,000** budget. Not verified: human translation review, a live bank or API, and any field Core Web Vitals baseline.
+
+---
+
+# OpenStrata — Last Updated 2026-10-30 by Buffy
+
 Brief: v0.3.66 adds a translation review status page, selected localized labels and isolated browser tests. Real-user monitoring and human reviews remain open.
 
-Commit: uncommitted; base `c64e009`. See `docs/KIMI-HANDOFF.md` for verification and privacy limitations.
+Commit: `9be624c`. See `docs/KIMI-HANDOFF.md` for verification and privacy limitations.
 
 ---
 

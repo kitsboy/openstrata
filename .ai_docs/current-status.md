@@ -5,6 +5,14 @@
 **Last Updated:** 2026-10-30
 **Domain:** openstrata.giveabit.io
 
+## Recent milestone — consent-gated monitoring, automated accessibility (site, `0.3.67`)
+
+- Sentry is dormant unless a DSN is set **and** the visitor recorded monitoring consent (`src/lib/monitoring.ts`, `decideMonitoring`). Nothing sets that consent yet: a control and a policy change are product decisions, not a side effect of shipping a DSN. URLs are reduced to their path (no query or fragment) and no user identity is attached; Session Replay stays off. `hooks.client.test.ts` asserts the gate so a bare `if (dsn)` cannot return.
+- `e2e/accessibility.spec.ts` runs axe-core WCAG 2.1 A/AA over the dashboard, `/pay`, `/units`, `/accounting` and `/docs` with external traffic blocked, failing on serious or critical findings. It exposed real defects that were fixed at the cause: unnamed units-plan lot buttons, a clickable dashboard card, and calendar day buttons, health surfaces and the close reconciliation with missing names or low contrast.
+- `static/sitemap.xml` lists 69 indexable routes; `/search` is gone because the page sends `noindex, follow`. Pay-sheet line-item labels now come from the catalog in all nine locales.
+- `npm audit fix` cleared the high (Undici) and moderate advisories; 7 low-severity ones remain in the dev toolchain (`deepmerge` via `@sveltejs/vite-plugin-svelte`) and only the breaking `@sveltejs/kit` 3 major fixes them. Not taken in this pass.
+- Verified: **875 frontend tests across 92 files**, Svelte check 0/0, browser suite **8 passed**, translation and contrast audits (218 pairs), production build, initial dashboard JS **213,947 gzip bytes** of 230,000. Not verified: human translation review, a live bank or API, field Core Web Vitals.
+
 ## Recent milestone — translation review and browser flows (site, `0.3.66`)
 
 - `/docs/translation-review` lists current-catalog reviews; all are unreviewed. Update records only with documented scope, date and Git revision, and keep reviewer information private. BC legal/financial review remains separate.

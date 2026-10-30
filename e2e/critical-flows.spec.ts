@@ -39,6 +39,26 @@ test('signs in with an isolated API response and signs out', async ({ page }) =>
   await expect.poll(() => page.evaluate(() => localStorage.getItem('openstrata-token'))).toBeNull();
 });
 
+test('keeps keyboard focus inside the sign-in dialog and restores it', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-app-ready', 'true');
+  const trigger = page.getByRole('button', { name: 'Sign in', exact: true });
+  await trigger.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  for (let step = 0; step < 12; step += 1) {
+    await page.keyboard.press('Tab');
+    const inside = await page.evaluate(() => {
+      const shell = document.querySelector('dialog');
+      return shell ? shell.contains(document.activeElement) : false;
+    });
+    expect(inside, `focus left the dialog after ${step + 1} tab(s)`).toBe(true);
+  }
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test('rehearses Interac payment without contacting a bank', async ({ page }) => {
   await page.goto('/pay?unit=207&rail=etransfer');
   await expect(page.locator('html')).toHaveAttribute('data-app-ready', 'true');

@@ -31,9 +31,12 @@ describe('the client error hook is wired', () => {
     );
   });
 
-  it('initialises Sentry only when a DSN is present, so a DSN-less build stays inert', () => {
+  it('initialises Sentry only when a DSN is present and consent was recorded', () => {
     const source = hooksSource();
     expect(source).toContain('import.meta.env.VITE_PUBLIC_SENTRY_DSN');
-    expect(source).toMatch(/if \(dsn\) \{\s*Sentry\.init\(/);
+    // The gate is the shared rule, not a bare `if (dsn)`: a DSN on its own must
+    // leave monitoring off until the visitor has explicitly consented.
+    expect(source).toContain('decideMonitoring(');
+    expect(source).toMatch(/if \(decision\.enabled && dsn\) \{\s*Sentry\.init\(/);
   });
 });

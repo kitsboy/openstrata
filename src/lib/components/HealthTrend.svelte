@@ -158,9 +158,9 @@
 						class="bar-button"
 						class:chosen={open === row.period}
 						aria-pressed={open === row.period}
-						aria-label={fill($copy.healthTrendOpenMonth, { month: monthLong(row.period) })}
 						onclick={() => toggle(row.period)}
 					>
+						<span class="sr-only">{`${fill($copy.healthTrendOpenMonth, { month: monthLong(row.period) })} — ${row.score}/100`}</span>
 						<span class="bar-score">{row.score}</span>
 						<span class="bar-track" aria-hidden="true">
 							<i class={tone(row.score)} style={`height: ${row.score}%`}></i>

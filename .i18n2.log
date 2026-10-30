@@ -1,0 +1,16 @@
+
+> openstrata@0.3.66 audit:i18n
+> node scripts/audit-i18n.mjs
+
+Translation audit passed: 2127 English keys checked across 36 route components.
+Review warnings:
+- src/routes/+page.svelte:372: hard-coded copy "Evergreen House"
+- src/routes/compliance/+page.svelte:404: hard-coded copy "docs/BC-STRATA-COMPLIANCE.md"
+- src/routes/docs/+page.svelte:67: hard-coded copy "Translation review status"
+- src/routes/docs/translation-review/+page.svelte:10: hard-coded copy "Translation review status · OpenStrata"
+- src/routes/docs/translation-review/+page.svelte:16: hard-coded copy "Translation review status"
+- src/routes/docs/translation-review/+page.svelte:17: hard-coded copy "Human review of the current catalog is outstanding. Automated coverage does not certify accuracy. Legal and financial content also requires separate qualified BC review."
+- src/routes/docs/translation-review/+page.svelte:20: hard-coded copy "Review scope"
+- src/routes/docs/translation-review/+page.svelte:20: hard-coded copy "Date / revision"
+- src/routes/docs/translation-review/+page.svelte:34: hard-coded copy "A recorded review applies only to its stated scope and revision, not later changes. Reviewer identities and completed sheets should be kept securely, not published here."
+- src/routes/documents/+page.svelte:246: hard-coded copy "Strata Plan"

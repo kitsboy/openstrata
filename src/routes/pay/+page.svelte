@@ -146,11 +146,11 @@
 		bill
 			? []
 			: [
-					{ label: 'October fee', cents: due.october },
-					{ label: 'Fees behind', cents: due.arrears },
-					{ label: 'Late fee', cents: due.late },
-					{ label: 'Fine', cents: due.fine },
-					{ label: 'Parkade levy', cents: due.levy }
+					{ label: $copy.payLineOctober, cents: due.october },
+					{ label: $copy.payLineArrears, cents: due.arrears },
+					{ label: $copy.payLineLate, cents: due.late },
+					{ label: $copy.payLineFine, cents: due.fine },
+					{ label: $copy.payLineLevy, cents: due.levy }
 				].filter((part) => part.cents !== 0)
 	);
 	/**

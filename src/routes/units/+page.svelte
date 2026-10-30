@@ -251,17 +251,15 @@
 								{/if}
 								<div class="flex">
 									{#each row.units as unit, index (unit.id)}
+										<!-- No aria-label here: the cell's own text (lot, size, owner)
+										     is the name, so a screen reader hears exactly what is on
+										     screen and the name cannot drift from the visible copy. -->
 										<button
 											class="relative border px-2 py-1.5 text-left {toneStyles[tone(unit, filedForms)].cell} {selectedId === unit.id
 												? 'z-10 ring-2 ring-brand-600 ring-inset'
 												: ''}"
 											style="width: {row.shares[index]}%"
 											aria-pressed={selectedId === unit.id}
-											aria-label={fill($copy.unitsPlanLotAria, {
-												lot: unit.id,
-												owner: unit.owner,
-												sqft: unit.sqft
-											})}
 											onclick={() => choose(unit.id)}
 										>
 											<span class="block text-sm font-bold leading-tight">{unit.id}</span>

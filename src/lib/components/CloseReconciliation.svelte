@@ -232,6 +232,9 @@
 	}
 	.print-org {
 		margin: 0;
+		/* Explicit ink: inheriting the sheet's muted body colour left the 13.5pt
+		   building name under the 4.5:1 AA floor. */
+		color: #14181c;
 		font-size: 13.5pt;
 		font-weight: 700;
 		letter-spacing: -0.01em;
@@ -346,7 +349,9 @@
 	}
 	.recon-table .line-code {
 		margin-left: 6px;
-		color: #7a858f;
+	/* #7a858f cleared 6.2pt text at only ~3.6:1; this is the same grey the
+	   other small print on the sheet uses and clears AA. */
+		color: #5a6672;
 		font-family: 'DM Mono', ui-monospace, monospace;
 		font-size: 6.2pt;
 		white-space: nowrap;

@@ -155,8 +155,11 @@
       bind:this={gridEl}
       onkeydown={onGridKeydown}
     >
+      <!-- Decorative: each day button announces its own full date, so these
+           initial letters must not be read out (and they are not grid headers —
+           this is a group of buttons, not a data grid). -->
       {#each weekdayLabels as label, i (i)}
-        <div class="cal-dow" role="columnheader">{label}</div>
+        <div class="cal-dow" aria-hidden="true">{label}</div>
       {/each}
       {#each cells as cell (cell.iso)}
         <button
@@ -168,7 +171,7 @@
           class:cal-overdue={ cell.hasOverdue }
           class:cal-open={ openDay === cell.iso }
           aria-expanded={openDay === cell.iso}
-          aria-label="{cell.iso}{cell.items.length ? ', ' + cell.items.map((i) => i.title).join(', ') : ''}"
+          aria-label="{cell.dayOfMonth} {cell.iso}{cell.items.length ? ', ' + cell.items.map((i) => i.title).join(', ') : ''}"
           onclick={(event) => toggleDay(cell.iso, event.currentTarget as HTMLElement)}
         >
           <span class="cal-day">{cell.dayOfMonth}</span>
@@ -239,7 +242,10 @@
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500) 40%, transparent);
   }
   .cal-grid { position: relative; }
-  .cal-out { opacity: 0.35; }
+  /* Dim the neighbouring month with a colour that still clears 4.5:1 on the
+     card, not with opacity, which dropped the day numbers below AA. */
+  .cal-out .cal-day { color: var(--muted); font-weight: 500; }
+  .cal-out .cal-event { opacity: 0.4; }
   .cal-today { box-shadow: inset 0 0 0 1.5px var(--color-brand-500); }
   .cal-window { background: color-mix(in srgb, var(--color-brand-500) 12%, transparent); }
   .cal-overdue .cal-day { color: var(--color-danger); font-weight: 800; }

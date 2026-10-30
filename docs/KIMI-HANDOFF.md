@@ -1,3 +1,20 @@
+## Session — 2026-10-30 (consent-gated monitoring and automated accessibility)
+
+**Done:**
+- Site v0.3.67 gates Sentry on **both** a DSN and a recorded consent decision (`src/lib/monitoring.ts`), strips query and fragment from reported URLs, attaches no identity and keeps Session Replay off. Nothing in the code sets consent — that needs a control and a privacy-policy change, which is a product and legal decision, not an engineering convenience.
+- `e2e/accessibility.spec.ts` runs axe-core WCAG 2.1 A/AA over five routes (dashboard, `/pay`, `/units`, `/accounting`, `/docs`) with external traffic blocked and fails on serious/critical findings with the rule and node printed. The defects it found were fixed at the cause: units-plan lot buttons had a comment inside the opening tag (no accessible name), the dashboard building card was a clickable `div` (now a stretched real button), and calendar day buttons, the health score/trend and the close reconciliation had unnamed controls or contrast below threshold.
+- The sitemap now lists only indexable routes: `/search` was advertised while sending `noindex, follow`, which Search Console reports as a sitemap error. 69 routes remain.
+- Pay-sheet line-item labels come from the catalog in all nine locales. `npm audit fix` cleared the high (Undici) and moderate advisories; 7 low-severity advisories remain in the dev toolchain and are only fixable by the breaking `@sveltejs/kit` 3.1 major, which was not forced.
+- Verified: **875 frontend tests across 92 files**, Svelte check 0/0, browser suite **8 passed**, translation audit, contrast audit 218 pairs, production build, initial dashboard JS **213,947 gzip bytes** of 230,000.
+
+**Decisions / Kimi:**
+- The monitoring gate is deliberately dormant. Do not enable the DSN in production until the family privacy policy is corrected (it still says OpenStrata has no accounts) and a consent control ships; then re-check retention, CSP and sensitive URLs.
+- No human translation review, no live bank or API call and no field Core Web Vitals baseline exists. The accessibility suite covers five routes at serious/critical impact only; moderate findings are not enforced.
+- Cross-reference this entry in the THOR vault project map rather than creating a parallel record.
+
+**Git State:**
+- This entry travels in the v0.3.67 commit; use `git log -1` and `git log --oneline origin/main..HEAD` for the exact SHA.
+
 ## Session — 2026-10-30 (review status and critical browser flows)
 
 **Done:**
