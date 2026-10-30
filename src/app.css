@@ -85,7 +85,8 @@
      wrapped. The two sheets that are whole pages of their own are held to
      176mm — inside the 14mm side margins — so the paper shows every column. */
   .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc,
-  .cash-doc, .recon-doc, .levy-doc, .register-doc {
+  .cash-doc, .recon-doc, .levy-doc, .register-doc, .payable-doc,
+  .trial-doc, .fee-doc, .proxy-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
@@ -98,11 +99,17 @@
   .cash-doc,
   .recon-doc,
   .levy-doc,
-  .register-doc {
+  .register-doc,
+  .payable-doc,
+  .trial-doc,
+  .fee-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }
   .print-page + .print-page { break-before: page; page-break-before: always; }
+  /* The Journal tab prints the cash statement and then the trial balance, so the
+     second sheet starts a page rather than running under the chain head. */
+  .cash-doc + .trial-doc { break-before: page; page-break-before: always; }
   .print-doc table, .print-doc tr, .print-doc .print-note,
   .print-doc .print-signatures, .print-doc .print-table-wrap {
     break-inside: avoid;

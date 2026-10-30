@@ -28,31 +28,31 @@
 	/** Offered 2026-10-29 (refreshed). Not started. Cam picks one or two; the rest stay queued. English in script, same as the phase chips. */
 	const uiHeading = 'Keep refining the workspace';
 	const uiIntro =
-		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, the close reconciliation shipped on /accounting in v0.3.56, and the levy statement, the budget in the reader’s language and the Form K register in the package shipped in v0.3.57; these four are what is waiting now.';
+		'The interface keeps being refined as the product grows. After every push that changes what a person sees, the next session offers exactly four concrete upgrades. Pick one or two. Only those are polished. When a pick ships, it is replaced, so four are always waiting. Aged arrears on Accounting and a lot’s own sheet on Units were picked from this offer and shipped in v0.3.45, health over time on the dashboard shipped in v0.3.46, and the Form K register shipped at /units/register in v0.3.48, the reserve fund’s five-year picture shipped on /accounting in v0.3.49, the year on one page and the AGM packet shipped in v0.3.50, the receipt on /pay with workspace search shipped in v0.3.51, the budget that prints with the year’s deadlines shipped in v0.3.52, the AGM package with filters that stay put and the budget’s reasons shipped in v0.3.53, the arrears ladder on paper shipped in v0.3.54, the cash statement with its chain shipped in v0.3.55, the close reconciliation shipped on /accounting in v0.3.56, the levy statement, the budget in the reader’s language and the Form K register in the package shipped in v0.3.57, and the payables sheet, the trial balance, the proxy card and the fee schedule shipped in v0.3.58; these four are what is waiting now.';
 	const uiQueue = [
 		{
-			name: 'A payables sheet for the close',
-			where: '/accounting',
+			name: 'A Form F certificate on paper',
+			where: '/units/207',
 			detail:
-				'The Payables tab is the last tab on the page with no paper: the bills by vendor and account, the CRA remittance due 15 October, what falls due inside the next 30 days and the total a council approves. Print it as one page — the same $6,500.00 of bills and $117.10 of source deductions the reconciliation now counts, with the days each one has left.'
+				'The lot’s sheet prints the account but not the certificate a buyer’s notary asks for: the balance, what makes it up, whether Form F is withheld, the day it is issued and a signature line.'
 		},
 		{
-			name: 'A trial balance on paper',
-			where: '/accounting',
-			detail:
-				'The Journal tab prints the cash statement and the screen table chains its hashes, but the month has no page that adds debits and credits by account and proves they agree. Give the tab a second sheet: every account that moved in September with its debits, its credits and its balance, the two columns totalling the same figure, and the accounts that did not move named rather than dropped.'
-		},
-		{
-			name: 'A proxy card with the notice',
+			name: 'The AGM notice as a letter to owners',
 			where: '/meetings',
 			detail:
-				'The packet prints the notice, the agenda, the last minutes and the quorum maths; the form an owner actually returns is still missing. Add a proxy page — the lot, the appointee, the meeting and its date, the direction if the bylaw requires one, and the signature line — with the same 7-day notice arithmetic the packet already does.'
+				'The packet is council’s working paper and the proxy is the return; the notice itself is still prose on screen. Print the statutory letter — date, time, place, the 14-day window, the agenda and the budget resolution — ready to address to each owner.'
 		},
 		{
-			name: 'The fee schedule by lot',
-			where: '/units',
+			name: 'A vendor spend summary for the year',
+			where: '/accounting',
 			detail:
-				'The monthly fee is computed for every lot and shown one lot at a time; the building has no sheet that lists all 40 with their entitlement, their fee, the operating and reserve split and the annual total. Print it as the page a council approves with the budget, and let the register’s tenanted lots be the first cut of it.'
+				'The contracts cards list renewals, but no page totals what each vendor has been paid this year against what was budgeted, which is the first question a council asks of a quote.'
+		},
+		{
+			name: 'A bylaw fine register',
+			where: '/meetings',
+			detail:
+				'Every fine on the books in one list: the lot, the bylaw, the notice date, the 14-day window, the council vote and whether it has been paid.'
 		}
 	];
 </script>

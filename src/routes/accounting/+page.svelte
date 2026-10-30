@@ -8,7 +8,9 @@
 	import CashStatement from '$lib/components/CashStatement.svelte';
 	import CloseReconciliation from '$lib/components/CloseReconciliation.svelte';
 	import LevySheet from '$lib/components/LevySheet.svelte';
+	import PayablesSheet from '$lib/components/PayablesSheet.svelte';
 	import SeptemberClose from '$lib/components/SeptemberClose.svelte';
+	import TrialBalanceSheet from '$lib/components/TrialBalanceSheet.svelte';
 	import { copy, fill, formatDate, formatNumber, locale } from '$lib/i18n';
 	import { money } from '$lib/demo/format';
 	import { books } from '$lib/demo/books';
@@ -16,6 +18,8 @@
 	import { OPERATING_ACCOUNT, OPERATING_OPENING, cashStatement } from '$lib/cash-statement';
 	import { BOOK_RECONCILIATION } from '$lib/close-reconciliation';
 	import { BOOK_LEVY_SHEET } from '$lib/levy-sheet';
+	import { BOOK_PAYABLES } from '$lib/payables-sheet';
+	import { bookChart, trialBalance } from '$lib/trial-balance';
 	import { printedLine } from '$lib/budget-copy';
 	import { age, summarise } from '$lib/arrears';
 	import { arrearsSheet } from '$lib/arrears-sheet';
@@ -53,6 +57,7 @@
 			tab === 'budget' ||
 			tab === 'receivables' ||
 			tab === 'journal' ||
+			tab === 'payables' ||
 			tab === 'levy'
 	);
 
@@ -207,6 +212,13 @@
 	 * on the operating cash the funds tab reports.
 	 */
 	const cashSheet = $derived(cashStatement(journalEntries, OPERATING_ACCOUNT, OPERATING_OPENING));
+	/**
+	 * The journal's second sheet: every account it touched, added by code, and the
+	 * accounts with a year-to-date balance that the page never posted to. Built
+	 * from the same entries as the statement, so a month carried in stops both
+	 * sheets at the same day.
+	 */
+	const trial = $derived(trialBalance(journalEntries, bookChart()));
 	/** The first day the sample journal has anything on it. */
 	const journalFirst =
 		books.journal
@@ -554,7 +566,19 @@
 	{/if}
 
 	{#if tab === 'payables'}
-		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2">
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.accPayablesLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.accPayablesPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.accPayablesPrintNote}</span>
+			</div>
+		</div>
+		<div class="overflow-x-auto rounded-2xl border border-border bg-surface-2 no-print">
 			<table class="w-full min-w-[640px] text-sm">
 				<thead class="text-left text-xs uppercase tracking-wide text-slate-400">
 					<tr class="border-b border-border">
@@ -586,7 +610,7 @@
 				</tbody>
 			</table>
 		</div>
-		<div class="mt-6 grid gap-3 md:grid-cols-2">
+		<div class="mt-6 grid gap-3 md:grid-cols-2 no-print">
 			{#each books.contracts as contract}
 				<div class="rounded-2xl border border-border bg-surface-2 p-4">
 					<p class="font-semibold text-slate-900">{contract.vendor}</p>
@@ -596,6 +620,8 @@
 				</div>
 			{/each}
 		</div>
+
+		<PayablesSheet sheet={BOOK_PAYABLES} />
 	{/if}
 
 	{#if tab === 'funds'}
@@ -819,6 +845,7 @@
 				onclick={() => window.print()}>{$copy.accCashStatementPrint}</button
 			>
 			<span class="text-xs text-slate-500">{$copy.accCashStatementPrintNote}</span>
+			<span class="text-xs text-slate-500">{$copy.accTrialPrintNote}</span>
 		</div>
 		<p class="mb-2 max-w-3xl text-sm text-slate-600 no-print">{$copy.accJournalIntro}</p>
 		<p class="mb-4 text-sm text-slate-600 no-print">
@@ -921,5 +948,12 @@
 		     order and hashes, every entry printed so the chain can be followed on
 		     the page. -->
 		<CashStatement sheet={cashSheet} asOf={asOf} openingDate={journalFirst} ties={!period} />
+
+		<!-- The second sheet: the same journal added by account, so the debits and
+		     the credits can be checked on paper rather than trusted. A month before
+		     the journal begins has nothing to add, so it prints no second sheet. -->
+		{#if trial.rows.length > 0}
+			<TrialBalanceSheet sheet={trial} />
+		{/if}
 	{/if}
 </div>

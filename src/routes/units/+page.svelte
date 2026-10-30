@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import FeeScheduleSheet from '$lib/components/FeeScheduleSheet.svelte';
+	import { BOOK_FEE_SCHEDULE } from '$lib/fee-schedule';
 	import { money } from '$lib/demo/format';
 	import { plan } from '$lib/floor-plan';
 	import { copy, fill, formatNumber } from '$lib/i18n';
@@ -34,6 +36,8 @@
 
 	const LEVELS = [1, 2, 3, 4] as const;
 
+	/** The plan and the list are the page; the schedule is a page of its own. */
+	let schedule = $state(false);
 	let selectedId = $state('305');
 	let floor = $state<UnitFloor>('all');
 	let focus = $state<UnitTone>('all');
@@ -155,7 +159,10 @@
 	<title>{$copy.unitsPageTitle}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 print:px-0 print:py-0">
+	<!-- The schedule replaces the working page rather than printing over it, so a
+	     reader who opens it gets one sheet and a way back. -->
+	<div class:hidden={schedule}>
 	<PageHeader
 		kicker={fill($copy.unitsKicker, { lots: headcount.lots, floors: building.floors })}
 		title={$copy.unitsTitle}
@@ -194,6 +201,11 @@
 				onclick={clearFilters}>{$copy.unitsFilterClear}</button
 			>
 		{/if}
+		<!-- The fee schedule is a page of its own, a button away. -->
+		<button
+			class="shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600"
+			onclick={() => (schedule = true)}>{$copy.unitsFeeSheetShow}</button
+		>
 		<!-- The list the Form K filter narrows, on one page a council can print. -->
 		<a
 			class="ml-auto shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-slate-600 no-underline"
@@ -346,4 +358,25 @@
 			</a>
 		</aside>
 	</div>
+	</div>
+
+	{#if schedule}
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3 no-print">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">
+				{$copy.unitsFeeSheetLede}
+			</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+					onclick={() => (schedule = false)}>{$copy.unitsFeeSheetHide}</button
+				>
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.unitsFeeSheetPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.unitsFeeSheetPrintNote}</span>
+			</div>
+		</div>
+		<FeeScheduleSheet sheet={BOOK_FEE_SCHEDULE} />
+	{/if}
 </div>

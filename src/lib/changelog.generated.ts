@@ -14,6 +14,36 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.58",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "Payables at the close (/accounting). The Payables tab prints: five vendor bills and the CRA remittance, $6,617.10 open, the days each has left from the 30 September 2026 close (7, 10, 15, 15, 20, 20) and the thirty-day window ending 30 October 2026. Vendor bills are $6,500.00 and source deductions $117.10, named apart because 2100 is held for the CRA and remitted rather than paid to a supplier. src/lib/payables-sheet.ts (6 tests) takes the day count from the books' own close, so an overdue bill prints a negative count rather than a zero; the total is the rows added and both windows are cut from it.",
+          "A trial balance on paper (/accounting). The Journal tab's second sheet adds September by four-digit code: 18 accounts, $60,784.68 of debits against $60,784.68 of credits, a balance column adding to $0.00, and a difference row reading *Debits and credits agree*. An account debited and credited back still prints, because a trial balance is a period and not a status list. src/lib/trial-balance.ts (7 tests) names the 26 accounts that carry a year-to-date balance and no September entry under the table, so a page built from a nine-entry journal cannot look complete while being partial; those accounts are never counted in its totals. A month before the journal begins has nothing to add and prints no second sheet.",
+          "The proxy card (/meetings). Behind the packet: lot, owner, appointee, the appointment, a direction, a signature and the day it is due — 5 May 2027, fourteen days before the AGM — with the quorum noted as 14 of 40 lots. src/lib/proxy-card.ts (6 tests) takes the deadline from the packet's own arithmetic rather than a second subtraction, and counts a card only when it names a lot and an appointee, is signed and arrives by the deadline; a blank direction is a discretion, because the bylaws do not require one.",
+          "The fee schedule by lot (/units). All 40 lots with their entitlement, the $4.50-a-point fee, the operating and reserve split and the annual total: $27,000.00 a month and $324,000.00 a year against the budget's own line, with the CRF column adding to $43,200.00. src/lib/fee-schedule.ts (7 tests) computes each row from the points and the two rates, so the split cannot fail to add back, and the eight tenanted lots print first without the other thirty-two being dropped. The plan steps aside while the sheet is open, so print is the sheet alone."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "Two print defects found in Chrome. The fee schedule ran to three Letter pages at 1,169px; tighter rows and the tenant on the owner's own line took it to one page at 905px of the 927 a page box holds. The units page's own 32px screen padding then pushed that sheet onto a second page, so print zeroes it (print:px-0 print:py-0).",
+          "The queue is refreshed. The four shipped slots are replaced by a Form F certificate on paper (/units/207), the AGM notice as a letter to owners (/meetings), a vendor spend summary for the year (/accounting) and a bylaw fine register (/meetings). Recorded in docs/ROADMAP.md, /roadmap, static/llms.txt, WORKPLAN.md, docs/WORKPLAN.md, LATEST-UPDATE.md and .ai_docs/current-status.md."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "32 new tests: 6 for the payables rules, 7 for the trial balance, 6 for the proxy card, 7 for the fee schedule and 6 route tests (four for /accounting, one for /meetings, one for /units).",
+          "Printed and measured in Chrome: payables one Letter page (572px), the journal two (the cash statement, then the trial balance), meetings two (the packet, then the proxy card) and the fee schedule one at 905px, all 176mm wide with .no-print measured as display: none.",
+          "Frontend 727 passed across 75 files, Svelte check 0 errors / 0 warnings, translation audit 1,753 keys × 9 locales (52 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.57",
     "date": "2026-10-29",
     "groups": [

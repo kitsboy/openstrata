@@ -1,6 +1,7 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import MeetingPacket from '$lib/components/MeetingPacket.svelte';
+	import ProxyCard from '$lib/components/ProxyCard.svelte';
 	import { copy, fill } from '$lib/i18n';
 	import { councilSeats, getUnit } from '$lib/demo/building';
 	import { agm, bylawCase, lastCouncil, nextAgm, nextCouncil, quorum, voteGuide } from '$lib/demo/meetings';
@@ -139,5 +140,8 @@
 			</div>
 		</div>
 		<MeetingPacket />
+		<!-- The card the owner sends back. Its deadline is the meeting's own notice
+		     arithmetic, and its quorum is the AGM's third of the lots. -->
+		<ProxyCard />
 	</section>
 </div>

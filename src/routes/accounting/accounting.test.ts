@@ -561,3 +561,64 @@ describe('the parkade levy on paper', () => {
 		expect(container.querySelector('h1')?.closest('.no-print')).toBeTruthy();
 	});
 });
+
+describe('the payables on paper', () => {
+	it('prints the six open items and the window they fall in', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Who we owe');
+		const sheet = container.querySelector('.payable-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		const text = sheet.textContent ?? '';
+		// Five vendor bills and the CRA remittance, and the total they make.
+		expect(text).toContain('$6,500.00');
+		expect(text).toContain('$117.10');
+		expect(text).toContain('$6,617.10');
+		expect(text).toContain('2100');
+		// The window's end is computed from the close, not typed.
+		expect(text).toContain('Due by October 30, 2026');
+		expect(text).toContain('After October 30, 2026');
+		// Seven days on the first bill, 20 on the CRA line.
+		expect(text).toContain('7');
+		expect(text).not.toContain('overdue');
+	});
+
+	it('keeps the screen table and the contracts off the paper', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'Who we owe');
+		const controls = [...container.querySelectorAll('.no-print')].map(
+			(node) => node.textContent ?? ''
+		);
+		expect(controls.some((text) => text.includes('Print the payables'))).toBe(true);
+		// The contract cards stay on screen, and the sheet is not one of them.
+		expect(controls.some((text) => text.includes('Seawall Membrane'))).toBe(true);
+		const sheet = container.querySelector('.payable-doc')!;
+		expect(sheet.closest('.no-print')).toBeNull();
+	});
+});
+
+describe('the trial balance on paper', () => {
+	it('adds the journal by account and says the columns agree', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'September journal');
+		const sheet = container.querySelector('.trial-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		const text = sheet.textContent ?? '';
+		expect(text).toContain('Trial balance — September');
+		expect(text).toContain('Debits and credits agree');
+		expect(text).toContain('$0.00');
+		// Every account the journal touched is on it, named by code.
+		expect(text).toContain('Operating chequing');
+		expect(text).toContain('Source deductions payable');
+	});
+
+	it('names the accounts with a year-to-date balance and no entry here', async () => {
+		const { container } = renderAt('/accounting');
+		await openTab(container, 'September journal');
+		const text = container.querySelector('.trial-doc')?.textContent ?? '';
+		expect(text).toContain('26 accounts carry a year-to-date balance and no entry on this page');
+		expect(text).toContain('6110');
+		expect(text).toContain('7010');
+	});
+});

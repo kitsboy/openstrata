@@ -135,4 +135,27 @@ describe('/units — filters that stay put', () => {
 		await flush();
 		expect(lots(container)).toHaveLength(40);
 	});
+
+	it('opens the fee schedule as a page of its own, a button away', async () => {
+		const { container } = renderAt();
+		await flush();
+		expect(container.querySelector('.fee-doc')).toBeNull();
+		const open = [...container.querySelectorAll('button')].find(
+			(button) => button.textContent?.trim() === 'The fee schedule'
+		);
+		expect(open).toBeTruthy();
+		await fireEvent.click(open as HTMLElement);
+
+		const sheet = container.querySelector('.fee-doc')!;
+		expect(sheet).toBeTruthy();
+		expect(sheet.closest('.no-print')).toBeNull();
+		const text = sheet.textContent ?? '';
+		// All forty lots, the budget's rate, and the totals that match it.
+		expect(sheet.querySelectorAll('tbody tr')).toHaveLength(40);
+		expect(text).toContain('$27,000.00');
+		expect(text).toContain('$324,000.00');
+		expect(text).toContain('8 of 40 lots carry a tenant');
+		// The working page steps aside so the print is the sheet alone.
+		expect(container.querySelector('.hidden')).toBeTruthy();
+	});
 });

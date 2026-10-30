@@ -1,3 +1,29 @@
+## Session — 2026-10-29 (eighth)
+
+**Done:**
+- The last four offers from the 29 October queue shipped together as `0.3.58`.
+- **Payables at the close** (`/accounting`). The Payables tab prints: five vendor bills and the CRA remittance, **$6,617.10** open, days from the **30 September 2026** close (**7, 10, 15, 15, 20, 20**), the thirty-day window ending **30 October 2026**, vendor bills **$6,500.00** and source deductions **$117.10** named apart. `src/lib/payables-sheet.ts` (6 tests) and `PayablesSheet.svelte`.
+- **A trial balance on paper** (`/accounting`). The Journal tab's second sheet adds September by four-digit code: **18** accounts, **$60,784.68** of debits against **$60,784.68** of credits, a balance column adding to **$0.00** and a difference row reading *Debits and credits agree*; **26** accounts with a year-to-date balance and no September entry are named under the table. `src/lib/trial-balance.ts` (7 tests) and `TrialBalanceSheet.svelte`.
+- **The proxy card** (`/meetings`). Behind the packet: lot, owner, appointee, the appointment, a direction, a signature and the day it is due — **5 May 2027**, fourteen days before the AGM — with the quorum noted as **14 of 40**. `src/lib/proxy-card.ts` (6 tests) and `ProxyCard.svelte`; the packet's print label now says “packet and proxy”.
+- **The fee schedule by lot** (`/units`). All **40** lots with entitlement, the **$4.50**-a-point fee, the operating and reserve split and the annual total: **$27,000.00** a month, **$324,000.00** a year, CRF **$43,200.00**; the eight tenanted lots first. `src/lib/fee-schedule.ts` (7 tests) and `FeeScheduleSheet.svelte`, behind a “The fee schedule” button that steps the plan aside.
+- 52 catalog keys × 9 locales (1,753 at parity), 727 frontend tests across 75 files (32 new: 6 payables, 7 trial, 6 proxy, 7 fee, 6 route), check 0/0, i18n audit green, contrast 218 pairs, secret gate green, production build green. Printed and measured in Chrome: payables **one** Letter page (572px), the journal **two**, meetings **two**, the fee schedule **one** at 905px.
+
+**Decisions:**
+- **The payables day count runs from the books' close, not the clock.** A sheet read a week later still says which day it counted from, and an overdue bill prints a negative count rather than a zero that hides the lateness.
+- **The source deductions are a liability, not a vendor.** The CRA remittance prints with the bills because it falls due with them, but the page names account **2100** and the basis says it is remitted, not paid to a supplier.
+- **The trial balance names the accounts it cannot add.** The journal is nine entries while the year's books carry 44 income and expense lines; printing only the 18 accounts it touched would look complete and be wrong, so the 26 with a year-to-date balance and no September entry are listed under the table and never counted in its totals. A month before the journal begins has nothing to add, so it prints no second sheet.
+- **The proxy card is for the AGM, not council.** The sample data says proxies are not used at council, so a card dated for the 20 October meeting would have been a form nobody could use. It is due with the AGM notice on **5 May 2027** (the 14-day window) and its quorum is passed in as **14 of 40** lots — the one-third rule — because `packetMaths` computes a majority, which is right for council seats and wrong for lots.
+- **A blank direction is a discretion, not a gap.** The card counts whether or not a direction is marked; the test refuses it only for a missing lot, a missing appointee, a missing signature or a late return.
+- **The fee is the points at the two rates, and the monthly fee is their sum.** The split therefore cannot fail to add back, and the annual column is twelve monthly runs, which is the budget's fee line and its CRF contribution. Tenanted lots print first but ordering never changes the totals.
+- **Printing found the page fit.** The fee schedule ran to three Letter pages at 1,169px, so the rows tightened to 6.9pt with the tenant on the owner's own line and it now holds one page at 905px; the units page's own 32px screen padding then pushed that sheet onto a second page, so print zeroes it (`print:px-0 print:py-0`).
+- The four picked slots are replaced by **a Form F certificate on paper** (`/units/[lot]`), **the AGM notice as a letter to owners** (`/meetings`), **a vendor spend summary for the year** (`/accounting`) and **a bylaw fine register** (`/meetings`), so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.58`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (seventh)
 
 **Done:**

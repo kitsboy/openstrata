@@ -1,6 +1,28 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the payables, the trial balance, the proxy card and the fee schedule
+
+Commit: this commit (site `0.3.58`). Backend API version stays `0.3.28`.
+
+> **The last four offers from the 29 October queue, shipped together, and each one is a page the interface was already describing.**
+>
+> **Payables at the close (`/accounting`).** The Payables tab finally prints: the five vendor bills and the CRA remittance, **$6,617.10** open, the days each has left from the **30 September 2026** close — **7, 10, 15, 15, 20, 20** — and the thirty-day window ending **30 October 2026**. The vendor bills are **$6,500.00** and the source deductions **$117.10**, named apart because **2100** is held for the CRA and not owed to a supplier. `src/lib/payables-sheet.ts` (6 tests) takes the day count from the books' own close rather than the clock, so a bill already past due prints a negative count instead of a zero that hides it, and cuts both windows from a total that is the rows added up.
+>
+> **A trial balance on paper (`/accounting`).** The Journal tab's second sheet adds September by four-digit code: **18** accounts, **$60,784.68** of debits against **$60,784.68** of credits, a balance column that adds to **$0.00**, and a difference row reading *Debits and credits agree* rather than claiming it. An account debited and credited back still prints, because a trial balance is a period and not a status list; **26** accounts that carry a year-to-date balance and no September entry are named under the table so the page cannot look complete while being a nine-entry sample. `src/lib/trial-balance.ts` (7 tests).
+>
+> **The proxy card (`/meetings`).** The form an owner actually returns now prints behind the packet: lot, owner, appointee, the appointment, a direction, a signature line, and the day it must be back. Its deadline is the packet's own arithmetic rather than a second subtraction — **5 May 2027**, fourteen days before the AGM — and the quorum it notes is the AGM's third of forty lots (**14**), not a council majority the old maths would have printed. `src/lib/proxy-card.ts` (6 tests) counts a card only when it names a lot and an appointee, is signed, and arrives by the deadline; a blank direction is a discretion, not a gap.
+>
+> **The fee schedule by lot (`/units`).** All forty lots with their entitlement, the **$4.50**-a-point fee, the operating and reserve split and the annual total: **$27,000.00** a month and **$324,000.00** a year against the budget's own line, with the CRF column adding to **$43,200.00**. `src/lib/fee-schedule.ts` (7 tests) computes each row from the points and the two rates, so the split cannot fail to add back, and the eight tenanted lots print first without the other thirty-two being dropped.
+>
+> **Two print defects were found by making the paper.** The fee schedule ran to three Letter pages at **1,169px**, so the rows tightened to 6.9pt with the tenant on the owner's own line and it now holds one page at **905px** of the 927 a page box holds; and the units page's own 32px screen padding pushed that 905px sheet onto a second page, which print now zeroes.
+>
+> **Verified:** frontend **727 passed** across 75 files (32 new: 6 payables, 7 trial, 6 proxy, 7 fee, 6 route), `check` **0 errors / 0 warnings**, translation audit **1,753 keys × 9 locales** (52 new) across 35 route components, contrast audit **218 pairs**, secret gate green, production build green. Printed and measured in Chrome: payables **one** Letter page (572px), the journal **two** (statement, then trial balance), meetings **two** (packet, then proxy), the fee schedule **one** at 905px.
+>
+> **The queue is refreshed, because four picks shipped.** Four new offers are waiting: **a Form F certificate on paper** (`/units/[lot]`), **the AGM notice as a letter to owners** (`/meetings`), **a vendor spend summary for the year** (`/accounting`) and **a bylaw fine register** (`/meetings`).
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — the levy statement, the budget in the reader's language, the register in the package
 
-Commit: this commit (site `0.3.57`). Backend API version stays `0.3.28`.
+Commit: 0.3.57 (site `0.3.57`). Backend API version stays `0.3.28`.
 
 > **Three picks from the 29 October queue, shipped together, and each turns a tab into a page a council hands over.**
 >
