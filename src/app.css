@@ -86,7 +86,7 @@
      176mm — inside the 14mm side margins — so the paper shows every column. */
   .year-doc, .packet-doc, .receipt-doc, .budget-doc, .year-cal-doc, .arrears-doc,
   .cash-doc, .recon-doc, .levy-doc, .register-doc, .payable-doc,
-  .trial-doc, .fee-doc, .proxy-doc {
+  .trial-doc, .fee-doc, .proxy-doc, .ff-doc, .agm-letter-doc, .fines-doc {
     width: 176mm !important;
     max-width: 176mm !important;
     margin: 0 !important;
@@ -102,7 +102,10 @@
   .register-doc,
   .payable-doc,
   .trial-doc,
-  .fee-doc {
+  .fee-doc,
+  .ff-doc,
+  .agm-letter-doc,
+  .fines-doc {
     padding: 0 4mm !important;
   }
   .print-page { margin: 0 !important; }
@@ -110,6 +113,15 @@
   /* The Journal tab prints the cash statement and then the trial balance, so the
      second sheet starts a page rather than running under the chain head. */
   .cash-doc + .trial-doc { break-before: page; page-break-before: always; }
+  /* `/meetings` prints four sheets: the packet, the proxy, the AGM notice and the
+     fine register. Each starts its own page rather than running under the one
+     above it. */
+  .packet-doc + .proxy-doc,
+  .proxy-doc + .agm-letter-doc,
+  .agm-letter-doc + .fines-doc {
+    break-before: page;
+    page-break-before: always;
+  }
   .print-doc table, .print-doc tr, .print-doc .print-note,
   .print-doc .print-signatures, .print-doc .print-table-wrap {
     break-inside: avoid;

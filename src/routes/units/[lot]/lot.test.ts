@@ -70,3 +70,50 @@ describe('/units/[lot]#forms', () => {
 		expect((getByLabelText('Date on the Form K') as HTMLInputElement).value).toBe('2026-09-30');
 	});
 });
+
+/**
+ * The certificate a buyer's notary asks for.
+ *
+ * The lot's sheet and the receivables page both say "Form F withheld"; the
+ * certificate is the page that says why, with the balance and the day it was
+ * struck. It sits behind a button so the lot's working page and the certificate
+ * are never on the same sheet of paper.
+ */
+describe('/units/[lot] — the Form F certificate', () => {
+	beforeEach(() => localStorage.clear());
+
+	async function openCertificate(container: HTMLElement) {
+		const button = [...container.querySelectorAll('button')].find(
+			(node) => node.textContent?.trim() === 'Form F certificate'
+		);
+		expect(button).toBeTruthy();
+		await fireEvent.click(button as HTMLElement);
+	}
+
+	it('withholds lot 309’s certificate for its unpaid fine', async () => {
+		const { container } = render(LotSheet, { data: { lot: '309' } });
+		await openCertificate(container);
+		const cert = container.querySelector('.ff-doc')!;
+		expect(cert).toBeTruthy();
+		expect(cert.closest('.no-print')).toBeNull();
+		const text = cert.textContent ?? '';
+		expect(text).toContain('Withheld');
+		expect(text).toContain('$200.00');
+		expect(text).toContain('Bylaw fine');
+		expect(text).toContain('OS-FF-2026-09-309');
+		// The working page steps aside so the print is the certificate alone.
+		expect(container.querySelector('.hidden')).toBeTruthy();
+	});
+
+	it('issues lot 305’s certificate and prints October as not yet due', async () => {
+		const { container } = render(LotSheet, { data: { lot: '305' } });
+		await openCertificate(container);
+		const cert = container.querySelector('.ff-doc')!;
+		const text = cert.textContent ?? '';
+		expect(text).toContain('Issued');
+		expect(text).toContain('$0.00');
+		expect(text).toContain('Not yet due');
+		// The next fee is printed but not counted: $576 is 128 points at $4.50.
+		expect(text).toContain('$576.00');
+	});
+});

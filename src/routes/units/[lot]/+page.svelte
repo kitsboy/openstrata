@@ -8,6 +8,8 @@
 	import { addDays, dayIn, daysBetween, daysPastDue, periodOf } from '$lib/arrears';
 	import { FORM_K_DAYS } from '$lib/health';
 	import { account, billedMonths, forLot, upcoming, type AccountLine } from '$lib/lot-sheet';
+	import FormFCertificateSheet from '$lib/components/FormFCertificateSheet.svelte';
+	import { formFCertificate } from '$lib/form-f-certificate';
 	import {
 		clearFormK,
 		filedOn,
@@ -48,6 +50,14 @@
 		filedForms = next;
 		writeFiledForms(next);
 	}
+	/**
+	 * The certificate a notary asks for, behind a button. The working page and the
+	 * certificate are never on the paper together: the page is the lot's record,
+	 * the certificate is one statement of its balance.
+	 */
+	let certificate = $state(false);
+	const formFCert = $derived(formFCertificate(unit, charges(asOf), asOf));
+
 	const due = $derived(balance(unit));
 	const lotCharges = $derived(charges(asOf).filter((charge) => charge.unitId === unit.id));
 
@@ -123,6 +133,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+	<div class:hidden={certificate}>
 	<PageHeader
 		kicker={fill($copy.lotSheetKicker, {
 			date: formatDate(asOf, $locale, { dateStyle: 'long' })
@@ -140,6 +151,10 @@
 			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-600 no-underline"
 			href="/units?lot={unit.id}"
 		>{$copy.goBack}</a>
+		<button
+			class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+			onclick={() => (certificate = true)}>{$copy.ffCertShow}</button
+		>
 		<span class="text-xs text-slate-500">{$copy.lotSheetPrintNote}</span>
 	</div>
 
@@ -314,4 +329,23 @@
 			</section>
 		</div>
 	</div>
+	</div>
+
+	{#if certificate}
+		<div class="no-print mb-4 flex flex-wrap items-end justify-between gap-3">
+			<p class="min-w-0 flex-1 basis-[24rem] text-sm leading-relaxed text-slate-600">{$copy.ffCertLede}</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					class="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-slate-700"
+					onclick={() => (certificate = false)}>{$copy.ffCertHide}</button
+				>
+				<button
+					class="rounded-xl bg-slab px-4 py-2 text-sm font-bold text-slab-ink transition-colors hover:bg-slab-raised"
+					onclick={() => window.print()}>{$copy.ffCertPrint}</button
+				>
+				<span class="text-xs text-slate-500">{$copy.ffCertPrintNote}</span>
+			</div>
+		</div>
+		<FormFCertificateSheet certificate={formFCert} />
+	{/if}
 </div>

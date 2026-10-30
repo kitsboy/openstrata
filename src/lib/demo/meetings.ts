@@ -63,6 +63,45 @@ export const nextCouncil = {
 	]
 };
 
+/**
+ * The next AGM's notice, as the secretary would send it. The date is `nextAgm`'s
+ * and the window is the packet's; what the demo adds is the time, the place, the
+ * agenda and the three motions an owner is being asked to decide. No bylaw
+ * amendment is proposed, because an amendment would need its text in the notice
+ * and a 3/4 vote.
+ */
+export const nextAgmNotice = {
+	time: '7:00 pm',
+	place: 'Amenity room, 4100 Cambie Street, and the video link in this letter',
+	issued: '2027-04-28',
+	agenda: [
+		'Call to order and confirmation of quorum',
+		'Approval of the minutes of the annual general meeting of May 20, 2026',
+		'Report of the council for the year ended March 31, 2027',
+		'Financial statements for the year ended March 31, 2027',
+		'Budget for the year ending March 31, 2028',
+		'Appointment of the accountant for the year ending March 31, 2028',
+		'Election of five council members',
+		'Insurance renewal',
+		'Other business',
+		'Adjournment'
+	],
+	resolutions: [
+		{
+			vote: 'Majority',
+			text: 'That the budget for the fiscal year ending {yearEnd}, presented with this notice, be approved.'
+		},
+		{
+			vote: 'Majority',
+			text: 'That North Shore Tax Co-op be appointed to compile the financial statements and prepare the T2 and T1044 for the year ending {yearEnd}.'
+		},
+		{
+			vote: 'Majority',
+			text: 'That the insurance renewal presented with this notice be adopted.'
+		}
+	]
+};
+
 export const bylawCase = {
 	lot: '309',
 	bylaw: '9.2 — no stays under 30 days',

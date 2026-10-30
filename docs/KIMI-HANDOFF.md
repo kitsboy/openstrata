@@ -1,3 +1,30 @@
+## Session — 2026-10-29 (ninth)
+
+**Done:**
+- Three offers from the 29 October queue shipped together as `0.3.59`.
+- **The Form F certificate on paper** (`/units/[lot]`). A button on the lot's sheet opens the certificate a buyer's notary asks for: the balance at the statement date, every charge that makes it up, the state in a stamped line and a signature under it. Lot **309** prints **withheld** for its **$200.00** fine posted **16 September 2026**, reference **OS-FF-2026-09-309**, deliverable **7 October**; lot **305** prints **issued** on a **$0.00** balance with its **$576.00** October fee shown separately as not yet due. `src/lib/form-f-certificate.ts` (6 tests) and `FormFCertificateSheet.svelte`; the working page steps aside with `class:hidden` so print is the certificate alone.
+- **The AGM notice as a letter to owners** (`/meetings`). Issued **28 April 2027**, twenty-one days before the **19 May** meeting, the last lawful day **5 May**, ten agenda items, three motions with the vote each needs, quorum **14 of 40**, and a budget motion for the year ending **31 March 2028**. `src/lib/agm-notice.ts` (5 tests) and `AgmNoticeLetter.svelte`.
+- **The bylaw fine register** (`/meetings`). Lot **309**, bylaw **9.2**, noticed **29 August 2026**, window closed **12 September**, heard **15 September**, **4–0–1**, **$200.00** posted **16 September**, unpaid **14 days** at the close, against the bylaw's own **$200**-a-day ceiling. `src/lib/fine-register.ts` (7 tests), `src/lib/demo/fines.ts` and `FineRegisterSheet.svelte`.
+- `/meetings` prints **four** Letter pages (packet, proxy, notice, register), each starting its own page; the print button reads *Print the meeting pack* and its hint says four pages, in all nine locales.
+- 60 catalog keys × 9 locales (1,816 at parity), 749 frontend tests across 78 files (22 new: 6 Form F, 5 notice, 7 register, 2 meetings route, 2 lot route), check 0/0, i18n audit green, contrast 218 pairs, secret gate green, production build green. Printed and measured in Chrome: the certificate **one** page at **560px**, lot 305's **one** at **528px**, meetings **four** (893, 487, 908, 375), all **176 mm** wide; French and Chinese also four pages.
+
+**Decisions:**
+- **The certificate's state is its own arithmetic, and it is checked against the screen.** `form-f-certificate` withholds when the charges owing on its date add above zero, and a test compares that against the lot's own `formF` rule on all forty lots. A certificate that repeated the screen's fields would have been a second rule to keep in step; an arithmetic that is tested against the first is one rule with two proofs.
+- **The next month's fee is printed and not counted.** A certificate is a statement of what has fallen due. Counting October's fee on 30 September would withhold a sale over a bill nobody is late on, so the fee prints on its own line as not yet due and sits outside the balance.
+- **A certificate is never dated before the books it quotes.** An earlier issue date moves forward to the statement date, because a notary reads the date as the day the balance was struck; a later date is kept and the balance still comes from the close.
+- **The AGM notice takes its window from the packet and its budget year from the meeting.** The fourteen days are `packetMaths`' own, so the notice, the packet and the proxy cannot disagree. The budget motion names the first fiscal year end after the meeting — **2028-03-31** — computed from the books' year end rather than typed, so a notice cannot ask owners to approve a year that has already closed.
+- **A late notice stays on the paper.** It prints the days it had and says it is late; it is neither accepted quietly nor withheld. A defect an owner can see is better than one they cannot.
+- **A fine is money only when the process supports it.** The register counts a fine only after the fourteen days closed, the vote carried (yes over no, abstentions ignored) and the posting followed the hearing; a defect is listed with its reason and not counted. Payment is a date, so a payment recorded after the close leaves the fine standing at the close.
+- **The register and the receivables page are held together by a test.** The owing total must equal the fine charges `charges()` hands the ladder, so the two pages cannot print different arrears; a second copy of the fine arithmetic would have been the easy way to make them disagree.
+- **The demo has one fine, and the page says so rather than inventing more.** The books carry a single $200 fine this year, so the register prints one row with every step of it. Adding fictional earlier fines to fill the table would have been the one dishonest line on the sheet.
+- The three picked slots are replaced by **a vendor spend summary for the year** (`/accounting`, carried over), **the arrears ladder as a letter to one owner** (`/units/[lot]`), **a reserve-fund contribution statement for the budget** (`/accounting`) and **a bylaw hearing notice for the owner** (`/meetings`), so four offers are waiting.
+
+**Git State:**
+- SHA: this commit (`0.3.59`), pushed to `origin/main`.
+- Unpushed: none.
+
+---
+
 ## Session — 2026-10-29 (eighth)
 
 **Done:**

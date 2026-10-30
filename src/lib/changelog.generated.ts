@@ -14,6 +14,38 @@ export type ChangelogRelease = {
 /** Releases with full notes, newest first. */
 export const changelogReleases: ChangelogRelease[] = [
   {
+    "version": "0.3.59",
+    "date": "2026-10-29",
+    "groups": [
+      {
+        "label": "Added",
+        "items": [
+          "The Form F certificate on paper (/units/[lot]). The lot's sheet has said *Form F: withheld* since the first version, and /documents has a template for unit 101, but neither is the certificate a buyer's notary asks for. The new sheet prints the letterhead, the lot and owner, the balance at the statement date, every charge that makes it up, the state in a stamped line and a signature under it, with a reference (OS-FF-2026-09-309) and the delivery day. Lot 309 prints withheld for its $200.00 fine posted 16 September; lot 305 prints issued on a $0.00 balance.",
+          "src/lib/form-f-certificate.ts (6 tests) holds four rules. The state is the certificate's own arithmetic — owing above zero is withheld — and a test checks that answer against the lot's own formF rule on all forty lots, so the screen and the paper cannot drift. Only a charge that has fallen due is owing: lot 305's $576.00 October fee prints on its own line as not yet due and is never counted. A certificate is never dated before the books it quotes, so an earlier issue date moves forward to the statement date. And the delivery window is Form B's seven days, because the two forms travel together on a request.",
+          "The AGM notice as a letter to owners (/meetings). Issued 28 April 2027, twenty-one days before the 19 May meeting, with the last lawful day 5 May, the ten-item agenda, three motions and the vote each needs, quorum 14 of 40, and a budget motion for the year ending 31 March 2028. A proxy line names the day a card must reach the secretary, and the letter is addressed to every owner rather than to council.",
+          "src/lib/agm-notice.ts (5 tests) holds four rules. The fourteen-day window comes from packetMaths, the same call the packet and the proxy use, so the three cannot disagree. A notice issued inside the window prints the days it had and says it is late rather than being quietly accepted or withheld. A motion with no wording or no vote is dropped instead of printed as a blank the chair fills in. And the budget year is the first fiscal year end after the meeting — 2028-03-31 for a May 2027 AGM — computed, so a notice cannot ask owners to approve a year that has already closed.",
+          "The bylaw fine register (/meetings). Every fine on the books with the process behind it: lot 309, bylaw 9.2, noticed 29 August 2026, the fourteen days closing 12 September, heard 15 September, 4–0–1, $200.00 posted 16 September and unpaid 14 days at the close, against the bylaw's own $200-a-day ceiling. src/lib/fine-register.ts (7 tests) counts a fine only when the window ran out, the vote carried and the posting followed the hearing; abstentions are not counted; payment is a date, so a payment after the close leaves the fine standing at the close; and the owing total equals the fine charges charges() hands the receivables page, checked by a test, so the two pages cannot print different arrears."
+        ]
+      },
+      {
+        "label": "Changed",
+        "items": [
+          "/meetings prints four sheets. The packet, the proxy card, the AGM notice and the fine register each start their own Letter page (app.css), the print button reads *Print the meeting pack* and its hint says four pages, in all nine locales. .ff-doc, .agm-letter-doc and .fines-doc join the 176 mm print rule with a 4 mm gutter.",
+          "The lot's certificate sits behind a button. /units/[lot] gains *Form F certificate*; the working page steps aside with the same class:hidden trick the fee schedule uses, and a *Back to the lot* button returns. The certificate's own closing rule is that the working page and the certificate are never on the same sheet of paper.",
+          "The queue is refreshed. The three shipped slots are replaced by a vendor spend summary for the year (/accounting), the arrears ladder as a letter to one owner (/units/[lot]), a reserve-fund contribution statement for the budget (/accounting) and a bylaw hearing notice for the owner (/meetings) — four offers, none started."
+        ]
+      },
+      {
+        "label": "Verified",
+        "items": [
+          "22 new tests: 6 for the Form F rules, 5 for the AGM notice, 7 for the fine register, 2 for /meetings (the notice and the register on their own pages, four sheets in all) and 2 for /units/[lot] (a withheld certificate and an issued one, with the working page hidden).",
+          "Printed and measured in Chrome: lot 309's certificate one Letter page at 560px of the 927 a page holds, lot 305's one at 528px, and /meetings four (packet 893px, proxy 487px, notice 908px, register 375px), every sheet 176mm wide with .no-print measured as display: none and no descendant past its right edge. French and Chinese read back at four pages with the notice at 908px and 879px.",
+          "Frontend 749 passed across 78 files, Svelte check 0 errors / 0 warnings, translation audit 1,816 keys × 9 locales (60 new) across 35 route components, contrast audit 218 pairs, secret gate green, production build green."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.3.58",
     "date": "2026-10-29",
     "groups": [

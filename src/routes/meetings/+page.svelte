@@ -2,9 +2,38 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import MeetingPacket from '$lib/components/MeetingPacket.svelte';
 	import ProxyCard from '$lib/components/ProxyCard.svelte';
+	import AgmNoticeLetter from '$lib/components/AgmNoticeLetter.svelte';
+	import FineRegisterSheet from '$lib/components/FineRegisterSheet.svelte';
 	import { copy, fill } from '$lib/i18n';
-	import { councilSeats, getUnit } from '$lib/demo/building';
-	import { agm, bylawCase, lastCouncil, nextAgm, nextCouncil, quorum, voteGuide } from '$lib/demo/meetings';
+	import { agmNotice } from '$lib/agm-notice';
+	import { building, councilSeats, getUnit } from '$lib/demo/building';
+	import { bylawFines } from '$lib/demo/fines';
+	import { fineRegister } from '$lib/fine-register';
+	import {
+		agm,
+		bylawCase,
+		lastCouncil,
+		nextAgm,
+		nextAgmNotice,
+		nextCouncil,
+		quorum,
+		voteGuide
+	} from '$lib/demo/meetings';
+
+	// The letter's window and budget year come from the meeting's own arithmetic;
+	// the fine register reads the same records the books post from.
+	const notice = agmNotice({
+		meetingIso: nextAgm.iso,
+		time: nextAgmNotice.time,
+		place: nextAgmNotice.place,
+		issuedIso: nextAgmNotice.issued,
+		agenda: nextAgmNotice.agenda,
+		resolutions: nextAgmNotice.resolutions,
+		quorumNeed: quorum.agmNeed,
+		lots: quorum.lots,
+		fiscalYearEnd: building.fiscalEnd
+	});
+	const fines = fineRegister(bylawFines, building.asOf);
 </script>
 
 <svelte:head>
@@ -143,5 +172,9 @@
 		<!-- The card the owner sends back. Its deadline is the meeting's own notice
 		     arithmetic, and its quorum is the AGM's third of the lots. -->
 		<ProxyCard />
+		<!-- The notice itself, addressed to the owners, and the fines the books
+		     carry with the process behind each. -->
+		<AgmNoticeLetter {notice} />
+		<FineRegisterSheet register={fines} />
 	</section>
 </div>

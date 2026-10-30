@@ -1,3 +1,23 @@
+# openstrata — Last Updated 2026-10-29 by Buffy — the Form F certificate, the AGM notice and the fine register
+
+Commit: this commit (site `0.3.59`). Backend API version stays `0.3.28`.
+
+> **Three picks from the 29 October queue, and each is a page a council hands to somebody outside the building.**
+>
+> **The Form F certificate (`/units/[lot]`).** A button on the lot's sheet opens the certificate a buyer's notary asks for: the letterhead, the lot and owner, the balance at the statement date, every charge that makes it up, the state in a stamped line and a signature under it. Lot **309** prints **withheld** for its **$200.00** fine posted 16 September, reference **OS-FF-2026-09-309**, deliverable **7 October**; lot **305** prints **issued** on a **$0.00** balance. `src/lib/form-f-certificate.ts` (6 tests) makes the state the certificate's own arithmetic and checks it against the lot's own Form F rule on all forty lots, so the screen and the paper cannot drift; prints the next month's fee separately as not yet due, so a certificate never withholds over a bill nobody is late on; refuses to date a certificate before the books it quotes; and takes Form B's seven-day window because the two forms travel together. The working page steps aside while the certificate is open, so print is the certificate alone.
+>
+> **The AGM notice as a letter to owners (`/meetings`).** Issued **28 April 2027**, twenty-one days before the **19 May** meeting, with the last lawful day **5 May**, ten agenda items, three motions with the vote each needs, quorum **14 of 40**, and a budget motion for the year ending **31 March 2028** — the first fiscal year end after the meeting. `src/lib/agm-notice.ts` (5 tests) takes the fourteen-day window from `packetMaths`, the same call the packet and the proxy use; keeps a late notice on the paper rather than hiding or withholding it; drops a motion with no wording or no vote instead of printing a blank for the chair; and advances the budget year past the meeting, so a notice cannot ask owners to approve a year that has already closed.
+>
+> **The bylaw fine register (`/meetings`).** Every fine on the books with the process behind it: lot **309**, bylaw **9.2**, noticed **29 August 2026**, the fourteen days closing **12 September**, heard **15 September**, **4–0–1**, **$200.00** posted **16 September** and unpaid **14 days** at the close, against the bylaw's own **$200**-a-day ceiling. `src/lib/fine-register.ts` (7 tests) counts a fine only when the window ran out, the vote carried and the posting followed the hearing; abstentions are not counted; payment is a date, so a payment after the close leaves the fine standing at the close; and the owing total equals the fine charges the receivables page ages, checked by a test. A fine the process could not support is listed and not counted.
+>
+> **`/meetings` prints four Letter pages.** Packet, proxy, notice and register each start their own page (`app.css`), the print button reads *Print the meeting pack* and its hint says four pages, in all nine locales. `.ff-doc`, `.agm-letter-doc` and `.fines-doc` join the **176 mm** print rule with a **4 mm** gutter.
+>
+> **Verified:** frontend **749 passed** across 78 files (22 new: 6 Form F rules, 5 AGM notice, 7 fine register, 2 meetings route, 2 lot route), `check` **0 errors / 0 warnings**, translation audit **1,816 keys × 9 locales** (60 new) across 35 route components, contrast audit **218 pairs**, secret gate green, production build green. Printed and measured in Chrome: lot 309's certificate **one** Letter page at **560px**, lot 305's **one** at **528px**, meetings **four** (packet **893px**, proxy **487px**, notice **908px**, register **375px**), every sheet **176 mm** wide with `.no-print` measured `display: none` and no descendant past its right edge. French and Chinese read back at four pages.
+>
+> **The queue is refreshed, because three picks shipped.** Four offers are waiting: **a vendor spend summary for the year** (`/accounting`, carried over), **the arrears ladder as a letter to one owner** (`/units/[lot]`), **a reserve-fund contribution statement for the budget** (`/accounting`) and **a bylaw hearing notice for the owner** (`/meetings`).
+
+---
+
 # openstrata — Last Updated 2026-10-29 by Buffy — the payables, the trial balance, the proxy card and the fee schedule
 
 Commit: this commit (site `0.3.58`). Backend API version stays `0.3.28`.

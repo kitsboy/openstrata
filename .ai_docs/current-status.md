@@ -1,11 +1,22 @@
 # Current Status — OpenStrata
 
-**Site/product version:** v0.3.58
+**Site/product version:** v0.3.59
 **Backend API version:** v0.3.28
 **Last Updated:** 2026-10-29
 **Domain:** openstrata.giveabit.io
 
-## Recent milestone — the payables, the trial balance, the proxy card and the fee schedule (site, `0.3.58`, the last four queue picks)
+## Recent milestone — the Form F certificate, the AGM notice and the fine register (site, `0.3.59`, three queue picks)
+
+- **The Form F certificate prints from the lot (`/units/[lot]`).** A button opens the page a buyer's notary asks for: letterhead, lot and owner, the balance at the statement date, every charge that makes it up, the state in a stamped line and a signature under it. Lot **309** prints **withheld** for its **$200.00** fine posted **16 September 2026**, reference **OS-FF-2026-09-309**, deliverable **7 October**; lot **305** prints **issued** on a **$0.00** balance. The working page steps aside (`class:hidden`) so print is the certificate alone, and a *Back to the lot* button returns.
+- **`src/lib/form-f-certificate.ts`, 6 tests.** The state is the certificate's own arithmetic and is checked against the lot's own `formF` rule on all forty lots, so the screen and the paper cannot drift; only a charge that has fallen due is owing, so lot 305's **$576.00** October fee prints separately and is not counted; a certificate is never dated before the books it quotes; and the delivery window is Form B's seven days, because the two forms travel together.
+- **The AGM notice is a statutory letter to owners (`/meetings`).** Issued **28 April 2027**, twenty-one days before the **19 May** meeting, the last lawful day **5 May**, ten agenda items, three motions with the vote each needs, quorum **14 of 40**, and a budget motion for the year ending **31 March 2028** — the first fiscal year end after the meeting.
+- **`src/lib/agm-notice.ts`, 5 tests.** The fourteen-day window comes from `packetMaths`, the same call the packet and the proxy use; a notice issued inside the window is late on the paper rather than hidden or withheld; a motion with no wording or no vote is dropped instead of printed blank; the budget year advances past the meeting, so no notice asks owners to approve a closed year.
+- **The bylaw fine register (`/meetings`).** Lot **309**, bylaw **9.2**, noticed **29 August 2026**, window closed **12 September**, heard **15 September**, **4–0–1**, **$200.00** posted **16 September**, unpaid **14 days** at the **30 September** close, against the bylaw's own **$200**-a-day ceiling. `src/lib/fine-register.ts` (7 tests) counts a fine only when the window ran out, the vote carried and the posting followed the hearing; abstentions are not counted; payment is a date; and the owing total equals the fine charges `charges()` hands the receivables page, checked by a test.
+- **`/meetings` prints four Letter pages.** Packet, proxy, notice and register, each starting its own page; the print button reads *Print the meeting pack* and its hint says four pages, in all nine locales. `.ff-doc`, `.agm-letter-doc` and `.fines-doc` join the **176 mm** print rule with a **4 mm** gutter.
+- 60 new catalog keys × 9 locales, catalogue **1,816** keys at full parity. Verification: frontend **749 passed** across 78 files (22 new), `check` **0/0**, i18n audit **1,816 keys across 35 route components**, contrast audit **218 pairs**, secret gate green, production build green. Printed in Chrome: the certificate **one** page at **560px**, lot 305's **one** at **528px**, meetings **four** (893, 487, 908, 375), all **176 mm** wide; French and Chinese also four pages.
+- **Queue:** the three picked slots are replaced by **a vendor spend summary for the year** (`/accounting`, carried over), **the arrears ladder as a letter to one owner** (`/units/[lot]`), **a reserve-fund contribution statement for the budget** (`/accounting`) and **a bylaw hearing notice for the owner** (`/meetings`) — four offers, none started.
+
+## Prior milestone — the payables, the trial balance, the proxy card and the fee schedule (site, `0.3.58`, the last four queue picks)
 
 - **The Payables tab on `/accounting` prints at the close.** Five vendor bills and the CRA remittance, **$6,617.10** open, days from the **30 September 2026** close (**7, 10, 15, 15, 20, 20**), the thirty-day window ending **30 October 2026**. Vendor bills **$6,500.00** and source deductions **$117.10** named apart, because **2100** is held for the CRA.
 - **`src/lib/payables-sheet.ts`, 6 tests.** Days come from the books' own close, so an overdue bill prints a negative count rather than a zero; the total is the rows added and both windows are cut from it; the window's end date is computed once and printed.
