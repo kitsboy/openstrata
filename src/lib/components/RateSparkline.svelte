@@ -6,11 +6,11 @@
   import { onMount } from 'svelte';
   import { copy, formatCurrency, locale } from '$lib/i18n';
   import { auth } from '$lib/api/auth';
-  import { fetchRailsStatus } from '$lib/api/rails';
+  import { DEMO_CAD_PER_BTC, fetchRailsStatus } from '$lib/api/rails';
   import Sparkline from './Sparkline.svelte';
   import Icon from './Icon.svelte';
 
-  let rate = $state(98_500);
+  let rate = $state(DEMO_CAD_PER_BTC);
   let asOf = $state<Date | null>(null);
   let live = $state(false);
   let history = $state<number[]>([]);

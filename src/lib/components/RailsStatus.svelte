@@ -5,7 +5,7 @@
   import { get } from 'svelte/store';
   import { copy, formatCurrency, locale } from '$lib/i18n';
   import { auth } from '$lib/api/auth';
-  import { fetchRailsStatus, type RailsStatus } from '$lib/api/rails';
+  import { DEMO_CAD_PER_BTC, fetchRailsStatus, type RailsStatus } from '$lib/api/rails';
   import Icon from './Icon.svelte';
   import Skeleton from './Skeleton.svelte';
 
@@ -24,7 +24,7 @@
 
   const DEMO: RailsStatus = {
     rails: { fiat: { enabled: true }, onchain: { enabled: true }, lightning: { enabled: true }, liquid: { enabled: false }, paynym_bip47: { enabled: false }, nostr: { enabled: false } },
-    cadPerBtc: 96500
+    cadPerBtc: DEMO_CAD_PER_BTC
   };
 
   onMount(() => {

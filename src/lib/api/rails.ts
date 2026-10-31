@@ -17,6 +17,14 @@ export interface RailsStatus {
   cadPerBtc: number;
 }
 
+/**
+ * The single CAD-per-BTC figure used by every rate tile when no host is
+ * connected (demo mode). One named source so two "live" tiles on the same
+ * screen cannot contradict each other — a connected host overrides this with
+ * the value from /api/v1/rails/status.
+ */
+export const DEMO_CAD_PER_BTC = 96_500;
+
 export async function fetchRailsStatus(): Promise<RailsStatus> {
   return apiFetch<RailsStatus>('/api/v1/rails/status', { token: getToken() });
 }
